@@ -1,0 +1,2 @@
+made the decision that the R files that michael judge's 'module' files call (such as stocsy_dec.R and )
+ should be the ones that are packaged up. This package can then be called directly from github.

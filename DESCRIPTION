@@ -1,0 +1,5 @@
+Package: ImperialNMRTool
+Type: Package
+Title: Tool for Nuclear Magnetic Resonance based spectrography.
+Version: 0.0.1.0
+RoxygenNote: 7.2.1
