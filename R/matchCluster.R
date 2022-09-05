@@ -1,23 +1,28 @@
-## 
-
-# Provide an alternative matching method for target and ref clusters. 
-## MTJ 28FEB2022
-##
-# 
-# Requires flexclust, pracma libraries
-# Calculate all pairwise distances between all target cluster peaks and reference cluster peaks and filter for tolerance. Match each peak with its closest ref peak:
-#   A)
-#     start with lowest overall distance, assign target[i] to ref[r] peak, record ref[r] as unavailable (remove its matches in the distance matrix)
-#     find next lowest distance match, and repeat until no more matches
-#     – easier to implement right now, necessary update if staying with GG code
-#   B) 
-#     find the best set of matches which satisfy the following:
-#     ppm ranks are preserved (no criss-crossing of match lines)
-#     ref peaks can be assigned to at most one target peak
-#     best match set determined by sum of distances
-#     –> alternative, potentially better qualities and potentially faster (no loop/complex decision tree)
-#     install.packages(here(RcppHungarian), repos=NULL, type="source")
-
+#' matchCluster
+#' 
+#' Provide an alternative matching method for target and ref clusters. 
+#' MTJ 28FEB2022
+#'
+#' 
+#' Requires flexclust, pracma libraries
+#' Calculate all pairwise distances between all target cluster peaks and reference cluster peaks and filter for tolerance. Match each peak with its closest ref peak:
+#'   A)
+#'     start with lowest overall distance, assign target[i] to ref[r] peak, record ref[r] as unavailable (remove its matches in the distance matrix)
+#'     find next lowest distance match, and repeat until no more matches
+#'     – easier to implement right now, necessary update if staying with GG code
+#'   B) 
+#'     find the best set of matches which satisfy the following:
+#'     ppm ranks are preserved (no criss-crossing of match lines)
+#'     ref peaks can be assigned to at most one target peak
+#'     best match set determined by sum of distances
+#'     –> alternative, potentially better qualities and potentially faster (no loop/complex decision tree)
+#'     install.packages(here(RcppHungarian), repos=NULL, type="source")
+#' @param t target peaks.
+#' @param r reference peaks.
+#' @param tol tolerance in ppm.
+#' @param method matching methodology as a string, defaults to itmin.
+#' @return List of matches.
+#' @export
 matchCluster <- function(t, # target peaks
                       r, # reference peaks
                       tol = 0.02, # tolerance (ppm)

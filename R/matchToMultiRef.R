@@ -1,9 +1,20 @@
-# Matches peaks from one pseudo-spectrum corresponding to one driver peak
-# to all database peaks
-# Returns a data frame with the results ranked by score 
-
+#' matchToMultiRef
+#'
+#' Matches peaks from one pseudo-spectrum corresponding to one driver peak
+#' to all database peaks.
+#' Returns a data frame with the results ranked by score.
+#' @param references reference spectra as a db file.
+#' @param metadata metadata that is included in the final merged dataframe.
+#' @param target target driver peak.
+#' @param driver_ppm parts per million of driver peak.
+#' @param match_method matching methodology as a string.
+#' @param tol tolerance in ppm.
+#' @param Itol
+#' @param intensity flag indicating whether to figure intensity into matching.
+#' @return Dataframe of results ranked by score.
+#' @export
 matchToMultiRef <- function(references, metadata, target, driver_ppm,
-                            matchMethod = "",tol = 0.02, Itol = 20, 
+                            matchMethod = "", tol = 0.02, Itol = 20,
                             intensity = FALSE) {
 
  
@@ -11,6 +22,8 @@ matchToMultiRef <- function(references, metadata, target, driver_ppm,
   # Run either the old or new matching function (v2 has matchMethod options, 'basic' method = old)
     if (!matchMethod == "") {
       
+      # note from callum - does assigning intensity to FALSE as is done below not mean it will always be FALSE,
+      # even if the function is called with this flag set to TRUE?
       res <- lapply(1:length(references),
                     function(x) matchPeaksToRef2(target = target,
                                                  driver_ppm = driver_ppm,

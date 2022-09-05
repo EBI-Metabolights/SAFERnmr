@@ -1,14 +1,24 @@
-# Function to match target and reference spectral peaks by chemical shift
-# Goncalo Graca, 16 February 2021, g.gomes-da-graca@imperial.ac.uk
-# modified on 13 May 2021
-# modifications added:
-# matches only count if driver peak is found in the reference
-# score is the Jaccard index for the target and reference
-# matched ppms counted only once
-# result output modified to match with other functions
-
+#' matchPeaksToRef2
+#'
+#' Function to match target and reference spectral peaks by chemical shift
+#' Goncalo Graca, 16 February 2021, g.gomes-da-graca-at-imperial.ac.uk
+#' modified on 13 May 2021
+#' modifications added:
+#' matches only count if driver peak is found in the reference
+#' score is the Jaccard index for the target and reference
+#' matched ppms counted only once
+#' result output modified to match with other functions
+#' @param target target peak.
+#' @param driver_ppm parts per million of driver peak.
+#' @param reference reference spectral peaks as db file.
+#' @param tol tolerance in ppm.
+#' @param Itol
+#' @param matchMethod matching methodology as a string, defaults to 'basic'
+#' @param intensity flag to indicate whether to factor in intensity to matching.
+#' @return list of resulting matches.
+#' @export
 matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
-                            Itol = 20, matchMethod = "basic",intensity = FALSE) {
+                            Itol = 20, matchMethod = "basic", intensity = FALSE) {
 
   # Clean up params
   

@@ -1,39 +1,43 @@
+#' exportMatches
+#'
 # Export matches to file for visualization and storage
-# 
-# Ideally, this function will allow 
+#'
+# Ideally, this function will allow:
+#'
+#' cleanMatches(matches,ranklimit = 1,annot_field = "hmdb_id")
 
-  #cleanMatches(matches,ranklimit = 1,annot_field = "hmdb_id")
-
-## Export matches
-  # matches object is a list with two objects for each STOCSY cluster matched 
-  # (including those with null matches): 
-  #   - scores_matrix
-  #     - data frame containing 1 row for each non-zero scored match, and columns
-  #       with match info/metadata such as hmdb_id, ref spectrum id, (Jaccard) scores, 
-  #       number of matches, number of possible matches in ref, compound name, instrument
-  #       properties, experiment properties, etc.
-  #
-  #   - filteredResults
-  #     - list of lists, each list contains additional info for each row in 
-  #       scores_matrix which could not fit into a data frame. Some info is
-  #       duplicated in the scores_matrix, but the important data here is:
-  #       - peaklists: reference and target peaklists (matched lists)
-  #       - matchlist: detailed match info for the matched peaks only (both ref and target):
-  #         - "ppms" of the peaks
-  #         - relative "intensities" of the reference peaks (if known)
-  #         - "inds" in the starting ref or target list, respectively
-  # 
-    
-  # Extract data and put in tall matrix (all matched peaks). 
-  # Define Format: In order to plot the matches as two lists of scatter points and 
-  # lines connecting the matched target and ref points, we need:
-  #   - all ref peak positions and intensities
-  #   - all target peaks and intensities
-  #   - the connection from each matched ref to its target
-  #     - peaks with no match could be coded as NaN
-  #   - indicate the limiting peak (intensity-wise) for a match
-  # 
-
+#' Export matches
+#' matches object is a list with two objects for each STOCSY cluster matched 
+#' (including those with null matches): 
+#'   - scores_matrix
+#'     - data frame containing 1 row for each non-zero scored match, and columns
+#'       with match info/metadata such as hmdb_id, ref spectrum id, (Jaccard) scores, 
+#'      number of matches, number of possible matches in ref, compound name, instrument
+#'       properties, experiment properties, etc.
+#'
+#'   - filteredResults
+#'     - list of lists, each list contains additional info for each row in 
+#'       scores_matrix which could not fit into a data frame. Some info is
+#'       duplicated in the scores_matrix, but the important data here is:
+#'       - peaklists: reference and target peaklists (matched lists)
+#'       - matchlist: detailed match info for the matched peaks only (both ref and target):
+#'         - "ppms" of the peaks
+#'         - relative "intensities" of the reference peaks (if known)
+#'         - "inds" in the starting ref or target list, respectively
+#'  
+#' Extract data and put in tall matrix (all matched peaks). 
+#' Define Format: In order to plot the matches as two lists of scatter points and 
+#' lines connecting the matched target and ref points, we need:
+#'   - all ref peak positions and intensities
+#'   - all target peaks and intensities
+#'   - the connection from each matched ref to its target
+#'     - peaks with no match could be coded as NaN
+#'   - indicate the limiting peak (intensity-wise) for a match
+#' @param matches matches object, see above description for further information.
+#' @param X
+#' @param rankLimit rank limit, defaults to 1.
+#' @return N/A, matches are written to file.
+#' @export
 exportMatches <- function(matches,
                           X = NULL,
                           rankLimit = 1) {

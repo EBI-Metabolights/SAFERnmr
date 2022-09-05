@@ -9,7 +9,7 @@
 #' @param inds The linear indices to be converted IE linear index (1 = [1,1], 2 = [2,1], 3 = [3,1], 4 = [1,2], 5 = [2,2])
 #' @param m The number of rows IE m = nrow(matrix)
 #' @return List of row and column indices.
-#' @export 
+#' @export
 ind2subR <- function(inds, m) {
   row.inds <- ((inds - 1) %% m) + 1
   col.inds <- floor((inds - 1) / m) + 1
