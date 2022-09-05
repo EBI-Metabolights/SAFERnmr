@@ -1,5 +1,5 @@
 #' matchCluster
-#' 
+#'
 #' Provide an alternative matching method for target and ref clusters.
 #' MTJ 28FEB2022
 #' Requires flexclust, pracma libraries
