@@ -9,7 +9,7 @@
 #' @param driver_ppm parts per million of driver peak.
 #' @param match_method matching methodology as a string.
 #' @param tol tolerance in ppm.
-#' @param Itol
+#' @param Itol tbc.
 #' @param intensity flag indicating whether to figure intensity into matching.
 #' @return Dataframe of results ranked by score.
 #' @export

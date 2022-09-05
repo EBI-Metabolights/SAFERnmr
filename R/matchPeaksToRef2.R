@@ -12,7 +12,7 @@
 #' @param driver_ppm parts per million of driver peak.
 #' @param reference reference spectral peaks as db file.
 #' @param tol tolerance in ppm.
-#' @param Itol
+#' @param Itol tbc
 #' @param matchMethod matching methodology as a string, defaults to 'basic'
 #' @param intensity flag to indicate whether to factor in intensity to matching.
 #' @return list of resulting matches.

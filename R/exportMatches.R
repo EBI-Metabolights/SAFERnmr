@@ -1,7 +1,7 @@
 #' exportMatches
 #'
-# Export matches to file for visualization and storage
-# Ideally, this function will allow:
+#' Export matches to file for visualization and storage
+#' Ideally, this function will allow:
 #' cleanMatches(matches,ranklimit = 1,annot_field = "hmdb_id")
 #' Export matches
 #' matches object is a list with two objects for each STOCSY cluster matched 
@@ -29,7 +29,7 @@
 #'     - peaks with no match could be coded as NaN
 #'   - indicate the limiting peak (intensity-wise) for a match
 #' @param matches matches object, see above description for further information.
-#' @param X
+#' @param X tbc.
 #' @param rankLimit rank limit, defaults to 1.
 #' @return N/A, matches are written to file.
 #' @export
