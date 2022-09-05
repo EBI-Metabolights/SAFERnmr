@@ -17,5 +17,5 @@ stocsydec(spectra, idx, cthr = 0.8)
 Result of STOCS decomposition.
 }
 \description{
-Function to run 'STOCSY decomposition' Goncalo Graca, 15 September 2020, g.gomes-da-graca@imperial.ac.uk
+Function to run 'STOCSY decomposition' Goncalo Graca, 15 September 2020, g.gomes-da-graca/at/imperial.ac.uk
 }

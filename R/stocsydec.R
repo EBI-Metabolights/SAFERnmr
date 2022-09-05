@@ -1,7 +1,6 @@
 #' stocsydec
 #'
-#' Function to run 'STOCSY decomposition' Goncalo Graca, 15 September 2020, g.gomes-da-graca@imperial.ac.uk
-#' 
+#' Function to run 'STOCSY decomposition' Goncalo Graca, 15 September 2020, g.gomes-da-graca/at/imperial.ac.uk
 #' @param spectra individual spectra file to run through decomp
 #' @param idx index number of spextra files to be run through decomp
 #' @param cthr cutoff threshold
