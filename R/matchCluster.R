@@ -1,9 +1,7 @@
 #' matchCluster
 #' 
-#' Provide an alternative matching method for target and ref clusters. 
+#' Provide an alternative matching method for target and ref clusters.
 #' MTJ 28FEB2022
-#'
-#' 
 #' Requires flexclust, pracma libraries
 #' Calculate all pairwise distances between all target cluster peaks and reference cluster peaks and filter for tolerance. Match each peak with its closest ref peak:
 #'   A)

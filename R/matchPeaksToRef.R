@@ -1,9 +1,9 @@
 #' matchPeaksToRef
 #'
 #' Function to match target and reference spectral peaks by chemical shift
-#' Goncalo Graca, 16 February 2021, g.gomes-da-graca@imperial.ac.uk
+#' Goncalo Graca, 16 February 2021, g.gomes-da-graca-at-imperial.ac.uk
 #' modified on 13 May 2021
-#' modifications added: 
+#' modifications added:
 #' matches only count if driver peak is found in the reference
 #' score is the Jaccard index for the target and reference
 #' matched ppms counted only once

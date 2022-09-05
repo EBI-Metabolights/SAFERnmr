@@ -1,11 +1,8 @@
 #' exportMatches
 #'
 # Export matches to file for visualization and storage
-#'
 # Ideally, this function will allow:
-#'
 #' cleanMatches(matches,ranklimit = 1,annot_field = "hmdb_id")
-
 #' Export matches
 #' matches object is a list with two objects for each STOCSY cluster matched 
 #' (including those with null matches): 
@@ -14,7 +11,6 @@
 #'       with match info/metadata such as hmdb_id, ref spectrum id, (Jaccard) scores, 
 #'      number of matches, number of possible matches in ref, compound name, instrument
 #'       properties, experiment properties, etc.
-#'
 #'   - filteredResults
 #'     - list of lists, each list contains additional info for each row in 
 #'       scores_matrix which could not fit into a data frame. Some info is
@@ -24,7 +20,6 @@
 #'         - "ppms" of the peaks
 #'         - relative "intensities" of the reference peaks (if known)
 #'         - "inds" in the starting ref or target list, respectively
-#'  
 #' Extract data and put in tall matrix (all matched peaks). 
 #' Define Format: In order to plot the matches as two lists of scatter points and 
 #' lines connecting the matched target and ref points, we need:
