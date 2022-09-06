@@ -1,6 +1,6 @@
-#' matchClusterR.
+#' @name matchClusterR
 #'
-#' MTJ 28FEB2022
+#' @description MTJ 28FEB2022
 #' Requires flexclust, pracma libraries
 #' Calculate all pairwise distances between all target cluster peaks and reference cluster peaks and filter for tolerance. Match each peak with its closest ref peak:
 #' A)
