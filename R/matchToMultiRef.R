@@ -17,7 +17,7 @@ matchToMultiRef <- function(references, metadata, target, driver_ppm,
                             matchMethod = "", tol = 0.02, Itol = 20,
                             intensity = FALSE) {
 
- 
+  library(flexclust)
   #######################################################################################################################
   # Run either the old or new matching function (v2 has matchMethod options, 'basic' method = old)
     if (!matchMethod == "") {
