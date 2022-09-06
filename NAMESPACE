@@ -3,7 +3,6 @@
 export(exportMatches)
 export(ind2subR)
 export(matchCluster2)
-export(matchClusterR)
 export(matchPeaksToRef)
 export(matchPeaksToRef2)
 export(matchToMultiRef)
