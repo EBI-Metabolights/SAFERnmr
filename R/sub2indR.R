@@ -1,4 +1,4 @@
-#' ppTargetSpec
+#' sub2indR
 #'
 #' Convert row, column subscripts to linear indices.
 #' Comparable to sub2ind in MATLAB.
