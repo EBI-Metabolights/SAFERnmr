@@ -13,4 +13,4 @@ You can install the package using the R CLI straight from this repository.
 
 4 - run `library(ImperialNMRTool)` to load the package into the session.
 
-To quickly verify if the package is installed you can run `?indsubr` . This will bring up the manual page for this function, and if loaded means that the package itself was installed and loaded successfully. The manual pages for each function contain the information you will need to run them. More detailed instruction maybe added to either this repository or the manual pages at a later date.
+To quickly verify if the package is installed you can run `?indsubr` . This will bring up the manual page for this function, and if loaded means that the package itself was installed and loaded successfully. The manual pages for each function contain the information you will need to run them. More detailed instruction may be added to either this repository or the manual pages at a later date.
