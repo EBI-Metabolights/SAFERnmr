@@ -2,7 +2,7 @@
 % Please edit documentation in R/sub2indR.R
 \name{sub2indR}
 \alias{sub2indR}
-\title{ppTargetSpec}
+\title{sub2indR}
 \usage{
 sub2indR(rows, cols, m)
 }

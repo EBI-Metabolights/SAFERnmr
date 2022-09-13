@@ -11,7 +11,6 @@
 #' @return list of chemical shifts and intensities.
 #' @export
 ppTargetSpec <- function(target, normalise = FALSE) {
-    library(speaq)
     tmp <- detectSpecPeaks(
         target, nDivRange = 128,
         scales = seq(1, 16, 2),
