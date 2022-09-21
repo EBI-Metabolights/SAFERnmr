@@ -1,13 +1,13 @@
 #' Statistical Decomposition for spectra.
 #'
 #' Description
-#' @param peaks_loc location of the rds peaks file.
-#' @param spec_loc location of the rds spec file.
-#' @param params location of the yaml params file.
+#' @param peaks_loc rds peaks file loaded into memory.
+#' @param spec_loc rds spec file loaded into memory.
+#' @param params yaml object containg parameters for the pipeline.
 #'
 #' @return list of stuff
 #' @export
-stat_decomp <- function(peaks_loc, spec_loc, params) {
+stat_decomp <- function(peaks, spec, params) {
     library(stringr)
     # put speaq back in here.
     library(yaml)
@@ -15,20 +15,10 @@ stat_decomp <- function(peaks_loc, spec_loc, params) {
     library(devtools)
     library(MassSpecWavelet)
     # Read params
+
+    # want to later must have the params object passed into the method,
+    # rather than loading it.
     pars <- yaml.load_file(params)
-
-    # Load data
-    if (missing(peaks_loc)) {
-        peaks <- readRDS(str_c("./data/", "peaks.RDS"))
-    } else {
-        peaks <- readRDS(peaks_loc)
-    }
-
-    if (missing(spec_loc)) {
-        spec <- readRDS(str_c("./data/", "spec.RDS"))
-    } else {
-        spec <- readRDS(spec_loc)
-    }
 
     # Do the STOCSY deconvolution
     message("\nRunning STOCSY on all provided peaks...")
@@ -48,5 +38,8 @@ stat_decomp <- function(peaks_loc, spec_loc, params) {
 
     message("\nData written to target.RDS, ppeaks.RDS, and peaks.RDS .")
     message("\nStatistical Decomposition process completed.\n\n\n")
-    return(c(target, ppeaks, recursive = TRUE))
+    return(list(
+        target = target,
+        ppeaks = ppeaks
+    ))
 }

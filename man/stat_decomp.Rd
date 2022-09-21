@@ -4,14 +4,14 @@
 \alias{stat_decomp}
 \title{Statistical Decomposition for spectra.}
 \usage{
-stat_decomp(peaks_loc, spec_loc, params)
+stat_decomp(peaks, spec, params)
 }
 \arguments{
-\item{peaks_loc}{location of the rds peaks file.}
+\item{params}{yaml object containg parameters for the pipeline.}
 
-\item{spec_loc}{location of the rds spec file.}
+\item{peaks_loc}{rds peaks file loaded into memory.}
 
-\item{params}{location of the yaml params file.}
+\item{spec_loc}{rds spec file loaded into memory.}
 }
 \value{
 list of stuff
