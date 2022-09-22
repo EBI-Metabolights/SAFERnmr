@@ -7,11 +7,11 @@
 stat_decomp(peaks, spec, params)
 }
 \arguments{
+\item{peaks}{rds peaks file loaded into memory.}
+
+\item{spec}{rds spec file loaded into memory.}
+
 \item{params}{yaml object containg parameters for the pipeline.}
-
-\item{peaks_loc}{rds peaks file loaded into memory.}
-
-\item{spec_loc}{rds spec file loaded into memory.}
 }
 \value{
 list of stuff

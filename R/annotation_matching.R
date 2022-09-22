@@ -28,21 +28,8 @@
 #' @export
 annotation_matching <- function(
   peaks, target, ppeaks, spec, params, output_dir) {
-  # Libraries
-
-  library(stringr)
-  library(pbapply)
-  library(rlang)
-  library(yaml)
-  library(flexclust)
-  library(pracma)
-  library(RcppHungarian)
-
-
-  # Load data
-  message("\n\nReading data from Statistical Decomposition Module...\n")
-
-
+    
+  # maybe wanna move this out  
   refdb <- readRDS(params$am_pars$refdb_file)
 
   # Reformat metadata (this may eventually be unnecessary):
@@ -51,8 +38,12 @@ annotation_matching <- function(
     lapply(1:length(refdb), function(x) refdb[[x]]$metadata))
 
   # Run the matching function:
-  message(paste0("\n\nMatching STOCSY clusters using ", params$am_pars$refdb_file, " as the reference...\n"))
-  matches <- pblapply(
+  message(
+    paste0(
+      "\n\nMatching STOCSY clusters using ",
+       params$am_pars$refdb_file, " as the reference...\n"))
+
+  matches <- pblapply::pblapply(
     1:length(target),
     function(x) {
       matchToMultiRef(
@@ -61,21 +52,14 @@ annotation_matching <- function(
         references = refdb, # refs, driver_ppm - ?
         metadata = metadata,
         tol = params$am_pars$dist_thresh,
-        matchMethod = pars$am_pars$matchMethod
+        matchMethod = params$am_pars$matchMethod
       )
     }
   )
 
-  # Export to flat files and use plotMatches.m in MATLAB to
-  # visualize and play with the matches.
-  # Flat files written to:
-  # $output_dir/: matchPairs.tsv, referenceList.tsv, targetList.tsv
-
-  exportMatches(matches,
-    X = spec,
-    rankLimit = pars$am_pars$rank_limit
-  )
   message(
     "\nData written to matchPairs.tsv, referenceList.tsv, and targetList.tsv .")
   message("\nAnnotation matching process completed.\n\n")
+
+  return(matches)
 }
