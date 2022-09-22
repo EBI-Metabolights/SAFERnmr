@@ -1,6 +1,6 @@
 #' Peak detection for spectra
 #'
-#' Divide the whole spectra into smaller segments and detect peaks by using MassSpecWavelet package. 
+#' Divide the whole spectra into smaller segments and detect peaks by using MassSpecWavelet package.
 #' Note that, the peak lists could be found by using other methods, this function is just a choice.
 #'
 #'
@@ -17,26 +17,26 @@
 #' @author Trung Nghia Vu
 #'
 #' @examples
-#' res=makeSimulatedData();
-#' X=res$data;
-#' groupLabel=res$label;
+#' res <- makeSimulatedData()
+#' X <- res$data
+#' groupLabel <- res$label
 #' peakList <- detectSpecPeaks(X,
-#'                             nDivRange = c(128),
-#'                             scales = seq(1, 16, 2),
-#'                             baselineThresh = 50000,
-#'                             SNR.Th = -1,
-#'                             verbose=FALSE
-#' );
-#' 
+#'     nDivRange = c(128),
+#'     scales = seq(1, 16, 2),
+#'     baselineThresh = 50000,
+#'     SNR.Th = -1,
+#'     verbose = FALSE
+#' )
+#'
 #' @export
-#' 
-detectSpecPeaks <- function (X, nDivRange = 128, scales = seq(1, 16, 2), baselineThresh = 50000, 
-SNR.Th = -1, verbose = TRUE) 
-{
+#'
+detect_spec_peaks <- function(
+    X, nDivRange = 128, scales = seq(1, 16, 2), baselineThresh = 50000,
+                            SNR.Th = -1, verbose = TRUE) {
     nFea <- ncol(X)
     nSamp <- nrow(X)
     noiseEsp <- 0.005
-    if (SNR.Th < 0){
+    if (SNR.Th < 0) {
         SNR.Th <- max(scales) * 0.05
     }
     pList <- NULL
@@ -45,47 +45,53 @@ SNR.Th = -1, verbose = TRUE)
         mySpec <- X[i, ]
         for (k in seq_along(nDivRange)) {
             divR <- nDivRange[k]
-            for (j in 1:(trunc(nFea/divR) - 3)) {
+            for (j in 1:(trunc(nFea / divR) - 3)) {
                 startR <- (j - 1) * divR + 1
-                if (startR >= nFea){
+                if (startR >= nFea) {
                     startR <- nFea
                 }
                 endR <- (j + 3) * divR
-                if (endR > nFea){
+                if (endR > nFea) {
                     endR <- nFea
                 }
                 xRange <- mySpec[startR:endR]
                 xMean <- mean(xRange)
                 xMedian <- stats::median(xRange)
                 peakDetectionFlag <- TRUE
-                if ((xMean == xMedian) || abs(xMean - xMedian)/((xMean + xMedian) * 2) < noiseEsp) peakDetectionFlag = FALSE
+                if ((xMean == xMedian) || abs(xMean - xMedian) / ((xMean + xMedian) * 2) < noiseEsp) peakDetectionFlag <- FALSE
                 if (peakDetectionFlag) {
                     majorPeakInfo <- NULL
-                    tryCatch({
-                        peakInfo = MassSpecWavelet::peakDetectionCWT(mySpec[startR:endR], 
-                                                                     scales = scales, SNR.Th = SNR.Th)
-                        majorPeakInfo = peakInfo$majorPeakInfo
-                    },  error=function(e){if (verbose) cat("\n", "Wannings for spectrum",i, "from function peakDetectionCWT() of MassSpecWavelet package: ",conditionMessage(e), "\n")})
-                    
-                    if(!is.null(majorPeakInfo)){
+                    tryCatch(
+                        {
+                            peakInfo <- MassSpecWavelet::peakDetectionCWT(mySpec[startR:endR],
+                                scales = scales, SNR.Th = SNR.Th
+                            )
+                            majorPeakInfo <- peakInfo$majorPeakInfo
+                        },
+                        error = function(e) {
+                            if (verbose) cat("\n", "Wannings for spectrum", i, "from function peakDetectionCWT() of MassSpecWavelet package: ", conditionMessage(e), "\n")
+                        }
+                    )
+
+                    if (!is.null(majorPeakInfo)) {
                         if (length(majorPeakInfo$peakIndex) > 0) {
-                            myPeakRes <- c(myPeakRes, majorPeakInfo$peakIndex + startR - 1)
+                            myPeakRes <- c(
+                                myPeakRes, majorPeakInfo$peakIndex + startR - 1)
                         }
                     }
                 }
             }
         }
-        
+
         pList[i] <- list(myPeakRes)
-        if(!is.null(myPeakRes)){
+        if (!is.null(myPeakRes)) {
             pList[[i]] <- sort(unique(pList[[i]]))
             pList[[i]] <- pList[[i]][which(X[i, pList[[i]]] > baselineThresh)]
             pList[[i]] <- sort(pList[[i]])
         }
-        if (verbose){
+        if (verbose) {
             cat("\n Spectrum", i, "has", length(pList[[i]]), "peaks")
         }
-        
     }
     return(pList)
 }
