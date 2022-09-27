@@ -35,7 +35,11 @@ hurricane <- function(params_loc) {
             "extdata", "hmdb_spectra_28FEB2022.RDS", package="ImperialNMRTool")
 
         peaks <- readRDS(peaks_path)
-        spec <- readRDS(spec_path)
+        # spec <- readRDS(spec_path)
+        spec <- readRDS("inst/extdata/spec.RDS")
+        if (is.null(spec)) {
+            message("it was null")
+        }
         refdb <- readRDS(refdb_path)
     } else {
         peaks <- readRDS(run_params$general_pars$peaks_location)

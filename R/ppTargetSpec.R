@@ -11,7 +11,7 @@
 #' @return list of chemical shifts and intensities.
 #' @export
 ppTargetSpec <- function(target, normalise = FALSE) {
-    tmp <- detectSpecPeaks(
+    tmp <- detect_spec_peaks(
         target, nDivRange = 128,
         scales = seq(1, 16, 2),
         baselineThresh = 1000,

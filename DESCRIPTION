@@ -9,7 +9,7 @@ Authors@R: c(
     person("Callum Martin", "Developer", role = c("cre"), email="cmartin@ebi.ac.uk"))
 Maintainer: Callum Martin <cmartin@ebi.ac.uk>
 Depends: R (>= 4.0.0)
-Imports: optparse, BiocManager, stringr, MassSpecWavelet, yaml, pbapply, devtools, batch, flexclust, rlang, pracma, RcppHungarian
+Imports: optparse, BiocManager, stringr, MassSpecWavelet, yaml, pbapply, devtools, batch, flexclust, rlang, pracma, RcppHungarian, grid, lattice, modeltools, stats4
 License: GPL-2
 Description: Workflows for automatic processing and annotation of 1D 1H-NMR spectra from MetaboLights repository.
 RoxygenNote: 7.2.1
