@@ -23,14 +23,16 @@
 #' "Blood" "Cerebrospinal Fluid (CSF)" "Feces" "Urine" )
 #'       > dsource
 #'         (char, data source e.g. 'spec_file' or 'metabocard')
+#' @param params params.yaml file, see package desc
+#' @param refdb reference database containing spectra to match against,
+#' loaded into memory.
+#' 
 #'
 #' @return nothing, export matches is called.
 #' @export
 annotation_matching <- function(
-  peaks, target, ppeaks, spec, params, output_dir) {
-    
-  # maybe wanna move this out  
-  refdb <- readRDS(params$am_pars$refdb_file)
+  peaks, target, ppeaks, spec, params, refdb) {
+
 
   # Reformat metadata (this may eventually be unnecessary):
 

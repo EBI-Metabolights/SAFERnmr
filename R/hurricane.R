@@ -12,10 +12,13 @@
 #' @return N/A but .RDS and .TSV files are saved, see description.
 #' @export
 hurricane <- function(params_loc) {
-
+    default <- FALSE
     if (missing(params_loc)) {
         # load default params
-        run_params <- yaml::yaml.load_file("./extdata/default_params.yaml")
+        filepath <- system.file(
+            "extdata", "default_params.yaml", package="ImperialNMRTool")
+        run_params <- yaml::yaml.load_file(filepath)
+        default <- TRUE
     } else {
         # load supplied params
         run_params <- yaml::yaml.load_file(params_loc)
@@ -23,9 +26,23 @@ hurricane <- function(params_loc) {
     # it may be that a user supplies their own params file but it
     # is not complete. What do we do then? Fill in any missing fields
     # with the corresponding values from default params?
+    if (default == TRUE) {
+        peaks_path <- system.file(
+            "extdata", "peaks.RDS", package="ImperialNMRTool")
+        spec_path <- system.file(
+            "extdata", "spec.RDS", package="ImperialNMRTool")
+        refdb_path <- spec_path <- system.file(
+            "extdata", "hmdb_spectra_28FEB2022.RDS", package="ImperialNMRTool")
 
-    peaks <- readRDS(run_params$general_pars$peaks_location)
-    spec <- readRDS(run_params$general_pars$spec_location)
+        peaks <- readRDS(peaks_path)
+        spec <- readRDS(spec_path)
+        refdb <- readRDS(refdb_path)
+    } else {
+        peaks <- readRDS(run_params$general_pars$peaks_location)
+        spec <- readRDS(run_params$general_pars$spec_location)
+        refdb <- readRDS(run_params$am_pars$refdb_file)
+    }
+
 
     s_d_results <- stat_decomp(
         peaks = peaks,
@@ -42,7 +59,9 @@ hurricane <- function(params_loc) {
         target = s_d_results$target,
         ppeaks = s_d_results$ppeaks,
         spec = spec,
+        refdb = refdb,
         params = run_params)
+
 
     exportMatches(
         matches = matches,

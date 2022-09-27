@@ -4,7 +4,7 @@
 \alias{annotation_matching}
 \title{Annotation Module}
 \usage{
-annotation_matching(peaks, target, ppeaks, spec, params, output_dir)
+annotation_matching(peaks, target, ppeaks, spec, params, refdb)
 }
 \arguments{
 \item{peaks}{initial peaks picked (driver for picked peaks and target)}
@@ -28,6 +28,11 @@ col2: (named "intensity") intensity (covariance from STOCSY).}
 "Blood" "Cerebrospinal Fluid (CSF)" "Feces" "Urine" )
       > dsource
         (char, data source e.g. 'spec_file' or 'metabocard')}
+
+\item{params}{params.yaml file, see package desc}
+
+\item{refdb}{reference database containing spectra to match against,
+loaded into memory.}
 }
 \value{
 nothing, export matches is called.
