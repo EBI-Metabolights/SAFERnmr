@@ -156,7 +156,7 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
       # if there are any refs close to driver peak (within tolerance)
       # - otherwise, no real point in matching the others?
 
-        matchList <- matchCluster(t, # target peaks
+        matchList <- matchCluster2(t, # target peaks
           r, # reference peaks
           tol = 0.02, # tolerance (ppm)
           method = matchMethod
