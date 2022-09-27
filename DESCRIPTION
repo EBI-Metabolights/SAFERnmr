@@ -4,9 +4,9 @@ Title: Tool for Nuclear Magnetic Resonance based spectrography.
 Version: 0.0.1.0
 Date: 2022-09-12
 Authors@R: c(
-    person("Michael T. Judge", "PostDoc / Developer", role = c("aut", "cre")),
-    person("Goncalo G. Graca", "PostDoc / Developer", role = c("aut", "cre")),
-    person("Callum Martin", "Developer", role = c("aut"), email="cmartin@ebi.ac.uk"))
+    person("Michael T. Judge", "PostDoc / Developer", role = c("aut")),
+    person("Goncalo G. Graca", "PostDoc / Developer", role = c("aut")),
+    person("Callum Martin", "Developer", role = c("cre"), email="cmartin@ebi.ac.uk"))
 Maintainer: Callum Martin <cmartin@ebi.ac.uk>
 Depends: R (>= 4.0.0)
 Imports: optparse, BiocManager, stringr, MassSpecWavelet, yaml, pbapply, devtools, batch, flexclust, rlang, pracma, RcppHungarian
