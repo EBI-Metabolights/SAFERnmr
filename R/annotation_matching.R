@@ -45,7 +45,7 @@ annotation_matching <- function(
       "\n\nMatching STOCSY clusters using ",
        params$am_pars$refdb_file, " as the reference...\n"))
 
-  matches <- pblapply::pblapply(
+  matches <- pbapply::pblapply(
     1:length(target),
     function(x) {
       matchToMultiRef(
