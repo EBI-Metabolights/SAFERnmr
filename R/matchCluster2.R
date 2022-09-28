@@ -105,7 +105,7 @@ matchCluster2 <- function(t, r, tol = 0.02, method = "itmin") {
     # Remove all peaks which have no matches within tolerance:
 
     dlabels <- d
-    dlabels[1:numel(d)] <- 1:numel(d)
+    dlabels[1:pracma::numel(d)] <- 1:pracma::numel(d)
 
     # * New indices for reduced cost matrix * (tab indicates indexing level)
     redRows <- which(rowSums(mask) != 0)
@@ -115,7 +115,7 @@ matchCluster2 <- function(t, r, tol = 0.02, method = "itmin") {
 
     # Check to make sure there's even anything in the reduced matrix:
 
-    if (sum(size(redD)) >= 2) {
+    if (sum(pracma::size(redD)) >= 2) {
       # Exponential scaling of out-of-tolerance resonances (optional)
       if (method == "hungarian_scaled") {
         oot <- redD > tol & redD < 1 & redD > 0
@@ -124,7 +124,7 @@ matchCluster2 <- function(t, r, tol = 0.02, method = "itmin") {
 
       # Calculate optimal matchings (d cannot have NAs). New indices (matchpa)
 
-      matchPairs <- HungarianSolver(redD)
+      matchPairs <- RcppHungarian::HungarianSolver(redD)
 
       # Which have matches - beware of R trying to turn 1xn into vector (set nrow to force it to not transpose)
 
