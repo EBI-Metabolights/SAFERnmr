@@ -29,7 +29,6 @@ hurricane <- function(params_loc) {
     # is not complete. What do we do then? Fill in any missing fields
     # with the corresponding values from default params?
     if (isTRUE(default)) {
-        message("hit the if block")
         peaks_path <- system.file(
             "extdata", "peaks.RDS", package="ImperialNMRTool")
         spec_path <- system.file(
