@@ -11,7 +11,6 @@ stat_decomp <- function(peaks, spec, params) {
 
     # Do the STOCSY deconvolution
     message("\nRunning STOCSY on all provided peaks...")
-    message(stringr::str_c("hello", paste(nrow(spec))))
     target <- pbapply::pblapply(
         peaks, function(x) stocsydec(spec, x, params$sd_pars$cutoff)
     )

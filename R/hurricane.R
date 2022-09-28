@@ -7,6 +7,8 @@
 #' 4] visualisation [in progress in upstream repository]
 #' Also saves to RDS outputs from statistical decomposition
 #' A default params.yaml file will be used if none is supplied.
+#' The params file looks like this:
+#' 
 #' @param params_loc location of the params.yaml file containing
 #'  pipeline run parameters.
 #' @return N/A but .RDS and .TSV files are saved, see description.
@@ -26,7 +28,8 @@ hurricane <- function(params_loc) {
     # it may be that a user supplies their own params file but it
     # is not complete. What do we do then? Fill in any missing fields
     # with the corresponding values from default params?
-    if (default == TRUE) {
+    if (isTRUE(default)) {
+        message("hit the if block")
         peaks_path <- system.file(
             "extdata", "peaks.RDS", package="ImperialNMRTool")
         spec_path <- system.file(
@@ -35,11 +38,7 @@ hurricane <- function(params_loc) {
             "extdata", "hmdb_spectra_28FEB2022.RDS", package="ImperialNMRTool")
 
         peaks <- readRDS(peaks_path)
-        # spec <- readRDS(spec_path)
-        spec <- readRDS("inst/extdata/spec.RDS")
-        if (is.null(spec)) {
-            message("it was null")
-        }
+        spec <- readRDS(spec_path)
         refdb <- readRDS(refdb_path)
     } else {
         peaks <- readRDS(run_params$general_pars$peaks_location)
@@ -70,6 +69,7 @@ hurricane <- function(params_loc) {
     exportMatches(
         matches = matches,
         X = spec,
-        rankLimit = run_params$am_pars$rank_limit)
+        rankLimit = run_params$am_pars$rank_limit,
+        output_dir = run_params$general_pars$output_dir)
 
 }
