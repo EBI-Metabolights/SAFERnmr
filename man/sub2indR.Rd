@@ -21,6 +21,6 @@ Convert row, column subscripts to linear indices.
 Comparable to sub2ind in MATLAB.
 }
 \details{
-MTJ mjudge\at\imperial.ac.uk
+MTJ mjudge-at-imperial.ac.uk
 9MARCH2022
 }

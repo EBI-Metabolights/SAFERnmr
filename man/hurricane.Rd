@@ -21,4 +21,5 @@ Run the NMR pipeline start to finish:
 4] visualisation [in progress in upstream repository]
 Also saves to RDS outputs from statistical decomposition
 A default params.yaml file will be used if none is supplied.
+The params file looks like this:
 }
