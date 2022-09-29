@@ -1,4 +1,4 @@
-#' matchPeaksToRef2
+#' Match Peaks to reference Spectra 2.
 #'
 #' Function to match target and reference spectral peaks by chemical shift
 #' Goncalo Graca, 16 February 2021, g.gomes-da-graca-at-imperial.ac.uk
@@ -20,8 +20,6 @@
 matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
                              Itol = 20, matchMethod = "basic", intensity = FALSE) {
 
-  # Clean up params
-
   # To keep same argument form as before, if intensity arg is used,
   # switch matchMethod
   if (intensity == TRUE) {
@@ -31,9 +29,7 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
   # extract relevant metadata from reference
   hmdb_name <- reference$metadata$hmdb_name
   hmdb_id <- reference$metadata$hmdb_id
-  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-  # print(hmdb_name)
-  # <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+
   spectrum_id <- reference$metadata$spectrum_id
   reference <- reference$spectrum_peaks # NOTE: this overwrites reference
 
@@ -56,8 +52,6 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
     r <- reference[, 1]
   }
 
-  #########################################################
-
   # initialize matches and matched_targets reference and target peaks vectors
   matches <- NULL
   matches <- 0
@@ -71,7 +65,6 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
 
   matchList <- list()
 
-  #########################################################
   ## There are several matching methods that can be used:
 
   # Match using chemical shift and intensity
@@ -103,7 +96,6 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
     }
   }
 
-  #########################################################
   # Match using chemical shift only (2021 algorithm)
   if (matchMethod == "basic") {
     # browser()
@@ -162,11 +154,6 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
           method = matchMethod
         )
 
-        # debug when match is obtained
-        #>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-        # if (!is.null(matchList)){browser()}
-        #<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
-
         matched_targets <- matchList$matchedTargets
         target_inds <- matchList$matchedTargetInds
         matched_refs <- matchList$matchedRefs
@@ -180,13 +167,10 @@ matchPeaksToRef2 <- function(target, driver_ppm, reference, tol = 0.02,
         }
       }
   }
-
-  ########################################################
   # Gather up scores
 
   score <- matches / (reference_peaks + target_peaks - matches)
 
-  ########################################################
   # Produce result struct(s)
 
   # Troubleshooting
