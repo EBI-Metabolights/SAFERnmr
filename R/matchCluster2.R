@@ -1,16 +1,28 @@
 
-#' matchCluster2
-#' 
-#' description
+#' Match Cluster 2
+#'
+#' provide an alternative matching method for target and ref clusters.
+#' Calculate all pairwise distances between all target cluster peaks
+#' and reference cluster peaks and filter for tolerance.
+#' Match each peak with its closest ref peak:
+#'   A) start with lowest overall distance, assign target[i] to ref[r]
+#'     peak, record ref[r] as unavailable (remove its matches in the
+#'     distance matrix)
+#'     find next lowest distance match, and repeat until no more matches
+#'   B) find the best set of matches which satisfy the following:
+#'     ppm ranks are preserved (no criss-crossing of match lines)
+#'     ref peaks can be assigned to at most one target peak
+#'     best match set determined by sum of distances
+#'
 #' @param t target peaks.
 #' @param r reference peaks.
 #' @param tol tolerance in ppm.
 #' @param method matching methodology as a string, defaults to 'itmin'.
 #' Can also be substructure based 'substruct'. optimal 'opt' not implemented.
-#' @return List of matches.
+#' @return List of match objects.
 #' @export
 matchCluster2 <- function(t, r, tol = 0.02, method = "itmin") {
-      # Initialize reporting vectors
+  # Initialize reporting vectors
 
   matched_targets <- NA
   length(matched_targets) <- length(t)

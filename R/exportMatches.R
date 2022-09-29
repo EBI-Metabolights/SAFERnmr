@@ -1,4 +1,4 @@
-#' exportMatches
+#' Export Matches to filesystem.
 #'
 #' Export matches to file for visualization and storage
 #' Ideally, this function will allow:

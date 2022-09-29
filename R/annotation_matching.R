@@ -1,4 +1,4 @@
-#' Annotation Module
+#' Annotation Matching Module
 #'
 #' Given picked peaks from statistical decomposition module, do a simple
 #' comparison between each query chemical shift list (STOCSY-derived)

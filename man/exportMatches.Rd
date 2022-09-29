@@ -2,7 +2,7 @@
 % Please edit documentation in R/exportMatches.R
 \name{exportMatches}
 \alias{exportMatches}
-\title{exportMatches}
+\title{Export Matches to filesystem.}
 \usage{
 exportMatches(matches, X = NULL, rankLimit = 1, output_dir)
 }
