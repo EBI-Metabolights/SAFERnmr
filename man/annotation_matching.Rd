@@ -2,7 +2,7 @@
 % Please edit documentation in R/annotation_matching.R
 \name{annotation_matching}
 \alias{annotation_matching}
-\title{Annotation Module}
+\title{Annotation Matching Module}
 \usage{
 annotation_matching(peaks, target, ppeaks, spec, params, refdb)
 }

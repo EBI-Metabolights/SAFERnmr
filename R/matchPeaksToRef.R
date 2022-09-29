@@ -1,4 +1,4 @@
-#' matchPeaksToRef
+#' Match Peaks to Reference Spectra
 #'
 #' Function to match target and reference spectral peaks by chemical shift
 #' Goncalo Graca, 16 February 2021, g.gomes-da-graca-at-imperial.ac.uk
@@ -15,7 +15,7 @@
 #' @param Itol tbc
 #' @param matchMethod matching methodology as a string, defaults to 'basic'
 #' @param intensity flag to indicate whether to factor in intensity to matching.
-#' @return list of resulting matches.
+#' @return list of resulting matches and metadata objects.
 #' @export
 matchPeaksToRef <- function(
   target, driver_ppm, reference, tol = 0.02, Itol = 20,

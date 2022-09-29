@@ -2,7 +2,7 @@
 % Please edit documentation in R/matchCluster2.R
 \name{matchCluster2}
 \alias{matchCluster2}
-\title{matchCluster2}
+\title{Match Cluster 2}
 \usage{
 matchCluster2(t, r, tol = 0.02, method = "itmin")
 }
@@ -17,8 +17,19 @@ matchCluster2(t, r, tol = 0.02, method = "itmin")
 Can also be substructure based 'substruct'. optimal 'opt' not implemented.}
 }
 \value{
-List of matches.
+List of match objects.
 }
 \description{
-description
+provide an alternative matching method for target and ref clusters.
+Calculate all pairwise distances between all target cluster peaks
+and reference cluster peaks and filter for tolerance.
+Match each peak with its closest ref peak:
+  A) start with lowest overall distance, assign target[i] to ref[r]
+    peak, record ref[r] as unavailable (remove its matches in the
+    distance matrix)
+    find next lowest distance match, and repeat until no more matches
+  B) find the best set of matches which satisfy the following:
+    ppm ranks are preserved (no criss-crossing of match lines)
+    ref peaks can be assigned to at most one target peak
+    best match set determined by sum of distances
 }

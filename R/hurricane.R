@@ -7,15 +7,19 @@
 #' 4] visualisation [in progress in upstream repository]
 #' Also saves to RDS outputs from statistical decomposition
 #' A default params.yaml file will be used if none is supplied.
-#' The params file looks like this:
-#' 
+#' The outline of the params file can be found in the repo readme.md
+#'
 #' @param params_loc location of the params.yaml file containing
 #'  pipeline run parameters.
+#' @param params_obj A populated yaml object containing the parameters.
+#' This parameter is intended for use when being run from galaxy.
 #' @return N/A but .RDS and .TSV files are saved, see description.
 #' @export
-hurricane <- function(params_loc) {
+hurricane <- function(params_loc, params_obj) {
     default <- FALSE
-    if (missing(params_loc)) {
+    if (isFALSE(missing(params_obj))) {
+        run_params <- params_obj
+    } else if (missing(params_loc)) {
         # load default params
         filepath <- system.file(
             "extdata", "default_params.yaml", package="ImperialNMRTool")
@@ -25,9 +29,7 @@ hurricane <- function(params_loc) {
         # load supplied params
         run_params <- yaml::yaml.load_file(params_loc)
     }
-    # it may be that a user supplies their own params file but it
-    # is not complete. What do we do then? Fill in any missing fields
-    # with the corresponding values from default params?
+    # currently loading default files does not work.
     if (isTRUE(default)) {
         peaks_path <- system.file(
             "extdata", "peaks.RDS", package="ImperialNMRTool")

@@ -2,7 +2,7 @@
 % Please edit documentation in R/matchPeaksToRef.R
 \name{matchPeaksToRef}
 \alias{matchPeaksToRef}
-\title{matchPeaksToRef}
+\title{Match Peaks to Reference Spectra}
 \usage{
 matchPeaksToRef(
   target,
@@ -29,7 +29,7 @@ matchPeaksToRef(
 \item{matchMethod}{matching methodology as a string, defaults to 'basic'}
 }
 \value{
-list of resulting matches.
+list of resulting matches and metadata objects.
 }
 \description{
 Function to match target and reference spectral peaks by chemical shift

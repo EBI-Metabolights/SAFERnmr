@@ -4,11 +4,14 @@
 \alias{hurricane}
 \title{hurricane}
 \usage{
-hurricane(params_loc)
+hurricane(params_loc, params_obj)
 }
 \arguments{
 \item{params_loc}{location of the params.yaml file containing
 pipeline run parameters.}
+
+\item{params_obj}{A populated yaml object containing the parameters.
+This parameter is intended for use when being run from galaxy.}
 }
 \value{
 N/A but .RDS and .TSV files are saved, see description.
@@ -21,4 +24,5 @@ Run the NMR pipeline start to finish:
 4] visualisation [in progress in upstream repository]
 Also saves to RDS outputs from statistical decomposition
 A default params.yaml file will be used if none is supplied.
+The outline of the params file can be found in the repo readme.md
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/matchPeaksToRef2.R
 \name{matchPeaksToRef2}
 \alias{matchPeaksToRef2}
-\title{matchPeaksToRef2}
+\title{Match Peaks to reference Spectra 2.}
 \usage{
 matchPeaksToRef2(
   target,

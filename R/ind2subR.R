@@ -6,7 +6,8 @@
 #' https://stackoverflow.com/questions/4452039/converting-between-matrix-subscripts-and-linear-indices-like-ind2sub-sub2ind-in
 #'
 #' MTJ 28FEB2022
-#' @param inds The linear indices to be converted IE linear index (1 = [1,1], 2 = [2,1], 3 = [3,1], 4 = [1,2], 5 = [2,2])
+#' @param inds The linear indices to be converted IE linear index
+#'  (1 = [1,1], 2 = [2,1], 3 = [3,1], 4 = [1,2], 5 = [2,2])
 #' @param m The number of rows IE m = nrow(matrix)
 #' @return List of row and column indices.
 #' @export
