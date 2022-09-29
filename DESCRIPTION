@@ -1,7 +1,11 @@
 Package: ImperialNMRTool
 Type: Package
 Title: Tool for Nuclear Magnetic Resonance based spectrography.
-Version: 0.0.1.0
+Description: A  workflow to derive insights data held in the MetaboLights repository.
+Entrypoint to the workflow is hurricane.r, and it takes an argument which is the location 
+of a parameters file, which itself contains the location of the files the workflow needs,
+and the workflow parameters. To read more visit the github repository at github.com/EBI-Metabolights/icl_nmr_R
+Version: 0.2.0.0
 Date: 2022-09-12
 Authors@R: c(
     person("Michael T. Judge", "PostDoc / Developer", role = c("aut")),
