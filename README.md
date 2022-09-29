@@ -34,7 +34,7 @@ sd_pars:
  cutoff : 0.8                   # standard cutoff for STOCSY
  
 am_pars:
- rank_limit: 5                  # rank limit for exporting matches
+ rank_limit: 5                  # rank limit for exporting matches IE take the top 5 matches discard the rest
  dist_thresh: 0.02              # no sense in allowing < precision of db peaks (0.01 ppm for hmdb)
  matchMethod: hungarian_scaled  # or basic, itmin, hungarian, hungarian_scaled
  refdb_file: hmdb_spectra_28FEB2022.RDS # location of reference spectra .RDS file.
