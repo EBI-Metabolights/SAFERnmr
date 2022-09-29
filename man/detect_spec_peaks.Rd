@@ -14,15 +14,20 @@ detect_spec_peaks(
 )
 }
 \arguments{
-\item{X}{The spectral dataset in matrix format in which each row contains a single sample}
+\item{X}{The spectral dataset in matrix format in which each row contains
+a single sample}
 
 \item{nDivRange}{The size of a single small segment after division of spectra}
 
-\item{scales}{The parameter of peakDetectionCWT function of MassSpecWavelet package, look it up in the original function.}
+\item{scales}{The parameter of peakDetectionCWT function of MassSpecWavelet
+package, look it up in the original function.}
 
-\item{baselineThresh}{It will remove all peaks under an intensity set by baselineThresh.}
+\item{baselineThresh}{It will remove all peaks under an intensity set by
+baselineThresh.}
 
-\item{SNR.Th}{The parameter of peakDetectionCWT function of MassSpecWavelet package, look it up in the original function. If you set -1, the function will itself re-compute this value.}
+\item{SNR.Th}{The parameter of peakDetectionCWT function of
+MassSpecWavelet package, look it up in the original function.
+If you set -1, the function will itself re-compute this value.}
 
 \item{verbose}{A boolean value to allow print out process information.}
 }
@@ -30,8 +35,10 @@ detect_spec_peaks(
 The peak lists of the spectra
 }
 \description{
-Divide the whole spectra into smaller segments and detect peaks by using MassSpecWavelet package.
-Note that, the peak lists could be found by using other methods, this function is just a choice.
+Divide the whole spectra into smaller segments and detect
+peaks by using MassSpecWavelet package.
+Note that, the peak lists could be found by using other
+methods, this function is just a choice.
 }
 \examples{
 res <- makeSimulatedData()

@@ -7,7 +7,8 @@
 ind2subR(inds, m)
 }
 \arguments{
-\item{inds}{The linear indices to be converted IE linear index (1 = [1,1], 2 = [2,1], 3 = [3,1], 4 = [1,2], 5 = [2,2])}
+\item{inds}{The linear indices to be converted IE linear index
+(1 = [1,1], 2 = [2,1], 3 = [3,1], 4 = [1,2], 5 = [2,2])}
 
 \item{m}{The number of rows IE m = nrow(matrix)}
 }

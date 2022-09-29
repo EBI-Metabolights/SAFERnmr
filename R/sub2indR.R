@@ -11,7 +11,5 @@
 #' @return linear indices
 #' @export
 sub2indR <- function(rows, cols, m) {
-
-  return((cols-1) * m + rows)
-
+  return((cols - 1) * m + rows)
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/stocsydec.R
 \name{stocsydec}
 \alias{stocsydec}
-\title{stocsydec}
+\title{Stocsy Decomposition}
 \usage{
 stocsydec(spectra, idx, cthr = 0.8)
 }
@@ -17,5 +17,6 @@ stocsydec(spectra, idx, cthr = 0.8)
 Result of STOCS decomposition.
 }
 \description{
-Function to run 'STOCSY decomposition' Goncalo Graca, 15 September 2020, g.gomes-da-graca/at/imperial.ac.uk
+Function to run 'STOCSY decomposition' Goncalo Graca, 15 September
+ 2020, g.gomes-da-graca/at/imperial.ac.uk
 }
