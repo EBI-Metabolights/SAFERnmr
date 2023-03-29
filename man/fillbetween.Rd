@@ -13,7 +13,7 @@ fillbetween(inds)
 a numeric vector representing the sequence of indices between the starting and ending indices
 }
 \description{
-Calculate a sequence of values between two numeric indices, with optional reversal.
+Calculate a sequence of values between two numeric indices (e.g., like ':' ), with optional reversal.
 }
 \examples{
 fillbetween(c(1, 5)) # returns 1 2 3 4 5

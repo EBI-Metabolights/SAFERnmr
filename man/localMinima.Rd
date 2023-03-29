@@ -13,5 +13,7 @@ localMinima(v)
 a numeric vector containing the indices of local minima in \code{v}.
 }
 \description{
-Given a numeric vector, returns the indices of local minima in the vector.
+Given a numeric vector, returns the indices of local minima in the vector. Endpoints
+can be included. Specifically, a point is considered a local minimum if there
+are no lesser points adjacent.
 }

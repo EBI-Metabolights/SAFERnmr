@@ -13,15 +13,15 @@
 )
 }
 \arguments{
-\item{match.info}{The match information data.frame.}
+\item{match.info}{The match information data.frame obtained within filter.matches.}
 
 \item{fits.feature}{A list of fitted features.}
 
-\item{peak.qualities}{A list of peak qualities.}
+\item{peak.qualities}{A list of peak quality vectors (~ feature points' relevance in the reference database)}
 
-\item{pq.featureNumbers}{A vector of feature numbers.}
+\item{pq.featureNumbers}{A vector of feature numbers to index the peak.qualities list. This is necessary when only a subset of features are matched and feature fits are filtered.}
 
-\item{res.area.thresh}{The threshold for residual area.}
+\item{res.area.thresh}{The minimum reference spectrum resonance area that must be accounted for by the fit feature in order to consider it matched.}
 }
 \value{
 A list containing the filtered match information and the filtered fitted features.

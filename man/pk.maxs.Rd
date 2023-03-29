@@ -2,9 +2,9 @@
 % Please edit documentation in R/pk.maxs.R
 \name{pk.maxs}
 \alias{pk.maxs}
-\title{Get indices of local maxima in a vector}
+\title{Get indices of maxima of true peaks in a vector. Wrapper for extractPeaks_corr()}
 \usage{
-pk.maxs(v, mask)
+pk.maxs(v, mask = NULL)
 }
 \arguments{
 \item{v}{A numeric vector}

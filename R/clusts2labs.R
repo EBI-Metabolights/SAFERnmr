@@ -1,0 +1,24 @@
+#' Convert clusters to feature-sorted cluster labels
+#'
+#' Given a list of cluster-feature pairs, this function returns feature-sorted 
+#' cluster labels. 
+#'
+#' @param clusters A list of cluster-feature pairs.
+#' 
+#' @return A numeric vector of feature-sorted cluster labels.
+#'
+#' @export
+#'
+#' @importFrom magrittr %>%
+#' @importFrom base order
+#'
+#' @author MTJ
+clusts2labs <- function(clusters){
+  # Take cluster-feature pairs, return feature-sorted cluster labels:
+  cluster.labs <- lapply(1:length(clusters), 
+                           function(x) cbind(rep(x, length(clusters[[x]])),
+                                             clusters[[x]] %>% as.numeric)
+                           ) %>% do.call(rbind,.)
+  return(cluster.labs[order(cluster.labs[,2]),] %>% .[,1]) # sort points
+  
+}

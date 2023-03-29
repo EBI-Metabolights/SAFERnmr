@@ -17,7 +17,7 @@ corr_expand(peak, localMins, vRange)
 A list with two elements: \code{lower}, the index of the closest local minimum to the left of the peak, and \code{upper}, the index of the closest local minimum to the right of the peak
 }
 \description{
-This function takes a correlation vector and an index of a peak and returns the bounds of the region containing the peak, extended to the closest local minima on either side of the peak.
+This function takes a correlation profile vector and an index of a peak, and returns the bounds of the region containing the peak, extended to the closest local minima on either side of the peak.
 }
 \examples{
 v <- c(1, 2, 3, 2, 1)

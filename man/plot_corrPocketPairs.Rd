@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_corrPocketPairs.R
 \name{plot_corrPocketPairs}
 \alias{plot_corrPocketPairs}
-\title{Plot Correlation Heatmaps of Pocket Pairs}
+\title{Plot Stackplot of Correlation Pocket Pairs}
 \usage{
 plot_corrPocketPairs(
   pocketPairs,
@@ -13,7 +13,7 @@ plot_corrPocketPairs(
 )
 }
 \arguments{
-\item{pocketPairs}{A list of pocket pairs with elements named "peakMap", "corr", "cov", and "regions".}
+\item{pocketPairs}{Result of corrPocketPairs_al(...) with elements named "peakMap", "corr", "cov", and "regions".}
 
 \item{region}{A vector of integers specifying the columns of the peakMap to be included in the plot.}
 
@@ -24,17 +24,17 @@ plot_corrPocketPairs(
 \item{show}{Logical. Whether or not to display the plot.}
 }
 \value{
-The correlation heatmap plot.
+The corrPocketPairs stack plot.
 }
 \description{
-This function plots correlation heatmaps for a subset of pocket pairs from a list of pocket pairs.
+This function plots a stackplot of correlation pocket peaks (same data as the heatmap, but plotted like spectral regions)
 }
 \examples{
 # Load data
-data(pocketPairsList)
+pocketPairs <- corrPocketPairs_al(...)
 
 # Plot correlation heatmaps
-plot_corrPocketPairs(pocketPairsList[[1]], region = 2:5)
+plot_corrPocketPairs(pocketPairs, region = 1000:1500)
 
 
 }

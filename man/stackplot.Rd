@@ -19,9 +19,9 @@ stackplot(
 
 \item{xvect}{A numeric vector of ppm values.}
 
-\item{vshift}{A numeric value for shifting spectra vertically.}
+\item{vshift}{A numeric value for shifting spectra vertically (spectra are scaled down to this value).}
 
-\item{hshift}{A numeric value for shifting spectra horizontally.}
+\item{hshift}{A numeric value for shifting spectra horizontally (as % of actual range).}
 
 \item{shift_by}{A numeric vector for shifting spectra by row number.}
 

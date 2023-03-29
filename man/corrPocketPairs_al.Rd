@@ -19,15 +19,15 @@ corrPocketPairs_al(
 
 \item{ppm}{a numeric vector of the same length as \code{ncol(x)} specifying the ppm for each column.}
 
-\item{ws}{an integer specifying the size of the sliding window used to calculate correlations.}
+\item{ws}{an integer specifying half the size of the sliding window used to calculate correlations.}
 
 \item{reg}{an optional vector specifying the column indices to consider in \code{x}.}
 
 \item{plotHeatmap}{a logical indicating whether to plot a heatmap of the correlation matrix.}
 
-\item{wdlimit}{a numeric specifying the minimum fraction of sliding windows that need to contain a pocket to consider it noise.}
+\item{wdlimit}{a numeric (0,1) specifying the minimum fraction of sliding windows that need to contain a pocket to consider a point noise.}
 
-\item{rcutoff}{a numeric specifying the correlation coefficient cutoff to use when extracting significant peaks.}
+\item{rcutoff}{a numeric (0,1) specifying the correlation coefficient cutoff to use when extracting significant peaks.}
 }
 \value{
 a list with the following elements:

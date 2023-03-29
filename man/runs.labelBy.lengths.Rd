@@ -15,8 +15,9 @@ A numeric vector containing the lengths of all runs of consecutive
 }
 \description{
 This function takes a binary vector and computes the lengths of all runs of
-consecutive 1s in the vector. The output is a numeric vector with length equal
-to the number of 1s in the input vector.
+consecutive 1s in the vector. The output is a numeric vector, with length equal
+to the number of 1s in the input vector, where each point in each run is labeled 
+by its run length.
 }
 \examples{
 v <- c(0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1)

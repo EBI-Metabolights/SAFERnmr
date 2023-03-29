@@ -17,7 +17,7 @@ sub2indR(rows, cols, m)
 The linear indices corresponding to the input subscripts.
 }
 \description{
-This function converts subscripts of a matrix to their corresponding linear indices in a column-major order.
+This function converts subscripts of a matrix to their corresponding linear indices in a column-major order. Intended to replicate MATLAB's sub2ind.
 }
 \examples{
 sub2indR(1:3, 1:3, 3)

@@ -2,7 +2,8 @@
 % Please edit documentation in R/storm_pairplay.R
 \name{storm_pairplay}
 \alias{storm_pairplay}
-\title{storm_pairplay}
+\title{storm_pairplay: Run modified STORM on the provided spectral region and ref shape.
+Built for accepting corrPocketPairs results. Notes:}
 \usage{
 storm_pairplay(
   xmat = NULL,
@@ -11,8 +12,8 @@ storm_pairplay(
   corrthresh = 0.8,
   q = 0.05,
   minpeak = 10,
-  refSpec = NULL,
-  ref.idx = NULL
+  refSpec,
+  ref.idx
 )
 }
 \arguments{
@@ -22,15 +23,15 @@ storm_pairplay(
 
 \item{b}{An integer giving the expansion parameter for the reference peak}
 
-\item{corrthresh}{A numeric giving the minimum correlation value between a spectrum and the reference for it to be considered for inclusion}
+\item{corrthresh}{A numeric giving the minimum correlation value to be considered for inclusion (for both subset AND reference optimization)}
 
-\item{q}{A numeric giving the p-value threshold for correlation significance}
+\item{q}{A numeric giving the p-value threshold for correlation significance (both subset AND reference optimization)}
 
 \item{minpeak}{An integer giving the minimum number of points allowed in a run of significant points in the reference}
 
-\item{refSpec}{A vector of spectral data to use as the initial reference (optional)}
+\item{refSpec}{A vector of spectral data to use as the initial reference}
 
-\item{ref.idx}{A vector of the spectral points in ppm to use as the initial reference (optional)}
+\item{ref.idx}{A vector of the spectral points (columns of xmat) to use as the initial reference}
 }
 \value{
 A list with components "reconstructed" and "status". "reconstructed" is a matrix 
@@ -38,5 +39,5 @@ containing the reconstructed metabolite concentrations (rows are samples, column
 "status" is a character string indicating whether the method converged successfully or failed.
 }
 \description{
-storm_pairplay
+STORM: Joram Posma's STORM has been adapted and optimized to accept these
 }

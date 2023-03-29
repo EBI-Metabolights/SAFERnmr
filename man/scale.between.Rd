@@ -22,6 +22,5 @@ This function takes a numeric vector and scales the values to be between a speci
 \examples{
 x <- c(1, 3, 5, 7, 9)
 scale.between(x, 0, 10)
-# Returns: 0 3 5 7 10
 
 }

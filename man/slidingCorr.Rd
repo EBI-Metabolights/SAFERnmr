@@ -2,7 +2,7 @@
 % Please edit documentation in R/slidingCorr.R
 \name{slidingCorr}
 \alias{slidingCorr}
-\title{Calculate sliding correlation matrix and pockets}
+\title{Calculate sliding window correlation matrix, and label correlation peaks (pockets)}
 \usage{
 slidingCorr(
   x,
@@ -20,7 +20,7 @@ slidingCorr(
 
 \item{extractPockets}{If \code{TRUE}, calculate correlation pockets for each column of \code{x} within each sliding window.}
 
-\item{plotting}{If \code{TRUE}, produce a stacked plot of the correlation matrix with pockets highlighted.}
+\item{plotting}{If \code{TRUE}, produce a stackplot of the correlation matrix with pockets highlighted.}
 
 \item{vshift}{Vertical shift in plot.}
 
@@ -32,12 +32,12 @@ A list containing the following items:
 \item{indsmat}{The offset matrix used to calculate the sliding correlation matrix.}
 \item{cov_compact}{The compact form of the sliding covariance matrix.}
 \item{isPocket}{A logical matrix indicating whether each point in the sliding window is within a correlation pocket.}
-\item{plot}{If \code{plotting} is \code{TRUE}, a stacked plot of the correlation matrix with pockets highlighted.}
-\item{window}{The range of the sliding window.}
+\item{plot}{If \code{plotting} is \code{TRUE}, a stackplot of the correlation matrix. If extractPockets = T, show only the pockets.}
+\item{window}{The relative inds in the sliding window.}
 \item{center}{The center position of the sliding window.}
 }
 \description{
-Calculate sliding correlation matrix and pockets
+Calculate sliding window correlation matrix, and label correlation peaks (pockets)
 }
 \examples{
 # Generate a test matrix

@@ -14,7 +14,7 @@ extractPeaks_corr(corr, mask = NULL, plots = FALSE)
 \item{plots}{Whether to plot the resulting peaks and bounds.}
 }
 \value{
-A list containing the peak indices, the bounds of the windows around each peak, and the indices of any masked regions.
+A list containing the peak indices, the bounds of the windows around each peak, and the indices of any masked regions, and whether or not each peak is a true peak (i.e., require a lower point on each side)
 }
 \description{
 This function takes a correlation vector and returns the indices of the local maxima and minima, and the bounds for the corresponding windows around each maximum.

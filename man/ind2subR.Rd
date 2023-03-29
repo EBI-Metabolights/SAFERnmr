@@ -7,19 +7,19 @@
 ind2subR(inds, m)
 }
 \arguments{
-\item{inds}{A numeric vector of linear indices}
+\item{inds}{A numeric vector of linear indices from a matrix}
 
-\item{m}{A positive integer representing the number of columns in the corresponding matrix}
+\item{m}{A positive integer representing the number of rows in the corresponding matrix}
 }
 \value{
 A list with two elements: \code{rows}, a vector of row subscripts corresponding to the linear indices, and \code{cols}, a vector of column subscripts corresponding to the linear indices
 }
 \description{
-This function takes a numeric vector of linear indices \code{inds} and a positive integer \code{m}, representing the number of columns in a matrix, and returns a list with two elements: \code{rows}, a vector of row subscripts corresponding to the linear indices, and \code{cols}, a vector of column subscripts corresponding to the linear indices.
+This function takes a numeric vector of linear indices \code{inds} and a positive integer \code{m}, representing the number of columns in a matrix, and returns a list with two elements: \code{rows}, a vector of row subscripts corresponding to the linear indices, and \code{cols}, a vector of column subscripts corresponding to the linear indices. Meant to replicate MATLAB's ind2sub.
 }
 \examples{
 inds <- 1:9
-m <- 3
+m <- 4
 ind2subR(inds, m)
-# Returns: list(rows = c(1, 2, 3, 1, 2, 3, 1, 2, 3), cols = c(1, 1, 1, 2, 2, 2, 3, 3, 3))
+# Returns: list(rows = c(1, 2, 3, 4, 1, 2, 3, 4, 1), cols = c(1, 1, 1, 1, 2, 2, 2, 2, 3))
 }
