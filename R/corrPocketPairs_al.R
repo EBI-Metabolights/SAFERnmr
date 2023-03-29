@@ -2,11 +2,11 @@
 #'
 #' @param x a matrix with numerical values.
 #' @param ppm a numeric vector of the same length as \code{ncol(x)} specifying the ppm for each column.
-#' @param ws an integer specifying the size of the sliding window used to calculate correlations.
+#' @param ws an integer specifying half the size of the sliding window used to calculate correlations.
 #' @param reg an optional vector specifying the column indices to consider in \code{x}.
 #' @param plotHeatmap a logical indicating whether to plot a heatmap of the correlation matrix.
-#' @param wdlimit a numeric specifying the minimum fraction of sliding windows that need to contain a pocket to consider it noise.
-#' @param rcutoff a numeric specifying the correlation coefficient cutoff to use when extracting significant peaks.
+#' @param wdlimit a numeric (0,1) specifying the minimum fraction of sliding windows that need to contain a pocket to consider a point noise.
+#' @param rcutoff a numeric (0,1) specifying the correlation coefficient cutoff to use when extracting significant peaks.
 #' 
 #' @return a list with the following elements:
 #' \item{regions}{a matrix specifying the indices of the peaks in each column of the original matrix, filtered to exclude peaks that are too small or only have unidirectional interactions.}

@@ -23,8 +23,9 @@ run.labels <- function(v) {
 #' Computes the lengths of runs of 1s in a binary vector.
 #'
 #' This function takes a binary vector and computes the lengths of all runs of
-#' consecutive 1s in the vector. The output is a numeric vector with length equal
-#' to the number of 1s in the input vector.
+#' consecutive 1s in the vector. The output is a numeric vector, with length equal
+#' to the number of 1s in the input vector, where each point in each run is labeled 
+#' by its run length.
 #'
 #' @param v A binary vector.
 #' @return A numeric vector containing the lengths of all runs of consecutive

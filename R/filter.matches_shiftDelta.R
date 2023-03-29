@@ -4,13 +4,13 @@
 #' ppm shift between the feature and the match. Only matches with a ppm shift 
 #' difference less than or equal to ppm.tol are retained.
 #'
-#' @param match.info A data frame containing the match information
-#' @param feature A feature object with position information
-#' @param ppm A numeric vector of ppm values
-#' @param fits.feature A logical vector indicating whether each match fits the feature
+#' @param match.info A data frame containing the match information; produced in filter.matches()
+#' @param feature Object containing features' intensity matrix, position (column inds of spectral matrix) matrix, and other information about the features
+#' @param ppm A numeric vector of ppm values; feature$position values index this
+#' @param fits.feature List of feature fits to reference spectral regions
 #' @param ppm.tol The maximum allowed ppm shift difference between the feature and the match
 #'
-#' @return A list with two elements: the filtered `match.info` data frame, and the filtered `fits.feature` logical vector
+#' @return A list with two elements: the filtered `match.info` data frame, and the filtered `fits.feature` list which have been filtered by ppm shift difference. 
 #'
 #' @export
 filter.matches_shiftDelta <- function(match.info,

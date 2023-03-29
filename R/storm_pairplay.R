@@ -1,14 +1,41 @@
-#' storm_pairplay
+#' storm_pairplay: Run modified STORM on the provided spectral region and ref shape.
+#' Built for accepting corrPocketPairs results. Notes:
+#' 
+#' STORM: Joram Posma's STORM has been adapted and optimized to accept these
+#   protofeatures (corrPocketPairs) in the following ways: 
+# - first, since many of the protofeatures are noise, we provide failure modes 
+#   and reporting for the following cases: 
+#   "empty subset",          # empty subset (no spectrum contains signature)
+#   "subset degenerated",    # 1-3 spectra in the subset (not enough spectra to 
+#                              get a reliable correlation)
+#   "reference degenerated", # signature degenerates to include < 3 points (not
+#                              meaningful to correlate shapes)
+#   "did not converge"       # subset continues to change after 24 iterations
+#
+# - additionally, the correlation r and p-value cutoff q are both used during 
+#   both the subset selection and reference update steps. 
+# - we also remove any regions of the reference for which there are fewer than 
+#   minpeak values after r and p value thresholding. This helps avoid noise. 
+#   
+# STORM extracts meaningful features using protofeatures to define the region of 
+# interest and a rough sketch of the feature shape highly correlated with each 
+# spectral point. In the future, HCA could be used to cluster potential starting
+# feature shapes correlated with each driver, or the nonoptimal subset for each 
+# point could be re-STORMed to detect any other feature shapes present. It is 
+# also perfectly reasonable to combine feature shapes from different STORM runs 
+# for a given dataset, as these comprise a list of somewhat independently tested
+# feature shapes, and duplication is not an issue. 
+
 #'
 #'
 #' @param xmat A matrix of spectral data (rows are spectra, columns are spectral points)
 #' @param ppm A vector of the spectral points in ppm (optional, default is all columns of xmat)
 #' @param b An integer giving the expansion parameter for the reference peak
-#' @param corrthresh A numeric giving the minimum correlation value between a spectrum and the reference for it to be considered for inclusion
-#' @param q A numeric giving the p-value threshold for correlation significance
+#' @param corrthresh A numeric giving the minimum correlation value to be considered for inclusion (for both subset AND reference optimization)
+#' @param q A numeric giving the p-value threshold for correlation significance (both subset AND reference optimization)
 #' @param minpeak An integer giving the minimum number of points allowed in a run of significant points in the reference
-#' @param refSpec A vector of spectral data to use as the initial reference (optional)
-#' @param ref.idx A vector of the spectral points in ppm to use as the initial reference (optional)
+#' @param refSpec A vector of spectral data to use as the initial reference
+#' @param ref.idx A vector of the spectral points (columns of xmat) to use as the initial reference
 #'
 #' @return A list with components "reconstructed" and "status". "reconstructed" is a matrix 
 #' containing the reconstructed metabolite concentrations (rows are samples, columns are metabolites). 
@@ -23,7 +50,7 @@
 #' @importFrom dplyr %>%
 #' @importFrom lubridate ymd_hms
 storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
-                        q=0.05, minpeak = 10, refSpec=NULL, ref.idx=NULL){
+                        q=0.05, minpeak = 10, refSpec, ref.idx){
 
 ############ Setup ##################################################  
     

@@ -11,7 +11,6 @@
 #' @examples
 #' x <- c(1, 3, 5, 7, 9)
 #' scale.between(x, 0, 10)
-#' # Returns: 0 3 5 7 10
 #'
 #' @export
 scale.between <- function(data, lower = 0, upper = 1){

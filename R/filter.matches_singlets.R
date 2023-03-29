@@ -2,11 +2,11 @@
 #'
 #' This function removes matches that have only one peak in their respective feature, reference or feature-not-never-fit regions.
 #'
-#' @param match.info The match information data.frame.
+#' @param match.info The match information data.frame obtained within filter.matches.
 #' @param fits.feature A list of fitted features.
-#' @param peak.qualities A list of peak qualities.
-#' @param pq.featureNumbers A vector of feature numbers.
-#' @param res.area.thresh The threshold for residual area.
+#' @param peak.qualities A list of peak quality vectors (~ feature points' relevance in the reference database)
+#' @param pq.featureNumbers A vector of feature numbers to index the peak.qualities list. This is necessary when only a subset of features are matched and feature fits are filtered.
+#' @param res.area.thresh The minimum reference spectrum resonance area that must be accounted for by the fit feature in order to consider it matched.
 #'
 #' @return A list containing the filtered match information and the filtered fitted features.
 #'
