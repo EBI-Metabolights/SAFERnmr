@@ -1,10 +1,10 @@
-#' Calculate sliding correlation matrix and pockets
+#' Calculate sliding window correlation matrix, and label correlation peaks (pockets)
 #' 
 #' 
 #' @param x Input matrix. 
 #' @param ws Size of sliding window. 
 #' @param extractPockets If \code{TRUE}, calculate correlation pockets for each column of \code{x} within each sliding window. 
-#' @param plotting If \code{TRUE}, produce a stacked plot of the correlation matrix with pockets highlighted. 
+#' @param plotting If \code{TRUE}, produce a stackplot of the correlation matrix with pockets highlighted. 
 #' @param vshift Vertical shift in plot. 
 #' @param ppm X-axis values for plot. If not specified, uses column numbers of \code{x}.
 #' 
@@ -13,8 +13,8 @@
 #' \item{indsmat}{The offset matrix used to calculate the sliding correlation matrix.}
 #' \item{cov_compact}{The compact form of the sliding covariance matrix.}
 #' \item{isPocket}{A logical matrix indicating whether each point in the sliding window is within a correlation pocket.}
-#' \item{plot}{If \code{plotting} is \code{TRUE}, a stacked plot of the correlation matrix with pockets highlighted.}
-#' \item{window}{The range of the sliding window.}
+#' \item{plot}{If \code{plotting} is \code{TRUE}, a stackplot of the correlation matrix. If extractPockets = T, show only the pockets.}
+#' \item{window}{The relative inds in the sliding window.}
 #' \item{center}{The center position of the sliding window.}
 #' 
 #' @examples
@@ -135,10 +135,6 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
         
           g <- stackplot(cmat, vshift = vshift, hshift = 0, xvect = ppm)
     }
-  
-    # How to define the corr pocket bounds and scores using this info???
-    # scores <- 
-      # stackStocsys?
       
   return(list(corr_compact = corrmat,
               indsmat = indsmat,

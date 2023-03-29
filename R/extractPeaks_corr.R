@@ -6,7 +6,7 @@
 #' @param mask A boolean mask for excluding points.
 #' @param plots Whether to plot the resulting peaks and bounds.
 #'
-#' @return A list containing the peak indices, the bounds of the windows around each peak, and the indices of any masked regions.
+#' @return A list containing the peak indices, the bounds of the windows around each peak, and the indices of any masked regions, and whether or not each peak is a true peak (i.e., require a lower point on each side)
 #'
 #' @importFrom graphics plot
 #' @importFrom ggplot2 aes geom_line geom_vline geom_point scale_x_reverse

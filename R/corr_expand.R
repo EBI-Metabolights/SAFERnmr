@@ -1,6 +1,6 @@
 #' Expand a peak region to the closest correlation minimums
 #'
-#' This function takes a correlation vector and an index of a peak and returns the bounds of the region containing the peak, extended to the closest local minima on either side of the peak.
+#' This function takes a correlation profile vector and an index of a peak, and returns the bounds of the region containing the peak, extended to the closest local minima on either side of the peak.
 #'
 #' @param peak An integer representing the index of the peak in the correlation vector
 #' @param localMins A numeric vector containing the indices of local minima in the correlation vector

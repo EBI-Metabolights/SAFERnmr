@@ -1,9 +1,9 @@
 #' Find the indices of the local maxima of a numeric vector
 #' 
 #' Given a numeric vector, this function returns the indices of the local maxima.
-#' A local maximum is defined as a data point that is greater than its two neighboring
+#' A local maximum is defined as a data point that is greater than its adjacent
 #' points. The function adds a minimum value to each end of the vector to ensure that the
-#' endpoints can be identified as local maxima.
+#' endpoints can also be identified as local maxima, if appropriate.
 #' 
 #' @param v A numeric vector
 #' 

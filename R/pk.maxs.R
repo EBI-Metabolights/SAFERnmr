@@ -1,4 +1,4 @@
-#' Get indices of local maxima in a vector
+#' Get indices of maxima of true peaks in a vector. Wrapper for extractPeaks_corr()
 #'
 #' This function takes a numeric vector \code{v} and a logical mask \code{mask}, and returns the indices of the local maxima in \code{v} that are not masked by \code{mask}.
 #'
@@ -11,7 +11,7 @@
 #' pk.maxs(v, mask)
 #' # Returns: 3
 #' @export
-pk.maxs <- function(v, mask){
+pk.maxs <- function(v, mask = NULL){
   pks <- extractPeaks_corr(v, mask = mask)
   return(pks$peaks[pks$truePeak] %>% unlist)
 }

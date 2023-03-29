@@ -6,8 +6,8 @@
 #' 
 #' @param ymat A numeric matrix of spectral intensities.
 #' @param xvect A numeric vector of ppm values.
-#' @param vshift A numeric value for shifting spectra vertically.
-#' @param hshift A numeric value for shifting spectra horizontally.
+#' @param vshift A numeric value for shifting spectra vertically (spectra are scaled down to this value).
+#' @param hshift A numeric value for shifting spectra horizontally (as % of actual range).
 #' @param shift_by A numeric vector for shifting spectra by row number.
 #' @param xdir A character string for x-axis direction, either "reverse" or "forward".
 #' @param show A logical value for whether or not to display the plot.

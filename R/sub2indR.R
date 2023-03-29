@@ -1,6 +1,6 @@
 #' Convert Subscripts to Linear Indices in Column-Major Order
 #'
-#' This function converts subscripts of a matrix to their corresponding linear indices in a column-major order.
+#' This function converts subscripts of a matrix to their corresponding linear indices in a column-major order. Intended to replicate MATLAB's sub2ind.
 #'
 #' @param rows The row subscripts.
 #' @param cols The column subscripts.

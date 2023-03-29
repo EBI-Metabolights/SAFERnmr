@@ -1,21 +1,21 @@
-#' Plot Correlation Heatmaps of Pocket Pairs
+#' Plot Stackplot of Correlation Pocket Pairs
 #'
-#' This function plots correlation heatmaps for a subset of pocket pairs from a list of pocket pairs.
+#' This function plots a stackplot of correlation pocket peaks (same data as the heatmap, but plotted like spectral regions)
 #' 
-#' @param pocketPairs A list of pocket pairs with elements named "peakMap", "corr", "cov", and "regions".
+#' @param pocketPairs Result of corrPocketPairs_al(...) with elements named "peakMap", "corr", "cov", and "regions".
 #' @param region A vector of integers specifying the columns of the peakMap to be included in the plot.
 #' @param vshift The vertical shift to apply to the distributions for stacking.
 #' @param xvect The x values at which to plot the distributions.
 #' @param show Logical. Whether or not to display the plot.
 #' 
-#' @return The correlation heatmap plot.
+#' @return The corrPocketPairs stack plot.
 #' 
 #' @examples
 #' # Load data
-#' data(pocketPairsList)
+#' pocketPairs <- corrPocketPairs_al(...)
 #' 
 #' # Plot correlation heatmaps
-#' plot_corrPocketPairs(pocketPairsList[[1]], region = 2:5)
+#' plot_corrPocketPairs(pocketPairs, region = 1000:1500)
 #' 
 #' 
 #' @export

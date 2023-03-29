@@ -1,6 +1,6 @@
 #' fillbetween
 #' 
-#' Calculate a sequence of values between two numeric indices, with optional reversal.
+#' Calculate a sequence of values between two numeric indices (e.g., like ':' ), with optional reversal.
 #' 
 #' @param inds a numeric vector of length 2 indicating the starting and ending indices
 #' @return a numeric vector representing the sequence of indices between the starting and ending indices
