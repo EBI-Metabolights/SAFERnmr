@@ -1,10 +1,8 @@
 #' Plot the STORM results
 #'
-#' Plot the storm results (s) from storm_play, etc. 
+#' Plot the storm results (s) from storm_play, etc.
 #' Plot light gray ref region for optimal subset. 
 #' use in lapply().
-#' Pass in s:
-#'   nothing outside
 #' 
 #' @param xmat numeric matrix of spectral data
 #' @param ppm numeric vector of length equal to ncol(xmat)

@@ -2,7 +2,8 @@
 #'
 #' This function takes a matrix and pads it with rows and columns of a specified
 #' value. The number of rows and columns to add can also be specified. The new 
-#' rows and columns will have the same value.
+#' rows and columns will have the same value. The padding is symmetric (same number
+#' added to both sides).
 #'
 #' @param x A matrix to pad
 #' @param use The value to fill new rows and columns with (default is NA)

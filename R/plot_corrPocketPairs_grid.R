@@ -1,9 +1,9 @@
-#' Plot correlation pairs of pockets in a grid
+#' Plot STOCSY-like plots of corrpocketpairs results in a grid
 #' 
 #' 
 #' @param xmat A matrix of dimensions (n, m), where each row is a pocket
 #' @param ppm A vector of ppm values
-#' @param pocketPairs A list of 2-tuples, each of which indicates which pockets to compare
+#' @param pocketPairs list of corrpocket pairs results
 #' @param res Resolution of the plot in ppm
 #' @param plotLoc A string specifying the directory to save the plot in
 #' 

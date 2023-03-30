@@ -1,9 +1,9 @@
 #' Plot the spectral and feature fits
 #'
-#' @param fit An object of class "fit"
+#' @param fit A "fit" list (produced by one the fit.methods)
 #' @param type A character string specifying the type of plot. Possible values are "simple", "auc", and "color.line".
 #' @param ppm A numeric vector containing the ppm values.
-#' @param color A numeric vector containing the color values.
+#' @param color A numeric vector containing the values to map to color.
 #' 
 #' @return A ggplot object
 #' 

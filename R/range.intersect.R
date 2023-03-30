@@ -35,7 +35,7 @@ range.intersect <- function(a,b,operation = "intersection"){
 #'
 #' Given a matrix of ranges (rows: features, columns: ranges),
 #' calculates the pairwise intersection or union between each range.
-#' Returns a matrix with dimensions (ncol(ranges), ncol(ranges)).
+#' Returns a matrix with dimensions (ncol(ranges), ncol(ranges)). with the sizes of the intersections.
 #'
 #' @param ranges a matrix with dimensions (n x m), where n is the number of features
 #' and m is the number of ranges

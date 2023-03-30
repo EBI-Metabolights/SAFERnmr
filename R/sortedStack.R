@@ -1,9 +1,9 @@
 #' sortedStack
 #'
-#' Sorts a matrix by row sum and stacks the rows.
+#' Stackplot, but sorts the matrix by row sum first 
 #' 
 #' @param mat The matrix to sort and stack.
-#' @param ppm The x-axis values for the columns of the matrix. Defaults to NULL.
+#' @param ppm The x-axis values for the columns of the matrix. Defaults to indices.
 #' @param vshift The vertical shift for the stacked plots. Defaults to 10.
 #' @param hshift The horizontal shift for the stacked plots. Defaults to 0.
 #' 

@@ -1,5 +1,5 @@
 #' Calculate Pearson correlations and covariance using STOCSY for a subset of variables.
-#' 
+#' Modified from metabom8 from tkimhofer. 
 #' 
 #' @param X A matrix of spectral data with variables in the columns.
 #' @param driverInd A vector of indices for the variables that will be used as drivers.

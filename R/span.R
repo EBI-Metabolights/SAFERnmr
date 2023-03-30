@@ -1,7 +1,7 @@
 #' Calculates the span of a numeric vector
 #'
-#' Calculates the span of a numeric vector, which is defined as the range of the values
-#' plus one.
+#' Calculates the number of elements needed to contain fillbetween(range(v)), where v is an
+#' integer array of indices.
 #'
 #' @param v A numeric vector
 #' @return The span of the vector

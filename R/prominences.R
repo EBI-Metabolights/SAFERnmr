@@ -1,9 +1,9 @@
 #' Calculate the prominence of each peak
 #'
-#' The prominence of a peak is the height of the peak relative to the lowest contour line that encloses
-#' the peak and no higher peak. This function calculates the prominence of each peak in a vector.
+#' The 'prominence' of a peak is the height of the peak relative to the lower bound
+#' in this case.
 #'
-#' @param peaks A list of peak information as output from the \code{peakdet} function.
+#' @param peaks A list of peak information as output from the \code{extractPeaks_corr} function.
 #' @param v2 A vector of the y-values of the peaks.
 #'
 #' @return A vector of the prominences of each peak.

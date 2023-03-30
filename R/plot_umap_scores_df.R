@@ -1,6 +1,6 @@
 #' Plot UMAP scores
 #' 
-#' Plots UMAP scores (layout) and labels clusters (if given).
+#' Plots UMAP scores (layout) and labels clusters (if given) using a dataframe input (for shiny app).
 #' 
 #' @param df A data.frame with columns "x", "y", and "cluster".
 #' @param clusters An optional vector of cluster labels for each point in the layout.

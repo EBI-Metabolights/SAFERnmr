@@ -1,11 +1,11 @@
-#' Plot STOCSY line over the current plot
+#' Plot STOCSY (colored) line over the current plot
 #'
 #'
 #' @param g plot to add STOCSY line to
-#' @param specRegion region of the NMR spectrum to plot
+#' @param specRegion region of the NMR spectrum to plot (needed for scaling)
 #' @param ppm vector of chemical shift values
-#' @param corr matrix of correlations between reference and query spectra
-#' @param covar matrix of covariances between reference and query spectra
+#' @param corr vector of correlations 
+#' @param covar vector of covariances
 #' @param driver chemical shift value of the driver peak, if given
 #' @param bounds chemical shift values of the boundaries of the region of interest, if given
 #'

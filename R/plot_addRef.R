@@ -1,11 +1,11 @@
-#' Add reference region to an existing ggplot object
+#' Add bold line (for reference spectrum) to an existing ggplot object
 #' 
 #' 
 #' @param g existing ggplot object (e.g. from simplePlot)
 #' @param specRegion x[,ref.idx]
 #' @param ref entire ref object - this function uses information from window and signature
 #' @param ppm ppm[,ref$wind$inds]
-#' @param scaling logical, whether to use new scaling
+#' @param scaling logical, whether to re-scale the line being added
 #' @param type character vector specifying the type of plot to make ("bold line", "line", "shaded area")
 #' 
 #' @return ggplot object with reference region added

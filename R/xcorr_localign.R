@@ -1,4 +1,4 @@
-#' Cross-correlation with local alignment
+#' Cross-correlation-based local alignment
 #'
 #' This function calculates the cross-correlation between a reference vector and a matrix of spectra, where each
 #' spectrum is a row of the matrix. The function aligns the reference vector with each spectrum by shifting

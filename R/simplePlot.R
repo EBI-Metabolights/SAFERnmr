@@ -1,6 +1,6 @@
 #' Create a simple plot using ggplot2
 #'
-#' This function creates a simple plot using ggplot2, based on a matrix or dataframe input.
+#' This function creates a simple plot using ggplot2, based on a matrix or vector input.
 #' It can handle both single vector and multiple vectors input, and can generate x-axis ticks
 #' with a specified number of ticks or using a default breaks_pretty() function.
 #'

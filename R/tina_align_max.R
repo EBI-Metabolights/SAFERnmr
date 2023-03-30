@@ -3,7 +3,7 @@
 #' @param feature a list object containing a matrix of feature values and a matrix of their corresponding positions
 #' @param scaling a logical value indicating whether to scale the feature values to between 0 and 1 based on the highest peak's intensity
 #' 
-#' @return a list object containing 
+#' @return a list object containing max-aligned feature and position stack.
 #' 
 #' @export
 align.max <- function(feature, scaling = TRUE){
