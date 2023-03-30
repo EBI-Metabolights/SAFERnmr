@@ -117,7 +117,7 @@ match.features2refs.par <- function(pars){
   # Setup ####
 
       # Put features in a matrix
-        f.subset <- lapply(unique(clusters$cluster.labs), function(x) (clusters$cluster.labs == x) %>% which %>% .[1]) %>% unlist #%>% .[1:4]
+        f.subset <- lapply(unique(clusters$cluster.labs), function(x) (clusters$cluster.labs == x) %>% which %>% .[1]) %>% unlist %>% .[1:4]
         f.stack <- feature$stack[f.subset,,drop = F]
         f.position <- feature$position[f.subset,,drop = F]
       

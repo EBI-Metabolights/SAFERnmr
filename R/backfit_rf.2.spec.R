@@ -11,6 +11,7 @@
 #' @return A list containing the back-fits and back-fit feasibility scores for each spectrum in the subset,
 #'         as well as a grid plot of the fits and back-fit feasibility scores.
 #'
+#' @importFrom ggnewscale new_scale_color
 #'
 #' @export
 backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info, 
@@ -150,7 +151,7 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
                                         opacity = .9,
                                         linewidth = 1) # + geom_hline(yintercept = pl.adj)
                   
-                        g <- g + new_scale_color() +
+                        g <- g + ggnewscale::new_scale_color() +
                               geom_area(data = data.frame(vals = ff,
                                                           ppms = ppm[spec.cols]),
                                         na.rm = TRUE,

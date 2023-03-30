@@ -10,6 +10,11 @@
 #' @examples
 #' plot.fit(fit, type = "simple", ppm = ppm, color = color)
 #'
+#' 
+#' @importFrom ggnewscale new_scale_color
+#' @importFrom colorRamps matlab.like2
+#' 
+#'
 #' @export
 plot.fit <- function(fit, type = "simple", 
                      ppm = NULL,
@@ -26,14 +31,14 @@ plot.fit <- function(fit, type = "simple",
                       opacity = .9, 
                       linewidth = 1) # ,-res$residuals
 
-      g <- g + new_scale_color() +
+      g <- g + ggnewscale::new_scale_color() +
               geom_line(data = data.frame(vals = fit$feat.fit,
                                           ppm = ppm,
                                           corr = rep(-1, length(ppm))), 
                         mapping = aes(x = ppm, y = vals, colour = corr),
                         linewidth = .5,
                         na.rm = TRUE) +
-              scale_colour_gradientn(colours = matlab.like2(10),
+              scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                                      limits = c(-1, 1))
   }
   
@@ -46,7 +51,7 @@ plot.fit <- function(fit, type = "simple",
                       opacity = 1, 
                       linewidth = .75) # ,-res$residuals
 
-      g <- g + new_scale_color() +
+      g <- g + ggnewscale::new_scale_color() +
             geom_area(data = data.frame(vals = ff,
                                         ppms = ppm),
                       na.rm = TRUE,
@@ -71,14 +76,14 @@ plot.fit <- function(fit, type = "simple",
       #                    mapping = aes(x = ppms, y = vals),
       #                    colour = "black", linewidth = .25)
 
-      g <- g + new_scale_color() +
+      g <- g + ggnewscale::new_scale_color() +
               geom_line(data = data.frame(vals = fit$feat.fit,
                                           ppm = ppm,
                                           corr = 1-color), 
                         mapping = aes(x = ppm, y = vals, colour = corr),
                         linewidth = 1,
                         na.rm = TRUE) +
-              scale_colour_gradientn(colours = matlab.like2(10),
+              scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                                      limits = c(-1, 1))
     # plot(g)
   }

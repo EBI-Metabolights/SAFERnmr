@@ -66,11 +66,11 @@ pipeline <- function(params_loc, params_obj) {
       "extdata", "default_params.yaml",
       package = "ImperialNMRTool"
     )
-    run_params <- yaml::yaml.load_file(filepath)
+    run_params <- yaml::yaml.load_file(filepath, eval.expr=TRUE)
     default <- TRUE
   } else {
     # load supplied params
-    run_params <- yaml::yaml.load_file(params_loc)
+    run_params <- yaml::yaml.load_file(params_loc, eval.expr=TRUE)
   }
 
 
@@ -91,7 +91,7 @@ pipeline <- function(params_loc, params_obj) {
   # - match using convolution-based cross-correlation
   # - parallelized
 
-  match.features2refs.par(pars)
+  match.features2refs.par(run_params)
 
 
   ###################################################################################################################################
@@ -121,7 +121,7 @@ pipeline <- function(params_loc, params_obj) {
 
   score.matches(run_params)
 
-  matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
+  matches <- readRDS(paste0(run_params$dirs$temp, "/matches_scored_named.RDS"))
   write.table(matches, sep = "\t", file = "matches_scored_named.txt", row.names = F, col.names = T)
-  saveRDS(sessionInfo(), paste0(this.run, "/session.info.RDS"))
+  saveRDS(sessionInfo(), paste0(run_params$dirs$temp, "/session.info.RDS"))
 }

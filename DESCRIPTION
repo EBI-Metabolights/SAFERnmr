@@ -14,7 +14,7 @@ Authors@R: c(
 Maintainer: Callum Martin <cmartin@ebi.ac.uk>
 Depends: R (>= 4.0.0)
 Imports: optparse, stringr, yaml, pbapply, devtools, batch, flexclust, rlang, pacman, ggplot2, scales, purrr, matrixStats, 
-    pracma, RcppHungarian, grid, lattice, modeltools, stats4, ggnewscale, colorRamps, Metric, transport, fftw, gridextra, umap,
+    pracma, RcppHungarian, grid, lattice, modeltools, stats4, ggnewscale, colorRamps, Metrics, transport, fftw, gridextra, umap,
     tictoc, apcluster, plotly, shiny, ggridges
 License: GPL-2
 RoxygenNote: 7.2.1

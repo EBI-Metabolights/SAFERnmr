@@ -25,8 +25,10 @@
 #' fit.batman(feat, spec)
 #' 
 #' @importFrom cowplot plot_grid
-#' @importFrom ggplot2 geom_line scale_colour_gradientn new_scale_color
+#' @importFrom ggplot2 geom_line scale_colour_gradientn 
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom ggnewscale new_scale_color
+#' @importFrom colorRamps matlab.like2
 #' 
 #' @export
 fit.batman <- function(feat, spec, 
@@ -84,13 +86,13 @@ fit.batman <- function(feat, spec,
                       linewidth = 1)
 
       v1.inds <- v1 %>% t %>% trim.sides(out = "inds")
-      g <- g + new_scale_color() +
+      g <- g + ggnewscale::new_scale_color() +
               geom_line(data = data.frame(vals = v1.fit[v1.inds],
                                           ppm = ppm[v1.inds],
                                           corr = rep(-1, length(v1.inds))), 
                         mapping = aes(x = ppm, y = vals, colour = corr),
                         linewidth = .5) +
-              scale_colour_gradientn(colours = matlab.like2(10),
+              scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                                      limits = c(-1, 1))
   }
   # 
@@ -186,13 +188,13 @@ fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE){
                       linewidth = 1) # ,-res$residuals
 
       
-      g <- g + new_scale_color() +
+      g <- g + ggnewscale::new_scale_color() +
               geom_line(data = data.frame(vals = v1.fit %>% t %>% trim.sides %>% t,
                                           ppm = ppm,
                                           corr = rep(-1, length(ppm))), 
                         mapping = aes(x = ppm, y = vals, colour = corr),
                         linewidth = .5) +
-              scale_colour_gradientn(colours = matlab.like2(10),
+              scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                                      limits = c(-1, 1))
   }
   

@@ -15,7 +15,8 @@
 #' @importFrom ggplot2 geom_line geom_vline scale_colour_gradientn
 #' @importFrom scales rescale
 #' @importFrom matrixStats colMax rowMax
-#'
+#' @importFrom colorRamps matlab.like2
+#' 
 #' @export
 plot_addSTOCSYLine <- function(g,specRegion,ppm,
                                corr = NULL, covar = NULL, driver = NULL,
@@ -37,13 +38,13 @@ plot_addSTOCSYLine <- function(g,specRegion,ppm,
   
   # Plot the stocsy line over the current plot
     
-    g <- g + new_scale_color() +
+    g <- g + ggnewscale::new_scale_color() +
       geom_line(data = data.frame(refvals = stocsyLine,
                                   refppms = ppm,
                                   corr = corr), 
                 mapping = aes(x = refppms, y = refvals, colour = corr),
                 size = 1) +
-      scale_colour_gradientn(colours = matlab.like2(10),
+      scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                              limits = c(-1, 1))
   
   # Plot corr boundaries and driver as vert lines, if given
