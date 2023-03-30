@@ -19,8 +19,12 @@
 #' 
 #' @return a ggplot object with the plot of the spectral data, the reference region, and the STOCSY plot (if applicable).
 #' 
-#' @importFrom ggplot2 geom_path geom_vline scale_colour_gradientn
+#' @importFrom ggplot2 geom_path geom_vline scale_colour_gradientn 
+#' @importFrom ggnewscale new_scale_color
 #' @importFrom gridExtra grid.arrange
+#' @importFrom matrixStats rowSds
+#' @importFrom colorRamps matlab.like2
+#' 
 #' 
 #' @export
 #'
@@ -62,7 +66,7 @@ plot_storm_refRegions <- function(xmat,ppm,s, bgplot = "overlayed", vshift = 1, 
     # ppm.wise.scfactors <- rowMeans(t(xmat[s$subset,s$ref.idx]))/s$ref.vals
     # ref <- s$ref.vals * abs(mean(ppm.wise.scfactors))
     refInReg <- s$finalRegion %in% s$ref.idx %>% which
-    ref <- s$ref.vals * mean(rowSds(specRegion[,refInReg])) / rowSds(t(s$ref.vals)) # normalize 
+    ref <- s$ref.vals * mean(matrixStats::rowSds(specRegion[,refInReg])) / matrixStats::rowSds(t(s$ref.vals)) # normalize 
       ref <- ref + (median(t(specRegion[,refInReg])) - median(ref)) # median-center
       
       # Make a copy of the ref over the plot (final) region with NAs in the gap
@@ -165,7 +169,7 @@ plot_storm_refRegions <- function(xmat,ppm,s, bgplot = "overlayed", vshift = 1, 
       # Plot the stocsy line over the current plot
         
         
-        g <- g + new_scale_color() +
+        g <- g + ggnewscale::new_scale_color() +
           geom_line(data = data.frame(refvals = stocsyLine,
                                       refppms = ppm[s$finalRegion],
                                       corr = corr), 
@@ -174,7 +178,7 @@ plot_storm_refRegions <- function(xmat,ppm,s, bgplot = "overlayed", vshift = 1, 
                     lineend = "round",
                     linejoin = "round",
                     linemitre = "5") +
-          scale_colour_gradientn(colours = matlab.like2(10),
+          scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                                  limits = c(-1, 1))
           
       # Plot corr boundaries as vert lines  

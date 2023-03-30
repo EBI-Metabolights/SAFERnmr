@@ -14,7 +14,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom scales breaks_pretty
 #' @importFrom utils str_c
-#' @importFrom matlablike matlab.like2
+#' @importFrom colorRamps matlab.like2
 #' @importFrom MetaboMate Spectrum
 plot_stocsy_corrWindow <- function(sr,lbound,rbound,showplot = TRUE, 
                                    restrictTo = NULL){
@@ -41,7 +41,7 @@ plot_stocsy_corrWindow <- function(sr,lbound,rbound,showplot = TRUE,
                               colour = "abs(cc)")) + 
     geom_line() +
     scale_x_reverse(breaks = breaks_pretty()) + 
-    scale_colour_gradientn(colours = matlab.like2(10),
+    scale_colour_gradientn(colours = colorRamps::matlab.like2(10),
                            limits = c(0, 1), 
                            name = csc_lab) + 
     labs(x = expression(delta ~ {}^1 * H ~ (ppm)), 

@@ -60,7 +60,7 @@ pair.score.summation <- function(pars){
 
 ## Parallelize the ss.spec - reference pair score summation? ####      
       message('Reading in data for pair score summation...')
-        pars <- yaml::yaml.load_file("./data/params.yaml", eval.expr=TRUE)
+        
         
         tmpdir <- pars$dirs$temp
         this.run <- paste0(tmpdir)

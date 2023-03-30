@@ -63,6 +63,7 @@
 #' @importFrom corrPocketPairs_al
 #' @importFrom plyr ldply count
 #' @importFrom pander
+#' @importFrom purrr pluck
 #' 
 #' 
 #' @export
@@ -218,10 +219,10 @@ fse <- function(pars){
 ################ Report run stats  ######
         
           fmodes <- lapply(1:length(storm_rnd1), 
-                           function(x) pluck(storm_rnd1[x],1,"status"))
+                           function(x) purrr::pluck(storm_rnd1[x],1,"status"))
           
           failed <- lapply(1:length(storm_rnd1), 
-                           function(x) pluck(storm_rnd1[x],1,"status") %in% "succeeded") %>% 
+                           function(x) purrr::pluck(storm_rnd1[x],1,"status") %in% "succeeded") %>% 
                             unlist %>% "!"(.) 
           succeeded <- !failed
           
