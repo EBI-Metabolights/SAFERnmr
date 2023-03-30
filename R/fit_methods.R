@@ -24,7 +24,6 @@
 #' spec <- c(1, 2, 3, 4, 5)
 #' fit.batman(feat, spec)
 #' 
-#' @importFrom cowplot plot_grid
 #' @importFrom ggplot2 geom_line scale_colour_gradientn 
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom ggnewscale new_scale_color
@@ -35,13 +34,7 @@ fit.batman <- function(feat, spec,
                        exclude.lowest = .5,
                        ppm = NULL,# in practice I see convergence about here
                        plots = FALSE){
-   # v1 * ratio = v1 fit to v2
-   # 
-   # feat <- featureStack[2002,]
-   # spec <- featureStack[2000,] / 2
-   # feat <- featureStack[comb[1],]
-   # spec <- featureStack[comb[2],]
-  
+
   use <- which(!is.na(feat + spec))
   
   sub.v1 <- min(feat[use])

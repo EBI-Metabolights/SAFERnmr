@@ -1,9 +1,10 @@
-#' Expand a correlation window around a given peak index
+#' Expand a correlation window around a given peak index to the nearest correlation minima outside of the window
+#' bounds.
 #'
 #' @param xmat A matrix of NMR spectra.
 #' @param ppm A vector of ppm values corresponding to the columns of xmat.
 #' @param peakInd The index of the peak around which to expand the window.
-#' @param wind A vector defining the window around the peak.
+#' @param wind A vector defining the window (column inds) around the peak.
 #'
 #' @return A list with the following elements:
 #'   \item{peak}{The index of the peak used for window expansion.}

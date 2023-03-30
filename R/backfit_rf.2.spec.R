@@ -1,12 +1,12 @@
 #' Back-fit reference features to a subset of spectra
 #'
-#' @param m.inds A vector of indices corresponding to the matches between reference features and spectra
-#' @param fits.feature A list of fitted reference features
-#' @param match.info A data frame containing information about the matches between reference features and spectra
-#' @param feature A data frame describing the features in the dataset
-#' @param xmat A matrix containing the subset of spectra to be fitted
+#' @param m.inds A vector of indices corresponding to the matches between reference features and spectra. Necessary to allow for subsetting of matches (i.e. because of filtering)
+#' @param fits.feature A list of fitted features (to reference spectra)
+#' @param match.info A data frame containing information about the matches between features and reference spectra
+#' @param feature List containing feature intensities and positions
+#' @param xmat Full spectral matrix from which the features were derived
 #' @param ppm A vector containing the ppm axis of the spectra
-#' @param plots A logical value indicating whether to generate plots of the fits and back-fit feasibility scores
+#' @param plots A logical value indicating whether to generate plots of the fits and back-fit feasibility scores - only use for a couple of backfits at a time as plots will double the weight of the result
 #'
 #' @return A list containing the back-fits and back-fit feasibility scores for each spectrum in the subset,
 #'         as well as a grid plot of the fits and back-fit feasibility scores.

@@ -1,4 +1,4 @@
-#' Identify True Peaks
+#' Label True Peak points in a vector using extractPeaks_corr (wrapper)
 #'
 #'
 #' @param v a vector of intensities

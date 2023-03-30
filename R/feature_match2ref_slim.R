@@ -1,7 +1,10 @@
 #' Match a feature against a reference using FFT-based convolution and correlation
+#' picks the top max.hits peaks in the convolution, then calculates correlation and 
+#' pvalue of the PCC at those points in the ref. 
+#' Returns a dataframe with the xcorr information. 
 #'
-#' @param f.num numeric: Feature number or identifier
-#' @param r.num numeric: Reference number or identifier
+#' @param f.num numeric: Feature number 
+#' @param r.num numeric: Reference number 
 #' @param feat numeric: Vector of feature intensities
 #' @param ref numeric: Vector of reference intensities
 #' @param feat.ft.c numeric: FFT of feature intensities, conjugated

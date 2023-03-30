@@ -1,5 +1,9 @@
 #' Filter features based on specified criteria
-#' 
+#' - null features
+#' - features outside of ppm range
+#' - features with no runs >= min.runlength
+#' - features derived from < min.subset spectra
+#' - features with strong baseline effect 
 #' 
 #' @param feature A feature object to be filtered
 #' @param ppm A vector of ppm values for each point in the spectra
@@ -49,7 +53,7 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
          # print(f)
          feature$stack[f, , drop = FALSE] %>% 
            trim.sides %>%
-           detect.baseline.effect 
+           detect.baseline.effect(prom.ratio = prom.ratio)
       })
       
       bl.effect.ul <- bl.effect %>% unlist %>% as.logical

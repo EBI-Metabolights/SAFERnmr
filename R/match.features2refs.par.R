@@ -297,7 +297,7 @@ match.features2refs.par <- function(pars){
                 
             # Re-weight the rmses using peak quality (for this db) ####
               message("    - estimating peak quality, weighting RMSEs...\n")
-              peak.quality <- bad.peaks(pos.res.pct.feat = lapply(allmatches.fits,
+              peak.poorness <- bad.peaks(pos.res.pct.feat = lapply(allmatches.fits,
                                           function(x) x$overshoot.pct.feat
                                         ) %>% do.call(rbind,.),
                                             scale.exp = 2)
@@ -307,8 +307,8 @@ match.features2refs.par <- function(pars){
                   v1 <- match$feat.fit
                   v2 <- match$spec.fit
                   resids <- v1-v2
-                  use <- !is.na(resids+peak.quality)
-                  rmse <- sum((resids[use] * (1-peak.quality[use])) ^ 2)/sum(use)
+                  use <- !is.na(resids+peak.poorness)
+                  rmse <- sum((resids[use] * (1-peak.poorness[use])) ^ 2)/sum(use)
                   return(rmse)
               }) %>% unlist
               
@@ -319,7 +319,7 @@ match.features2refs.par <- function(pars){
             # Format results ####
               
               return(list(matches = allmatches.feat,
-                          peak.quality = peak.quality,
+                          peak.quality = peak.poorness,
                           fits = allmatches.fits))
 
             }
