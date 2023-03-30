@@ -1,9 +1,11 @@
 #' score.matches function
 #'
 #' This function computes match scores between subset spectra and library reference spectra.
-#' It builds a non-duplicate ss-ref matrix and looks for any compounds that match known annotations.
+#' Uses pair.score.summation() to actually compute the scores
+#' It builds a ss-ref matrix and looks for any compounds that match known annotations.
+#' 
 #' @param pars a list containing necessary parameters for the function
-#' @return The match scores between subset spectra and library reference spectra
+#' @return RDS file containing match scores between library reference spectra and the best subset spectrum score for each.
 #' @export
 #'
 score.matches <- function(pars){
@@ -36,12 +38,7 @@ score.matches <- function(pars){
 
 
     ######################### Build match matrix  #############################    
-    # Get the processed library data:
-      
-      refmat <- lapply(lib.data.processed, function(x) x$mapped$data) %>% do.call(rbind,.)
-      cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind,.)
-      # write(cmpd.names,"/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo.cmpd.names.txt", sep = '\t')
-      
+
     # For all subset spectrum - reference pairs, record the % of reference spectrum matched # ####
       message('Building match pair list...')
       ss.ref.pairs <- pblapply(backfits, function(bf) 
@@ -55,15 +52,13 @@ score.matches <- function(pars){
                        ref.start = fit$ref.region[1],
                        ref.end = fit$ref.region[2],
                        ref = fit$ref,
-                       # ref.start = fit$ref.region$ref.start,
-                       # ref.end = fit$ref.region$ref.end,
                        feat = fit$feat,
                        ss.spec = lapply(bf$fits, function(x) x$ss.spec) %>% unlist,
                        bff.res = bf$bffs.res,
                        bff.tot = bf$bffs.tot,
                        pct.ref = pct.ref)
         }) %>% do.call(rbind,.)
-      
+
       message('Exporting match pair data for scoring ...')
       saveRDS(ss.ref.pairs, paste0(this.run, "/ss.ref.pairs.RDS"))
       # ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
@@ -82,7 +77,9 @@ score.matches <- function(pars){
         
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
-          ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = max(ss.ref.pairs$ref))
+          
+          
+          ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = length(lib.data.processed))
           linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
                             cols = ss.ref.pair.scores$ref, 
                             m = nrow(xmat))

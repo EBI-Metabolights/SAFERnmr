@@ -1,6 +1,6 @@
 #' Convert clusters to feature-sorted cluster labels
 #'
-#' Given a list of cluster-feature pairs, this function returns feature-sorted 
+#' Given a list of clustered feature inds in list elements, this function returns feature-sorted 
 #' cluster labels. 
 #'
 #' @param clusters A list of cluster-feature pairs.

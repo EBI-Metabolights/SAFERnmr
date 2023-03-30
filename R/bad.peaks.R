@@ -1,18 +1,19 @@
-#' Calculate the probability that a peak is "bad"
+#' Calculate how often each feature point is fit across the reference database
 #'
-#' Detect likelihood of each point being a bad peak
-#' mean of the % of the feature signal that had no
-#' corresponding ref signal (extra peak in feature)
+#' Get weights for feature profile points according to how often they fit against reference DB peaks.
+#' mean of the % of the feature signal that had no corresponding ref signal (extra peak in feature)
 #' useful to scale this by some exponential (e.g. 2) to select extremely high percentages
-#' (higher values does less squashing of the bad peaks)
-#' opf.mat <- lapply(allmatches.fits, function(x) x$overshoot.pct.feat) %>% do.call(rbind,.)
-#' output is a vector which can be (e.g.) multiplied by and then subtracted from fit$fit.feat
-#' @param pos.res.pct.feat matrix of positional residue differences between a 
-#'   reference and a feature spectrum, as output by \code{positionalResidue}.
-#' @param scale.exp a scaling exponent for the probability values (default is 2)
+#' lapply(allmatches.fits, function(x) x$overshoot.pct.feat) %>% do.call(rbind,.)
+#' 
+#' @param pos.res.pct.feat matrix of positive residuals for a feature to all references fit as a percent of the feature resonance height
+#' @param scale.exp a scaling exponent for the weights to select for values very close to 1 (default is 2)
 #'
-#' @return A vector of probabilities, one for each peak in the feature spectrum,
-#'   indicating the probability that the peak is "bad".
+#' @return A vector of weights, one for each point in the feature profile,
+#' indicating how rarely the feature point was fit in the ref DB matches the 
+#' which can be (e.g.) multiplied by and then subtracted from feature
+#' to squash not-never-fit peaks in the feature, or (1-result) * rmse values to 
+#' downweight the effect of not-never-fit peaks (those not represented in the ref DB, 
+#' and more likely to be false positives in feature extraction). 
 #'
 #'
 #' @export
