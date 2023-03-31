@@ -2,7 +2,10 @@
 % Please edit documentation in R/feature_match2ref_slim.R
 \name{feature_match2ref_slim}
 \alias{feature_match2ref_slim}
-\title{Match a feature against a reference using FFT-based convolution and correlation}
+\title{Match a feature against a reference using FFT-based convolution and correlation
+picks the top max.hits peaks in the convolution, then calculates correlation and 
+pvalue of the PCC at those points in the ref. 
+Returns a dataframe with the xcorr information.}
 \usage{
 feature_match2ref_slim(
   f.num,
@@ -18,9 +21,9 @@ feature_match2ref_slim(
 )
 }
 \arguments{
-\item{f.num}{numeric: Feature number or identifier}
+\item{f.num}{numeric: Feature number}
 
-\item{r.num}{numeric: Reference number or identifier}
+\item{r.num}{numeric: Reference number}
 
 \item{feat}{numeric: Vector of feature intensities}
 
@@ -54,4 +57,7 @@ A data frame with the following columns:
 }
 \description{
 Match a feature against a reference using FFT-based convolution and correlation
+picks the top max.hits peaks in the convolution, then calculates correlation and 
+pvalue of the PCC at those points in the ref. 
+Returns a dataframe with the xcorr information.
 }

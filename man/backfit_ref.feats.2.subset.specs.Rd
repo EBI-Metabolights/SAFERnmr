@@ -15,19 +15,19 @@ backfit_ref.feats.2.subset.specs(
 )
 }
 \arguments{
-\item{m.inds}{A vector of indices corresponding to the matches between reference features and spectra}
+\item{m.inds}{A vector of indices corresponding to the matches between reference features and spectra. Necessary to allow for subsetting of matches (i.e. because of filtering)}
 
-\item{fits.feature}{A list of fitted reference features}
+\item{fits.feature}{A list of fitted features (to reference spectra)}
 
-\item{match.info}{A data frame containing information about the matches between reference features and spectra}
+\item{match.info}{A data frame containing information about the matches between features and reference spectra}
 
-\item{feature}{A data frame describing the features in the dataset}
+\item{feature}{List containing feature intensities and positions}
 
-\item{xmat}{A matrix containing the subset of spectra to be fitted}
+\item{xmat}{Full spectral matrix from which the features were derived}
 
 \item{ppm}{A vector containing the ppm axis of the spectra}
 
-\item{plots}{A logical value indicating whether to generate plots of the fits and back-fit feasibility scores}
+\item{plots}{A logical value indicating whether to generate plots of the fits and back-fit feasibility scores - only use for a couple of backfits at a time as plots will double the weight of the result}
 }
 \value{
 A list containing the back-fits and back-fit feasibility scores for each spectrum in the subset,

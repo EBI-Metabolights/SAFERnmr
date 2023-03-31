@@ -2,7 +2,12 @@
 % Please edit documentation in R/filterFeatures.R
 \name{filterFeatures}
 \alias{filterFeatures}
-\title{Filter features based on specified criteria}
+\title{Filter features based on specified criteria
+- null features
+- features outside of ppm range
+- features with no runs >= min.runlength
+- features derived from < min.subset spectra
+- features with strong baseline effect}
 \usage{
 filterFeatures(
   feature,
@@ -34,4 +39,9 @@ If \code{give = "features"}, a feature object with the filtered features. If \co
 }
 \description{
 Filter features based on specified criteria
+- null features
+- features outside of ppm range
+- features with no runs >= min.runlength
+- features derived from < min.subset spectra
+- features with strong baseline effect
 }

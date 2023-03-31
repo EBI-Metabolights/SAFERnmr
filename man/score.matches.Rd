@@ -10,9 +10,10 @@ score.matches(pars)
 \item{pars}{a list containing necessary parameters for the function}
 }
 \value{
-The match scores between subset spectra and library reference spectra
+RDS file containing match scores between library reference spectra and the best subset spectrum score for each.
 }
 \description{
 This function computes match scores between subset spectra and library reference spectra.
-It builds a non-duplicate ss-ref matrix and looks for any compounds that match known annotations.
+Uses pair.score.summation() to actually compute the scores
+It builds a ss-ref matrix and looks for any compounds that match known annotations.
 }

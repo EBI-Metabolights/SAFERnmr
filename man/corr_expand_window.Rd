@@ -2,7 +2,8 @@
 % Please edit documentation in R/corr_expand_window.R
 \name{corr_expand_window}
 \alias{corr_expand_window}
-\title{Expand a correlation window around a given peak index}
+\title{Expand a correlation window around a given peak index to the nearest correlation minima outside of the window
+bounds.}
 \usage{
 corr_expand_window(xmat, ppm, peakInd, wind)
 }
@@ -13,7 +14,7 @@ corr_expand_window(xmat, ppm, peakInd, wind)
 
 \item{peakInd}{The index of the peak around which to expand the window.}
 
-\item{wind}{A vector defining the window around the peak.}
+\item{wind}{A vector defining the window (column inds) around the peak.}
 }
 \value{
 A list with the following elements:
@@ -27,5 +28,6 @@ A list with the following elements:
   \item{corrLbound}{The index of the left boundary of the expanded window in the \code{wind} vector.}
 }
 \description{
-Expand a correlation window around a given peak index
+Expand a correlation window around a given peak index to the nearest correlation minima outside of the window
+bounds.
 }

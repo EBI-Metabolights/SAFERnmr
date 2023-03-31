@@ -2,7 +2,7 @@
 % Please edit documentation in R/is.true.peak.R
 \name{is.true.peak}
 \alias{is.true.peak}
-\title{Identify True Peaks}
+\title{Label True Peak points in a vector using extractPeaks_corr (wrapper)}
 \usage{
 is.true.peak(v)
 }
@@ -13,7 +13,7 @@ is.true.peak(v)
 a logical vector indicating the true peaks and tail regions
 }
 \description{
-Identify True Peaks
+Label True Peak points in a vector using extractPeaks_corr (wrapper)
 }
 \examples{
 v <- rnorm(100)

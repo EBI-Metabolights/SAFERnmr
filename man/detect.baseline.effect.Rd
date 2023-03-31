@@ -2,7 +2,10 @@
 % Please edit documentation in R/detect.baseline.effect.R
 \name{detect.baseline.effect}
 \alias{detect.baseline.effect}
-\title{Detect baseline effect in feature data}
+\title{Detect baseline effect in feature profile (also indicates monotonic features, which are easy to get with STORM)
+Goes through a couple of checks:
+- is the peak prominence (max vs. lower bound) of at least one peak > prom.ratio x the entire feature intensity range
+- do the valleys and peaks in the feature profile correlate strongly (r > cutoff.corr)? If so, likely a baseline effect.}
 \usage{
 detect.baseline.effect(feat, cutoff.corr = 0.99, prom.ratio = 0.3)
 }
@@ -21,5 +24,8 @@ A list containing two logical values. The first indicates whether
   whether the feature passed the peak fit filter.
 }
 \description{
-Detect baseline effect in feature data
+Detect baseline effect in feature profile (also indicates monotonic features, which are easy to get with STORM)
+Goes through a couple of checks:
+- is the peak prominence (max vs. lower bound) of at least one peak > prom.ratio x the entire feature intensity range
+- do the valleys and peaks in the feature profile correlate strongly (r > cutoff.corr)? If so, likely a baseline effect.
 }

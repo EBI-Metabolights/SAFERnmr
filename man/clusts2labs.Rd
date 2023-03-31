@@ -13,7 +13,7 @@ clusts2labs(clusters)
 A numeric vector of feature-sorted cluster labels.
 }
 \description{
-Given a list of cluster-feature pairs, this function returns feature-sorted 
+Given a list of clustered feature inds in list elements, this function returns feature-sorted 
 cluster labels.
 }
 \author{
