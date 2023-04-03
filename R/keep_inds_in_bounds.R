@@ -5,12 +5,11 @@
 #'
 #' @param check A numeric vector of indices to check.
 #' @param against A numeric vector of indices to check against.
-#' 
+#'
 #' @return A numeric vector of indices within the bounds of against.
 #'
 #' @examples
 #' keep_inds_in_bounds(1:10, 5:15)
-#'
 #'
 #' @export
 keep_inds_in_bounds <- function(check, against) {

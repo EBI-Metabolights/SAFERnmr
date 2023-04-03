@@ -24,5 +24,4 @@ Plot the spectral and feature fits
 \examples{
 plot.fit(fit, type = "simple", ppm = ppm, color = color)
 
-
 }

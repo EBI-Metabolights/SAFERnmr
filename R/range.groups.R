@@ -10,11 +10,11 @@
 #' @export
 #'
 #'
-range.groups <- function(ranges, operation = "intersection"){
+range.groups <- function(ranges, operation = "intersection") {
   return(
-          range.intersect.all(ranges) %>% is.na %>% "!"(.) %>% 
-          igraph::graph.adjacency(.,mode="undirected", weighted=NULL) %>%
-            igraph::max_cliques(., min = 0, max = NULL) %>%
-            lapply(function(x) (as.numeric(x)))
-    )
+    range.intersect.all(ranges) %>% is.na() %>% "!"(.) %>%
+      igraph::graph.adjacency(., mode = "undirected", weighted = NULL) %>%
+      igraph::max_cliques(., min = 0, max = NULL) %>%
+      lapply(function(x) (as.numeric(x)))
+  )
 }

@@ -22,7 +22,7 @@ plot_storm_refRegions(
 
 \item{s}{STORM results from storm_play or similar function}
 
-\item{bgplot}{a character vector indicating how the plot is rendered: 
+\item{bgplot}{a character vector indicating how the plot is rendered:
 "overlayed" or "stack". Default is "overlayed".}
 
 \item{vshift}{numeric scalar indicating the vertical shift between spectra when bgplot is "stack". Default is 1.}
@@ -31,15 +31,15 @@ plot_storm_refRegions(
 
 \item{calcStocsy}{a logical indicating whether to calculate STOCSY plot. Default is TRUE.}
 
-\item{n_xticks}{an integer indicating the number of ticks on the x-axis. 
+\item{n_xticks}{an integer indicating the number of ticks on the x-axis.
 Default is 4.}
 }
 \value{
 a ggplot object with the plot of the spectral data, the reference region, and the STOCSY plot (if applicable).
 }
 \description{
-Plot the storm results (s) from storm_play, etc. 
-Plot light gray ref region for optimal subset. 
+Plot the storm results (s) from storm_play, etc.
+Plot light gray ref region for optimal subset.
 use in lapply().
 Pass in s:
   nothing outside

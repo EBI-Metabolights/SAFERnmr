@@ -12,9 +12,9 @@ stocsy_slim(X, driverInd)
 \item{driverInd}{A vector of indices for the variables that will be used as drivers.}
 }
 \value{
-A list with two elements: \code{cc}, a vector of Pearson correlations 
+A list with two elements: \code{cc}, a vector of Pearson correlations
         between each variable in \code{X} and the variables in \code{driverInd}; and
-        \code{cv}, a vector of covariance values between each variable in \code{X} 
+        \code{cv}, a vector of covariance values between each variable in \code{X}
         and the variables in \code{driverInd}.
 }
 \description{

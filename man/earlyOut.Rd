@@ -9,15 +9,15 @@ earlyOut(dontCalc, overlaps)
 \arguments{
 \item{dontCalc}{A boolean vector indicating which comparisons are not calculated}
 
-\item{overlaps}{A numeric vector of the overlaps between the reference and each 
+\item{overlaps}{A numeric vector of the overlaps between the reference and each
 shift of the spectrum}
 }
 \value{
-A list containing NA values for `rvals`, `pvals`, `lags`, and `bestFit`, 
+A list containing NA values for `rvals`, `pvals`, `lags`, and `bestFit`,
   as well as the `overlaps` values and `dontCalc` boolean vector.
 }
 \description{
-This function returns a list of NA values for `rvals`, `pvals`, `lags`, and `bestFit`, 
-as well as the `overlaps` values and `dontCalc` boolean vector that caused the 
+This function returns a list of NA values for `rvals`, `pvals`, `lags`, and `bestFit`,
+as well as the `overlaps` values and `dontCalc` boolean vector that caused the
 function to exit early.
 }

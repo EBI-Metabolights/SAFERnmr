@@ -9,15 +9,16 @@
 #' @return A vector of the prominences of each peak.
 #' @export
 #'
-#' 
-#' 
+#'
+#'
 #' @importFrom magrittr %>%
-#' 
-prominences <- function(peaks, v2){
+prominences <- function(peaks, v2) {
   maxima <- v2[peaks$peaks]
   proms <- lapply(1:length(maxima), function(p) {
-    v.hts <- peaks$bounds[[p]] %>% as.numeric %>% v2[.]
+    v.hts <- peaks$bounds[[p]] %>%
+      as.numeric() %>%
+      v2[.]
     return(min(maxima[p] - v.hts, na.rm = T))
-  }) %>% unlist
+  }) %>% unlist()
   return(proms)
 }

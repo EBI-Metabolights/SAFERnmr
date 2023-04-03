@@ -34,8 +34,8 @@ storm_pairplay(
 \item{ref.idx}{A vector of the spectral points (columns of xmat) to use as the initial reference}
 }
 \value{
-A list with components "reconstructed" and "status". "reconstructed" is a matrix 
-containing the reconstructed metabolite concentrations (rows are samples, columns are metabolites). 
+A list with components "reconstructed" and "status". "reconstructed" is a matrix
+containing the reconstructed metabolite concentrations (rows are samples, columns are metabolites).
 "status" is a character string indicating whether the method converged successfully or failed.
 }
 \description{

@@ -46,148 +46,127 @@
 #'
 #' # Calculate cross-correlation
 #' xcorr(spec, ref, ref.idx, lags)
-xcorr <- function(spec, ref.vals, ref.idx, lags, min.overlap = 3){
-  
-  # Build a matrix where each row is the spec data extraction resulting from a 
+xcorr <- function(spec, ref.vals, ref.idx, lags, min.overlap = 3) {
+
+  # Build a matrix where each row is the spec data extraction resulting from a
   # different lag with respect to ref.
-    
-    indmat <- outer(ref.idx %>% range %>% fillbetween, lags, FUN = "+")
-    
-    spec.allshifts <- (spec[indmat] %>% pracma::Reshape(., nrow(indmat), ncol(indmat)))
-   
+
+  indmat <- outer(ref.idx %>% range() %>% fillbetween(), lags, FUN = "+")
+
+  spec.allshifts <- (spec[indmat] %>% pracma::Reshape(., nrow(indmat), ncol(indmat)))
+
   # Format ref so missing vals (indicated by gaps in ref.idx) are NAs:
-    ref <- rep(NA, ref.idx %>% span)
-    ref[ref.idx-min(ref.idx)+1] <- ref.vals
-    
-    
-  # (optional) Don't calc corr is not enough overlap
-      # Determine length of overlap
-    
-        # calculate # of mutually non-na elements between ref and each row of spec.allshifts
-        # More explicit:
-        # overlaps <- apply(spec.allshifts, 2, function(shiftedSpec) ((ref %>% is.na) | 
-        #                                                             (shiftedSpec %>% is.na)) %>% "!"(.) %>% sum)
-        # 
-        # Same speed but simpler (addition with an NA defaults to NA):
-          
-          # Non-NAs overlap:
-            
-            overlaps <- apply(spec.allshifts, 2, function(x) (ref + x) %>% 
-                                is.na %>% "!"(.) %>% sum)
-            
-            # sd.na.or.zero <- apply(spec.allshifts, 1 , function(x) sd(x , na.rm = T) == 0)
-            # sd.na.or.zero[is.na(sd.na.or.zero)] <- T
-            # 
-            
-            dontCalc <- overlaps < min.overlap 
-              
-          
-            if (sum(dontCalc) == length(overlaps)){return(earlyOut(dontCalc,overlaps))}
-            
-            if (sum(!dontCalc) == 0){return(earlyOut(dontCalc,overlaps))}
-            
-            lags <- lags[!dontCalc]
-            overlaps <- overlaps[!dontCalc]
-            spec.allshifts[,dontCalc] <- NA
-            
-          # NA-agnostic region overlap:
-            #overlaps <- rep(length(ref),ncol(spec.allshifts))
-      
-      
-    # heatmap(spec.allshifts %>% t, Rowv = NA, Colv = NA, scale = "none")
-    # spec %>% simplePlot
-    
-    # Potentially much faster - but how does it work?
-      # convscores <- outer(spec,ref,"*") %>% rowSums(na.rm = TRUE)
-      # bestMatch <- (convscores/overlaps) %>% which.max
-      # Calculate corr for the best match instead of all of them
-      
-    # heatmap(conv, Rowv = NA, Colv = NA, scale = "none")
+  ref <- rep(NA, ref.idx %>% span())
+  ref[ref.idx - min(ref.idx) + 1] <- ref.vals
+
+  # Non-NAs overlap:
+
+  overlaps <- apply(spec.allshifts, 2, function(x) {
+    (ref + x) %>%
+      is.na() %>%
+      "!"(.) %>%
+      sum()
+  })
+
+  dontCalc <- overlaps < min.overlap
+
+
+  if (sum(dontCalc) == length(overlaps)) {
+    return(earlyOut(dontCalc, overlaps))
+  }
+
+  if (sum(!dontCalc) == 0) {
+    return(earlyOut(dontCalc, overlaps))
+  }
+
+  lags <- lags[!dontCalc]
+  overlaps <- overlaps[!dontCalc]
+  spec.allshifts[, dontCalc] <- NA
 
   # Calculate the correlation between the ref and all rows of spec.allshifts
-    # if (is_empty(spec.allshifts[,-dontCalc])){browser()}
-    
-    # spec.allshifts[is.na(spec.allshifts)] <- NaN
-    
-    # if(isempty(spec.allshifts[ , !dontCalc])){browser()}
-    scores <- suppressWarnings(
-      cor(spec.allshifts[ , !dontCalc],
-                  ref,
-                  use = "pairwise.complete.obs",
-                  method = "pearson"))
-    
-    scores[is.infinite(scores)] <- NA
-            
-      # Calculate pvalue using # elements available to compare (overlaps, above)
-      # and the correlation from the comparison:
-          a=-abs(scores * sqrt( (overlaps-2) /(1-scores^2)))
-          pvals=2*pt(a,(overlaps-2))
-          # pvals %>% log %>% plot
-          bestFit.idx <- which.min(pvals)
-          bestFit.score <- scores[bestFit.idx]
-          bestFit.pval <- pvals[bestFit.idx]
-      
-      # Convert back to lag 
-        # bestFit.idx is the index of the row of indmat that was the best fit
-        # that, in turn, corresponds to an index of lag
-          
-          bestFit.lag <- lags[bestFit.idx]
-          indmat <- indmat[,!dontCalc]
-          matchingInds <- indmat[,bestFit.idx]
-          
-          # **** Export rvals, pvals, etc. as NA if not passing dontCalc - this
-          # allows them to be readily compiled at the same lengths for when in batches
-          full.rvals <- full.pvals <- full.overlaps <- full.lags <- rep(NA, ncol(spec.allshifts))
-          
-          full.rvals[!dontCalc] <- scores
-          full.pvals[!dontCalc] <- pvals
-          full.overlaps[!dontCalc] <- overlaps
-          full.lags[!dontCalc] <- lags
-          
-  return(list(rvals = full.rvals, 
-              pvals = full.pvals,
-              overlaps = full.overlaps,
-              not.used = dontCalc,
-              lags = full.lags,
-              bestFit = list(which.lag = which(full.lags %in% bestFit.lag),
-                             r = bestFit.score,
-                             lag = bestFit.lag,
-                             pval = bestFit.pval,
-                             overlaps = overlaps[bestFit.idx],
-                             specInds.matched = matchingInds) # matchinginds used to extract spec for plotting
-              )
-         )
+
+  scores <- suppressWarnings(
+    cor(spec.allshifts[, !dontCalc],
+      ref,
+      use = "pairwise.complete.obs",
+      method = "pearson"
+    )
+  )
+
+  scores[is.infinite(scores)] <- NA
+
+  # Calculate pvalue using # elements available to compare (overlaps, above)
+  # and the correlation from the comparison:
+  a <- -abs(scores * sqrt((overlaps - 2) / (1 - scores^2)))
+  pvals <- 2 * pt(a, (overlaps - 2))
+  bestFit.idx <- which.min(pvals)
+  bestFit.score <- scores[bestFit.idx]
+  bestFit.pval <- pvals[bestFit.idx]
+
+  # Convert back to lag
+  # bestFit.idx is the index of the row of indmat that was the best fit
+  # that, in turn, corresponds to an index of lag
+
+  bestFit.lag <- lags[bestFit.idx]
+  indmat <- indmat[, !dontCalc]
+  matchingInds <- indmat[, bestFit.idx]
+
+  # **** Export rvals, pvals, etc. as NA if not passing dontCalc - this
+  # allows them to be readily compiled at the same lengths for when in batches
+  full.rvals <- full.pvals <- full.overlaps <- full.lags <- rep(NA, ncol(spec.allshifts))
+
+  full.rvals[!dontCalc] <- scores
+  full.pvals[!dontCalc] <- pvals
+  full.overlaps[!dontCalc] <- overlaps
+  full.lags[!dontCalc] <- lags
+
+  return(list(
+    rvals = full.rvals,
+    pvals = full.pvals,
+    overlaps = full.overlaps,
+    not.used = dontCalc,
+    lags = full.lags,
+    bestFit = list(
+      which.lag = which(full.lags %in% bestFit.lag),
+      r = bestFit.score,
+      lag = bestFit.lag,
+      pval = bestFit.pval,
+      overlaps = overlaps[bestFit.idx],
+      specInds.matched = matchingInds
+    ) # matchinginds used to extract spec for plotting
+  ))
 }
 
 #' Return early output for `xcorr` if no comparisons should be computed
-#' 
-#' This function returns a list of NA values for `rvals`, `pvals`, `lags`, and `bestFit`, 
-#' as well as the `overlaps` values and `dontCalc` boolean vector that caused the 
+#'
+#' This function returns a list of NA values for `rvals`, `pvals`, `lags`, and `bestFit`,
+#' as well as the `overlaps` values and `dontCalc` boolean vector that caused the
 #' function to exit early.
 #'
 #' @param dontCalc A boolean vector indicating which comparisons are not calculated
-#' @param overlaps A numeric vector of the overlaps between the reference and each 
+#' @param overlaps A numeric vector of the overlaps between the reference and each
 #'   shift of the spectrum
-#' 
-#' @return A list containing NA values for `rvals`, `pvals`, `lags`, and `bestFit`, 
+#'
+#' @return A list containing NA values for `rvals`, `pvals`, `lags`, and `bestFit`,
 #'   as well as the `overlaps` values and `dontCalc` boolean vector.
-#' 
+#'
 #'
 #' @export
-earlyOut <- function(dontCalc,overlaps){
+earlyOut <- function(dontCalc, overlaps) {
   dummy <- rep(NA, length(overlaps))
-  return(list(rvals = dummy, 
-                pvals = dummy,
-                overlaps = overlaps,
-                not.used = dontCalc,
-                lags = dummy,
-                bestFit = list(which.lag = NA,
-                               r = NA,
-                               lag = 0,
-                               pval = NA,
-                               overlaps = NA,
-                               specInds.matched = NA)
-              )
-         )
-         
+  return(list(
+    rvals = dummy,
+    pvals = dummy,
+    overlaps = overlaps,
+    not.used = dontCalc,
+    lags = dummy,
+    bestFit = list(
+      which.lag = NA,
+      r = NA,
+      lag = 0,
+      pval = NA,
+      overlaps = NA,
+      specInds.matched = NA
+    )
+  ))
 }

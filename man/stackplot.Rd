@@ -39,6 +39,6 @@ and peaks.
 }
 \examples{
 data(metab)
-stackplot(metab[,1:10], xvect = metab[,11])
+stackplot(metab[, 1:10], xvect = metab[, 11])
 
 }

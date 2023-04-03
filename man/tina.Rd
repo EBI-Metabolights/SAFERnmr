@@ -13,9 +13,9 @@ tina(pars)
 A list containing the results and cluster labels from TINA
 }
 \description{
-This is a bit of a semantic argument, but spectral alignment typically refers to 
+This is a bit of a semantic argument, but spectral alignment typically refers to
 modifying spectra or reposition peaks such that they align with each other from
-sample to sample. Because we've done FSE, features have much more information 
+sample to sample. Because we've done FSE, features have much more information
 which allows them to be detected in multiple regions combined by shape similarity.
 Instead of modifying spectra, TINA reformulates alignment as a clustering
 problem in feature (shape) space.
@@ -23,8 +23,8 @@ problem in feature (shape) space.
 \details{
 There are also several filtering steps employed before this.
 We cannot eliminate all poor shapes, but there are a couple of useful heuristics
-which generally reduce unnecessary computation downstream. First, there are many 
-feature shapes which are either quite poor in quality, or do not contain 
+which generally reduce unnecessary computation downstream. First, there are many
+feature shapes which are either quite poor in quality, or do not contain
 sufficient information to be useful for annotation. We keep features with:
   - in defined ppm range (generally [-1, 11])
   - long enough runs? (contains runs > noisewidth*3 adjacent points)
@@ -33,26 +33,26 @@ sufficient information to be useful for annotation. We keep features with:
     side of a broad peak; not monotonic)
 Since the same features will often be extracted multiple times (either in the
 same spectral region, or other regions; i.e. same peak, but misaligned), it is
-advantageous to reduce this redundancy by clustering feature shapes. We accomplish 
+advantageous to reduce this redundancy by clustering feature shapes. We accomplish
 this using a combination of UMAP projection and Affinity Propagation clustering.
 Before comparing feature shapes, we align them to their maximum intensity
-resonance. This is quick, and usually performs well enough. 
-UMAP uses euclidean distance as a default. In practice, UMAP is able to sort 
-feature shapes into tight clusters when low n_neighbors (e.g. 5) and min_dist 
-(e.g. 0.05) are used. This does not capture global relationships as well, but 
+resonance. This is quick, and usually performs well enough.
+UMAP uses euclidean distance as a default. In practice, UMAP is able to sort
+feature shapes into tight clusters when low n_neighbors (e.g. 5) and min_dist
+(e.g. 0.05) are used. This does not capture global relationships as well, but
 we only use it to identify tight clusters.
 All pairwise correlations (PCCs) are calculated for the feature shapes. A mask
 for correlation thresholding is applied to the distance matrix (generated using
 apcluster::negDistMat(pts, r=2), squared negative euclidean distance) to ensure
 that clustered features have a high correlation as well. apcluster uses a q
 parameter to optimize the initial preferences. Higher q -> stricter clusters.
-Raising the lambda (dampening) parameter helps avoid oscillations which prevent 
-convergence, although raising this too high can make updates too slow to 
-converge within the number of iterations. 
-See 
-https://cran.r-project.org/web/packages/apcluster/vignettes/apcluster.pdf for 
+Raising the lambda (dampening) parameter helps avoid oscillations which prevent
+convergence, although raising this too high can make updates too slow to
+converge within the number of iterations.
+See
+https://cran.r-project.org/web/packages/apcluster/vignettes/apcluster.pdf for
 a full description of affinity propagation parameters
-Ultimately, it doesn't matter much what clustering method is used, as this is 
+Ultimately, it doesn't matter much what clustering method is used, as this is
 primarily a means of combining highly similar features to reduce the computational
 burden of pairwise comparisons to reference spectra.
 }

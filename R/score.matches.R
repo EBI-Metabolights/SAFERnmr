@@ -3,7 +3,7 @@
 #' This function computes match scores between subset spectra and library reference spectra.
 #' Uses pair.score.summation() to actually compute the scores
 #' It builds a ss-ref matrix and looks for any compounds that match known annotations.
-#' 
+#'
 #' @param pars a list containing necessary parameters for the function
 #' @return RDS file containing match scores between library reference spectra and the best subset spectrum score for each.
 #' @export
@@ -16,7 +16,6 @@ score.matches <- function(pars) {
 
   ##################################################################################################################
   # Params and data: ####
-  # pars <- yaml::yaml.load_file("../data/params.yaml", eval.expr=TRUE)
   #
   tmpdir <- pars$dirs$temp
   this.run <- paste0(tmpdir)
@@ -41,13 +40,10 @@ score.matches <- function(pars) {
 
   refmat <- lapply(lib.data.processed, function(x) x$mapped$data) %>% do.call(rbind, .)
   cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind, .)
-  # write(cmpd.names,"/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo.cmpd.names.txt", sep = '\t')
 
   # For all subset spectrum - reference pairs, record the % of reference spectrum matched # ####
   message("Building match pair list...")
   ss.ref.pairs <- pblapply(backfits, function(bf) {
-    # bf <- backfits[[1]]
-    # Fast way (should be fine) ####
     fit <- bf$fits[[1]]
     refspec <- lib.data.processed[[fit$ref]]$mapped$data
     pct.ref <- sum(fit$ref.region %>% as.numeric() %>% fillbetween() %>% refspec[.], na.rm = T) / sum(refspec, na.rm = T)
@@ -56,8 +52,6 @@ score.matches <- function(pars) {
       ref.start = fit$ref.region[1],
       ref.end = fit$ref.region[2],
       ref = fit$ref,
-      # ref.start = fit$ref.region$ref.start,
-      # ref.end = fit$ref.region$ref.end,
       feat = fit$feat,
       ss.spec = lapply(bf$fits, function(x) x$ss.spec) %>% unlist(),
       bff.res = bf$bffs.res,
@@ -79,8 +73,6 @@ score.matches <- function(pars) {
   # Put into matrix
   ss.ref.pair.scores <- readRDS(paste0(this.run, "/ss.ref.pair.scores.RDS"))
   scores <- ss.ref.pair.scores$score.tot
-  # scattermore::scattermoreplot(seq_along(scores), sort(scores))
-  # hist(scores, breaks = 1000)
 
   xmat <- fse.result$xmat
   ppm <- fse.result$ppm
@@ -108,10 +100,6 @@ score.matches <- function(pars) {
   scores.mat <- ss.ref.mat.nd
   # scores.mat <- ss.ref.mat
 
-  # lib.data.processed[[47]]$mapped$data %>% t %>% trim.sides %>% simplePlot(linecolor = 'black') + ggtitle(paste0(cmpd.names[47]))
-  # scattermore::scattermoreplot(1:length(scores.mat), sort(scores.mat))
-  # abline(h = mean(scores.mat))
-
   rep.ref <- apply(scores.mat, 2, max)
 
   # See if annotations are in maf file list of annotations ####
@@ -123,8 +111,6 @@ score.matches <- function(pars) {
   matches <- matches[order(matches$best.refscore, decreasing = T), ]
 
   saveRDS(matches, paste0(this.run, "/matches_scored_named.RDS"))
-  # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
-
   message("----------------------------------------------------------------")
   message("-------------------  Match Scoring Completed -------------------")
   message("----------------------------------------------------------------")

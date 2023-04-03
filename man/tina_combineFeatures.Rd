@@ -24,15 +24,15 @@ tina_combineFeatures(
 
 \item{doUMAP}{Logical indicating whether to perform UMAP projection on the features.}
 
-\item{umap.n_neighbors}{the number of approximate nearest neighbors used to construct 
-the initial high-dimensional graph. It effectively controls how UMAP balances local 
-versus global structure - low values will push UMAP to focus more on local structure by 
-constraining the number of neighboring points considered when analyzing the data in high dimensions, 
+\item{umap.n_neighbors}{the number of approximate nearest neighbors used to construct
+the initial high-dimensional graph. It effectively controls how UMAP balances local
+versus global structure - low values will push UMAP to focus more on local structure by
+constraining the number of neighboring points considered when analyzing the data in high dimensions,
 while high values will push UMAP towards representing the big-picture structure while losing fine detail.}
 
 \item{umap.min_dist}{the minimum distance between points in low-dimensional space. This parameter controls
- how tightly UMAP clumps points together, with low values leading to more tightly packed embeddings. 
-Larger values of min_dist will make UMAP pack points together more loosely, focusing instead on the 
+ how tightly UMAP clumps points together, with low values leading to more tightly packed embeddings.
+Larger values of min_dist will make UMAP pack points together more loosely, focusing instead on the
 preservation of the broad topological structure.}
 
 \item{umap.n_epochs}{The number of iterations to run.}

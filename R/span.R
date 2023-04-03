@@ -7,6 +7,6 @@
 #' @return The span of the vector
 #''
 #' @export
-span <- function(v){
-  return(v %>% range(., na.rm = TRUE) %>% diff +1)
+span <- function(v) {
+  return(v %>% range(., na.rm = TRUE) %>% diff() + 1)
 }

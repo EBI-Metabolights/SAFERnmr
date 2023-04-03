@@ -7,7 +7,7 @@
 #' @param peak.qualities A list of peak quality vectors (~ feature points' relevance in the reference database)
 #' @param pq.featureNumbers A vector of feature numbers to index the peak.qualities list. This is necessary when only a subset of features are matched and feature fits are filtered.
 #' @param res.area.thresh The minimum reference spectrum resonance area that must be accounted for by the fit feature in order to consider it matched.
-#' 
+#'
 #' @return A list containing the filtered match information and the filtered fitted features.
 #'
 #' @import dplyr
@@ -21,13 +21,7 @@ filter.matches_singlets <- function(match.info, fits.feature, peak.qualities, pq
   ########################################################################################################################
   ## Removing singlets ####
 
-  # # Dependencies ####
-  #   source('./../extractPeaks_corr.R')
-  #   source('./../pk.maxs.R')
-  #   source('./../pk.bounds.R')
-  #   source('./../corr_expand.R')
-  #   source('./../ind2subR.R')
-  #   source('./../stackplot.R')
+
 
 
   ########### singlet filter for fit features ################

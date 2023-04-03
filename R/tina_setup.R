@@ -43,20 +43,9 @@ tina_setup <- function(a, xmat){
           }
 
         # Look at the subset overlap
-                  # rowSums(subsets) %>% plot(xlab = "Feature (sorted)",
-                  #                                    ylab = "Subset size")
-                  # title(main = "Subset Size Distribution pre-afc")
-                  # abline(h = 5)
           subset.diffs <- subsets %>% diff %>% abs %>% rowSums
           subset.overlaps <- (subsets[-1,] & subsets[-nrow(subsets),]) %>% rowSums
           subset.sizes <- subsets %>% rowSums
-                  # (subset.diffs / subset.overlaps) %>% sort %>% plot(xlab = "Feature Comparison",
-                  #                                                    ylab = "Subsets diff/overlap")
-                  # subset.ratios <- (subset.diffs / subset.overlaps) 
-                  # subset.ratios[subset.ratios < .5] %>% sort %>% plot(xlab = "Feature Comparison",
-                  #                                                     ylab = "Subsets diff/overlap")
-                  
-          
 
           # If the comparison is missing > 0.5 of the spectra in either subset
             subset.frac.1 <- subset.overlaps / subset.sizes[-nrow(subsets)]
@@ -65,10 +54,6 @@ tina_setup <- function(a, xmat){
             nds <- subset.frac.1 > subset.frac.2
             subset.frac[nds] <- subset.frac.2[nds] 
             
-            
-            # subset.frac %>% sort %>% plot(xlab = "Feature Comparison",
-            #                               ylab = "Feature Subset Overlap (lesser)")
-            #   abline(h = 0.5, col = "red")
               
         # Look at the position region overlap (speed up later)
             reg.frac <- rep(0, nrow(positionStack)-1)
@@ -82,9 +67,6 @@ tina_setup <- function(a, xmat){
               reg.frac[i] <- min(c(reg.frac.1, reg.frac.2))
             }
             reg.sizes <- lapply(relinds, length) %>% unlist
-            # reg.frac %>% sort %>% plot(xlab = "Feature Comparison",
-            #                            ylab = "Feature Region Overlap (lesser)")
-            #   abline(h = 0.5, col = "red")
                     
     return(list(stack = featureStack,
                 position = positionStack,

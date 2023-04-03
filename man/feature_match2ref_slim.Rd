@@ -3,8 +3,8 @@
 \name{feature_match2ref_slim}
 \alias{feature_match2ref_slim}
 \title{Match a feature against a reference using FFT-based convolution and correlation
-picks the top max.hits peaks in the convolution, then calculates correlation and 
-pvalue of the PCC at those points in the ref. 
+picks the top max.hits peaks in the convolution, then calculates correlation and
+pvalue of the PCC at those points in the ref.
 Returns a dataframe with the xcorr information.}
 \usage{
 feature_match2ref_slim(
@@ -57,7 +57,7 @@ A data frame with the following columns:
 }
 \description{
 Match a feature against a reference using FFT-based convolution and correlation
-picks the top max.hits peaks in the convolution, then calculates correlation and 
-pvalue of the PCC at those points in the ref. 
+picks the top max.hits peaks in the convolution, then calculates correlation and
+pvalue of the PCC at those points in the ref.
 Returns a dataframe with the xcorr information.
 }

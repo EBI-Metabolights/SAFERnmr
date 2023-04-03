@@ -22,11 +22,11 @@ Prepare reference spectra for matching to a dataset
 \details{
 To match features from a dataset to reference spectra in fine detail, they need
 to have the same spectral axis, more or less. This function interpolates each
-reference spectrum in the list to the dataset ppm axis, and then filters its 
+reference spectrum in the list to the dataset ppm axis, and then filters its
 signal to avoid inclusion of noise/zeros, which are replaced with NAs so that
-cross-correlations, etc. are minimized. In future versions, a solvent region 
-could be provided for each (or all) that will be replaced with NAs to avoid 
-matching that peak.  
+cross-correlations, etc. are minimized. In future versions, a solvent region
+could be provided for each (or all) that will be replaced with NAs to avoid
+matching that peak.
 
  Takes gissmo (or other) reference spectra as a list with
   - tag (short name, e.g. "bmse000005" - not necessarily unique)

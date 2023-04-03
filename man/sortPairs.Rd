@@ -15,13 +15,13 @@ A two-row matrix with pairs sorted in ascending order
 \description{
 Given a two-row matrix where each column contains a pair of numbers,
 this function sorts the pairs such that each column's first element is less
-than its second element. The function assumes that pairs are already 
+than its second element. The function assumes that pairs are already
 sorted, and quickly checks if any pairs need to be switched.
 }
 \examples{
 pairs <- matrix(c(1, 3, 2, 5, 4, 3), nrow = 2)
 sortPairs(pairs)
-# Output: 
+# Output:
 #      [,1] [,2] [,3]
 # [1,]    1    2    3
 # [2,]    3    5    4

@@ -35,11 +35,11 @@ pipeline <- function(params_loc, params_obj) {
       "extdata", "default_params.yaml",
       package = "ImperialNMRTool"
     )
-    run_params <- yaml::yaml.load_file(filepath, eval.expr=TRUE)
+    run_params <- yaml::yaml.load_file(filepath, eval.expr = TRUE)
     default <- TRUE
   } else {
     # load supplied params
-    run_params <- yaml::yaml.load_file(params_loc, eval.expr=TRUE)
+    run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
   }
 
 

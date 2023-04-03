@@ -20,7 +20,7 @@ A padded matrix
 }
 \description{
 This function takes a matrix and pads it with rows and columns of a specified
-value. The number of rows and columns to add can also be specified. The new 
+value. The number of rows and columns to add can also be specified. The new
 rows and columns will have the same value.
 }
 \examples{

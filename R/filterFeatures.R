@@ -61,16 +61,7 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
       pass.fit <- bl.effect.ul[c(FALSE,TRUE)]
       
       not.monotonic <- pass.prom & pass.fit
-      
-      # filt <- !nullfeatures & inbounds & rl.pass & ss.pass
-      # feature$stack[which(!not.monotonic),] %>% apply(1,scale.between) %>% t %>% trim.sides %>% simplePlot
-      # which(
-      #   which(
-      #      not.monotonic) %in% c(1068,1102,1116,1130,1136,1144,1151,1163,1166,1172,1173,1192,1225,1227)
-      #   )
-      # )
-      # feature$stack[c(1068,1102,1116,1130,1136,1144,1151,1163,1166,1172,1173,1192,1225,1227),] %>% apply(1,scale.between) %>% t %>% trim.sides %>% simplePlot
-      # sum(!not.monotonic)
+
       
   # Build the filter
     filt <- !nullfeatures & inbounds & rl.pass & ss.pass & not.monotonic

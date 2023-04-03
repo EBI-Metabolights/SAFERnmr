@@ -20,16 +20,20 @@
 #' # [1,]    1    2    3
 #' # [2,]    2    3    4
 #' # [3,]    3    4    5
-shiftedInds_toVals <- function(xmat, shiftedInds){
-    
+shiftedInds_toVals <- function(xmat, shiftedInds) {
+
   # Calculate linear inds in xmat from shiftedInds matrix
-    linds <- sub2indR(rows = (1:nrow(xmat)) %>% matrix %>% pracma::repmat(1,ncol(shiftedInds)), 
-                      cols = shiftedInds, 
-                      m = nrow(xmat))
-  
+  linds <- sub2indR(
+    rows = (1:nrow(xmat)) %>% matrix() %>% pracma::repmat(1, ncol(shiftedInds)),
+    cols = shiftedInds,
+    m = nrow(xmat)
+  )
+
   # Extract vals and reformat the vector to the original size
-    specRegion <- xmat[linds] %>% pracma::Reshape(nrow(shiftedInds), 
-                                                  ncol(shiftedInds))
-                                                
+  specRegion <- xmat[linds] %>% pracma::Reshape(
+    nrow(shiftedInds),
+    ncol(shiftedInds)
+  )
+
   return(specRegion)
 }

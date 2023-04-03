@@ -39,10 +39,10 @@ with a specified number of ticks or using a default breaks_pretty() function.
 }
 \examples{
 data(mtcars)
-plotmat <- scale(mtcars[,-1], center = TRUE, scale = TRUE)
+plotmat <- scale(mtcars[, -1], center = TRUE, scale = TRUE)
 simplePlot(plotmat, linecolor = "black", opacity = 0.6, linewidth = 0.5)
 
-simplePlot(plotmat[,1], linecolor = "red", opacity = 0.6, linewidth = 0.5)
+simplePlot(plotmat[, 1], linecolor = "red", opacity = 0.6, linewidth = 0.5)
 
 simplePlot(plotmat, xvect = mtcars$wt, n_xticks = 5, linecolor = "black", opacity = 0.6, linewidth = 0.5)
 

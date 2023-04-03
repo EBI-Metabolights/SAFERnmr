@@ -9,7 +9,7 @@
 #' pk.bounds(v)
 #' # Returns: list(c(1, 3), c(4, 5))
 #' @export
-pk.bounds <- function(v){
+pk.bounds <- function(v) {
   pks <- extractPeaks_corr(v)
   return(pks$bounds[pks$truePeak])
 }

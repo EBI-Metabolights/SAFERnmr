@@ -33,6 +33,6 @@ plot_stormRefRegions_grid(
 a grid of plots of the storm analysis results for each reference region, saved to a pdf file.
 }
 \description{
-Wrapper for \code{\link{plot_storm_refRegions}} to generate plots for multiple 
+Wrapper for \code{\link{plot_storm_refRegions}} to generate plots for multiple
 reference regions in a grid format and save the result to a pdf file.
 }

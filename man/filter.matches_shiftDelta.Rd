@@ -21,7 +21,7 @@
 A list with two elements: the filtered `match.info` data frame, and the filtered `fits.feature` list which have been filtered by ppm shift difference.
 }
 \description{
-This function filters the matches in match.info based on the difference in 
-ppm shift between the feature and the match. Only matches with a ppm shift 
+This function filters the matches in match.info based on the difference in
+ppm shift between the feature and the match. Only matches with a ppm shift
 difference less than or equal to ppm.tol are retained.
 }

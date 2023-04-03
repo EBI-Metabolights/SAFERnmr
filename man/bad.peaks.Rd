@@ -13,10 +13,10 @@ bad.peaks(pos.res.pct.feat, scale.exp = 2)
 }
 \value{
 A vector of weights, one for each point in the feature profile,
-indicating how rarely the feature point was fit in the ref DB matches the 
+indicating how rarely the feature point was fit in the ref DB matches the
 which can be (e.g.) multiplied by and then subtracted from feature
-to squash not-never-fit peaks in the feature, or (1-result) * rmse values to 
-downweight the effect of not-never-fit peaks (those not represented in the ref DB, 
+to squash not-never-fit peaks in the feature, or (1-result) * rmse values to
+downweight the effect of not-never-fit peaks (those not represented in the ref DB,
 and more likely to be false positives in feature extraction).
 }
 \description{

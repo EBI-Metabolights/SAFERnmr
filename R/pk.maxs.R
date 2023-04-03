@@ -11,7 +11,7 @@
 #' pk.maxs(v, mask)
 #' # Returns: 3
 #' @export
-pk.maxs <- function(v, mask = NULL){
+pk.maxs <- function(v, mask = NULL) {
   pks <- extractPeaks_corr(v, mask = mask)
-  return(pks$peaks[pks$truePeak] %>% unlist)
+  return(pks$peaks[pks$truePeak] %>% unlist())
 }

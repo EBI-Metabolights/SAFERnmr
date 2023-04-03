@@ -36,5 +36,4 @@ pocketPairs <- corrPocketPairs_al(...)
 # Plot correlation heatmaps
 plot_corrPocketPairs(pocketPairs, region = 1000:1500)
 
-
 }

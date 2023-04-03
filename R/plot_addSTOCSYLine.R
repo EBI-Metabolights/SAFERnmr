@@ -26,9 +26,6 @@ plot_addSTOCSYLine <- function(g,specRegion,ppm,
   stocsyLine <- covar %>% c %>% t
   spr <- t(specRegion)
   
-  # Old scaling
-    # spr <- spr - median(spr)
-    # stocsyLine <- stocsyLine - median(stocsyLine)
   # New scaling (as of 26AUG22)
     spr <- spr - min(spr, na.rm = T)
     stocsyLine <- stocsyLine - min(stocsyLine, na.rm = T)

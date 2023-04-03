@@ -10,11 +10,11 @@
 #' @examples
 #' v <- c(0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1)
 #' run.labels(v)
-#' 
+#'
 #' @export
 run.labels <- function(v) {
-  breaks <- (c(0, v) %>% diff) > 0
-  labs <- breaks %>% cumsum 
+  breaks <- (c(0, v) %>% diff()) > 0
+  labs <- breaks %>% cumsum()
   labs[!v] <- 0
   return(labs)
 }
@@ -24,7 +24,7 @@ run.labels <- function(v) {
 #'
 #' This function takes a binary vector and computes the lengths of all runs of
 #' consecutive 1s in the vector. The output is a numeric vector, with length equal
-#' to the number of 1s in the input vector, where each point in each run is labeled 
+#' to the number of 1s in the input vector, where each point in each run is labeled
 #' by its run length.
 #'
 #' @param v A binary vector.
@@ -33,15 +33,15 @@ run.labels <- function(v) {
 #' @examples
 #' v <- c(0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1)
 #' runs.labelBy.lengths(v)
-#' 
+#'
 #' @export
 runs.labelBy.lengths <- function(v) {
-  if (is.logical(v)){
-     v2 <- rep(1, length(v))
-     v2[!v] <- 0
-     v <- v2
+  if (is.logical(v)) {
+    v2 <- rep(1, length(v))
+    v2[!v] <- 0
+    v <- v2
   }
   runs <- rle(v)
   runs$values <- runs$values * runs$lengths
-  return(runs %>% inverse.rle)
+  return(runs %>% inverse.rle())
 }

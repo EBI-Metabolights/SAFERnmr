@@ -14,21 +14,22 @@
 #' @import ggplot2
 #' @import gridExtra
 #' @importFrom stringr str_c
-plot_correlation_pockets_grid <- function(allvals, plotLoc){
-  
+plot_correlation_pockets_grid <- function(allvals, plotLoc) {
+
   # Wrapper for plot_correlation_pocket()
   # print to file in plotLoc
   # MTJ 2022
-  myplots <- lapply(1:length(allvals), function(x) plot_correlation_pocket(allvals[[x]]) )
-  
+  myplots <- lapply(1:length(allvals), function(x) plot_correlation_pocket(allvals[[x]]))
+
   # How big to make the page? 2 inches for each plot, and grid will be square.
-  dim <- 2*round(sqrt(length(allvals)))
-  pdf(file = str_c(plotLoc,"correlationPockets_grid.pdf"),   # The directory you want to save the file in
-      width = dim, # The width of the plot in inches
-      height = dim)
-  
+  dim <- 2 * round(sqrt(length(allvals)))
+  pdf(
+    file = str_c(plotLoc, "correlationPockets_grid.pdf"), # The directory you want to save the file in
+    width = dim, # The width of the plot in inches
+    height = dim
+  )
+
   gridExtra::grid.arrange(grobs = myplots)
-  
+
   dev.off()
-  
 }

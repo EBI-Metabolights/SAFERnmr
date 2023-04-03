@@ -20,53 +20,51 @@
 #' @importFrom magrittr %>%
 #' @importFrom ggplot2 geom_line geom_vline geom_point scale_x_reverse
 #' @export
-corr_expand_window <- function(xmat, ppm, peakInd, wind){
+corr_expand_window <- function(xmat, ppm, peakInd, wind) {
   # peakInd <- peaks.init[i]
   # Select a region that's close by and not out of bounds
   # no bigger than max(ppm), no smaller than min(ppm), within n * 2 indices
-  
-    wind <- max((min(wind)),1):min((max(wind)),length(ppm)) # stay in bounds of ppm vector
-    offset <- peakInd-min(wind) # (this might change if wind is out of bounds)
-    
+
+  wind <- max((min(wind)), 1):min((max(wind)), length(ppm)) # stay in bounds of ppm vector
+  offset <- peakInd - min(wind) # (this might change if wind is out of bounds)
+
   # Local STOCSY within window
-    sr <- stocsy(xmat[,wind], wind, peakInd,
-                 plotting = FALSE)
-    
+  sr <- stocsy(xmat[, wind], wind, peakInd,
+    plotting = FALSE
+  )
+
   # Get local mins in correlation vector around peak
-    localMins <- localMinima(sr@r)
-  
-    corrRbound <- (localMins > offset+1) %>%  # Take local mins to the right of driver peak    --- inds in wind
-      which() %>% localMins[.] %>% min() %>%  # get the ind of the leftmost one --- inds in wind
-      c(.,length(wind)) %>% min()   # take lesser between that and right bound of wind. ----  
-    # #%>% wind[.] #%>% ppm[.] # transform to ppm inds, and then to ppm vals --- inds in ppm -> ppm values 
-    
-    corrLbound <- (localMins < offset+1) %>%  # Take the local mins < peak
-      which() %>% localMins[.] %>% max() %>%  # get the ind of the rightmost one to left of peak
-      c(.,1)            %>% max()   # make sure it's not less than the left wind bound 
+  localMins <- localMinima(sr@r)
+
+  corrRbound <- (localMins > offset + 1) %>% # Take local mins to the right of driver peak    --- inds in wind
+    which() %>%
+    localMins[.] %>%
+    min() %>% # get the ind of the leftmost one --- inds in wind
+    c(., length(wind)) %>%
+    min() # take lesser between that and right bound of wind. ----
+  # #%>% wind[.] #%>% ppm[.] # transform to ppm inds, and then to ppm vals --- inds in ppm -> ppm values
+
+  corrLbound <- (localMins < offset + 1) %>% # Take the local mins < peak
+    which() %>%
+    localMins[.] %>%
+    max() %>% # get the ind of the rightmost one to left of peak
+    c(., 1) %>%
+    max() # make sure it's not less than the left wind bound
   # if you wanted ppm inds or vals:  %>% wind[.] #%>% ppm[.]
-    # browser()
-  # Check extracted window by plotting. Color in these STOCSYs is abs(cc)
-                  # df <- data.frame(r = sr@r,inds = wind)
-                  # g <- ggplot(data = df, aes(x = inds, y = r)) +
-                  #   geom_line() +
-                  #   geom_vline(xintercept = peakInd, linetype = 2, col = "grey") +
-                  #   geom_vline(xintercept = wind[c(corrLbound, corrRbound)], linetype = 1, col = "grey") +
-                  #   geom_point(data = data.frame(xs = wind[localMins], ys = sr@r[localMins]),
-                  #          aes(x = xs, y = ys)) +
-                  #   scale_x_reverse()
-                  # plot(g)
-  
+
   # Store data within list
-    vals <- list()
-    vals$peak <- peakInd
-    vals$intcorr <- sum(sr@r[corrLbound:corrRbound])
-    vals$data <- rbind(corr = sr@r[corrLbound:corrRbound],
-                       cov = sr@cov[corrLbound:corrRbound],
-                       inds = wind[corrLbound:corrRbound])
-    vals$sr <- sr
-    vals$wind <- wind
-    vals$newWind <- wind[corrLbound:corrRbound]
-    vals$corrRbound <- corrRbound
-    vals$corrLbound <- corrLbound
+  vals <- list()
+  vals$peak <- peakInd
+  vals$intcorr <- sum(sr@r[corrLbound:corrRbound])
+  vals$data <- rbind(
+    corr = sr@r[corrLbound:corrRbound],
+    cov = sr@cov[corrLbound:corrRbound],
+    inds = wind[corrLbound:corrRbound]
+  )
+  vals$sr <- sr
+  vals$wind <- wind
+  vals$newWind <- wind[corrLbound:corrRbound]
+  vals$corrRbound <- corrRbound
+  vals$corrLbound <- corrLbound
   return(vals)
 }

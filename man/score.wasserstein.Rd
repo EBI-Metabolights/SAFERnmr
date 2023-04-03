@@ -18,8 +18,8 @@ The Wasserstein distance between v1 and v2.
 Calculate the Wasserstein distance between two vectors using transport::wasserstein1d.
 }
 \examples{
-v1 <- c(1,2,3,4,5)
-v2 <- c(3,5,7,9,11)
-score.wasserstein(v1,v2)
+v1 <- c(1, 2, 3, 4, 5)
+v2 <- c(3, 5, 7, 9, 11)
+score.wasserstein(v1, v2)
 
 }

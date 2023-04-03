@@ -21,5 +21,4 @@ the subset of check that lies within the bounds of against.
 \examples{
 keep_inds_in_bounds(1:10, 5:15)
 
-
 }

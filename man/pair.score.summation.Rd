@@ -4,8 +4,8 @@
 \alias{pair.score.summation}
 \title{Calculates interaction scores between all reference spectra and spectral sets.
 The FSE module is one way to produce likely feature shapes supported by statistical
-association of spectral points across dataset spectra. Singlets contain 
-very little specific information, can match to any feature shape and are 
+association of spectral points across dataset spectra. Singlets contain
+very little specific information, can match to any feature shape and are
 therefore excluded.}
 \usage{
 pair.score.summation(pars)
@@ -24,32 +24,32 @@ in different places on the spectral axis (i.e., misaligned).
 These features are then matched to full-resolution pure compound reference spectra
 (e.g. GISSMO, or any other full-res source). The matching reference regions are
 termed ref-feats, and indeed are hypothesized subsignatures. To test whether these
-hypothetical subsignatures are present in the actual data, these are then back-fit 
-to the original spectral data using the feature position and quantification. 
+hypothetical subsignatures are present in the actual data, these are then back-fit
+to the original spectral data using the feature position and quantification.
 
 Then, for each backfit (ref-feat to dataset spectrum), a backfit feasibility score
 is calculated (see filter.matches() for details). This roughly indicates whether
 or not the fit of the ref-feat is feasible (doesn't grossly exceed the spectral
-data in any places). Perfectly feasible is 1, not feasible is 0. 
+data in any places). Perfectly feasible is 1, not feasible is 0.
 
-A good weighted rmse and rval therefore indicates a good shape match between the 
-feature and the ref-feat. A high bff score for a ref-feat and a given dataset 
-spectrum indicates that reference spectrum region has a feasible fit to the data. 
-These two pieces of information provide a basis for a believable association 
+A good weighted rmse and rval therefore indicates a good shape match between the
+feature and the ref-feat. A high bff score for a ref-feat and a given dataset
+spectrum indicates that reference spectrum region has a feasible fit to the data.
+These two pieces of information provide a basis for a believable association
 between the reference spectrum and the dataset spectrum.
 
-However, there can be numerous versions of each ref-feat, and numerous ref-feats 
-associating a given reference spectrum with a particular dataset spectrum. In 
-fact, the ideal situation is numerous, highly feasible ref-feats associating the 
+However, there can be numerous versions of each ref-feat, and numerous ref-feats
+associating a given reference spectrum with a particular dataset spectrum. In
+fact, the ideal situation is numerous, highly feasible ref-feats associating the
 two and accounting for 100% of a reference spectrum signature. Thus, for every
-point along the reference spectrum, we take the highest bff score associated with 
-that point (from any ref-feat that covers a region including that point), with 
+point along the reference spectrum, we take the highest bff score associated with
+that point (from any ref-feat that covers a region including that point), with
 the default being 0. We could sum all these values for a given reference spectrum
 (again, focusing specifically on a single dataset spectrum). However, small peaks
-are downweighted by multiplying this composite "point-wise best bff score" vector 
-by the % total reference spectrum intensity of each point. Thus we account for 
+are downweighted by multiplying this composite "point-wise best bff score" vector
+by the % total reference spectrum intensity of each point. Thus we account for
 the best-case feasibility of association of each ref spectral point, scaled by
 that point's overall relevance to the spectral signature. Summing these values
-across the score vector gives a total association score between a reference 
+across the score vector gives a total association score between a reference
 spectrum and a dataset spectrum.
 }
