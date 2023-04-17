@@ -44,7 +44,7 @@
 #' @importFrom matrixStats rowMins
 #' @importFrom doParallel registerDoParallel
 #' @importFrom parallel stopCluster makeCluster
-#' @importFrom foreach %dopar% %>% %do% getDoParRegistered getDoParWorkers
+#' @importFrom foreach getDoParRegistered getDoParWorkers
 #' @importFrom magrittr %>%
 #' @importFrom pbapply pbapply
 #' @importFrom fftw FFT

@@ -45,7 +45,6 @@
 #' @importFrom magrittr %>%
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
-#' @importFrom dplyr %>%
 #' @importFrom lubridate ymd_hms
 storm_pairplay <- function(xmat = NULL, ppm = NULL, b = 30, corrthresh = .8,
                            q = 0.05, minpeak = 10, refSpec, ref.idx) {
