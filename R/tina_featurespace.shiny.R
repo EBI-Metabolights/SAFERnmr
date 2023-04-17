@@ -21,8 +21,6 @@ runFeatureSpace.shiny <- function(study,
                                   umap.obj,
                                   cluster.labs,
                                   featureStack) {
-  require(shiny)
-  require(plotly)
 
   # Prep the data ----
   # Convert to df outside of the plot_umap.scores function ####

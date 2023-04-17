@@ -24,10 +24,7 @@ project_features.stackplot <- function(xmat, ppm,
                                        vshift = 2,
                                        hshift = 0.002,
                                        sort.rows = F) {
-  require(ggplot2)
-  require(pracma)
-  require(scales)
-  require(reshape2)
+
 
   # Only plot the fits that passed:
   bestfits$fit.feats <- bestfits$fit.feats[bestfits$pass.fit, , drop = F]

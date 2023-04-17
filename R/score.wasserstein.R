@@ -14,7 +14,6 @@
 #'
 #' @export
 score.wasserstein <- function(v1, v2) {
-  require(transport)
   # Zero-fill NA vals
   na.vals <- is.na(v1 + v2)
   v1[na.vals] <- 0

@@ -29,9 +29,6 @@ stackplot <- function(ymat = NULL, xvect = NULL,
                       xdir = "reverse",
                       show = TRUE) {
   # Requires
-  require(ggplot2)
-  require(ggridges)
-  require(dplyr)
   # Handle single vector case:
   if (is.vector(ymat)) {
     ymat <- t(matrix(ymat))

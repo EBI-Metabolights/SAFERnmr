@@ -120,7 +120,6 @@ fit.batman <- function(feat, spec,
 #'
 #' @export
 fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE) {
-  require(Metrics)
 
   # simplePlot(rbind(v1,v2) %>% trim.sides)
   use <- !is.na(v1 + v2)
