@@ -15,7 +15,7 @@ Maintainer: Callum Martin <cmartin@ebi.ac.uk>
 Depends: R (>= 4.0.0)
 Remotes: tkimhofer/metabom8
 Imports: optparse, stringr, yaml, pbapply, devtools, batch, flexclust, rlang, pacman, ggplot2, scales, purrr, matrixStats, 
-    pracma, RcppHungarian, grid, lattice, modeltools, stats4, ggnewscale, colorRamps, Metrics, transport, fftw, gridExtra, umap,
+    pracma, RcppHungarian, grid, lattice, modeltools, ggnewscale, colorRamps, Metrics, transport, fftw, gridExtra, umap,
     tictoc, apcluster, plotly, shiny, ggridges, foreach
 License: GPL-2
 RoxygenNote: 7.2.1
