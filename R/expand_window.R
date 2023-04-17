@@ -7,7 +7,6 @@
 #' @return A numeric vector representing the expanded window.
 #' 
 #' @importFrom magrittr %>%
-#' @import keep_inds_in_bounds
 #' 
 #' @examples
 #' # Expand a window with default arguments
