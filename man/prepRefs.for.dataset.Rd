@@ -2,7 +2,14 @@
 % Please edit documentation in R/prepRefs.for.dataset.R
 \name{prepRefs.for.dataset}
 \alias{prepRefs.for.dataset}
-\title{Prepare reference spectra for matching to a dataset}
+\title{Prepare reference spectra for matching to a dataset
+To match features from a dataset to reference spectra in fine detail, they need
+to have the same spectral axis, more or less. This function interpolates each
+reference spectrum in the list to the dataset ppm axis, and then filters its
+signal to avoid inclusion of noise/zeros, which are replaced with NAs so that
+cross-correlations, etc. are minimized. In future versions, a solvent region
+could be provided for each (or all) that will be replaced with NAs to avoid
+matching that peak.}
 \usage{
 prepRefs.for.dataset(data.list, ppm.dataset, ref.sig.SD.cutoff = 0.01)
 }
@@ -17,18 +24,7 @@ prepRefs.for.dataset(data.list, ppm.dataset, ref.sig.SD.cutoff = 0.01)
 a list of processed reference spectra, where each element of the list is a list containing the fields "tag", "ref.name", "compound.name", "ppm", "data", and "mapped". The "mapped" field contains a list with the fields "ppm", "data", "sig.cutoff", and "sd.cutoff"
 }
 \description{
-Prepare reference spectra for matching to a dataset
-}
-\details{
-To match features from a dataset to reference spectra in fine detail, they need
-to have the same spectral axis, more or less. This function interpolates each
-reference spectrum in the list to the dataset ppm axis, and then filters its
-signal to avoid inclusion of noise/zeros, which are replaced with NAs so that
-cross-correlations, etc. are minimized. In future versions, a solvent region
-could be provided for each (or all) that will be replaced with NAs to avoid
-matching that peak.
-
- Takes gissmo (or other) reference spectra as a list with
+Takes gissmo (or other) reference spectra as a list with
   - tag (short name, e.g. "bmse000005" - not necessarily unique)
   - ref.name (should be unique with field strength etc.)
   - ppm axis
