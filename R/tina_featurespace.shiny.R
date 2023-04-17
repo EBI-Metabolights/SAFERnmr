@@ -8,8 +8,8 @@
 #' @param cluster.labs A vector of cluster assignments for each point in the UMAP layout.
 #' @param featureStack A object of extracted features for each point in the UMAP layout.
 #'
-#' @importFrom shiny fluidPage plotOutput plotlyOutput sidebarLayout sidebarPanel mainPanel h1 h2 h4 titlePanel verbatimTextOutput
-#' @importFrom plotly event_register
+#' @importFrom shiny fluidPage plotOutput sidebarLayout sidebarPanel mainPanel h1 h2 h4 titlePanel verbatimTextOutput
+#' @importFrom plotly event_register plotlyOutput
 #' @importFrom plotly plot_ly layout event_data
 #' @import RColorBrewer
 #' @export

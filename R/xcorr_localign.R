@@ -37,7 +37,6 @@
 #' xcorr_localign(x, ppm, signature.vals, signature.idx.wind, currentInds, min.overlap = 3, slide = "internal", lag.limit = NA, plots = FALSE)
 #'
 #' @importFrom pracma Reshape
-#' @importFrom stats xcorr
 #' @importFrom matrixStats colVars
 #' @export
 xcorr_localign <- function(x, ppm, # full matrix and colnames
