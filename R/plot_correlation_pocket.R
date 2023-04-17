@@ -5,7 +5,6 @@
 #' @return a ggplot object displaying the correlation window
 #'
 #' @importFrom ggplot2 theme element_blank
-#' @import plot_stocsy_corrWindow
 #'
 #'
 #' @export
