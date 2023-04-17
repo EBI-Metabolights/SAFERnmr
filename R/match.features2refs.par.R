@@ -41,11 +41,10 @@
 #'
 #' @param pars a list of parameters for matching, read in from a YAML file
 #' @return nothing; results are saved as an RDS file
-#' @importFrom yaml load_file
 #' @importFrom matrixStats rowMins
-#' @importFrom doParallel makeCluster registerDoParallel getDoParRegistered getDoParWorkers
-#' @importFrom parallel stopCluster
-#' @importFrom foreach %dopar% %>% %do%
+#' @importFrom doParallel registerDoParallel
+#' @importFrom parallel stopCluster makeCluster
+#' @importFrom foreach %dopar% %>% %do% getDoParRegistered getDoParWorkers
 #' @importFrom magrittr %>%
 #' @importFrom pbapply pbapply
 #' @importFrom fftw FFT
@@ -53,14 +52,11 @@
 #' @importFrom graphics plot
 #' @importFrom ggplot2 ggplot geom_point geom_smooth aes
 #' @importFrom reshape2 melt
-#' @importFrom utils message
 #' @importFrom dplyr mutate
-#' @importFrom tidyr fill fillbetween
 #' @importFrom data.table rbindlist
 #' @importFrom scales alpha
 #' @importFrom fpc cluster.stats
 #' @importFrom stringr str_c
-#' @importFrom ggpubr ggarrange
 #' @export
 match.features2refs.par <- function(pars) {
   message("-------------------------------------------------------")

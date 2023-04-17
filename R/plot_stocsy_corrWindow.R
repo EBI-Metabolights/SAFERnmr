@@ -15,7 +15,6 @@
 #' @importFrom scales breaks_pretty
 #' @importFrom utils str_c
 #' @importFrom colorRamps matlab.like2
-#' @importFrom metabom8 Spectrum
 plot_stocsy_corrWindow <- function(sr, lbound, rbound, showplot = TRUE,
                                    restrictTo = NULL) {
   # Modified from metabom8 stocsy function to show local minima

@@ -11,7 +11,6 @@
 #' @importFrom shiny fluidPage plotOutput plotlyOutput sidebarLayout sidebarPanel mainPanel h1 h2 h4 titlePanel verbatimTextOutput
 #' @importFrom plotly event_register
 #' @importFrom plotly plot_ly layout event_data
-#' @importFrom cowplot simplePlot
 #' @import RColorBrewer
 #' @export
 #'

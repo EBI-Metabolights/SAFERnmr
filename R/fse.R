@@ -59,10 +59,7 @@
 #'
 #' @return A list of features extracted from the spectra.
 #'
-#' @importFrom readRDS
-#' @importFrom corrPocketPairs_al
 #' @importFrom plyr ldply count
-#' @importFrom pander
 #' @importFrom purrr pluck
 #'
 #'

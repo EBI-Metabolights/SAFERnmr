@@ -51,8 +51,6 @@
 #' @import foreach
 #' @import yaml
 #' @importFrom plyr rbind.fill
-#' @importFrom utils readRDS saveRDS
-#' @importFrom stats cumsum
 pair.score.summation <- function(pars) {
 
   ## Parallelize the ss.spec - reference pair score summation? ####

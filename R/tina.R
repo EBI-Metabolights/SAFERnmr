@@ -48,14 +48,12 @@
 #' @return A list containing the results and cluster labels from TINA
 #'
 #' @export
+#' @import ggridges
 #' @importFrom umap umap
 #' @importFrom apcluster apcluster
 #' @importFrom plotly plot_ly
-#' @importFrom shiny Shiny
-#' @importFrom ggridges ggridges
 #' @importFrom tictoc tic toc
 #' @importFrom gridExtra grid.arrange
-#' @importFrom coop pcor covar
 tina <- function(pars) {
   message("-------------------------------------------------------")
   message("-------------------      TINA       -------------------")

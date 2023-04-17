@@ -45,7 +45,6 @@ range.intersect <- function(a, b, operation = "intersection") {
 #' @export
 
 #'
-#' @importFrom pracma sub2indR
 range.intersect.all <- function(ranges, operation = "intersection") {
   if (ncol(ranges) == 1) {
     return(diff(ranges))

@@ -1,7 +1,4 @@
 #' Prepare reference spectra for matching to a dataset
-#'
-#'
-#'
 #' To match features from a dataset to reference spectra in fine detail, they need
 #' to have the same spectral axis, more or less. This function interpolates each
 #' reference spectrum in the list to the dataset ppm axis, and then filters its

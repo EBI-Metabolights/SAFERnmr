@@ -8,10 +8,6 @@
 #'
 #' @import yaml
 #' @import magrittr
-#' @importFrom base message
-#' @importFrom base file.copy
-#' @importFrom base stop
-#' @importFrom utils readRDS
 #'
 #' @export
 #'

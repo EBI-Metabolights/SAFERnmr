@@ -43,7 +43,6 @@
 #'
 #' @export storm_pairplay
 #' @importFrom magrittr %>%
-#' @importFrom zoo rollapply na.fill
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
 #' @importFrom dplyr %>%

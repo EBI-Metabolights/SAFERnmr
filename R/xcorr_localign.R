@@ -37,10 +37,8 @@
 #' xcorr_localign(x, ppm, signature.vals, signature.idx.wind, currentInds, min.overlap = 3, slide = "internal", lag.limit = NA, plots = FALSE)
 #'
 #' @importFrom pracma Reshape
-#' @importFrom tidyverse *
 #' @importFrom stats xcorr
 #' @importFrom matrixStats colVars
-#' @importFrom cowplot plot_grid
 #' @export
 xcorr_localign <- function(x, ppm, # full matrix and colnames
                            signature.vals, # vals matching signature.idx.wind

@@ -14,7 +14,6 @@
 #' @importFrom transport wasserstein1d
 #' @importFrom ggplot2 geom_line geom_vline scale_colour_gradientn
 #' @importFrom scales rescale
-#' @importFrom matrixStats colMax rowMax
 #' @importFrom colorRamps matlab.like2
 #' 
 #' @export

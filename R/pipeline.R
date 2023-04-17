@@ -20,18 +20,14 @@
 #' @param params_loc Path to a YAML file containing user-specified parameters
 #' @param params_obj List of parameters
 #' @return NULL
-#' @importFrom yaml yaml.load_file
-#' @importFrom base missing
-#' @importFrom utils readRDS
 #' @importFrom utils write.table
-#' @importFrom utils saveRDS
 #' @export
 pipeline <- function(params_loc, params_obj) {
   if (isFALSE(missing(params_obj))) {
     run_params <- params_obj
   } else if (missing(params_loc)) {
     # load default params
-    filepath <- system.file(
+    filepath <- base::system.file(
       "extdata", "default_params.yaml",
       package = "ImperialNMRTool"
     )

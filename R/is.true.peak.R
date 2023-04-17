@@ -3,11 +3,9 @@
 #'
 #' @param v a vector of intensities
 #' @return a logical vector indicating the true peaks and tail regions
-#' @importFrom fillbetween fillbetween
 #' @importFrom magrittr %>%
 #' @importFrom runs runs.labelBy.lengths
 #' @importFrom tidyr fill
-#' @importFrom utils extractPeaks_corr
 #' @examples
 #' v <- rnorm(100)
 #' is.true.peak(v)

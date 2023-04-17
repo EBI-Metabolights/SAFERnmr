@@ -10,7 +10,6 @@
 #' @export
 #'
 #' @importFrom magrittr %>%
-#' @importFrom base order
 #'
 #' @author MTJ
 clusts2labs <- function(clusters){
