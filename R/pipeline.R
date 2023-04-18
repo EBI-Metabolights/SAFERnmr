@@ -38,6 +38,10 @@ pipeline <- function(params_loc, params_obj) {
     run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
   }
 
+  if (run_params$galaxy$enabled == FALSE) {
+    setup(run_params)
+  }
+
 
   ###################################################################################################################################
   ## Feature Shape Extraction
