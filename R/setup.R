@@ -34,6 +34,27 @@ setup <- function(params_obj) {
 
 
   ##################################################################################################################
+## Spectral data copy ####
+
+message("Copying spectral matrix from ", params_obj$files$spectral.matrix)
+message(" to ", paste0(this.run, "/spectral.matrix.RDS"), "\n\n\n")
+
+copied <- file.copy(
+  from = params_obj$files$spectral.matrix,
+  to = paste0(this.run, "/spectral.matrix.RDS"),
+  overwrite = T
+)
+
+if (!copied) {
+  stop(
+    "Spectral matrix was not copied. Ensure that both file (",
+    params_obj$files$spectral.matrix,
+    ") and destination (",
+    this.run, ") exist."
+  )
+}
+
+  ##################################################################################################################
   ## Library data copy ####
 
   # Which spectrometer frequency out of those available is closest to the dataset?
