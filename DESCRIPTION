@@ -16,6 +16,6 @@ Depends: R (>= 4.0.0)
 Remotes: tkimhofer/metabom8
 Imports: optparse, stringr, yaml, pbapply, devtools, batch, flexclust, rlang, pacman, ggplot2, scales, purrr, matrixStats, 
     pracma, RcppHungarian, grid, lattice, modeltools, ggnewscale, colorRamps, Metrics, transport, fftw, gridExtra, umap,
-    tictoc, apcluster, plotly, shiny, ggridges, foreach, coop, doParallel, fpc, plyr
+    tictoc, apcluster, plotly, shiny, ggridges, foreach, coop, doParallel, fpc, plyr, reshape2
 License: GPL-2
 RoxygenNote: 7.2.1
