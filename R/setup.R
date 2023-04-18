@@ -62,7 +62,7 @@ setup <- function(params_obj) {
   if (!copied) {
     stop(
       "Library info was not copied. Ensure that both file (",
-      paste0(pars$dirs$lib, "/gissmo_lib.info.RDS"),
+      paste0(params_obj$dirs$lib, "/gissmo_lib.info.RDS"),
       ") and destination (",
       this.run, ") exist."
     )
