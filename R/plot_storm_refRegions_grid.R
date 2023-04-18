@@ -15,7 +15,6 @@
 #'
 #' @importFrom gridExtra grid.arrange
 #' @importFrom tictoc tic toc
-#' @importFrom pander panderOptions
 #' @importFrom dplyr tibble
 #' @importFrom magrittr %>%
 #' @export

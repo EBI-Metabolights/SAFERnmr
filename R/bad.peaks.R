@@ -17,7 +17,6 @@
 #'
 #'
 #' @export
-#' @importFrom stats colMeans
 #' @importFrom magrittr %>%
 bad.peaks <- function(pos.res.pct.feat, scale.exp = 2) {
   mat <- pos.res.pct.feat # res.mat

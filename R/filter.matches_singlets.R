@@ -12,7 +12,6 @@
 #'
 #' @import dplyr
 #' @importFrom magrittr %>%
-#' @importFrom rlist list.unlist
 #'
 #' @export
 filter.matches_singlets <- function(match.info, fits.feature, peak.qualities, pq.featureNumbers, res.area.thresh) {

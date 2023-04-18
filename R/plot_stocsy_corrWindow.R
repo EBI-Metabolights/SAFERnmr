@@ -13,7 +13,7 @@
 #' @import ggplot2
 #' @importFrom gridExtra grid.arrange
 #' @importFrom scales breaks_pretty
-#' @importFrom utils str_c
+#' @importFrom stringr str_c
 #' @importFrom colorRamps matlab.like2
 plot_stocsy_corrWindow <- function(sr, lbound, rbound, showplot = TRUE,
                                    restrictTo = NULL) {
