@@ -234,6 +234,8 @@ match.features2refs.par <- function(pars) {
         r.thresh = pars$matching$r.thresh,
         p.thresh = pars$matching$p.thresh
       )
+      # Filter out NULL values from allmatches.feat
+      matches <- allmatches.feat[!is.null(allmatches.feat)]
       return(matches)
     }
 
