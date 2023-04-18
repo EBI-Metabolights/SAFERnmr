@@ -8,6 +8,7 @@
 #'
 #' @import yaml
 #' @import magrittr
+#' @import lubridate
 #'
 #' @export
 #'
@@ -25,6 +26,8 @@ setup <- function(params_obj) {
   message("-------------------      Setup      -------------------")
   message("-------------------------------------------------------")
   message("\n\n\n")
+  this.run <- params_obj$dirs$temp
+  dir.create(this.run, showWarnings = F)
 
   #library(yaml)
   #library(magrittr)
@@ -52,7 +55,7 @@ setup <- function(params_obj) {
   message(" to ", paste0(this.run, "/lib.info.RDS"), "\n\n\n")
 
   copied <- file.copy(
-    from = paste0(pars$dirs$lib, "/gissmo_lib.info.RDS"),
+    from = paste0(params_obj$dirs$lib, "/gissmo_lib.info.RDS"),
     to = paste0(this.run, "/lib.info.RDS"),
     overwrite = T
   )
