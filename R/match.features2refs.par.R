@@ -199,7 +199,7 @@ match.features2refs.par <- function(pars) {
 
   # Par setup ####
   ncores <- pars$par$ncores
-  my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
+  my.cluster <- parallelly::makeCluster(ncores, type = pars$par$type)
   doParallel::registerDoParallel(cl = my.cluster)
   foreach::getDoParRegistered()
   foreach::getDoParWorkers()
@@ -325,7 +325,7 @@ match.features2refs.par <- function(pars) {
   }
   print(Sys.time() - t1)
 
-  parallel::stopCluster(my.cluster)
+  parallelly::autoStopCluster(my.cluster)
 
 
   ############ Format results and save ########################################################################################
