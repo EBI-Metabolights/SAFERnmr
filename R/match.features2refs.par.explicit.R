@@ -15,15 +15,19 @@ match.features2refs.par.explicit <- function(pars){
   
 ################ Read parameters file ##################
   
+    mem.snapshot(paste0('/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/', Sys.time(), '.txt'))
+
   tmpdir <- pars$dirs$temp
   this.run <- paste0(tmpdir)
-  pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
-  f.stack.split <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
-  f.mat.split <- readRDS(paste0(this.run, "/temp_data_matching/f.mat.split.RDS"))
-  split.scheme <- readRDS(paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
-  ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) 
-  r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
+  pad.size <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/pad.size.RDS"))
+  f.stack.split <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/f.stack.split.RDS"))
+  f.mat.split <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/f.mat.split.RDS"))
+  split.scheme <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/split.scheme.RDS"))
+  ref.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/ref.mat.RDS")) 
+  r.mat <- readRDS(paste0( "/nfs/production/odonovan/nmr_staging/debug_matching_files/rmat.RDS"))
   
+      mem.snapshot(paste0('/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/', Sys.time(), '.txt'))
+
     # Par setup ####
       #message("Setting up parallel cluster...\n\n")
       ##ncores <- pars$par$ncores
@@ -49,6 +53,7 @@ match.features2refs.par.explicit <- function(pars){
         
         message('Chunk ', chunk)
         # For each feature batch:
+        mem.snapshot(paste0('/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/', Sys.time(), 'chunk.txt'))
 
              # Set up ####
               
@@ -79,7 +84,9 @@ match.features2refs.par.explicit <- function(pars){
                     # feat = f.stack[,f.ind, drop = F]
                     # feat.ft = f.mat[,f.ind, drop = F]
                     # simplePlot(trim.sides(feat))
-    
+
+                mem.snapshot(paste0('/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/', Sys.time(), '.txt'))
+
                 message("Matching feature: ", f.ind,"...") # not same as f.num
                 message("    - cross-correlating to refs...")
                 
@@ -184,6 +191,7 @@ match.features2refs.par.explicit <- function(pars){
       }
         print(Sys.time() - t1)
 
+    mem.snapshot(paste0('/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/', Sys.time(), '.txt'))
 
 ############ Format results and save ########################################################################################
     # Compile and save match results ####
@@ -192,4 +200,11 @@ match.features2refs.par.explicit <- function(pars){
         # matches <- readRDS(paste0(this.run, "/matches.RDS"))
         # ####
 
+}
+
+
+mem.snapshot <- function(fname){
+  fileConn<-file(fname)
+  writeLines(paste0(as.character(round(pryr::mem_used() / 1000000000, 2)), ' Gb'), fileConn)
+  close(fileConn)
 }
