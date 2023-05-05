@@ -25,12 +25,12 @@ match.features2refs.par.explicit <- function(pars){
   r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
   
     # Par setup ####
-      message("Setting up parallel cluster...\n\n")
-      ncores <- pars$par$ncores
-      my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
-      doParallel::registerDoParallel(cl = my.cluster)
-      foreach::getDoParRegistered()
-      foreach::getDoParWorkers()
+      #message("Setting up parallel cluster...\n\n")
+      ##ncores <- pars$par$ncores
+      #my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
+      #doParallel::registerDoParallel(cl = my.cluster)
+      #foreach::getDoParRegistered()
+      #foreach::getDoParWorkers()
 
       
       
@@ -44,7 +44,7 @@ match.features2refs.par.explicit <- function(pars){
                          f.stack = f.stack.split,
                          f.mat = f.mat.split,
                          .combine='c', .multicombine=TRUE,
-                         .errorhandling="pass") %dopar%
+                         .errorhandling="pass") %do%
       {
         
         message('Chunk ', chunk)
