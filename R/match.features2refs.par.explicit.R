@@ -190,7 +190,7 @@ match.features2refs.par.explicit <- function(pars){
           
       }
         print(Sys.time() - t1)
-
+   #parallel::stopCluster(my.cluster)
     mem.snapshot(paste0('/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/', Sys.time(), '.txt'))
 
 ############ Format results and save ########################################################################################
