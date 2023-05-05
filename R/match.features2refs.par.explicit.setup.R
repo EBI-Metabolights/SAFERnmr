@@ -60,8 +60,8 @@ match.features2refs.par.setup <- function(pars) {
             which() %>%
             .[1]
     }) %>%
-        unlist()
-        .[1:pars$debug$throttle_matches]
+        unlist() %>%
+        .[1:4]
     nfeats <- length(f.subset)
     f.stack <- feature$stack[f.subset, , drop = F]
     f.position <- feature$position[f.subset, , drop = F]
