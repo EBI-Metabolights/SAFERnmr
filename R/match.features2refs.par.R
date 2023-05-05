@@ -196,7 +196,12 @@ match.features2refs.par <- function(pars) {
 
 
   message("Setting up parallel cluster...\n\n")
-
+    # Par setup ####
+    ncores <- pars$par$ncores
+    my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
+    doParallel::registerDoParallel(cl = my.cluster)
+    foreach::getDoParRegistered()
+    foreach::getDoParWorkers()
  
 
   # Run the matching loop ####
@@ -210,12 +215,7 @@ match.features2refs.par <- function(pars) {
     .combine = "c", .multicombine = TRUE,
     .errorhandling = "pass"
   ) %do% {
-     # Par setup ####
-    ncores <- pars$par$ncores
-    my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
-    doParallel::registerDoParallel(cl = my.cluster)
-    foreach::getDoParRegistered()
-    foreach::getDoParWorkers()
+
     message("Matching feature: ", f.ind, "...") # not same as f.num
     message("    - cross-correlating to refs...")
     # PARALLELIZE: Locate best positions in all available refs  ####
@@ -323,8 +323,9 @@ match.features2refs.par <- function(pars) {
       peak.quality = peak.poorness,
       fits = allmatches.fits
     ))
-  parallel::stopCluster(my.cluster)
   }
+    parallel::stopCluster(my.cluster)
+
   print(Sys.time() - t1)
 
 
