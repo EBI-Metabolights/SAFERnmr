@@ -10,7 +10,6 @@
 #' @import parallel
 #' @import foreach
 #' @import doParallel
-#' @import tidyverse
 match.features2refs.par.explicit <- function(pars){
   
 ################ Read parameters file ##################
