@@ -60,7 +60,9 @@ pipeline <- function(params_loc, params_obj) {
   # - match using convolution-based cross-correlation
   # - parallelized
 
-  match.features2refs.par(run_params)
+  # match.features2refs.par(run_params)
+  match.features2refs.par.setup(run_params)
+  match.features2refs.par.explicit(run_params)
 
 
   ###################################################################################################################################
