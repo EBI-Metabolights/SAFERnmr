@@ -61,7 +61,7 @@ match.features2refs.par.setup <- function(pars) {
             .[1]
     }) %>%
         unlist() %>%
-        .[1:4]
+        .[1:16]
     nfeats <- length(f.subset)
     f.stack <- feature$stack[f.subset, , drop = F]
     f.position <- feature$position[f.subset, , drop = F]
