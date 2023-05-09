@@ -116,8 +116,8 @@ match.features2refs.par.setup <- function(pars) {
     dir.create(paste0(this.run, "/temp_data_matching"))
 
     # Ref data applies to all nodes:
-     saveRDS(r.mat, paste0(this.run,'/temp_data_matching/rmat.RDS'))
-     saveRDS(ref.mat, paste0(this.run,'/temp_data_matching/ref.mat.RDS'))
+    saveRDS(r.mat, paste0(this.run, "/temp_data_matching/rmat.RDS"))
+    saveRDS(ref.mat, paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
 
     # Feat data is split between nodes:
 
