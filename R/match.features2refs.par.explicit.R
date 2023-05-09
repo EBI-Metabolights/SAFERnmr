@@ -25,7 +25,7 @@ match.features2refs.par.explicit <- function(pars) {
     split.scheme <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/split.scheme.RDS"))
     ref.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/ref.mat.RDS"))
     r.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/rmat.RDS"))
-
+    lapply(f.stack.split, ncol) %>% unlist %>% sum
     mem.snapshot(paste0(log_path, "/", Sys.time(), ".txt"))
 
     # Par setup ####
