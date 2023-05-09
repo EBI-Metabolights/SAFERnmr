@@ -19,12 +19,12 @@ match.features2refs.par.explicit <- function(pars) {
 
     tmpdir <- pars$dirs$temp
     this.run <- paste0(tmpdir)
-    pad.size <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/pad.size.RDS"))
-    f.stack.split <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/f.stack.split.RDS"))
-    f.mat.split <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/f.mat.split.RDS"))
-    split.scheme <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/split.scheme.RDS"))
-    ref.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/ref.mat.RDS"))
-    r.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/rmat.RDS"))
+    pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
+    f.stack.split <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
+    f.mat.split <- readRDS( paste0(this.run, "/temp_data_matching/f.mat.split.RDS"))
+    split.scheme <- readRDS(paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
+    ref.mat <- readRDS(paste0(this.run,'/temp_data_matching/ref.mat.RDS'))
+    r.mat <- readRDS(paste0(this.run,'/temp_data_matching/rmat.RDS'))
     print(lapply(f.stack.split, ncol) %>% unlist %>% sum)
     mem.snapshot(paste0(log_path, "/", Sys.time(), ".txt"))
 
