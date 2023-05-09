@@ -23,7 +23,8 @@ project_features.stackplot <- function(xmat, ppm,
                                        exp.by = 0.05,
                                        vshift = 2,
                                        hshift = 0.002,
-                                       sort.rows = F){
+                                       sort.rows = F,
+                                       plt.rng = 1:ncol(xmat)){
  
   require(ggplot2)
   require(pracma)
@@ -190,8 +191,8 @@ project_features.stackplot <- function(xmat, ppm,
                                        fill="pink",alpha=0.4)
                       # plot(g)
                   }
-                 
-                g <- g + labs(title = str_c("Feature ", label, ", ",
+                if (!is.null(label)){f.str <- str_c("Feature ", label, ", ")} else {f.str <- ''}
+                g <- g + labs(title = str_c(f.str,
                                             round(min(f.ppm,na.rm = T),2),"-",
                                             round(max(f.ppm,na.rm = T),2)," ppm")) + 
                 theme(plot.title = element_text(hjust = 0.5))
