@@ -25,7 +25,7 @@ match.features2refs.par.explicit <- function(pars) {
     split.scheme <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/split.scheme.RDS"))
     ref.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/ref.mat.RDS"))
     r.mat <- readRDS(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/rmat.RDS"))
-    lapply(f.stack.split, ncol) %>% unlist %>% sum
+    print(lapply(f.stack.split, ncol) %>% unlist %>% sum)
     mem.snapshot(paste0(log_path, "/", Sys.time(), ".txt"))
 
     # Par setup ####
@@ -87,7 +87,7 @@ match.features2refs.par.explicit <- function(pars) {
             # simplePlot(trim.sides(feat))
 
             #mem.snapshot(paste0("/nfs/production/odonovan/nmr_staging/debug_matching_files/readouts/", Sys.time(), ".txt"))
-            mem.snapshot(paste0(log_path, "/",Sys.time(), '_feature_',f.num,'.txt'))
+            mem.snapshot(paste0(log_path, "/",Sys.time(), '_feature_',f.num, '_chunk_', chunk, '.txt'))
             message("Matching feature: ", f.ind, "...") # not same as f.num
             message("    - cross-correlating to refs...")
 
