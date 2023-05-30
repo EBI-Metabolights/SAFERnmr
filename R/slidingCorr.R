@@ -42,7 +42,7 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
     oob <- indsmat < 1 | indsmat > ncol(x)
     indsmat[oob] <- NA
     
-  in.bounds <- (indsmat %>% is.na %>% !.) %>% pracma::Reshape(., nrow(indsmat), ncol(indsmat))
+  in.bounds <- (indsmat %>% is.na %>% "!"(.)) %>% pracma::Reshape(., nrow(indsmat), ncol(indsmat))
     
     
     for (j in 1:ncol(x)){

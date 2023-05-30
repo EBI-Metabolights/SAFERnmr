@@ -15,7 +15,7 @@
 #' \item{peakMap}{a matrix specifying the indices of the peaks in each column of the correlation matrix.}
 #' \item{noiseDist}{the proportion of pockets containing each window index.}
 #'
-#' @importFrom magrittr %>%
+#' @import magrittr
 #'
 #' @export
 corrPocketPairs_al <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALSE, wdlimit = 0.99,
