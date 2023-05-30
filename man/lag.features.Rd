@@ -5,7 +5,7 @@
 \title{From a feature stack and lag table, align features to a given feature. Works
 on pairs as well. Returns the matrix containing aligned profiles (e.g., for plotting).}
 \usage{
-\method{lag}{features}(featureStack, lag.table, to = NULL)
+lag.features(featureStack, lag.table, to = NULL)
 }
 \arguments{
 \item{featureStack}{matrix containing feature profiles}
