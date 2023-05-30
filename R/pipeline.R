@@ -214,7 +214,7 @@ pipeline <- function(params_loc, params_obj) {
 ################################################################################################################################### 
 ## Match filtering
 # - filter out singlet matches
-# - filter for Δ(δ)
+# - filter for (deltappm)
 # - backfit ref subsignatures to individual dataset spectra
 
   filter.matches(pars) 

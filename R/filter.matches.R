@@ -273,7 +273,7 @@ filter.matches <- function(pars){
           match.info <- match.info[keep, ]
           fits.feature <- fits.feature[keep]
 
-######################### Calculate Δ(δ) distance (specppm - featureppm)  #############################
+ ######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
         # source('./../span.R')
         # source('./../filter.matches_shiftDelta.R')
@@ -284,7 +284,7 @@ filter.matches <- function(pars){
         match.info <- res$match.info
         fits.feature <- res$fits.feature
 
-######################### Back-fit reference to spectra  #############################    
+ ######################### Back-fit reference to spectra  #############################    
     
       message('Back-fitting ref-feats to each spectrum in the relevant subset...\n\n')
       xmat <- fse.result$xmat
@@ -303,7 +303,7 @@ filter.matches <- function(pars){
         message('Saving backfits...\n\n\n')
         saveRDS(backfits, paste0(this.run,"/backfits.RDS"))
 
-# ########## save filtered data ########################################################################
+ # ########## save filtered data ########################################################################
          
         message('Saving split and filtered match data...\n\n')
 

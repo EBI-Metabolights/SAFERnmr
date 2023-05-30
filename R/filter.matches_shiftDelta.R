@@ -21,12 +21,12 @@ filter.matches_shiftDelta <- function(match.info,
   
   
   
-      ######################### Calculate Δ(δ) distance (specppm - featureppm)  #############################    
+      ######################### Calculate deltappm distance (specppm - featureppm)  #############################    
     
         
-          # Each feature has a δ range/distribution ####
-          # Each spec match with a feature has a δ range. 
-          # Each feature has a δ range/distribution. Compare them:  ####
+          # Each feature has a delta range/distribution ####
+          # Each spec match with a feature has a delta range. 
+          # Each feature has a delta range/distribution. Compare them:  ####
             
             match.info[,'ppm.difference'] <- pblapply(1:nrow(match.info), function(m){
               
