@@ -172,6 +172,7 @@
 #' 
 #' 
 #' @importFrom utils write.table
+#' @importFrom magrittr %>%
 #' 
 #' 
 #' @export
