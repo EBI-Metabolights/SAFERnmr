@@ -4,7 +4,7 @@
 \alias{filter.matches}
 \title{Match Filtering}
 \usage{
-filter.matches(pars)
+\method{filter}{matches}(pars)
 }
 \arguments{
 \item{pars}{A list of input parameters.}

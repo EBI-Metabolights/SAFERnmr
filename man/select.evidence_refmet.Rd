@@ -13,7 +13,7 @@ ppm.tolerance between ref feats and spec, and ref feats and selected ref region
 cutoff.residuals.feat 
 cutoff.residuals.spec}
 \usage{
-select.evidence_refmet(
+\method{select}{evidence_refmet}(
   ref.ind = 1,
   spec.ind = NULL,
   match.info,

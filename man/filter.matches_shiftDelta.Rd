@@ -4,13 +4,7 @@
 \alias{filter.matches_shiftDelta}
 \title{Filter matches based on ppm shift difference}
 \usage{
-filter.matches_shiftDelta(
-  match.info,
-  feature,
-  ppm,
-  fits.feature,
-  ppm.tol = 0.5
-)
+\method{filter}{matches_shiftDelta}(match.info, feature, ppm, fits.feature, ppm.tol = 0.5)
 }
 \arguments{
 \item{match.info}{A data frame containing the match information; produced in filter.matches()}
