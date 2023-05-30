@@ -196,8 +196,7 @@ pipeline <- function(params_loc, params_obj) {
   #   setup(run_params)
   # }
   pars <- run_params
-  'checkthis' %>% print
-  
+
 ################################################################################################################################### 
 ## Feature Shape Extraction
 

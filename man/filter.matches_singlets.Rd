@@ -4,7 +4,7 @@
 \alias{filter.matches_singlets}
 \title{Filter matches with singlets}
 \usage{
-\method{filter}{matches_singlets}(
+filter.matches_singlets(
   match.info,
   fits.feature,
   peak.qualities,

@@ -13,7 +13,9 @@ Authors@R: c(
     person("Callum Martin", "Developer", role = c("cre"), email="cmartin@ebi.ac.uk"))
 Maintainer: Callum Martin <cmartin@ebi.ac.uk>
 Depends: R (>= 4.0.0)
-Imports: optparse, stringr, yaml, pbapply, devtools, batch, flexclust, rlang, pracma, RcppHungarian, grid, lattice, modeltools, stats4, magrittr, fftw
-License: GPL-2
 RoxygenNote: 7.2.3
 Encoding: UTF-8
+Imports: optparse, stringr, yaml, pbapply, devtools, batch, rlang, ggplot2, scales, purrr, matrixStats, 
+    pracma, grid, lattice, modeltools, ggnewscale, colorRamps, Metrics, transport, fftw, gridExtra, umap,
+    tictoc, plotly, shiny, ggridges, foreach, coop, doParallel, fpc, plyr, reshape2, parallelly, pryr, stringr, stats4, magrittr
+License: GPL-2
