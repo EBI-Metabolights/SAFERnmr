@@ -7,6 +7,15 @@
 #'
 #' @return lag table 
 #'
+#' @import doParallel
+#' @import foreach
+#' 
+#' @importFrom dplyr slice
+#' @importFrom fftw FFT
+#' @importFrom dplyr arrange
+#' @importFrom dplyr group_by
+#' @importFrom dplyr desc
+#' @importFrom magrittr %>%
 #'
 #' @export
 feat.align <- function(feature.stack, max.hits = 1, counter = T){

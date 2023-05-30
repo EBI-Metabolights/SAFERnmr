@@ -11,6 +11,8 @@
 #' @param ppm.tol The maximum allowed ppm shift difference between the feature and the match
 #'
 #' @return A list with two elements: the filtered `match.info` data frame, and the filtered `fits.feature` list which have been filtered by ppm shift difference.
+#' @importFrom magrittr %>%
+#' @import pbapply
 #'
 #' @export
 filter.matches_shiftDelta <- function(match.info,

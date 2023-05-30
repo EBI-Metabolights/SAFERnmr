@@ -28,6 +28,8 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom ggnewscale new_scale_color
 #' @importFrom colorRamps matlab.like2
+#' @importFrom magrittr %>%
+#'
 #'
 #' @export
 fit.batman <- function(feat, spec, 
@@ -120,6 +122,7 @@ fit.batman <- function(feat, spec,
 #' @import Metrics
 #' @import ggplot2
 #' @importFrom dplyr %>%
+#' @importFrom magrittr %>%
 #'
 #' @export
 fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE){

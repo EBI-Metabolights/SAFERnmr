@@ -7,6 +7,8 @@
 #'
 #' @return A numeric vector with the same length as `v`, scaled to the range of `mat` element-wise.
 #'
+#' @importFrom magrittr %>%
+#'
 #'
 #' @export
 scale.to.minmax <- function(v,             # vector (e.g. feature profile)

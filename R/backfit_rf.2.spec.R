@@ -12,6 +12,8 @@
 #'         as well as a grid plot of the fits and back-fit feasibility scores.
 #'
 #' @importFrom ggnewscale new_scale_color
+#' @importFrom magrittr %>%
+#'
 #'
 #' @export
 backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info, 

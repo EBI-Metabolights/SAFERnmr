@@ -7,8 +7,10 @@
 #' @param pars A list of input parameters.
 #' @return A list of filtered and processed matched peak information, including back-fits to the original spectra.
 #' @import yaml
-#' @import magrittr
+#' @importFrom magrittr %>%
+#' 
 #' @import pbapply
+#' 
 #' @export filter.matches
 filter.matches <- function(pars){
 

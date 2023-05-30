@@ -7,6 +7,9 @@
 #' @param pars a list containing necessary parameters for the function
 #' @return RDS file containing match scores between library reference spectra and the best subset spectrum score for each.
 #' @export
+#' 
+#' @importFrom magrittr %>%
+#'
 #'
 score.matches <- function(pars){
   

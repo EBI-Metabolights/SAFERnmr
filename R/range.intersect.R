@@ -6,6 +6,8 @@
 #'
 #' @return a numeric vector representing the intersection or union of the two ranges, or a vector of NA if the ranges do not overlap
 #'
+#' @importFrom magrittr %>%
+#'
 #' @examples
 #' range.intersect(c(1, 5), c(3, 6), operation = "intersection")
 #' range.intersect(c(1, 5), c(3, 6), operation = "union")
@@ -41,6 +43,8 @@ range.intersect <- function(a,b,operation = "intersection"){
 #' and m is the number of ranges
 #' @param operation a string indicating the type of operation to perform. Can be either
 #' "intersection" or "union". Defaults to "intersection".
+#'
+#' @importFrom magrittr %>%
 #'
 #' @return a matrix with dimensions (ncol(ranges), ncol(ranges)) containing the pairwise
 #' intersection or union between each range.

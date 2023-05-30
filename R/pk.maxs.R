@@ -5,6 +5,7 @@
 #' @param v A numeric vector
 #' @param mask A logical vector of the same length as \code{v}, indicating which values of \code{v} should be masked (i.e., excluded from consideration as local maxima)
 #' @return A numeric vector containing the indices of the local maxima in \code{v} that are not masked by \code{mask}
+#' @importFrom magrittr %>%
 #' @examples
 #' v <- c(1, 2, 3, 2, 1)
 #' mask <- c(FALSE, FALSE, TRUE, FALSE, FALSE)

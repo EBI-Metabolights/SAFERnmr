@@ -5,7 +5,8 @@
 #'
 #' @param v A numeric vector
 #' @return The span of the vector
-#''
+#' @importFrom magrittr %>%
+#'
 #' @export
 span <- function(v){
   return(v %>% range(., na.rm = TRUE) %>% diff +1)

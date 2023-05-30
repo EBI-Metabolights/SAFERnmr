@@ -8,6 +8,9 @@
 #'   observed peak intensities.
 #' @param prom.ratio The minimum required ratio of peak prominence to feature
 #'   intensity range.
+#'   
+#' @importFrom magrittr %>%
+#'   
 #' @return A list containing two logical values. The first indicates whether
 #'   the feature passed the peak prominence filter, and the second indicates
 #'   whether the feature passed the peak fit filter.

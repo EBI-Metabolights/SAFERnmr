@@ -5,6 +5,8 @@
 #'
 #' @param clusters A list of cluster-feature pairs.
 #' 
+#'  @importFrom magrittr %>%
+#'
 #' @return A numeric vector of feature-sorted cluster labels.
 #'
 #' @export

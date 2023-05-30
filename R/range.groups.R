@@ -8,6 +8,7 @@
 #' @return A list of groups, where each group is a vector of indices
 #'   corresponding to overlapping ranges.
 #' @export
+#' @importFrom magrittr %>%
 #'
 #'
 range.groups <- function(ranges, operation = "intersection", clust.by = 'comps'){

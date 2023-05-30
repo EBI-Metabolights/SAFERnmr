@@ -10,6 +10,9 @@
 #' @examples
 #' v <- c(0, 1, 1, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 1, 1, 1, 1)
 #' run.labels(v)
+#'  
+#' @importFrom magrittr %>%
+#'
 #'
 #' @export
 run.labels <- function(v){

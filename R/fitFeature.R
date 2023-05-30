@@ -7,6 +7,8 @@
 #' @param spectrum.position A numeric value specifying the position of the spectrum
 #' @param method A character string specifying the method to use for fitting. Can be "least squares" or "minmax scaling".
 #'
+#' @importFrom magrittr %>%
+#'
 #' @return A list containing the feature fit, the feature position, the ratio, the residuals, and the overfit
 #'
 #'  @export

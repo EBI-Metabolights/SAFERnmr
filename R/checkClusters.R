@@ -4,6 +4,11 @@
 #' @param clusters cluster data from tina_combineFeatures_optics (and adjustments in tina)
 #' @param feature feature object containing data on all the features
 #'
+#' @importFrom magrittr %>%
+#' @import parallel
+#' @import foreach
+#' @import doParallel
+#'
 #' @return clust.info.split (list of cluster information for each cluster, concatenated)
 #'
 #' @export

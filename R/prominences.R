@@ -7,11 +7,10 @@
 #' @param v2 A vector of the y-values of the peaks.
 #'
 #' @return A vector of the prominences of each peak.
-#' @export
-#'
-#'
 #'
 #' @importFrom magrittr %>%
+#' 
+#' @export
 prominences <- function(peaks, v2){
   maxima <- v2[peaks$peaks]
   proms <- lapply(1:length(maxima), function(p) {

@@ -12,6 +12,8 @@
 #' 
 #' @importFrom plotly plot_ly layout
 #' @importFrom RColorBrewer brewer.pal
+#' @importFrom magrittr %>%
+#'
 #' 
 #' @export
 plot_spec <- function(spec, ppm, aucs = NULL, title = '', source.name = 'refspec'){

@@ -15,6 +15,7 @@
 #' @importFrom ggplot2 geom_line geom_vline scale_colour_gradientn
 #' @importFrom scales rescale
 #' @importFrom colorRamps matlab.like2
+#' @importFrom magrittr %>%
 #' 
 #' @export
 plot_addSTOCSYLine <- function(g,specRegion,ppm,

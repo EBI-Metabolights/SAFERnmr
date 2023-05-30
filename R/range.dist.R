@@ -7,6 +7,7 @@
 #' @param b range 2
 #' @return distance between them
 #' @export
+#' @importFrom magrittr %>%
 #'
 #'
 range.dist <- function(a,b){

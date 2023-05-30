@@ -15,6 +15,8 @@
 #' 
 #' @return If \code{give = "features"}, a feature object with the filtered features. If \code{give = "filter"}, a logical vector indicating which features passed the filter.
 #' 
+#' @importFrom magrittr %>%
+#'
 #' 
 #' @export
 filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subset = 5, prom.ratio = 0.3, give = "filter", max.features = 10000){

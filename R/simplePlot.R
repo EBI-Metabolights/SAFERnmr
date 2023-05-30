@@ -15,6 +15,8 @@
 #' @return A ggplot object.
 #'
 #' @import ggplot2 scales
+#' @importFrom magrittr %>%
+#'
 #'
 #' @examples
 #' data(mtcars)

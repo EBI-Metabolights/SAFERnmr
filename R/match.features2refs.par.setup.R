@@ -5,6 +5,9 @@
 #' @param pars a list of input parameters
 #'
 #' @return writes necessary files for matching script
+#' @importFrom magrittr %>%
+#' @import fftw
+#' @importFrom parallel mclapply
 #'
 #' @export
 match.features2refs.par.setup <- function(pars) {

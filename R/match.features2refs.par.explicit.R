@@ -10,6 +10,7 @@
 #' @import parallel
 #' @import foreach
 #' @import doParallel
+#' @importFrom magrittr %>%
 #' 
 #' @author MTJ
 match.features2refs.par.explicit <- function(pars){

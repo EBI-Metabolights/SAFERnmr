@@ -27,6 +27,8 @@
 #'   - ref.start: The starting index of the reference vector used in the correlation
 #'   - ref.end: The ending index of the reference vector used in the correlation
 #'
+#' @importFrom fftw FFT
+#' @importFrom magrittr %>%
 #'
 #' @export
 feature_match2ref_slim <- function(f.num, r.num, feat, ref,

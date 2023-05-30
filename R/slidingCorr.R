@@ -25,6 +25,7 @@
 #' slidingCorr(x, ws = 20, extractPockets = TRUE, plotting = TRUE)
 #'
 #' @importFrom pracma Reshape
+#' @importFrom magrittr %>%
 #'
 #' @export
 slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 20, ppm = NULL){

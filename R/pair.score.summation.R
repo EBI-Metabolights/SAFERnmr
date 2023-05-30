@@ -55,7 +55,9 @@
 #' @import parallel
 #' @import foreach
 #' @import yaml
-#' @importFrom plyr rbind.fill
+#' @importFrom magrittr %>%
+#' @import pbapply
+#'
 pair.score.summation <- function(pars, refmat, ss.ref.pairs){
 # # Dependencies ####
 # 

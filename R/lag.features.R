@@ -17,6 +17,8 @@
 #' @return matrix with aligned feature profiles. 
 #'
 #'
+#' @importFrom magrittr %>%
+#'
 #' @export
 lag.features <- function(featureStack,  # each row is a feature
                          lag.table,     # has fields f1, f2, lag.in.f2

@@ -6,6 +6,8 @@
 #' @param isolatedpk a numeric vector representing an isolated peak
 #' @return a numeric value representing the FWHM of the peak
 #'
+#' @importFrom magrittr %>%
+#'
 #'
 #' @export
 fwhm <- function(isolatedpk){

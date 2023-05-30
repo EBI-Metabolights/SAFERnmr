@@ -6,6 +6,9 @@
 #' @param localMins A numeric vector containing the indices of local minima in the correlation vector
 #' @param vRange A numeric vector containing the range of valid indices for the correlation vector
 #' @return A list with two elements: \code{lower}, the index of the closest local minimum to the left of the peak, and \code{upper}, the index of the closest local minimum to the right of the peak
+#' 
+#'  @importFrom magrittr %>%
+#'
 #' @examples
 #' v <- c(1, 2, 3, 2, 1)
 #' localMins <- c(1, 3, 5)

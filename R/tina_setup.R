@@ -21,6 +21,7 @@
 #' 
 #' # Run the function
 #' tina_setup(a = peaks, xmat = spectra)
+#' @importFrom magrittr %>%
 #'
 #' @export
 tina_setup <- function(a, xmat){

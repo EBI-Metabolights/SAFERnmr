@@ -15,6 +15,7 @@
 #' @import ggplot2
 #' @import ggridges
 #' @import dplyr
+#' @importFrom magrittr %>%
 #'
 #' @return A ggplot2 object.
 #'

@@ -6,6 +6,8 @@
 #' @param clust.feats cluster feature indices (rows in feature.stack)
 #' @param feature.stack matrix holding feature profiles (feature$stack)
 #'
+#' @importFrom magrittr %>%
+#'
 #' @return clust.info list; labels of features, rmses, profile, key feature, lag.table, other info
 #'
 #' @export

@@ -24,6 +24,7 @@
 #' @importFrom gridExtra grid.arrange
 #' @importFrom matrixStats rowSds
 #' @importFrom colorRamps matlab.like2
+#' @importFrom magrittr %>%
 #'
 #'
 #' @export

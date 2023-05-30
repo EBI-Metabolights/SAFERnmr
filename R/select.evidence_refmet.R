@@ -26,6 +26,7 @@
 #' - ref.info: library info for ref spectrum
 #' - rf.fits: list of fit objects for relevant ref features
 #'
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' v1 <- c(1, 2, 3, 4, 5)

@@ -9,10 +9,16 @@
 #'
 #' @return lag table 
 #'
-#'
+#' @importFrom magrittr %>%
+#' @importFrom fftw FFT
+#' @importFrom dplyr arrange
+#' @importFrom dplyr desc
+#' @importFrom dplyr group_by
+#' @importFrom dplyr slice
+#' 
 #' @export
 feat.align.to <- function(align, to, max.hits = 1, max.lag = Inf){
-  require(dplyr)
+  
   
   # align and to should be same size (NA padded if needed)
   
@@ -191,60 +197,3 @@ feat.align.to <- function(align, to, max.hits = 1, max.lag = Inf){
     return(hits)
         
 }
-
-
-
-
-
-
-
-  #           # Escape and return nothing if there are no matches to evaluate: ####
-  #               if (is.null(hits)){return(NULL)}
-  #               # if (nrow(matches) == 0){return(NULL)}
-  #         
-  #             ######################################################################
-  #         
-  #             # Evaluate fits for top-scoring positions (regardless of ref) ####
-  #         
-  #               match.fits <- lapply(1:nrow(matches), function(m)
-  #               {
-  #                   # m <- 1
-  #                 # Get f and r indices for this row
-  #                   f <- f.num
-  #                   r <- r.num
-  #                   feat.pos <- matches[m, c('feat.start','feat.end')] %>% as.numeric %>% fillbetween
-  #                   ref.pos <- matches[m, c('ref.start','ref.end')] %>% as.numeric %>% fillbetween
-  #         
-  #                 # Fit
-  #                   fit <- fit.leastSquares(feat[feat.pos], ref[ref.pos], plots = F)
-  #                   # if(is.null(fit)){return(NA)}
-  #                     # fit$plot
-  #                   fit$wasserstein.score <- score.wasserstein(fit$feat.fit, fit$spec.fit)
-  #         
-  #                   return(fit)
-  #               })
-  #         
-  #               # Extract out minimal fit data ####
-  #                 fit.data <- lapply(match.fits, function(f) f$fit %>% as.numeric) %>% do.call(rbind,.)
-  #                 matches[,"fit.intercept"] <- fit.data[,1]
-  #                 matches[,"fit.scale"] <- fit.data[,2]
-  #         
-  #               # Add some different scores from the fits ####
-  #                 # message("    - calculating additional scores...")
-  #                 matches[,'wasserstein.score'] <-
-  #                   lapply(match.fits, function(x) x$wasserstein.score) %>% unlist
-  #                 matches[,'sum.residuals'] <-
-  #                   lapply(match.fits, function(x) x$sum.residuals) %>% unlist
-  #                 matches[,'rmse'] <-
-  #                   lapply(match.fits, function(x) x$rmse) %>% unlist
-  #         
-  #               # Reporting ####
-  #             return(matches)
-  #       }
-  #   
-  #       return(matches)
-  # }) %>% do.call(rbind,.)              
-      
-  # parallel::stopCluster(my.cluster)
-  #     
-  # return(matches)

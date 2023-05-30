@@ -7,6 +7,8 @@
 #' 
 #' @return list with lagged spectral region indices, values, subset, and range of columns in xmat
 #'
+#' @importFrom magrittr %>%
+#'
 #' @export
 #'
 #' @importFrom magrittr %>%

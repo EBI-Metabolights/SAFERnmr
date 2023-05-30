@@ -54,6 +54,8 @@
 #' @importFrom plotly plot_ly
 #' @importFrom tictoc tic toc
 #' @importFrom gridExtra grid.arrange
+#' @importFrom magrittr %>%
+#'
 tina <- function(pars){
   message('-------------------------------------------------------')
   message('-------------------      TINA       -------------------')

@@ -8,6 +8,8 @@
 #' @param pos.res.pct.feat matrix of positive residuals for a feature to all references fit as a percent of the feature resonance height
 #' @param scale.exp a scaling exponent for the weights to select for values very close to 1 (default is 2)
 #'
+#' @importFrom magrittr %>%
+#'
 #' @return A vector of weights, one for each point in the feature profile,
 #' indicating how rarely the feature point was fit in the ref DB matches the
 #' which can be (e.g.) multiplied by and then subtracted from feature
@@ -16,8 +18,8 @@
 #' and more likely to be false positives in feature extraction).
 #'
 #'
+#'
 #' @export
-#' @importFrom magrittr %>%
 bad.peaks <- function(pos.res.pct.feat, scale.exp = 2){
         mat <- pos.res.pct.feat #res.mat
         # mat <- mat * allmatches.feat[, 'rval']

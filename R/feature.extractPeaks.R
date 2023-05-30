@@ -8,6 +8,7 @@
 #'   - pks (all peak info)
 #'   - maxpk highest intensity true peak
 #'   - pkind.max index of maxpk
+#' @importFrom magrittr %>%
 #'
 #' @export
 feature.extractPeaks <- function(feature){

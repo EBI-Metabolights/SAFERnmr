@@ -4,6 +4,7 @@
 #' @param scaling a logical value indicating whether to scale the feature values to between 0 and 1 based on the highest peak's intensity
 #'
 #' @return a list object containing
+#' @importFrom magrittr %>%
 #'
 #' @export
 align.max <- function(feature, scaling = TRUE){

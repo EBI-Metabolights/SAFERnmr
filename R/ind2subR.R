@@ -10,6 +10,7 @@
 #' m <- 4
 #' ind2subR(inds, m)
 #' # Returns: list(rows = c(1, 2, 3, 4, 1, 2, 3, 4, 1), cols = c(1, 1, 1, 1, 2, 2, 2, 2, 3))
+#' @return list with row and column indices matching the linear indices given in inds
 #' @export
 ind2subR <- function(inds,m){   
   

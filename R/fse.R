@@ -61,6 +61,8 @@
 #'
 #' @importFrom plyr ldply count
 #' @importFrom purrr pluck
+#' @importFrom magrittr %>%
+#' @import pbapply
 #'
 #'
 #' @export

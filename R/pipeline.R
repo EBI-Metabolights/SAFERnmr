@@ -166,8 +166,14 @@
 #'
 #' @param params_loc Path to a YAML file containing user-specified parameters
 #' @param params_obj List of parameters
+#' 
+#' 
 #' @return NULL
+#' 
+#' 
 #' @importFrom utils write.table
+#' 
+#' 
 #' @export
 pipeline <- function(params_loc, params_obj) {
   if (isFALSE(missing(params_obj))) {
@@ -185,10 +191,11 @@ pipeline <- function(params_loc, params_obj) {
     run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
   }
 
-  if (run_params$galaxy$enabled == FALSE) {
-    setup(run_params)
-  }
-
+  # if (run_params$galaxy$enabled == FALSE) {
+  #   setup(run_params)
+  # }
+  pars <- run_params
+  
 ################################################################################################################################### 
 ## Feature Shape Extraction
 

@@ -15,6 +15,8 @@
 #' @importFrom pracma repmat
 #' @importFrom scales breaks_pretty
 #' @importFrom reshape2 melt
+#' 
+#' @importFrom magrittr %>%
 #'
 #' @export
 project_features.stackplot <- function(xmat, ppm,

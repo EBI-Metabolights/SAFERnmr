@@ -6,6 +6,8 @@
 #' @param peakInd The index of the peak around which to expand the window.
 #' @param wind A vector defining the window (column inds) around the peak.
 #'
+#' @importFrom magrittr %>%
+#'
 #' @return A list with the following elements:
 #'   \item{peak}{The index of the peak used for window expansion.}
 #'   \item{intcorr}{The integral of the correlation within the expanded window.}

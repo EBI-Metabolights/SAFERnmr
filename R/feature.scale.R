@@ -6,6 +6,9 @@
 #' @param peaks peaks for each, from feature.extractPeaks
 #'
 #' @return scaled feature matrix
+#' 
+#' @importFrom magrittr %>%
+#'
 #'
 #' @export
 feature.scale <- function(featureStack, peaks)

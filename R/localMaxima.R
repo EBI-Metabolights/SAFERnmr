@@ -8,6 +8,7 @@
 #' @param v A numeric vector
 #'
 #' @return A numeric vector containing the indices of the local maxima of \code{v}
+#' @importFrom magrittr %>%
 #'
 #' @examples
 #' localMaxima(c(1, 2, 3, 2, 1))
