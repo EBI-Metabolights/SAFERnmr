@@ -172,7 +172,7 @@
 #' 
 #' 
 #' @importFrom utils write.table
-#' @importFrom magrittr %>%
+#' @import magrittr
 #' 
 #' 
 #' @export
