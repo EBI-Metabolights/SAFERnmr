@@ -21,7 +21,7 @@ checkClusters <- function(clusters, feature,
   # Try max-align and clustering
     # feature <- feature.ma
     # clusters.by.grp <- clusters$results$clusters[clusters$results$labels != 0]
-    clusters.by.grp <- clusters$groups[1:10]
+    clusters.by.grp <- clusters$groups
     
     # Serially ####
     # message('Cluster ', i)
@@ -66,12 +66,12 @@ checkClusters <- function(clusters, feature,
         }
         
       # Par run ####
-        i <- 1
+        # i <- 1
         clust.info <-   foreach(cluster = clust,
                                 .combine='c',
-                                .errorhandling="pass") %do% 
+                                .errorhandling="pass") %dopar% 
                           {
-                                  print(i)
+                                  # print(i)
                                   # cluster <- clust[[193]]                   
                                   c.info <- check.cluster(clust.feats = 1:length(cluster$labels), 
                                                           feature.stack = cluster$f.stack)
@@ -80,7 +80,7 @@ checkClusters <- function(clusters, feature,
                                   c.info$key.feat <- c.info$key.feat %>% cluster$labels[.]
                                   c.info$lag.table$f1 <- c.info$lag.table$f1 %>% cluster$labels[.]
                                   c.info$lag.table$f2 <- c.info$lag.table$f2 %>% cluster$labels[.]
-                                  i <- i + 1
+                                  # i <- i + 1
                                   return(c.info)
                                   
                           }

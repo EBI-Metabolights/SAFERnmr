@@ -32,7 +32,7 @@ match.features2refs.par.explicit <- function(pars){
   ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) 
   r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
   
-  mem.snapshot(paste0(Sys.time(), '.txt'))
+  mem.snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
     # Par setup ####
       message("Setting up parallel cluster...\n\n")
       ncores <- pars$par$ncores
@@ -54,6 +54,7 @@ match.features2refs.par.explicit <- function(pars){
                              split.grp = split.scheme,
                              f.stack = f.stack.split,
                              .combine='c', .multicombine=TRUE,
+                             .packages = c('fftw', 'foreach'),
                              .errorhandling="pass") %dopar%
 
       {
@@ -85,7 +86,7 @@ match.features2refs.par.explicit <- function(pars){
                                           .combine='c', .multicombine=TRUE,
                                           .errorhandling="pass") %do%
                 {
-                  mem.snapshot(paste0(Sys.time(), '_feature_',f.num,'.txt'))
+                  mem.snapshot(paste0(tmpdir, '/', Sys.time(), '_feature_',f.num,'.txt'))
                   # Make the fft and conj'd feature on the fly, since it's only ever used once:
                   #  in the next foreach statement. 
                   
@@ -202,14 +203,14 @@ match.features2refs.par.explicit <- function(pars){
     
                 }
             
-            if (is.null(matches.chunk)){message('\tfailed')} else {message('\tsucceeded'); return(matches.chunk)}
+            # if (is.null(matches.chunk)){message('\tfailed')} else {message('\tsucceeded'); return(matches.chunk)}
           
       }
         print(Sys.time() - t1)
 
         parallel::stopCluster(my.cluster)
         
-        mem.snapshot(paste0(Sys.time(), '.txt'))
+        mem.snapshot(tmpdir, '/', paste0(Sys.time(), '.txt'))
         
 ############ Format results and save ########################################################################################
     # Compile and save match results ####

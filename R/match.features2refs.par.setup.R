@@ -49,7 +49,7 @@ match.features2refs.par.setup <- function(pars) {
         
         # If using a representative feature, just get the stack. 
          
-          f.subset <- cluster.final$keys #%>% .[1:6]
+          f.subset <- cluster.final$keys %>% .[1:6]
           
           feature.final <- readRDS(paste0(this.run, "/feature.final.RDS")) 
           featureStack <- feature.final$stack
@@ -65,7 +65,7 @@ match.features2refs.par.setup <- function(pars) {
         p.width <- lapply(cluster.final$info, function(x) x$profile %>% length) %>% unlist %>% max
         
         featureStack <- lapply(cluster.final$info, function(x) c(x$profile, rep(NA, p.width-length(x$profile)))) %>% do.call(rbind,.)
-        f.subset <- 1:nrow(featureStack) #%>% .[1:6]
+        f.subset <- 1:nrow(featureStack) %>% .[1:6]
         
       }
     
@@ -154,7 +154,7 @@ match.features2refs.par.setup <- function(pars) {
       split.scheme <- lapply(unique(f.grp), function(g) {
           list(
               f.inds = which(f.grp == g),
-              f.subset = which(f.grp == g) %>% f.subset[.]
+              f.subset = which(f.grp == g) %>% f.subset[.] 
           )
       })
 

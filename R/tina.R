@@ -283,6 +283,7 @@ tina <- function(pars){
       # What if a cluster is > max size allowed?
 
       # Update the results object
+      # (remove noiseclust, add to the end the broken noise clust)
         results$clusters <- c(results$clusters[-noiseclust], stray.feats)
         clusters <- list(method = 'optics',
                          results = results,
@@ -314,7 +315,7 @@ tina <- function(pars){
             # *** Note: this is parallelized for ncores - 2
             # *** Note: currently not using rmse cutoff.
             clust.info <- checkClusters(clusters = clusters, feature = feature.ma, 
-                                        par.cores = 10,#pars$par$ncores, 
+                                        par.cores = pars$par$ncores, 
                                         par.type = pars$par$type)
           print(Sys.time() - t1)
 

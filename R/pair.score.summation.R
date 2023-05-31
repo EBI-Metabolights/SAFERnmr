@@ -58,7 +58,7 @@
 #' @importFrom magrittr %>%
 #' @import pbapply
 #'
-pair.score.summation <- function(pars, refmat, ss.ref.pairs){
+pair.score.summation <- function(pars, refmat){
 # # Dependencies ####
 # 
 #   # library(magrittr)
@@ -72,7 +72,8 @@ pair.score.summation <- function(pars, refmat, ss.ref.pairs){
       # split backfits and combinations by reference spectra used
       # report as pairs with coords in matrix
       
-        # ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
+        ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
+        refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
       
       message('Splitting data for parallelization...')
       # Pre-split the table and refs (reduce overhead) ####
@@ -98,23 +99,14 @@ pair.score.summation <- function(pars, refmat, ss.ref.pairs){
         # library(parallel)
         # library(foreach)
 
-    # # Par setup ####
-    #   ncores <- pars$par$ncores
-    #   my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
-    #   doParallel::registerDoParallel(cl = my.cluster)
-    #   if (foreach::getDoParRegistered())
-    #   {
-    #     message('Cluster initiated with ',foreach::getDoParWorkers(),' cores...')
-    #   } else {stop('pair.score.summation: Cluster initiaion failed.')}
+   
       
       message('Computing scores...')
      
     # Calculate the score in parallel ####
         t1 <- Sys.time()
         # For each ref:
-            # ss.ref.pair.scores <- foreach(r.list = by.ref,
-            #                               .combine='c', .multicombine=TRUE,
-            #                               .errorhandling="pass") %dopar%
+            
             score.list <- mclapply(by.ref, mc.cores = pars$par$ncores, 
                                            FUN = function(r.list)                             
             {
@@ -127,7 +119,7 @@ pair.score.summation <- function(pars, refmat, ss.ref.pairs){
               
               # Extract the interactions info from the r.list object for this ref ####
                 r.num <- r.list$ref.num
-                refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
+                refspec <- r.list$refspec /sum(r.list$refspec, na.rm = T) # already normed
                 ref.pairs <- r.list$ref.pairs
               
               # Compute ss interactions (combinations) for this ref ####
@@ -160,6 +152,7 @@ pair.score.summation <- function(pars, refmat, ss.ref.pairs){
                         ref.range <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
                         
                         bff <- ref.pairs[j, ]$bff.tot
+                        # print(bff)
                         replace <- (bff > cum.bff.tot[ref.range])
                         cum.bff.tot[ref.range[replace]] <- bff
                         cbt.best[ref.range[replace]] <- j # record which backfit it came from
@@ -192,7 +185,7 @@ pair.score.summation <- function(pars, refmat, ss.ref.pairs){
         print(Sys.time() - t1)
      
       # Extract out the scores data.frame rows
-      
+        message('\nextracting out the scores data.frame rows...')
         ss.ref.pair.scores <- score.list %>% lapply(function(x) {
           x$pair.scores
         }) %>% do.call(rbind,.)
@@ -223,7 +216,7 @@ pair.score.summation <- function(pars, refmat, ss.ref.pairs){
                            res = rfs.used.res.rfs,
                            score.mat.coords = rfs.used.score.coord)
         
-
+      message('\nwriting scores to file...')
       saveRDS(ss.ref.pair.scores, paste0(this.run, "/ss.ref.pair.scores.RDS"))
       saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
       

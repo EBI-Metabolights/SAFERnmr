@@ -76,9 +76,9 @@ filter.matches <- function(pars){
         
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
-        new.data <- pblapply(matched.feats, function(fstack.row) {
+        new.data <- mclapply(matched.feats, function(fstack.row) {
             # fstack.row <- matched.feats[1]
-            print(fstack.row)
+            # print(fstack.row)
           
           # Which cluster did it belong to?
             # Behind each row of fstack is 1 or more feature indices
@@ -262,7 +262,7 @@ filter.matches <- function(pars){
             return(list(match.info = member.matches,
                         fits = member.fits))
             
-        }) %>% unlist(recursive = F)
+        }, mc.cores = pars$par$ncores) %>% unlist(recursive = F)
         new.data <- split(new.data, names(new.data))
           match.info <- rbind(match.info, 
                               new.data$match.info %>% do.call(rbind,.))

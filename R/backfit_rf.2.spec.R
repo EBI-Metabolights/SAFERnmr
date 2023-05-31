@@ -13,6 +13,7 @@
 #'
 #' @importFrom ggnewscale new_scale_color
 #' @importFrom magrittr %>%
+#' @importFrom parallel detectCores
 #'
 #'
 #' @export
@@ -21,7 +22,7 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
                                     xmat, ppm, 
                                     plots = T){
 
-      backfits <- pblapply(m.inds, function(m)
+      backfits <- mclapply(m.inds, function(m)
       {
         # print(m)
         ############# For each match ###############
@@ -266,7 +267,7 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
                   bffs.res = bffs.res,
                   bffs.tot = bffs.tot,
                   gridplot = gridplot))
-      })
+      }, mc.cores = parallel::detectCores() - 1)
       
       
   return(backfits)

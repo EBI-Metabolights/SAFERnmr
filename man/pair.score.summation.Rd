@@ -8,7 +8,7 @@ association of spectral points across dataset spectra. Singlets contain
 very little specific information, can match to any feature shape and are
 therefore excluded.}
 \usage{
-pair.score.summation(pars, refmat, ss.ref.pairs)
+pair.score.summation(pars, refmat)
 }
 \arguments{
 \item{pars}{A list of parameters specifying input/output directories and parallelization settings.}
