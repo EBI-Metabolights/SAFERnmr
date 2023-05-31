@@ -110,8 +110,6 @@ tina <- function(pars){
 
     # Build feature filter
 
-      feature$driver.relative %>% is.na %>% sum
-
           filts  <- filterFeatures(feature, ppm = ppm,
                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
@@ -187,10 +185,10 @@ tina <- function(pars){
         t1 <- Sys.time()
             features.specd <- parallel::mclapply(1:nrow(feature$stack),
                                                  FUN = function(i){
-            # features.specd <- lapply(459:1000,#:nrow(feature$stack),
+            # features.specd <- lapply(1:nrow(feature$stack),
             #                          FUN = function(i){
                 # print(i)
-                # i <- 459
+                # i <- 1
                 sfe(feature, i,
                          xmat,
                          ppm,
@@ -198,7 +196,7 @@ tina <- function(pars){
                 # try({})
                 # if (!is.empty(res)){return(res)}else{return(i)}
 
-              }, mc.cores = 6)
+              }, mc.cores = pars$par$ncores)
 
             message('Parallel sfe done on ', length(features.specd), ' features.')
         print(Sys.time() -t1)
@@ -334,7 +332,6 @@ tina <- function(pars){
    # OPTICS-based #### 
     
     if (nrow(feature.ma$stack) > 1000){
-      pars$par$ncores <- parallel::detectCores() - 1
       t1 <- Sys.time()
       results <- tina_combineFeatures_optics(feature.ma$stack,
                                              max.eps = 50,
@@ -344,7 +341,7 @@ tina <- function(pars){
                                              plot.loc = ".",
                                              plot.name = "feature_clusters.pdf",
                                              nfeats = 10000,
-                                             dist.threads = pars$par$ncores)
+                                             dist.threads = parallel::detectCores() - 1) # pars$par$ncores
   
       # Label the "noise" points as individual clusters
         stray.labels <- seq_along(results$clusters[[1]]) + max(results$labels) 
@@ -380,7 +377,7 @@ tina <- function(pars){
           t1 <- Sys.time()
             # *** Note: this is parallelized for ncores - 2
             # *** Note: currently not using rmse cutoff.
-            clust.info <- checkClusters(clusters = clusters, feature = feature.ma, par.cores = 4)
+            clust.info <- checkClusters(clusters = clusters, feature = feature.ma, par.cores = pars$par$ncores)
           print(Sys.time() - t1)
 
           keys <- lapply(clust.info, function(ci){

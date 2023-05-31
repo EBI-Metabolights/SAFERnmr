@@ -56,7 +56,7 @@ align.spec2feat <- function(feat, xmat, r.thresh = 0.8){
           
       # Align spectra for this feature: ####
       
-        # Before: simplePlot(xmat.ss[r.current > 0.8, f.pos.in.exp])
+        # Before: simplePlot(xmat.ss[ss, f.pos.in.exp])
           
           use.inds <- !is.na(feat$profile) # for internal NAs, we'll need to exclude sometimes
 

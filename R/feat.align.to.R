@@ -54,7 +54,7 @@ feat.align.to <- function(align, to, max.hits = 1, max.lag = Inf){
   # Need to pad the feature matrix so they comparisons can't overlap
   
     pad.size <- ncol(featureStack)
-    padding <- zeros(1,pad.size)
+    padding <- rep(0,pad.size)
 
     featureStack <- apply(featureStack, 1, function(feat) c(feat, padding)) # matrix is transposed!
     
@@ -84,7 +84,7 @@ feat.align.to <- function(align, to, max.hits = 1, max.lag = Inf){
               # Do the FFT-based convolution ####
                 
                 feat.ft <- feat %>%                 # take this feature
-                  c(., zeros(1, fill.len) ) %>%     # zero-pad the end of the feature to match the big vect length
+                  c(., rep(0, fill.len) ) %>%     # zero-pad the end of the feature to match the big vect length
                   fftw::FFT(.)          # compute its FT
     
                 # r <- ccf(feat %>% c(., zeros(1, fill.len) ), 
@@ -123,7 +123,7 @@ feat.align.to <- function(align, to, max.hits = 1, max.lag = Inf){
                     # plot(r, x = (1:length(r))-pad.size, xlab = 'shift by pad.size')
                   
                   f2.with.hit <- (lags / padded.feat.width) %>%         # bin each lag into a feature range
-                                    ceil                                # round up
+                                    ceiling                             # round up
                   
                 # Get the lag within the matched feature
                 
