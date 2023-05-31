@@ -46,9 +46,6 @@ score.matches <- function(pars){
     # Get the processed library data:
       
       refmat <- lapply(lib.data.processed, function(x) x$mapped$data) %>% do.call(rbind,.)
-      # Normalize refs 
-        ref.sums <- mclapply(1:nrow(refmat), function(x) sum(refmat[x, ], na.rm=T), mc.cores = 10) %>% unlist
-        refmat <- refmat/ref.sums
         
       # refmat <- readRDS(paste0(this.run,"/temp_data_matching/ref.mat.RDS")) %>% t
       cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind,.)
@@ -129,7 +126,7 @@ score.matches <- function(pars){
           # ss.ref.mat.nd <- ss.ref.mat.nd[, colSums(ss.ref.mat.nd) != 0]
           # ss.ref.mat.nd <- t(ss.ref.mat.nd)
         
-          pdf(file = paste0("./match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
+          pdf(file = paste0(tmpdir,"/match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
               width = 8, # The width of the plot in inches
               height = 8) # The height of the plot in inches
 

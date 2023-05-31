@@ -75,6 +75,10 @@ pair.score.summation <- function(pars, refmat){
         ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
         refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
       
+      # # Normalize refs 
+      #   ref.sums <- mclapply(1:nrow(refmat), function(x) sum(refmat[x, ], na.rm=T), mc.cores = 10) %>% unlist
+      #   refmat <- refmat/ref.sums
+
       message('Splitting data for parallelization...')
       # Pre-split the table and refs (reduce overhead) ####
         by.ref <- pbapply::pblapply(unique(ss.ref.pairs$ref), function(r) 
