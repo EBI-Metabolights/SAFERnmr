@@ -15,6 +15,10 @@
 #' @author MTJ
 match.features2refs.par.explicit <- function(pars){
   
+  message('\n-----------------------------------------------------------------')
+  message('-------------------  Parallel Matching to PRCSs -------------------')
+  message('-------------------------------------------------------------------')
+
   mem.snapshot(paste0(Sys.time(), '.txt'))
 
 ################ Read parameters file ##################
@@ -213,6 +217,9 @@ match.features2refs.par.explicit <- function(pars){
         saveRDS(matches.all, paste0(this.run, "/matches.RDS"))
         # matches <- readRDS(paste0(this.run, "/matches.RDS"))
         # ####
+  message('\n-----------------------------------------------------------------')
+  message('-------------------  Parallel Matching Complete -------------------')
+  message('-------------------------------------------------------------------')
 
 }
     

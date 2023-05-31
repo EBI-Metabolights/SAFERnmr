@@ -49,7 +49,7 @@ match.features2refs.par.setup <- function(pars) {
         
         # If using a representative feature, just get the stack. 
          
-          f.subset <- cluster.final$keys %>% .[1:6]
+          f.subset <- cluster.final$keys #%>% .[1:6]
           
           feature.final <- readRDS(paste0(this.run, "/feature.final.RDS")) 
           featureStack <- feature.final$stack
@@ -65,7 +65,7 @@ match.features2refs.par.setup <- function(pars) {
         p.width <- lapply(cluster.final$info, function(x) x$profile %>% length) %>% unlist %>% max
         
         featureStack <- lapply(cluster.final$info, function(x) c(x$profile, rep(NA, p.width-length(x$profile)))) %>% do.call(rbind,.)
-        f.subset <- 1:nrow(featureStack) %>% .[1:6]
+        f.subset <- 1:nrow(featureStack) #%>% .[1:6]
         
       }
     
@@ -88,7 +88,7 @@ match.features2refs.par.setup <- function(pars) {
       )
       
         rm(lib.data)
-      
+      message('\nsaving processed ref library to file...')
       saveRDS(lib.data.processed, paste0(this.run, "/lib.data.processed.RDS"))
 
     ##################################################################################################################
@@ -126,7 +126,7 @@ match.features2refs.par.setup <- function(pars) {
         
         # Loop through spec matrix, compute fftw::fft()
           message('\tReference matrix fft...')
-          r.mat <- mclapply(r.mat, function(ref) fftw::FFT(ref), mc.cores = 8) %>% do.call(cbind,.)
+          r.mat <- mclapply(r.mat, function(ref) fftw::FFT(ref), mc.cores = pars$par$ncores) %>% do.call(cbind,.)
 
         # Transpose original matrix so columns are spectra ####
           message("\nTransposing reference matrix (takes a few seconds)...\n\n")
@@ -170,5 +170,7 @@ match.features2refs.par.setup <- function(pars) {
     saveRDS(pad.size, paste0(this.run, "/temp_data_matching/pad.size.RDS"))
     saveRDS(split.scheme, paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
 
-    message('\n\tParallel Matching Setup complete.\n\n')
+  message('\n--------------------------------------------------------------------------')
+  message('-------------------  Parallel Matching Setup complete. -------------------')
+  message('--------------------------------------------------------------------------')
 }

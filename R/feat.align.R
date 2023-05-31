@@ -35,7 +35,7 @@ feat.align <- function(feature.stack, max.hits = 1, counter = T){
   
   # Need to pad the feature matrix so they comparisons can't overlap
     pad.size <- ncol(featureStack)
-    padding <- zeros(1,pad.size)
+    padding <- rep(0,pad.size)
 
     featureStack <- apply(featureStack, 1, function(feat) c(feat, padding))
     
@@ -94,7 +94,7 @@ feat.align <- function(feature.stack, max.hits = 1, counter = T){
               # Do the FFT-based convolution ####
                 if(counter){message(f.num)}
                 feat.ft <- feat %>%             # take this feature
-                  c(., zeros(1, fill.len) ) %>% # zero-pad the end of the feature to match the big vect length
+                  c(., rep(0, fill.len) ) %>% # zero-pad the end of the feature to match the big vect length
                   fftw::FFT(.)                  # compute its FT
                 
                 #af.ft.c <- Conj(fftw::FFT(allfeats))
@@ -132,7 +132,7 @@ feat.align <- function(feature.stack, max.hits = 1, counter = T){
                     # plot(r, x = (1:length(r))-pad.size, xlab = 'shift by pad.size')
                   
                   f2.with.hit <- (lags / padded.feat.width) %>%         # bin each lag into a feature range
-                                    ceil                                # round up
+                                    ceiling                             # round up
                   
                 # Get the lag within the matched feature
                 

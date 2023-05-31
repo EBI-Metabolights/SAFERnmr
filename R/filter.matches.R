@@ -72,11 +72,13 @@ filter.matches <- function(pars){
         #   - all that's needed is to test the ref feature in the local regions 
         #     x spectra from which the cluster member was extracted, as gained 
         #     from the sfe
+        #   - fstack.row is the row of the match matrix (subset of feature matrix)
+        
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
         new.data <- pblapply(matched.feats, function(fstack.row) {
-          
-            # print(fstack.row)
+            # fstack.row <- matched.feats[1]
+            print(fstack.row)
           
           # Which cluster did it belong to?
             # Behind each row of fstack is 1 or more feature indices

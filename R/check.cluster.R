@@ -26,7 +26,7 @@
           
       # Align all the features to each other ####
       
-        lag.table <- feat.align(feature.stack, max.hits = 1)
+        lag.table <- feat.align(feature.stack, max.hits = 1, counter = F)
        
       # Remove duplicate matches ####
         
@@ -52,7 +52,7 @@
       # Pick key feature by minimizing average rmse  ####
         # Build best pairwise rmse matrix (optimal alignment, then rmse for each pair of features in the cluster):
           linds <- sub2indR(rows = lag.table$f1, cols = lag.table$f2, m = nrow(feature.stack))
-          rmses <- zeros(nrow(feature.stack))
+          rmses <- matrix(0, nrow(feature.stack), nrow(feature.stack))
           rmses[linds] <- lag.table$rmse
             rmses[lower.tri(rmses)] <- rmses %>% upper.tri %>% rmses[.]
             centrality.score <- colMeans(rmses) 
@@ -105,7 +105,7 @@
     }
 
     singleFeat <- function(feat, ind){
-      feat <- feat %>% trim.sides
+      feat <- trim.sides(feat)
       return(
               list(labels = ind,
                    rmse.mean.clust = 0,

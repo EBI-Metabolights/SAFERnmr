@@ -276,11 +276,14 @@ tina <- function(pars){
                                              dist.threads = parallel::detectCores() - 1) # pars$par$ncores
 
       # Label the "noise" points as individual clusters
-        stray.labels <- seq_along(results$clusters[[1]]) + max(results$labels)
-        stray.feats <- results$clusters[[1]] %>% as.list
+        noiseclust <- which(results$labels == 0)
+        stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
+        stray.feats <- results$clusters[[noiseclust]] %>% as.list
+        
+      # What if a cluster is > max size allowed?
 
       # Update the results object
-        results$clusters <- c(results$clusters[-1], stray.feats)
+        results$clusters <- c(results$clusters[-noiseclust], stray.feats)
         clusters <- list(method = 'optics',
                          results = results,
                          cluster.labs = clusts2labs(results$clusters),
@@ -311,7 +314,7 @@ tina <- function(pars){
             # *** Note: this is parallelized for ncores - 2
             # *** Note: currently not using rmse cutoff.
             clust.info <- checkClusters(clusters = clusters, feature = feature.ma, 
-                                        par.cores = pars$par$ncores, 
+                                        par.cores = 10,#pars$par$ncores, 
                                         par.type = pars$par$type)
           print(Sys.time() - t1)
 
