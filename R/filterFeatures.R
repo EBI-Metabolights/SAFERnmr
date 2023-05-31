@@ -101,16 +101,16 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
       passed <- which(filt)
       
       if (length(passed) > max.features){
-
-        subset <- runif(n = max.features, 
-                        min = 0, 
-                        max = length(passed)) %>% ceiling %>% unique %>% passed[.]
+        subset <- sample(x = 1:length(passed), size = max.features, replace = FALSE) %>% passed[.] # not sorted
+        # subset <- runif(n = max.features, 
+        #                 min = 0, 
+        #                 max = length(passed)) %>% ceiling %>% unique %>% passed[.]
         
         filt[-subset] <- F
         all.filts$rand.subset[-subset] <- F
         
         number.excluded <- length(passed) - sum(filt)
-        message('Excluding ', number.excluded, ' / ', length(passed), ' passing features (', (number.excluded/length(passed)*100) %>% round,' %) to satisfy limit of ', pars$debug$throttle_features, ' features ...')
+        message('Excluding ', number.excluded, ' / ', length(passed), ' passing features (', (number.excluded/length(passed)*100) %>% round,' %) to satisfy limit of ', pars$tina$nfeats, ' features ...')
       }
   
       

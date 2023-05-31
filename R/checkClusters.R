@@ -14,7 +14,8 @@
 #' @export
 #' @importFrom magrittr %>%
 checkClusters <- function(clusters, feature, 
-                          par.cores =  1){
+                          par.cores =  1,
+                          par.type = 'PSOCK'){
   
   
   # Try max-align and clustering
@@ -58,7 +59,7 @@ checkClusters <- function(clusters, feature,
 
         ncores <- par.cores
         message('Starting parallel pool on ', ncores, ' cores...')
-        my.cluster <- parallel::makeCluster(ncores, type = pars$par$type)
+        my.cluster <- parallel::makeCluster(ncores, type = par.type)
         doParallel::registerDoParallel(cl = my.cluster)
         if (foreach::getDoParRegistered()){
           message('\tpool started on ', foreach::getDoParWorkers(), ' cores')

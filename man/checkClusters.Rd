@@ -5,7 +5,7 @@
 \title{Calculate feature cluster information - wrapper for check.cluster that parallelizes it
 See check.cluster documentation.}
 \usage{
-checkClusters(clusters, feature, par.cores = 1)
+checkClusters(clusters, feature, par.cores = 1, par.type = "PSOCK")
 }
 \arguments{
 \item{clusters}{cluster data from tina_combineFeatures_optics (and adjustments in tina)}
