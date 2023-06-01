@@ -355,7 +355,7 @@ tina <- function(pars){
         
         plots <- pblapply(clust.subset, function(x)
           {
-          print(x)
+          # print(x)
                 feat.inds <- clust.info[[x]]$labels
                 fs <- feature.ma$stack %>% 
                   lag.features(., clust.info[[x]]$lag.table, 

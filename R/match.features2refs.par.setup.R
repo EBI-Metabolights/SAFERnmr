@@ -21,6 +21,7 @@ match.features2refs.par.setup <- function(pars) {
 
     tmpdir <- pars$dirs$temp
     this.run <- paste0(tmpdir)
+    dir.create(paste0(this.run, "/temp_data_matching"), showWarnings = F)
 
     ##################################################################################################################
     # Read data and set up ####
@@ -152,7 +153,7 @@ match.features2refs.par.setup <- function(pars) {
 
     # Save ref data:
     
-      dir.create(paste0(this.run, "/temp_data_matching"), showWarnings = F)
+      
       
       message('\nWriting transformed ref data to file...')
       saveRDS(r.mat, paste0(this.run, "/temp_data_matching/rmat.RDS"))
