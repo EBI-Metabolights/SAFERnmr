@@ -51,7 +51,7 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
   
   # Filter out monotonic features
     message("Filtering out features with strong baseline effect (max true peak prominence < ", prom.ratio, "*intensity range")
-    message("or strong correlation (r >= .99) between valley and peak intensities). Progress...")
+    message("or strong correlation (r >= .99) between valley-interpolated and extracted peak intensities). Progress...")
     
     # Are there any peaks > 0.3 * feature intensity range? (Monotonic?) ####
       bl.effect <- pblapply(1:nrow(feature$stack), function(f)

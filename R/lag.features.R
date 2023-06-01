@@ -45,8 +45,13 @@ lag.features <- function(featureStack,  # each row is a feature
         key.in.f2 <- hits$f2 == to
         # Pull out the features that weren't the feature (can't unique - need to keep in order; 'to' feature is first)
         rows.used <- c(to,  cbind(hits$f1, hits$f2) %>% .[!cbind(key.in.f1, key.in.f2)])
+        if (length(rows.used) == 1){
+          return(featureStack[rows.used, ,drop = F])
+        }
         
-        fs <- featureStack[rows.used, ]
+        fs <- featureStack[rows.used, ,drop = F]
+        
+        
           # simplePlot(trim.sides(fs))
   
         lags <- -c(0, hits$lag.in.f2) # 0 is for the key feature

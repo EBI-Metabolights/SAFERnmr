@@ -84,7 +84,8 @@ tina <- function(pars){
     # Run tina_setup to set up successful features
 
         feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
-
+        message('\n\t---- Feature Filtering ----')
+        
     # Run feature filter function to get the filter:
     #   - in defined ppm range?
     #   - long enough runs?
@@ -97,7 +98,7 @@ tina <- function(pars){
           filts  <- filterFeatures(feature, ppm = ppm,
                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
-                                    max.features = max.features)
+                                    max.features = nrow(feature$stack))
 
           saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
           # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
@@ -115,6 +116,7 @@ tina <- function(pars){
       # Rerun setup on filtered features
         feature <- tina_setup(fse.result$storm_features[filt], xmat)
        
+        message('\n\tFeature filtering complete. Saving results...')
         saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
         # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
         
@@ -174,24 +176,17 @@ tina <- function(pars){
         gc()
         
     # Do spec-feature extraction for all features
-        message('\n\nsfe running...')
+        message('\n\n\t---- Spec-Feature Extraction (SFE) ----')
         t1 <- Sys.time()
             features.specd <- parallel::mclapply(1:nrow(feature$stack),
                                                  FUN = function(i){
-            # features.specd <- lapply(1:nrow(feature$stack),
-            #                          FUN = function(i){
-                # print(i)
-                # i <- 1
                 sfe(feature, i,
                          xmat,
                          ppm,
                          r.thresh = 0.8)
-                # try({})
-                # if (!is.empty(res)){return(res)}else{return(i)}
-
               }, mc.cores = pars$par$ncores)
 
-            message('Parallel sfe done on ', length(features.specd), ' features.')
+            message('\n\tParallel sfe done on ', length(features.specd), ' features.')
         print(Sys.time() -t1)
 
         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
@@ -202,23 +197,11 @@ tina <- function(pars){
       # profile stack must be updated
       # - needs to allow for resizing?
       # - sfe will return trimmed profiles and undo any alignment of features
-
-        # feature$stack.pre.sfe <- feature$stack
-        #
+        message('\n\tapplying sfe results to feature stack...')
         # Get the width of the new feature mat ####
           n.cols <- lapply(features.specd, function(res){
             res$feat$profile %>% length
           }) %>% unlist %>% max
-
-          # lags <- lapply(features.specd, function(x) x$lags) %>% unlist
-          # hist(lags[abs(lags) < 50], breaks = 100)
-
-          # if (n.cols != ncol(feature$stack.pre.sfe))
-          # {
-          #   message('feature stack now contains ',
-          #           n.cols, ' columns, instead of ',
-          #           ncol(feature$stack.pre.sfe))
-          # }
 
         # Make new feature mat ####
           feature$stack <- lapply(features.specd, function(res){
@@ -229,7 +212,7 @@ tina <- function(pars){
 
     # Align to feature maximum ####
 
-        message('Aligning features...')
+        message('\n\taligning features to max peak...')
         feature.ma <- align.max(feature, scaling = FALSE)
 
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
@@ -266,7 +249,7 @@ tina <- function(pars){
           x
         })
         
-        message('\nwriting TINA results to file...')
+        message('\n\twriting post-sfe features to file...')
         feature.final <- list(stack = feature.ma$stack,
                               position = feature.ma$position,
                               driver.relative = feature.ma$subset,
@@ -281,7 +264,7 @@ tina <- function(pars){
 # The TINA part  ####
               
    # OPTICS-based ####
-
+      message('\n\t---- OPTICS-based clustering ----')
         
     if (nrow(feature.ma$stack) > 1000){
       t1 <- Sys.time()
@@ -292,7 +275,7 @@ tina <- function(pars){
                                              max.plots = 600,
                                              plot.loc = this.run,
                                              plot.name = "feature_clusters.pdf",
-                                             nfeats = 10000,
+                                             nfeats = pars$tina$nfeats,
                                              dist.threads = parallel::detectCores() - 1) # pars$par$ncores
 
       # Label the "noise" points as individual clusters
@@ -333,7 +316,7 @@ tina <- function(pars){
     # - align all to key
     # - rmse-based threshold for removing features from cluster
     
-      message('\nchecking clusters...')
+      message('\n\tcheckClusters: optimizing intra-cluster alignment and selecting representative features...')
     
           # Force garbage collection to slim down workspace
             gc()
@@ -349,7 +332,8 @@ tina <- function(pars){
           keys <- lapply(clust.info, function(ci){
             ci$key.feat
           }) %>% unlist
-                
+          
+        message('\n\tcheckClusters complete. Saving...')     
       saveRDS(clust.info, paste0(tmpdir, "/clust.info.RDS"))
       # clust.info <- readRDS(paste0(tmpdir, "/clust.info.RDS"))
       
@@ -371,6 +355,7 @@ tina <- function(pars){
         
         plots <- pblapply(clust.subset, function(x)
           {
+          print(x)
                 feat.inds <- clust.info[[x]]$labels
                 fs <- feature.ma$stack %>% 
                   lag.features(., clust.info[[x]]$lag.table, 
