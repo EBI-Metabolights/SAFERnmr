@@ -73,7 +73,7 @@ tina <- function(pars){
     fse.result <- readRDS(paste0(this.run,"/fse.result.RDS"))
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
-      rm(fse.result)
+      
     bounds <- pars$tina$bounds        # only consider signatures within this region (ppm)
     min.subset <- pars$tina$min.subset          # don't keep features if their subsets are too small (basically does nothing)
     prom.ratio <- pars$tina$prom.ratio
@@ -170,6 +170,7 @@ tina <- function(pars){
         # - ppm
         # - pars
         rm(filts)
+        rm(fse.result)
         gc()
         
     # Do spec-feature extraction for all features
