@@ -99,7 +99,7 @@ score.matches <- function(pars){
   
       # Compute scores in separate R instance (cleaner, for parallel): "./pair.score.summation.R"
         
-        pair.score.summation(pars, refmat, ss.ref.pairs)
+        pair.score.summation(pars, refmat)
         
         ss.ref.pair.scores <- readRDS(paste0(this.run, "/ss.ref.pair.scores.RDS"))
         rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))
@@ -155,6 +155,8 @@ score.matches <- function(pars){
             # saveRDS(matches, paste0(this.run, "/matches_scored_named.RDS"))
             saveRDS(ss.ref.mat.nd, paste0(this.run, "/ss.ref.sumScores.RDS"))
             saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
+            # ss.ref.mat.nd <- readRDS(paste0(this.run, "/ss.ref.sumScores.RDS"))
+            # rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))
             
             # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
             

@@ -76,6 +76,8 @@ filter.matches <- function(pars){
         
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
+        n.matches.before <- nrow(match.info)
+        
         new.data <- mclapply(matched.feats, function(fstack.row) {
             # fstack.row <- matched.feats[1]
             # print(fstack.row)
@@ -264,10 +266,13 @@ filter.matches <- function(pars){
             
         }, mc.cores = pars$par$ncores) %>% unlist(recursive = F)
         new.data <- split(new.data, names(new.data))
+        
           match.info <- rbind(match.info, 
                               new.data$match.info %>% do.call(rbind,.))
           row.names(match.info) <- NULL
           fits.feature <- c(fits.feature, new.data$fits %>% unlist(recursive = F, use.names = F) %>% unlist(recursive = F))
+          
+          message('\n\t', n.matches.before, 'matches propagated to ', nrow(match.info), ' matches.')
           
         # Re-filter for corr, pval
         
@@ -306,55 +311,24 @@ filter.matches <- function(pars){
         Sys.time() - t1
         message('Saving backfits...\n\n\n')
         saveRDS(backfits, paste0(this.run,"/backfits.RDS"))
+        # backfits <- readRDS(paste0(this.run, "/backfits.RDS"))
 
  # ########## save filtered data ########################################################################
          
         message('Saving split and filtered match data...\n\n')
 
         saveRDS(match.info, paste0(this.run, "/match.info.RDS"))
+        # match.info <- readRDS(paste0(this.run, "/match.info.RDS"))
 
         saveRDS(fits.feature, paste0(this.run, "/fits.RDS"))
-
+        # fits.feature <- readRDS(paste0(this.run, "/fits.RDS"))
+        
         saveRDS(peak.qualities, paste0(this.run, "/peak.qualities.RDS"))
+        # peak.qualities <- readRDS(paste0(this.run, "/peak.qualities.RDS"))
    
   message('-----------------------------------------------------------------')
   message('-----------------  Matching Filtering Complete ------------------')
   message('-----------------------------------------------------------------')
   
-  
-  # Plot a subset of the backfits to check them out ####
-                     
-                    # # Generate plot result for a given match
-                    #       m <- 100
-                    #       ss.fit <- backfit_ref.feats.2.subset.specs(m.inds[m], fits.feature, match.info,
-                    #                                   feature,
-                    #                                   xmat, ppm, plots = T) %>% unlist(recursive = F)
-                    #       ss.fit$gridplot %>% plot
-                    #       m <- m + 1
-                    # 
-
-       ######################### Plotting #############################
-        # m.inds <- order(match.info[,"rmse.weighted"]/match.info[,"refpeaks.matched"], decreasing = F)
-        # # m.inds <- order(match.info[,"rmse"], decreasing = F)
-        # 
-        # 
-        # x <- 0 # x <- x - 1
-        # x <- x + 1
-        # m <- m.inds[[x]]
-        # # m <- nrow(match.info)
-        # match <- fits.feature[[m]]
-        #   
-        # peak.quality <- peak.qualities[[  which(feature.inds.skipEmpties == match.info[m, c("feat")] )  ]]
-        # 
-        # thisref.ppm <- match.info[m, c("ref.start","ref.end")] %>%
-        #                   as.numeric %>% fillbetween %>% fse.result$ppm[.]
-        # # match %>% plot.fit(., type = "simple", ppm = thisref.ppm) %>% plot
-        # # match %>% plot.fit(., type = "auc", ppm = thisref.ppm) %>% plot
-        # match %>% plot.fit(., type = "color.line", ppm = thisref.ppm, 
-        #                    color = peak.quality) %>% plot
-        # # plot(sort(match.info[,"rmse.weighted"])) 
-        # #   cutoff <- median(match.info[,"rmse.weighted"])
-        # #   abline(h = cutoff, col = 'red')
-        # # peak.quality %>% plot
 }
   

@@ -19,7 +19,7 @@ match.features2refs.par.explicit <- function(pars){
   message('-------------------  Parallel Matching to PRCSs -------------------')
   message('-------------------------------------------------------------------')
 
-  mem.snapshot(paste0(Sys.time(), '.txt'))
+  # mem.snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
 
 ################ Read parameters file ##################
   message('Reading data...\n')
@@ -32,7 +32,7 @@ match.features2refs.par.explicit <- function(pars){
   ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) 
   r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
   
-  mem.snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
+  # mem.snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
     # Par setup ####
       message("Setting up parallel cluster...\n\n")
       ncores <- pars$par$ncores
@@ -210,7 +210,7 @@ match.features2refs.par.explicit <- function(pars){
 
         parallel::stopCluster(my.cluster)
         
-        mem.snapshot(tmpdir, '/', paste0(Sys.time(), '.txt'))
+        # mem.snapshot(tmpdir, '/', paste0(Sys.time(), '.txt'))
         
 ############ Format results and save ########################################################################################
     # Compile and save match results ####

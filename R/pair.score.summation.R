@@ -129,7 +129,7 @@ pair.score.summation <- function(pars, refmat){
               # Compute ss interactions (combinations) for this ref ####
                 comb <- expand.grid(unique(ref.pairs$ref), unique(ref.pairs$ss.spec))
                   colnames(comb) <- c("ref", "ss.spec")
-                  v.zeros <- rep(0, length(refspec))
+                  # v.zeros <- rep(0, length(refspec))
               
               # Loop through ref-ss.spec combinations and calculate scores ####
                 lapply(1:nrow(comb), function(i){
@@ -141,9 +141,9 @@ pair.score.summation <- function(pars, refmat){
                   # Select relevant backfits and matches ####
                     rp.rows <- which(ref.pairs$ss.spec == ss.spec)
 
-                  # Make a vector the size of the ref ####
+                  # Make a tmp score and best.rf.index.used vector of length(refspec) for each score ####
                     
-                    cum.bff.tot <- cum.bff.res <- cbt.best <- cbr.best <- v.zeros
+                    cum.bff.tot <- cum.bff.res <- cbt.best <- cbr.best <- rep(0, length(refspec))
 
                   # Loop through the matches associated with this ref - ss.spec pair ####
                   # Update the bff values in v with any higher bff at that point ####

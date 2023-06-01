@@ -73,7 +73,7 @@ tina <- function(pars){
     fse.result <- readRDS(paste0(this.run,"/fse.result.RDS"))
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
-      
+      rm(fse.result)
     bounds <- pars$tina$bounds        # only consider signatures within this region (ppm)
     min.subset <- pars$tina$min.subset          # don't keep features if their subsets are too small (basically does nothing)
     prom.ratio <- pars$tina$prom.ratio
@@ -84,24 +84,6 @@ tina <- function(pars){
     # Run tina_setup to set up successful features
 
         feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
-
-    # If throttling comparisons, keep just a random subset of features
-        if (pars$debug$enabled == TRUE) {
-
-          max.features <- pars$debug$throttle_features
-
-        } else {
-
-          if (nrow(feature$stack) > pars$tina$nfeats){
-
-            max.features <- pars$tina$nfeats
-
-          } else {
-
-            max.features <- nrow(feature$stack)
-          }
-
-        }
 
     # Run feature filter function to get the filter:
     #   - in defined ppm range?
@@ -181,6 +163,14 @@ tina <- function(pars){
 
 ########### SFE  ################################################################################## 
 
+    # Force garbage collection to slim down workspace
+        # Remove everything except
+        # - feature
+        # - xmat
+        # - ppm
+        # - pars
+        rm(filts)
+        gc()
         
     # Do spec-feature extraction for all features
         message('\n\nsfe running...')
@@ -243,26 +233,55 @@ tina <- function(pars){
 
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
         # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
-        # feature <- feature.ma
+        rm(feature)
         
-  # Plot all feature ranges ####
-        pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
-            width = dim, # The width of the plot in inches
-            height = dim)
-            feature.shift_range <- feature$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
-            subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
-            plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
-            segments(feature.shift_range[1,], 1:ncol(feature.shift_range),
-                     feature.shift_range[2,], 1:ncol(feature.shift_range),
-                     lwd = 0.1)
-        dev.off()
+    # Plot all feature ranges ####
+          pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
+              width = dim, # The width of the plot in inches
+              height = dim)
+              feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
+              subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
+              plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
+              segments(feature.shift_range[1,], 1:ncol(feature.shift_range),
+                       feature.shift_range[2,], 1:ncol(feature.shift_range),
+                       lwd = 0.1)
+          dev.off()
        
+          
+          
+    # FINAL feature object to export: ####
+    # final feature object (everything should apply to max-aligned)
+    # - stack
+    # - position
+    # - driver.relative
+    # - sfe
+    #   - list of feature-specific objects
+  
+        # Erase the feature profiles - not necessary
+        features.specd <- lapply(features.specd, function(x) {
+          x$feat$profile <- NULL
+          x$feat$position <- NULL
+          x$feat$corr <- NULL
+          x
+        })
+        
+        message('\nwriting TINA results to file...')
+        feature.final <- list(stack = feature.ma$stack,
+                              position = feature.ma$position,
+                              driver.relative = feature.ma$subset,
+                              sfe = features.specd)
+        saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
+        
+        rm(features.specd)
+        gc()
+        
 ###############################################################################################################           
         
 # The TINA part  ####
               
    # OPTICS-based ####
 
+        
     if (nrow(feature.ma$stack) > 1000){
       t1 <- Sys.time()
       results <- tina_combineFeatures_optics(feature.ma$stack,
@@ -301,6 +320,8 @@ tina <- function(pars){
 
     saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
     # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
+    rm(xmat)
+    rm(ppm)
     
  ###############################################################################################################   
     
@@ -310,7 +331,12 @@ tina <- function(pars){
     # - identify key feature
     # - align all to key
     # - rmse-based threshold for removing features from cluster
+    
       message('\nchecking clusters...')
+    
+          # Force garbage collection to slim down workspace
+            gc()
+
           t1 <- Sys.time()
             # *** Note: this is parallelized for ncores - 2
             # *** Note: currently not using rmse cutoff.
@@ -340,10 +366,16 @@ tina <- function(pars){
         
         everyNth <- every.nth(select = pars$storm$number.of.plots, 
                               from = cluster.list)
+        clust.subset <- seq_along(cluster.list) %>% .[everyNth]
         
-        plots <- pblapply(cluster.list[everyNth], function(x)
+        plots <- pblapply(clust.subset, function(x)
           {
-                fs <- feature$stack[x, ,drop = FALSE] %>% trim.sides
+                feat.inds <- clust.info[[x]]$labels
+                fs <- feature.ma$stack %>% 
+                  lag.features(., clust.info[[x]]$lag.table, 
+                               to = clust.info[[x]]$key.feat) %>% 
+                  trim.sides 
+                
                 return(simplePlot(fs))
           })
         
@@ -392,31 +424,8 @@ tina <- function(pars){
       #   - this could be updated to hold the list of regions from
       # - driver.relative (driver position; column of [].stack)
 
-  # FINAL Objects to export: ####
-  # final feature object (everything should apply to max-aligned)
-  # - stack
-  # - position
-  # - driver.relative
-  # - sfe
-  #   - list of feature-specific objects
-
-      # Erase the feature profiles - not necessary
-      features.specd <- lapply(features.specd, function(x) {
-        x$feat$profile <- NULL
-        x$feat$position <- NULL
-        x$feat$corr <- NULL
-        x
-      })
       
-      message('\nwriting TINA results to file...')
-      feature.final <- list(stack = feature.ma$stack,
-                            position = feature.ma$position,
-                            driver.relative = feature.ma$subset,
-                            sfe = features.specd)
-      saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
-
-      
-  # final clusters object
+  # final clusters object ####
   # - labels (single vector labeling each cluster with its ID, matches feature stack rows)
   # - keys (list of feature stack row/clusters$labels indices of cluster representatives)
   # - info (results of check.clusters)

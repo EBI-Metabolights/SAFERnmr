@@ -42,19 +42,32 @@ match.features2refs.par.setup <- function(pars) {
     # Put features in a matrix ####
     
       message('Building feature matrix...')
+      
+          feature.final <- readRDS(paste0(this.run, "/feature.final.RDS")) 
+          featureStack <- feature.final$stack
+          
+          rm(feature.final)
 
+    # If throttling comparisons, keep just a random subset of features
+    
+        max.features <- nrow(featureStack)
+        
+        if ( pars$debug$enabled == TRUE &
+             nrow(featureStack) > pars$debug$throttle_features) 
+        {
+
+            max.features <- pars$debug$throttle_features
+          
+        }
+      
       # Allow use of representative.feature profiles, or cluster weighted.means:
     
       if (pars$matching$cluster.profile == 'representative.feature'){
         
         # If using a representative feature, just get the stack. 
          
-          f.subset <- cluster.final$keys %>% .[1:6]
+          f.subset <- cluster.final$keys %>% .[1:max.features]
           
-          feature.final <- readRDS(paste0(this.run, "/feature.final.RDS")) 
-          featureStack <- feature.final$stack
-          
-          rm(feature.final)
           rm(cluster.final)
           
       } else {
@@ -65,7 +78,7 @@ match.features2refs.par.setup <- function(pars) {
         p.width <- lapply(cluster.final$info, function(x) x$profile %>% length) %>% unlist %>% max
         
         featureStack <- lapply(cluster.final$info, function(x) c(x$profile, rep(NA, p.width-length(x$profile)))) %>% do.call(rbind,.)
-        f.subset <- 1:nrow(featureStack) %>% .[1:6]
+        f.subset <- 1:nrow(featureStack) %>% .[1:max.features]
         
       }
     
@@ -118,6 +131,14 @@ match.features2refs.par.setup <- function(pars) {
     
         # Make the padded ref mat matrix
           r.mat <- ref.mat %>% padmat(use = 0, col.by = pad.size)
+          
+          # Transpose original matrix so columns are spectra, save and remove it to clear memory ####
+            message("\nTransposing reference matrix (takes a few seconds)...\n\n")
+            ref.mat <- t(ref.mat)
+            message('\nWriting ref matrix to file...')
+            saveRDS(ref.mat, paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
+          
+          
           r.mat[is.na(r.mat)] <- 0
     
         # List-format the matrices to facilitate parallel
@@ -126,20 +147,16 @@ match.features2refs.par.setup <- function(pars) {
         
         # Loop through spec matrix, compute fftw::fft()
           message('\tReference matrix fft...')
+          gc() # garbage collect before parallel operation
           r.mat <- mclapply(r.mat, function(ref) fftw::FFT(ref), mc.cores = pars$par$ncores) %>% do.call(cbind,.)
-
-        # Transpose original matrix so columns are spectra ####
-          message("\nTransposing reference matrix (takes a few seconds)...\n\n")
-          ref.mat <- t(ref.mat)
-
 
     # Save ref data:
     
       dir.create(paste0(this.run, "/temp_data_matching"), showWarnings = F)
       
-      message('\nWriting ref data to file...')
+      message('\nWriting transformed ref data to file...')
       saveRDS(r.mat, paste0(this.run, "/temp_data_matching/rmat.RDS"))
-      saveRDS(ref.mat, paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
+      
         
         rm(r.mat)
         rm(ref.mat)

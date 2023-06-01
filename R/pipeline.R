@@ -208,14 +208,14 @@ pipeline <- function(params_loc, params_obj) {
 # - associate features whose shapes are highly similar
 
   tina(pars)
-
+  
 ################################################################################################################################### 
 ## Match spectra to the database 
 # - match using convolution-based cross-correlation
 # - parallelized
   
   match.features2refs.par.setup(pars)
-
+  gc() # garbage collect before big parallel compute
   match.features2refs.par.explicit(pars)
     
   
