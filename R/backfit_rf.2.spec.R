@@ -20,9 +20,9 @@
 backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info, 
                                     feature, 
                                     xmat, ppm, 
-                                    plots = T){
+                                    plots = F){
 
-      backfits <- mclapply(m.inds, function(m)
+      backfits <- lapply(m.inds, function(m)
       {
         # print(m)
         ############# For each match ###############
@@ -267,7 +267,7 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
                   bffs.res = bffs.res,
                   bffs.tot = bffs.tot,
                   gridplot = gridplot))
-      }, mc.cores = parallel::detectCores() - 1)
+      })#, mc.cores = pars$par$ncores)
       
       
   return(backfits)
