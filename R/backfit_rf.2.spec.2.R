@@ -63,11 +63,11 @@ backfit.rfs <- function(match.info,
       gc()
       
   # Run through each chunk ####
+    t1 <- Sys.time()
     backfits <- mclapply(chunks, function(chunk) {
     # backfits <- lapply(chunks, function(chunk) {
       # chunk <- chunks[[1]]
 
-      t1 <- Sys.time()
       backfits <- lapply(1:nrow(chunk$match.info), 
                          function(m)
       {
@@ -92,8 +92,8 @@ backfit.rfs <- function(match.info,
 
           # If sfe HAS been done, wait to do this at the spectrum level using lags
           
-            sfs <- data.frame(lag = feature$sfe[[mi$feat]]$lags,
-                              spec.number = feature$sfe[[mi$feat]]$feat$ss)
+            sfs <- data.frame(lag = chunk$feature$sfe[[mi$feat]]$lags,
+                              spec.number = chunk$feature$sfe[[mi$feat]]$feat$ss)
 
         # Calculate rf fit for each spec-feature: ####
         
@@ -230,11 +230,12 @@ backfit.rfs <- function(match.info,
       return(list(match = m,
                   fits = fits))
       })
-      print(Sys.time()-t1)
+     
+      return(backfits)
       
-      
-    }), mc.cores = ncores)
-      
+    }, mc.cores = ncores)
+     print(Sys.time()-t1)  
+     
     # Undo mi.order
       
       browser()
