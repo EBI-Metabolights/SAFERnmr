@@ -47,10 +47,14 @@ filter.matches <- function(pars){
         pq.featureNumbers <- unique(match.info[,'feat']) # this does not sort (just for good measure)
         
       peak.qualities <- matches.split$peak.quality
-      fits.feature <-  matches.split$fits %>% unlist(recursive = F)
+      fits.feature <- matches.split$fits %>% unlist(recursive = F)
         rm(matches.split)
-      
         
+        # Slim down fits.feature
+          # already recorded in match.info
+          match.info$fit.intercept
+          match.info$fit.scale
+          
 ######################### Remove singlets ############################################
 
       # Do the filtering (functionalized)
@@ -258,21 +262,24 @@ filter.matches <- function(pars){
               
             }
 
-              
-  ###########################################################################################################                    
             
             return(list(match.info = member.matches,
                         fits = member.fits))
             
         }, mc.cores = pars$par$ncores) %>% unlist(recursive = F)
+        
+        # saveRDS(new.data, paste0(tmpdir, "/new.data.RDS"))
+        new.data <- readRDS(paste0(tmpdir, "/new.data.RDS"))
         new.data <- split(new.data, names(new.data))
         
           match.info <- rbind(match.info, 
                               new.data$match.info %>% do.call(rbind,.))
-          row.names(match.info) <- NULL
+            row.names(match.info) <- NULL
+          new.fits <- new.data$fits
           fits.feature <- c(fits.feature, new.data$fits %>% unlist(recursive = F, use.names = F) %>% unlist(recursive = F))
           
           message('\n\t', n.matches.before, 'matches propagated to ', nrow(match.info), ' matches.')
+       
           
         # Re-filter for corr, pval
         
@@ -281,6 +288,7 @@ filter.matches <- function(pars){
           
           match.info <- match.info[keep, ]
           fits.feature <- fits.feature[keep]
+          # scattermore::scattermoreplot(x = 1:nrow(match.info), y = match.info$rval %>% sort)
 
  ######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
@@ -292,6 +300,14 @@ filter.matches <- function(pars){
                                          ppm.tol = pars$matching$filtering$ppm.tol)
         match.info <- res$match.info
         fits.feature <- res$fits.feature
+        
+        message('\nmatches reduced to ', nrow(match.info),' ...')
+        
+        # Savepoint
+          saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          # saveRDS(fits.feature, paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
+          # fits.feature <- readRDS(paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
 
  ######################### Back-fit reference to spectra  #############################    
     
@@ -304,6 +320,7 @@ filter.matches <- function(pars){
         m.inds <- 1:nrow(match.info)
         match.info$id <- m.inds
         t1 <- Sys.time()
+        
         backfits <- backfit_ref.feats.2.subset.specs(m.inds, fits.feature, match.info, 
                                                       feature, # now carries sfe data
                                                       xmat, ppm, plots = F) # plots are heavy and time-expensive!

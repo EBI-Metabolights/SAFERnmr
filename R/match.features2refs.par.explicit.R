@@ -159,7 +159,7 @@ match.features2refs.par.explicit <- function(pars){
                       fit <- fit.leastSquares(feat[feat.pos], ref[ref.pos], plots = F, scale.v2 = T)
                         # fit$plot
                       fit$wasserstein.score <- score.wasserstein(fit$feat.fit, fit$spec.fit)
-    
+                      
                       return(fit)
                   })
                   

@@ -22,20 +22,20 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
                                     xmat, ppm, 
                                     plots = F){
 
-      backfits <- lapply(m.inds, function(m)
+      backfits <- mclapply(m.inds, function(m)
       {
         # print(m)
         ############# For each match ###############
         # Get data ####
           # m <- 4
           # m <- m.inds[3]
-          
-          fit <- fits.feature[[m]]
-          ref.region <- match.info[m, c("ref.start","ref.end")] %>% as.numeric
+          mi.row <- match.info[m, ]
+          fit <- apply.fit(mi.row)
+          ref.region <- mi.row[, c("ref.start","ref.end")] %>% as.numeric
           feat <- match.info$feat[m]
           
           # If sfe has not been done:
-            spec.cols <- match.info[m, c("feat.start","feat.end")] %>% as.numeric %>% feature$position[feat,.] %>% fillbetween
+            spec.cols <- mi.row[, c("feat.start","feat.end")] %>% as.numeric %>% feature$position[feat,.] %>% fillbetween
             thisref.ppm <- ref.region %>% fillbetween %>% ppm[.]
           
           # If sfe HAS been done, wait to do this at the spectrum level using lags
@@ -225,7 +225,7 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
         #     -find the resonance(s) that the protrusion overlaps
         #     -% intensity of the protrusion compared to the overall ref feature height?
         #     -take the max of this for the ref feature fit
-        #     
+             
         # Calculate bff from ovs score ####
           ovs.res <- lapply(fits, function(f) f$ovs.res) %>% unlist
           ovs.tot <- lapply(fits, function(f) f$ovs.tot) %>% unlist
@@ -267,7 +267,7 @@ backfit_ref.feats.2.subset.specs <- function(m.inds, fits.feature, match.info,
                   bffs.res = bffs.res,
                   bffs.tot = bffs.tot,
                   gridplot = gridplot))
-      })#, mc.cores = pars$par$ncores)
+      }, mc.cores = pars$par$ncores)
       
       
   return(backfits)
