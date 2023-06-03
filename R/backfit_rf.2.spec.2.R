@@ -22,10 +22,23 @@
 #' PRCS and/or spectral region, or to a given feature. Once the row (rf) inds are 
 #' obtained, one can easily access the ss-level information for each of the rfs.
 #' This can be used, in combination with xmat and refmat to extract the shapes,
-#' and fits can be applied for plotting, scoring, etc. 
+#' and fits can be applied for plotting, scoring, etc.. Example:
+#'   # 1: select ref
+#'    - this narrows down matches without ref
+#'    - apply to backfits (indexed by match)
+#'    2: select ref region
+#'      - this narrows down matches further
+#'      - still don't need anything from the backfits
+#'      3: select samples
+#'        - now backfits needed
+#'        - plotting can take place. Access:
+#'         - spec region (really just the start)
+#'          - ref region
+#'          - ref spec
+#'          - fit data
 #' 
 #' Alternatively, one can loop through the rfs relevant to a given PRCS, then pull
-#' the ss-level table for each, and use that for scoring. 
+#' the ss-level table for each, and use that for scoring.
 #'
 #' @param m.inds A vector of indices corresponding to the matches between reference features and spectra. Necessary to allow for subsetting of matches (i.e. because of filtering)
 #' @param fits.feature A list of fitted features (to reference spectra)
@@ -265,6 +278,51 @@ backfit.rfs <- function(match.info,
       
     print(Sys.time()-t1)  
     
+  # Unchunk match.info ####
+  
+    match.info <- lapply(chunks, function(chunk) {
+      # chunk <- chunks[[1]]
+      # Undo the feature and ref number changes for each chunk - this is stored 
+      # in the match table, and the corrections are different for each chunk.
+      # (make sure to put the feature and ref indices back the way they were)
+      chunk$match.info$feat <- chunk$match.info$feat %>% chunk$feat.numbers[.]
+      chunk$match.info$ref <- chunk$match.info$ref %>% chunk$ref.numbers[.]
+      return(chunk$match.info)
+    }) %>% do.call(rbind,.)
+  
+  # Unlist the backfit tables so each one matches a row in match.info ####
+  # (they are currently split across chunks): ####
+  
+    backfits <- backfits %>% unlist(recursive = F)
+    
+    # Temporarily remove match + level - just keep the fits
+    # backfits <- lapply(backfits.by.chunk, function(bfc) {
+    #   # bfc <- backfits.by.chunk[[1]]
+    #     bfc <- lapply(bfc, function(bfc.row) {
+    #       bfc.row$fits
+    #     })
+    #     
+    #   return(bfc)
+    # }) %>% unlist(recursive = F)
+    
+    backfits <- lapply(backfits, function(bf.df) {
+      # bf.df <- backfits[[1]]
+      bf.df$ref.start <- NULL
+      bf.df$ref.end <- NULL
+      return(bf.df)
+    })
+     
+  # Undo mi.order ####
+    match.info <- match.info[]
+      # saveRDS(backfits, paste0(tmpdir, '/backfits.init.RDS'))
+      # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
+      
+      
+      browser()
+      
+  return(backfits)
+}
+
   # Data format criteria ####
   # We want to be able to quickly filter each of these for: 
   # - ref spec region - comes from match.info
@@ -318,47 +376,3 @@ backfit.rfs <- function(match.info,
     
      
 
-  # Unchunk match.info ####
-  
-    match.info <- lapply(chunks, function(chunk) {
-      # chunk <- chunks[[1]]
-      # Undo the feature and ref number changes for each chunk - this is stored 
-      # in the match table, and the corrections are different for each chunk.
-      # (make sure to put the feature and ref indices back the way they were)
-      chunk$match.info$feat <- chunk$match.info$feat %>% chunk$feat.numbers[.]
-      chunk$match.info$ref <- chunk$match.info$ref %>% chunk$ref.numbers[.]
-      return(chunk$match.info)
-    }) %>% do.call(rbind,.)
-  
-  # Unlist the backfit tables so each one matches a row in match.info ####
-  # (they are currently split across chunks): ####
-  
-    backfits <- backfits %>% unlist(recursive = F)
-    
-    # Temporarily remove match + level - just keep the fits
-    # backfits <- lapply(backfits.by.chunk, function(bfc) {
-    #   # bfc <- backfits.by.chunk[[1]]
-    #     bfc <- lapply(bfc, function(bfc.row) {
-    #       bfc.row$fits
-    #     })
-    #     
-    #   return(bfc)
-    # }) %>% unlist(recursive = F)
-    
-    backfits <- lapply(backfits, function(bf.df) {
-      # bf.df <- backfits[[1]]
-      bf.df$ref.start <- NULL
-      bf.df$ref.end <- NULL
-      return(bf.df)
-    })
-     
-  # Undo mi.order ####
-    match.info <- match.info[]
-      # saveRDS(backfits, paste0(tmpdir, '/backfits.init.RDS'))
-      # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
-      
-      
-      browser()
-      
-  return(backfits)
-}
