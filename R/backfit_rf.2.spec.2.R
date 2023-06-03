@@ -40,13 +40,9 @@
 #' Alternatively, one can loop through the rfs relevant to a given PRCS, then pull
 #' the ss-level table for each, and use that for scoring.
 #'
-#' @param m.inds A vector of indices corresponding to the matches between reference features and spectra. Necessary to allow for subsetting of matches (i.e. because of filtering)
-#' @param fits.feature A list of fitted features (to reference spectra)
 #' @param match.info A data frame containing information about the matches between features and reference spectra
 #' @param feature List containing feature intensities and positions
 #' @param xmat Full spectral matrix from which the features were derived
-#' @param ppm A vector containing the ppm axis of the spectra
-#' @param plots A logical value indicating whether to generate plots of the fits and back-fit feasibility scores - only use for a couple of backfits at a time as plots will double the weight of the result
 #'
 #' @return A list containing the back-fits and back-fit feasibility scores for each spectrum in the subset,
 #'         as well as a grid plot of the fits and back-fit feasibility scores.
@@ -59,10 +55,11 @@
 #' @export
 backfit.rfs <- function(match.info, 
                         feature, 
-                        xmat, ppm){
+                        xmat,
+                        ref.mat){
 
   # Chunk the data by ref (more or less) ####
-  
+    message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
     # Sort by ref, so we can group chunks by ref
       mi.order <- order(match.info$ref)
       match.info <- match.info[mi.order, ]
@@ -81,13 +78,9 @@ backfit.rfs <- function(match.info,
         feat.numbers <- unique(mi$feat)
         
         # Index these to this chunk's refs and features
-          # Record initial numbers
-            mi$feat.init <- mi$feat
-            mi$ref.init <- mi$ref
-          
-          # Index for this chunk
-            mi$feat.init <- lapply(mi$feat, function(x) which(feat.numbers == x)) %>% unlist
-            mi$ref.init <- lapply(mi$ref, function(x) which(ref.numbers == x)) %>% unlist
+
+          mi$feat <- lapply(mi$feat, function(x) which(feat.numbers == x)) %>% unlist
+          mi$ref <- lapply(mi$ref, function(x) which(ref.numbers == x)) %>% unlist
         
         list(match.info = mi,
              ref.numbers = ref.numbers,
@@ -107,20 +100,21 @@ backfit.rfs <- function(match.info,
       
       gc()
       
-  # Run through each chunk ####
+  # Compute over each chunk in parallel ####
+    
     t1 <- Sys.time()
-        
+      
+      # Each core gets:
+      # - 1 chunk (~1Mb / 50 rows @ 150 spectra and 130K points)
+      # - 1 xmat
+      # - 1 ppm vector        
+      
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
-      # backfits <- lapply(chunks, function(chunk) {
-        # chunk <- chunks[[1]]
-  
+      ############# For each chunk (in parallel): ###############
+            
         backfits.chunk <- lapply(1:nrow(chunk$match.info), 
                            function(m) {
-          # Each core gets:
-          # - 1 chunk (~1Mb / 50 rows @ 150 spectra and 130K points)
-          # - 1 xmat
-          # - 1 ppm vector
-          ############# For each match ###############
+        #############        For each match:         ###############
           
           # Get data, expand fit ####
             
@@ -155,8 +149,7 @@ backfit.rfs <- function(match.info,
                 spec.region <- xmat[ss.spec, spec.cols]
               
                 fit.feat2spec <- fit.batman(fit$feat.fit, spec.region, 
-                                            exclude.lowest = .5, 
-                                            ppm = ppm[spec.cols])
+                                            exclude.lowest = .5)
                 
                   # plot.fit(fit.feat2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
                 
@@ -239,21 +232,17 @@ backfit.rfs <- function(match.info,
                 }
                 
               # Return results ####
-                                  # match = m,
-                                  # ref = mi$ref,
-                                  # feat = mi$feat,
                 return(data.frame(ss.spec = ss.spec,
                                   fit.intercept = fit.feat2spec$intercept, 
                                   fit.scale = fit.feat2spec$ratio,
                                   spec.start = spec.cols[1],
                                   spec.end = tail(spec.cols,1),
-                                  # These aren't necessary - held in the match.info
-                                  # ref.start = ref.region[1],
-                                  # ref.end = ref.region[2],
                                   bffs.res = max(ovs.res), # tmp "bff"
                                   bffs.tot = max(ovs.tot))) # tmp "bff"
             }) %>% do.call(rbind,.)
             
+          # Calculate bff from ovs score ####
+          # 
           # The bff score (backfit feasibility score) is defined as:
           #   1 - overshoot viability score
           #   ovs:
@@ -261,15 +250,14 @@ backfit.rfs <- function(match.info,
           #     -find the resonance(s) that the protrusion overlaps
           #     -% intensity of the protrusion compared to the overall ref feature height?
           #     -take the max of this for the ref feature fit
-               
-          # Calculate bff from ovs score ####
             
             fits$bffs.res <- 1-fits$bffs.res
               fits$bffs.res[fits$bffs.res<0] <- 0
             fits$bffs.tot <- 1-fits$bffs.tot
               fits$bffs.tot[fits$bffs.tot<0] <- 0
-            
-        return(fits)
+          
+          # Return the minimal list of fits (minimal data)  ####
+            return(fits)
         })
         
         return(backfits.chunk)
@@ -278,49 +266,37 @@ backfit.rfs <- function(match.info,
       
     print(Sys.time()-t1)  
     
+  message('\tbackfit calculations finished - un-chunking and formatting results...')
+    
   # Unchunk match.info ####
   
     match.info <- lapply(chunks, function(chunk) {
-      # chunk <- chunks[[1]]
+
       # Undo the feature and ref number changes for each chunk - this is stored 
       # in the match table, and the corrections are different for each chunk.
       # (make sure to put the feature and ref indices back the way they were)
       chunk$match.info$feat <- chunk$match.info$feat %>% chunk$feat.numbers[.]
       chunk$match.info$ref <- chunk$match.info$ref %>% chunk$ref.numbers[.]
+      
       return(chunk$match.info)
+      
     }) %>% do.call(rbind,.)
   
   # Unlist the backfit tables so each one matches a row in match.info ####
   # (they are currently split across chunks): ####
-  
-    backfits <- backfits %>% unlist(recursive = F)
-    
-    # Temporarily remove match + level - just keep the fits
-    # backfits <- lapply(backfits.by.chunk, function(bfc) {
-    #   # bfc <- backfits.by.chunk[[1]]
-    #     bfc <- lapply(bfc, function(bfc.row) {
-    #       bfc.row$fits
-    #     })
-    #     
-    #   return(bfc)
-    # }) %>% unlist(recursive = F)
-    
-    backfits <- lapply(backfits, function(bf.df) {
-      # bf.df <- backfits[[1]]
-      bf.df$ref.start <- NULL
-      bf.df$ref.end <- NULL
-      return(bf.df)
-    })
-     
-  # Undo mi.order ####
-    match.info <- match.info[]
-      # saveRDS(backfits, paste0(tmpdir, '/backfits.init.RDS'))
+    saveRDS(backfits.by.chunk, paste0(tmpdir, '/backfits.init.RDS'))
       # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
-      
-      
-      browser()
-      
-  return(backfits)
+    backfits <- backfits.by.chunk %>% unlist(recursive = F)
+
+  # Undo mi.order for both objects ####
+    message('\tunsorting the match.info and backfits...')
+    match.info <- match.info[order(mi.order),]
+    backfits <- backfits[order(mi.order)]
+
+    message('\tbackfitting completed on ', length(backfits), ' ref-features.')
+  # Return list ####
+    return(list(match.info = match.info,
+                backfits = backfits))
 }
 
   # Data format criteria ####
@@ -343,7 +319,7 @@ backfit.rfs <- function(match.info,
    #    - by rf:
    #    
           #   pct.ref <- sum(fit$ref.region %>% as.numeric %>% fillbetween %>% refmat[fit$ref, .], na.rm = T)
-          #     # no need to sum the whole spectrum again; already normed to 1.
+          #     # no need to sum the whole spectrum again; already sums to 1.
           #   
           # # return df (expanded this score to all ss.spec x rf combinations) 
           #   data.frame(match = fit$match, # match # = backfit #

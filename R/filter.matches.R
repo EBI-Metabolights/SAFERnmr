@@ -276,8 +276,7 @@ filter.matches <- function(pars){
                               new.data$match.info %>% do.call(rbind,.))
             row.names(match.info) <- NULL
           new.fits <- new.data$fits
-          fits.feature <- c(fits.feature, new.data$fits %>% unlist(recursive = F, use.names = F) %>% unlist(recursive = F))
-          
+
           message('\n\t', n.matches.before, 'matches propagated to ', nrow(match.info), ' matches.')
        
           
@@ -287,7 +286,6 @@ filter.matches <- function(pars){
             match.info$pval <= pars$matching$p.thresh
           
           match.info <- match.info[keep, ]
-          fits.feature <- fits.feature[keep]
           # scattermore::scattermoreplot(x = 1:nrow(match.info), y = match.info$rval %>% sort)
 
  ######################### Calculate deltappm distance (specppm - featureppm)  #############################
@@ -299,8 +297,7 @@ filter.matches <- function(pars){
         res <- filter.matches_shiftDelta(match.info, feature, ppm = fse.result$ppm, fits.feature,
                                          ppm.tol = pars$matching$filtering$ppm.tol)
         match.info <- res$match.info
-        fits.feature <- res$fits.feature
-        
+
         message('\nmatches reduced to ', nrow(match.info),' ...')
         
         # Savepoint
@@ -319,13 +316,11 @@ filter.matches <- function(pars){
       # adjusted for sfe
         m.inds <- 1:nrow(match.info)
         match.info$id <- m.inds
-        t1 <- Sys.time()
+
+        backfit.results <- backfit.rfs(match.info, 
+                                       feature, # has sfe data 
+                                       xmat)
         
-        backfits <- backfit_ref.feats.2.subset.specs(m.inds, fits.feature, match.info, 
-                                                      feature, # now carries sfe data
-                                                      xmat, ppm, plots = F) # plots are heavy and time-expensive!
-        
-        Sys.time() - t1
         message('Saving backfits...\n\n\n')
         saveRDS(backfits, paste0(this.run,"/backfits.RDS"))
         # backfits <- readRDS(paste0(this.run, "/backfits.RDS"))
