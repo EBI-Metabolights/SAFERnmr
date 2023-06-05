@@ -11,7 +11,7 @@ project_features.stackplot(
   bestfits,
   exp.by = 0.05,
   vshift = 2,
-  hshift = 0.002,
+  hshift = 0,
   sort.rows = F
 )
 }

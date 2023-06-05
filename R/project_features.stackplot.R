@@ -24,7 +24,7 @@ project_features.stackplot <- function(xmat, ppm,
                                        bestfits,
                                        exp.by = 0.05,
                                        vshift = 2,
-                                       hshift = 0.002,
+                                       hshift = 0.0,
                                        sort.rows = F){
  
   require(ggplot2)

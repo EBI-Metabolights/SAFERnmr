@@ -2,19 +2,20 @@
 % Please edit documentation in R/range.dist.R
 \name{range.dist}
 \alias{range.dist}
-\title{Calculate range distances}
+\title{Calculate distances between two sets of ranges (each given as 2 x n columns)}
 \usage{
 \method{range}{dist}(a, b)
 }
 \arguments{
-\item{a}{range 1}
+\item{a}{range 1 (given as column, or multiple columns)}
 
-\item{b}{range 2}
+\item{b}{range 2 (given as column, or mulitple columns) - must be same length as a!}
 }
 \value{
 distance between them
 }
 \description{
-Given a pair of ranges, return distance between them (number of elements). Overlapping
+Given a pair of ranges, return distance between them ( for integer vectors, 
+this should be the number of elements between them). Overlapping
 ranges return negative distance.
 }
