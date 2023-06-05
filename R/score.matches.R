@@ -30,23 +30,21 @@ score.matches <- function(pars){
     fse.result <- readRDS(paste0(this.run,"/fse.result.RDS"))
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
-    clusters <- readRDS(paste0(this.run,"/cluster.final.RDS"))
     feature <- readRDS(paste0(this.run,"/feature.final.RDS"))
     lib.info <- readRDS(paste0(this.run,"/lib.info.RDS"))
     
-    match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
-    peak.qualities <- readRDS(paste0(this.run,"/peak.qualities.RDS"))
-    fits.feature <- readRDS(paste0(this.run,"/fits.RDS"))
-    
+    # match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
+
     lib.data.processed <- readRDS(paste0(this.run, "/lib.data.processed.RDS"))
-    backfits <- readRDS(paste0(this.run, "/backfits.RDS"))
-    
+    backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
+      match.info <- backfit.results$match.info
+      backfits <- backfit.results$backfits
     
     ######################### Build match matrix  #############################    
     # Get the processed library data:
       
-      refmat <- lapply(lib.data.processed, function(x) x$mapped$data) %>% do.call(rbind,.)
-        
+      refmat <- lapply(lib.data.processed, function(x) x$mapped$data / sum(x$mapped$data, na.rm = T)) %>% do.call(rbind,.)
+
       # refmat <- readRDS(paste0(this.run,"/temp_data_matching/ref.mat.RDS")) %>% t
       cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind,.)
       # write(cmpd.names,"/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo.cmpd.names.txt", sep = '\t')
@@ -62,29 +60,31 @@ score.matches <- function(pars){
         # chunk.size <- max(1, nrefs / pars$par$ncores)
         # f.grp <- ceiling((1:nrefs) / chunk.size)
       
-      ss.ref.pairs <- lapply(backfits, function(bf) 
+      ss.ref.pairs <- pblapply(1:nrow(match.info), function(m) 
         {
-          # bf <- backfits[[1]]
+          # Get data for this match
           
+            bf <- backfits[[m]]
+            mi <- match.info[m,]
+            
           # relevant backfit fields are ref.feature-specific - not spectrum specific
           # all fits in a backfit obj share the same ref.region, but differ in bff scores and ss
           # so just use the first one to get that info, and luckily we already extracted bffs. 
           # We do need to loop out the ss.specs.
           
             # Fast way (should be fine) ####
-              fit <- bf$fits[[1]]
-              pct.ref <- sum(fit$ref.region %>% as.numeric %>% fillbetween %>% refmat[fit$ref, .], na.rm = T)
+              
+              pct.ref <- sum(mi$ref.start:mi$ref.end %>% refmat[mi$ref, .], na.rm = T)
                 # no need to sum the whole spectrum again; already normed to 1.
               
-            # return df (expanded this score to all ss.spec x rf combinations) 
-              data.frame(match = fit$match, # match # = backfit #
-                         ref.start = fit$ref.region[1],
-                         ref.end = fit$ref.region[2],
-                         ref = fit$ref,
-                         # ref.start = fit$ref.region$ref.start,
-                         # ref.end = fit$ref.region$ref.end,
-                         feat = fit$feat,
-                         ss.spec = lapply(bf$fits, function(f) f$ss.spec) %>% unlist,
+            # return slimmed df (expanded this score to all ss.spec x rf combinations) 
+            # - this is just for scoring - needs very little data
+              data.frame(match = m, # match # = backfit #
+                         ref = mi$ref,
+                         feat = mi$feat,
+                         ref.start = mi$ref.start,
+                         ref.end = mi$ref.end,
+                         ss.spec = bf$ss.spec,
                          bff.res = bf$bffs.res,
                          bff.tot = bf$bffs.tot,
                          pct.ref = pct.ref)
@@ -111,21 +111,25 @@ score.matches <- function(pars){
           # scattermore::scattermoreplot(seq_along(scores), sort(scores))
           # hist(scores, breaks = 1000)
           
-          ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = max(ss.ref.pairs$ref))
+          ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
           linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
                             cols = ss.ref.pair.scores$ref, 
                             m = nrow(xmat))
           
           ss.ref.mat.nd[linds] <- scores
-      
+          
       # Update the rfs.used list to reflect these matrix positions (naming them)
+          # rfs.used$score.mat.coords$mat.pos <- linds # not needed anymore
+      
           
-          rfs.used$score.mat.coords$mat.pos <- linds
+      # Add colnames (compounds) to scores matrix 
           
-          colnames(ss.ref.mat.nd) <- cmpd.names[1:max(unique(ss.ref.pair.scores$ref))]
-          # ss.ref.mat.nd <- ss.ref.mat.nd[, colSums(ss.ref.mat.nd) != 0]
-          # ss.ref.mat.nd <- t(ss.ref.mat.nd)
-        
+          colnames(ss.ref.mat.nd) <- cmpd.names[1:nrow(refmat)]
+ 
+          saveRDS(ss.ref.mat.nd, paste0(this.run, "/ss.ref.sumScores.RDS"))
+          
+      # Plot the matrix as an HCA'd heatmap
+      
           pdf(file = paste0(tmpdir,"/match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
               width = 8, # The width of the plot in inches
               height = 8) # The height of the plot in inches
@@ -134,9 +138,12 @@ score.matches <- function(pars){
             
           dev.off()
 
+          
+          # ss.ref.mat.nd <- readRDS(paste0(this.run, "/ss.ref.sumScores.RDS"))
+          # rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))
         
 ######################################################################################################
-  # Given scores matrix, do any compounds match known annotations?
+  # Given scores matrix, do any compounds match known annotations? ####
         # scores.mat <- ss.ref.mat.nd
         # scores.mat <- ss.ref.mat
         
@@ -146,20 +153,15 @@ score.matches <- function(pars){
 
         # rep.ref <- apply(scores.mat, 2, max)
         
-        # See if annotations are in maf file list of annotations ####
+        # See if annotations are in maf file list of annotations
 
                   # matches <- data.frame(gissmo.result = cmpd.names,
                   #                       best.refscore = rep.ref)
                   # matches <- matches[order(matches$best.refscore, decreasing = T),]
                   # 
             # saveRDS(matches, paste0(this.run, "/matches_scored_named.RDS"))
-            saveRDS(ss.ref.mat.nd, paste0(this.run, "/ss.ref.sumScores.RDS"))
-            saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
-            # ss.ref.mat.nd <- readRDS(paste0(this.run, "/ss.ref.sumScores.RDS"))
-            # rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))
-            
             # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
-            
+  # ####       
   message('----------------------------------------------------------------')
   message('-------------------  Match Scoring Completed -------------------')
   message('----------------------------------------------------------------')

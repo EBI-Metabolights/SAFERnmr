@@ -31,6 +31,10 @@ filter.matches <- function(pars){
     message("Loading data from files...\n\n\n")
     
     fse.result <- readRDS(paste0(this.run, "/fse.result.RDS"))
+      xmat <- fse.result$xmat
+      ppm <- fse.result$ppm
+      rm(fse.result)
+
     feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
     ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
     matches <- readRDS(paste0(this.run, "/matches.RDS"))
@@ -52,8 +56,8 @@ filter.matches <- function(pars){
         
         # Slim down fits.feature
           # already recorded in match.info
-          match.info$fit.intercept
-          match.info$fit.scale
+          # match.info$fit.intercept
+          # match.info$fit.scale
           
 ######################### Remove singlets ############################################
 
@@ -275,7 +279,8 @@ filter.matches <- function(pars){
           match.info <- rbind(match.info, 
                               new.data$match.info %>% do.call(rbind,.))
             row.names(match.info) <- NULL
-          new.fits <- new.data$fits
+            
+          rm(new.data)
 
           message('\n\t', n.matches.before, 'matches propagated to ', nrow(match.info), ' matches.')
        
@@ -290,18 +295,18 @@ filter.matches <- function(pars){
 
  ######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
-        # source('./../span.R')
-        # source('./../filter.matches_shiftDelta.R')
-
-        message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
-        res <- filter.matches_shiftDelta(match.info, feature, ppm = fse.result$ppm, fits.feature,
-                                         ppm.tol = pars$matching$filtering$ppm.tol)
-        match.info <- res$match.info
-
-        message('\nmatches reduced to ', nrow(match.info),' ...')
-        
+        # # source('./../span.R')
+        # # source('./../filter.matches_shiftDelta.R')
+        # 
+        # message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
+        # res <- filter.matches_shiftDelta(match.info, feature, ppm = fse.result$ppm, fits.feature,
+        #                                  ppm.tol = pars$matching$filtering$ppm.tol)
+        # match.info <- res$match.info
+        # 
+        # message('\nmatches reduced to ', nrow(match.info),' ...')
+        # 
         # Savepoint
-          saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          # saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
           match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
           # saveRDS(fits.feature, paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
           # fits.feature <- readRDS(paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
@@ -309,8 +314,6 @@ filter.matches <- function(pars){
  ######################### Back-fit reference to spectra  #############################    
     
       message('Back-fitting ref-feats to each spectrum in the relevant subset...\n\n')
-      xmat <- fse.result$xmat
-      ppm <- fse.result$ppm
       
     # Back-fit each matched reference region to the subset spectra
       # adjusted for sfe
@@ -319,23 +322,24 @@ filter.matches <- function(pars){
 
         backfit.results <- backfit.rfs(match.info, 
                                        feature, # has sfe data 
-                                       xmat)
+                                       xmat,
+                                       ref.mat)
         
         message('Saving backfits...\n\n\n')
-        saveRDS(backfits, paste0(this.run,"/backfits.RDS"))
-        # backfits <- readRDS(paste0(this.run, "/backfits.RDS"))
+        saveRDS(backfit.results, paste0(this.run,"/backfit.results.RDS"))
+        # backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
 
  # ########## save filtered data ########################################################################
          
         message('Saving split and filtered match data...\n\n')
 
-        saveRDS(match.info, paste0(this.run, "/match.info.RDS"))
+        # saveRDS(match.info, paste0(this.run, "/match.info.RDS"))
         # match.info <- readRDS(paste0(this.run, "/match.info.RDS"))
 
-        saveRDS(fits.feature, paste0(this.run, "/fits.RDS"))
+        # saveRDS(fits.feature, paste0(this.run, "/fits.RDS"))
         # fits.feature <- readRDS(paste0(this.run, "/fits.RDS"))
         
-        saveRDS(peak.qualities, paste0(this.run, "/peak.qualities.RDS"))
+        # saveRDS(peak.qualities, paste0(this.run, "/peak.qualities.RDS"))
         # peak.qualities <- readRDS(paste0(this.run, "/peak.qualities.RDS"))
    
   message('-----------------------------------------------------------------')
