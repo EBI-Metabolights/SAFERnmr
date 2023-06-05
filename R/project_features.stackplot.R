@@ -20,6 +20,7 @@
 #'
 #' @export
 project_features.stackplot <- function(xmat, ppm,
+                                       plot.range,
                                        label,
                                        bestfits,
                                        exp.by = 0.05,

@@ -24,8 +24,8 @@ select.evidence_refmet <- function(ref = NULL,
 ############ Accessory functions ################          
 
     # Provide a way out if no evidence is selected:
-          no.evidence <- function(ref.ind, ld){
-            list(ref.ind = ref.ind,
+          no.evidence <- function(ref, ld){
+            list(ref.ind = ref$id,
                  ref.info = ld,
                  rf.fits = NULL)
           }
@@ -77,7 +77,7 @@ select.evidence_refmet <- function(ref = NULL,
             
           # Find all those which involve the spectra we're into
           
-            rf.specFits <- rf.specFits[rf.specFits$ss.spec %in% spec.ind, ]
+            rf.specFits <- rf.specFits[rf.specFits$ss.spec %in% sample$number, ]
             if(nrow(rf.specFits) == 0){return(no.evidence(ref$number, ld))}
             
       # Build a slimmed-down object that project_features.stackplot() will accept ####
