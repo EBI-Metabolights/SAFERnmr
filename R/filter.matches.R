@@ -68,11 +68,17 @@ filter.matches <- function(pars){
         match.info <- res$match.info
         fits.feature <- res$fits.feature
         
-######################### Propagate matches to feature clusters  ############
+        
+###########################################################################################  
+     # No full feature fits beyond this point. Just storing coefficients and positions. Try
+     # to move this line up further. 
+###########################################################################################        
+
+        
+        
+######################### Propagate matches to feature clusters  ##########################
 
         # For each match, produce other matches based on clusters
-        
-        # Option 1: 
         # - loop through clusters
         # - copy all matches from key to other cluster members
         # - what gets copied?
@@ -81,49 +87,66 @@ filter.matches <- function(pars){
         #     x spectra from which the cluster member was extracted, as gained 
         #     from the sfe
         #   - fstack.row is the row of the match matrix (subset of feature matrix)
-        
+        # - what gets added?
+        #   - new feature, lagged and fit to ref
+        #   - just store the coefficients and positions
+        #   
+        # This boils down to a match.info row for every feature. Fits can be rebuilt
+        # on the fly from this and the feature/spectral matrix/ref matrix.
+
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
         n.matches.before <- nrow(match.info)
         
-        new.data <- mclapply(matched.feats, function(fstack.row) {
-            # fstack.row <- matched.feats[36]
-            # print(fstack.row)
-          
-          # Which cluster did it belong to? ####
-            # Behind each row of fstack is 1 or more feature indices
-              
-              # For now, just assume these are the row numbers in the original featureStack (with all cluster members)
+        # Prep for basic load-balancing based on cluster size ####
+          cluster.size <- lapply(matched.feats, function(x) {
+            clust.number <- which(cluster$keys %in% x)
+            cluster$groups[[clust.number]] %>% length
+          }) %>% unlist
 
-                # fstack.row <- matched.feats[[1]]
-                clust.number <- which(cluster$keys %in% fstack.row) # just an index, not the key feature
-          
-            
-          # Pull cluster info ####
-          
-            clust.key <- cluster$keys[clust.number] # actual name of the key
-            cluster.members <- cluster$groups[[clust.number]]
-            clust.info <- cluster$info[[clust.number]]
-            
-            # Put lag table in terms of matching to key ####
-            
-              clust.lags <- clust.info$lag.table %>% pw.lags.relative.to(clust.key)
-            
-              # lag.features(feature$stack, clust.lags, to = clust.key) %>% trim.sides %>% stackplot #%>% simplePlot(linecolor = 'black')
-
-          # Match info for key feature
-            clust.matches <- match.info[match.info$feat == clust.key, ]
-            
- ############ # Specific to each cluster member: ######################################################################
- 
-            nonkey.members <- cluster.members[cluster.members != clust.key]
-          
-            if (length(nonkey.members) > 0){
+        # Compute new match.info for cluster members ####
+          new.data <- mclapply(matched.feats[order(cluster.size)], function(fstack.row) {
               
-              # Copy match info for each cluster member (recopy first one), and recalculate:
-              # - match info (adjust position)
-              # - fit to ref 
+            # Which cluster does this feature it belong to? ####
+              # Behind each row of fstack is 1 or more feature indices
+                
+                # For now, just assume these are the row numbers in the original featureStack (with all cluster members)
+  
+                  # fstack.row <- matched.feats[[1]]
+                  clust.number <- which(cluster$keys %in% fstack.row) # just an index, not the key feature
+            
               
+            # Pull cluster info ####
+            
+              clust.key <- cluster$keys[clust.number] # actual name of the key - should be fstack.row
+              cluster.members <- cluster$groups[[clust.number]]
+              clust.info <- cluster$info[[clust.number]]
+              
+              # Put lag table in terms of matching to key ####
+              
+                clust.lags <- clust.info$lag.table %>% pw.lags.relative.to(clust.key)
+              
+                # lag.features(feature$stack, clust.lags, to = clust.key) %>% trim.sides %>% stackplot #%>% simplePlot(linecolor = 'black')
+  
+            # Match info for key feature
+              clust.matches <- match.info[match.info$feat == clust.key, ]
+              
+  
+              ############ 
+              ############             
+              ############             
+              ############ # For each non-key cluster member: ############
+              ############ 
+              ############ 
+              
+              nonkey.members <- cluster.members[cluster.members != clust.key]
+              
+              if (length(nonkey.members) > 0){
+                
+                # Copy match info for each cluster member (recopy first one), and recalculate:
+                # - match info (adjust position)
+                # - fit to ref 
+                
                 member.matches <- lapply(nonkey.members, function(cluster.member){
                   # print(cluster.member)
                   # cluster.member <- nonkey.members[1]
@@ -226,7 +249,7 @@ filter.matches <- function(pars){
                         # Skip alignment, just update the row with fit data ####
                           
                           fit <- fit1
-
+  
                         # Either way, we now have a fit. Propagate that information:
                         
                           rf <- updateMatchInfoRow(rf, fit)
@@ -248,23 +271,24 @@ filter.matches <- function(pars){
                   # return(rfs.new)
                 }) %>% do.call(rbind,.)
                 
-                # plot(member.data$fit.intercept, member.data$fit.scale)
-
-            } else {
-              
-              return(NULL)
-              
-            }
-
-            return(member.matches)
-            
-        }, mc.cores = pars$par$ncores) %>% unlist(recursive = F)
-        
-        saveRDS(new.data, paste0(tmpdir, "/new.data.match.info.RDS"))
-        # new.data <- readRDS(paste0(tmpdir, "/new.data.RDS"))
+                return(member.matches)
+                
+                  # plot(member.matches$fit.intercept, member.matches$fit.scale)
+  
+              } else {
+                
+                return(NULL)
+                
+              }
+  
+          }, mc.cores = 10) %>% unlist(recursive = F)
+          
+          saveRDS(new.data, paste0(tmpdir, "/new.data.match.info.RDS"))
+          # new.data <- readRDS(paste0(tmpdir, "/new.data.RDS"))
 
           match.info <- rbind(match.info, 
                               new.data %>% do.call(rbind,.))
+          
             row.names(match.info) <- NULL
             
           rm(new.data)
