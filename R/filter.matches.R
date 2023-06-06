@@ -149,6 +149,7 @@ filter.matches <- function(pars){
                 # - fit to ref 
                 
                 member.matches <- lapply(nonkey.members, function(cluster.member){
+                  gc()
                   # print(cluster.member)
                   # cluster.member <- nonkey.members[1]
                   
@@ -281,7 +282,7 @@ filter.matches <- function(pars){
                 return(NULL)
                 
               }
-              gc()
+              
           }, mc.cores = 10)
           
           a <- unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
