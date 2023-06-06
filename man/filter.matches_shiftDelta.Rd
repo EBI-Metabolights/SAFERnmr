@@ -4,7 +4,7 @@
 \alias{filter.matches_shiftDelta}
 \title{Filter matches based on ppm shift difference}
 \usage{
-\method{filter}{matches_shiftDelta}(match.info, feature, ppm, fits.feature, ppm.tol = 0.5)
+\method{filter}{matches_shiftDelta}(match.info, feature, ppm, ppm.tol = 0.5)
 }
 \arguments{
 \item{match.info}{A data frame containing the match information; produced in filter.matches()}
@@ -13,9 +13,9 @@
 
 \item{ppm}{A numeric vector of ppm values; feature$position values index this}
 
-\item{fits.feature}{List of feature fits to reference spectral regions}
-
 \item{ppm.tol}{The maximum allowed ppm shift difference between the feature and the match}
+
+\item{fits.feature}{List of feature fits to reference spectral regions}
 }
 \value{
 A list with two elements: the filtered `match.info` data frame, and the filtered `fits.feature` list which have been filtered by ppm shift difference.

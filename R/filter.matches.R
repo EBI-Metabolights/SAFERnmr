@@ -52,7 +52,7 @@ filter.matches <- function(pars){
         pq.featureNumbers <- unique(match.info[,'feat']) # this does not sort (just for good measure)
         
       peak.qualities <- matches.split$peak.quality
-      fits.feature <- matches.split$fits %>% unlist(recursive = F)
+      # fits.feature <- matches.split$fits %>% unlist(recursive = F)
         rm(matches.split)
         
         # Slim down fits.feature
@@ -67,7 +67,7 @@ filter.matches <- function(pars){
                                        peak.qualities, pq.featureNumbers, 
                                        pars$matching$filtering$res.area.threshold)
         match.info <- res$match.info
-        fits.feature <- res$fits.feature
+        # fits.feature <- res$fits.feature
         
         
 ###########################################################################################  
@@ -149,7 +149,7 @@ filter.matches <- function(pars){
                 # - fit to ref 
                 
                 member.matches <- lapply(nonkey.members, function(cluster.member){
-                  gc()
+                  
                   # print(cluster.member)
                   # cluster.member <- nonkey.members[1]
                   
@@ -207,7 +207,7 @@ filter.matches <- function(pars){
     
                       # Calculate the fit between the initial rf and the cluster.member ####
                         
-                        fit1 <- fit.leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
+                        fit <- fit.leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
                           # fit1$plot %>% plot
                         
                       # # Try to optimize the alignment a bit more ####
@@ -250,7 +250,7 @@ filter.matches <- function(pars){
                           
                         # Skip alignment, just update the row with fit data ####
                           
-                          fit <- fit1
+                          # fit <- fit1
   
                         # Either way, we now have a fit. Propagate that information:
                         
@@ -285,7 +285,7 @@ filter.matches <- function(pars){
               
           }, mc.cores = 10)
           
-          a <- unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
+          a <- new.data %>% unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
             rm(new.data)
             
           match.info <- rbind(match.info, a)
