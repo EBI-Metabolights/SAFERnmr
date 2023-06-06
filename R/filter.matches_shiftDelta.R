@@ -55,7 +55,6 @@ filter.matches_shiftDelta <- function(match.info,
        #####   
           
           
-            return(list(match.info = match.info,
-                  fits.feature = fits.feature))
+            return(match.info)
     
 }

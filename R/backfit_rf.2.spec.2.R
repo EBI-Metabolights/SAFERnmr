@@ -58,8 +58,6 @@ backfit.rfs <- function(match.info,
                         xmat,
                         ref.mat){
   
-scattermore::scattermoreplot(x = 1:sum(match.info$fit.scale<0.1), 
-                             y = sort(match.info$fit.scale[match.info$fit.scale<0.1]))
   
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')

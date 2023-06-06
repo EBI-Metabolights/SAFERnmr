@@ -8,6 +8,7 @@
 #' @return A list of filtered and processed matched peak information, including back-fits to the original spectra.
 #' @import yaml
 #' @importFrom magrittr %>%
+#' @importFrom data.table rbindlist
 #' 
 #' @import pbapply
 #' 
@@ -264,12 +265,12 @@ filter.matches <- function(pars){
                         
                           return(rf)
                           
-                    }) %>% do.call(rbind,.)
+                    })
                         
                   return(rfs.new)                
     
                   # return(rfs.new)
-                }) %>% do.call(rbind,.)
+              })
                 
                 return(member.matches)
                 
@@ -280,45 +281,46 @@ filter.matches <- function(pars){
                 return(NULL)
                 
               }
-  
-          }, mc.cores = 10) %>% unlist(recursive = F)
+              gc()
+          }, mc.cores = 10)
           
-          saveRDS(new.data, paste0(tmpdir, "/new.data.match.info.RDS"))
-          # new.data <- readRDS(paste0(tmpdir, "/new.data.RDS"))
+          a <- unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
+            rm(new.data)
+            
+          match.info <- rbind(match.info, a)
 
-          match.info <- rbind(match.info, 
-                              new.data %>% do.call(rbind,.))
-          
             row.names(match.info) <- NULL
             
-          rm(new.data)
-
-          message('\n\t', n.matches.before, 'matches propagated to ', nrow(match.info), ' matches.')
-       
+          added.feats <- match.info$rmse.weighted %>% is.na %>% match.info$feat[.] %>% unique %>% length
+          message('\n\t', n.matches.before, ' matches were propagated to ', nrow(match.info), ' matches:')
+                  message('\n\tfeatures before: ', length(matched.feats))
+                  message('\n\tfeatures added : ', added.feats)
+                  message('\n\tfeatures after : ', length(unique(match.info$feat)))
           
         # Re-filter for corr, pval
-        
+          message('\n\tfiltering new matches for rval > ', pars$matching$r.thresh, ' and pval < ', pars$matching$p.thresh, ' ...')
           keep <- match.info$rval >= pars$matching$r.thresh & 
             match.info$pval <= pars$matching$p.thresh
           
           match.info <- match.info[keep, ]
           # scattermore::scattermoreplot(x = 1:nrow(match.info), y = match.info$rval %>% sort)
-
+          message('\n\t', sum(!keep), ' matches excluded by rval/pval filter (',  round(sum(!keep)/length(keep)*100), ' %)')
+          
  ######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
         # source('./../span.R')
         # source('./../filter.matches_shiftDelta.R')
 
         message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
-        res <- filter.matches_shiftDelta(match.info, feature, ppm = fse.result$ppm,
+        res <- filter.matches_shiftDelta(match.info, feature, ppm = ppm,
                                          ppm.tol = pars$matching$filtering$ppm.tol)
-        match.info <- res$match.info
+        match.info <- res
 
-        message('\nmatches reduced to ', nrow(match.info),' ...')
+        message('\n\t', nrow(match.info),' matches survived.')
 
         # Savepoint
-          # saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
-          match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          # match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
           # saveRDS(fits.feature, paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
           # fits.feature <- readRDS(paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
 
