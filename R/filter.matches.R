@@ -90,7 +90,7 @@ filter.matches <- function(pars){
             # fstack.row <- matched.feats[36]
             # print(fstack.row)
           
-          # Which cluster did it belong to?
+          # Which cluster did it belong to? ####
             # Behind each row of fstack is 1 or more feature indices
               
               # For now, just assume these are the row numbers in the original featureStack (with all cluster members)
@@ -99,13 +99,13 @@ filter.matches <- function(pars){
                 clust.number <- which(cluster$keys %in% fstack.row) # just an index, not the key feature
           
             
-          # Pull cluster info
+          # Pull cluster info ####
           
             clust.key <- cluster$keys[clust.number] # actual name of the key
             cluster.members <- cluster$groups[[clust.number]]
             clust.info <- cluster$info[[clust.number]]
             
-            # Put lag table in terms of matching to key
+            # Put lag table in terms of matching to key ####
             
               clust.lags <- clust.info$lag.table %>% pw.lags.relative.to(clust.key)
             
@@ -124,7 +124,8 @@ filter.matches <- function(pars){
               # - match info (adjust position)
               # - fit to ref 
               
-                member.data <- lapply(nonkey.members, function(cluster.member){
+                member.matches <- lapply(nonkey.members, function(cluster.member){
+                  # print(cluster.member)
                   # cluster.member <- nonkey.members[1]
                   
                     # Copy the match info to other member ####
@@ -147,13 +148,14 @@ filter.matches <- function(pars){
      ############ # For each ref feat for that cluster member: ####################################################
      
                     rfs.new <- lapply(1:nrow(new.matches), function(nm.row){
+                    # Extract data for each new match ####
                       rf <- new.matches[nm.row,]
                       # rf <- new.matches[1,]
                       ref.num <- rf$ref
                       ref.reg <- rf[c("ref.start", "ref.end")] %>% unlist %>% fillbetween
                       feat.reg <- rf[c("feat.start", "feat.end")] %>% unlist %>% fillbetween
                       
-                    # Get the lags and fits for the new matches to rfs
+                    # Get the lags and fits for the new matches to rfs ####
                     
                       # Extract out the feature
                       
@@ -180,7 +182,7 @@ filter.matches <- function(pars){
     
                       # Calculate the fit between the initial rf and the cluster.member ####
                         
-                        fit1 <- fit.leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = T, scale.v2 = T)
+                        fit1 <- fit.leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
                           # fit1$plot %>% plot
                         
                       # # Try to optimize the alignment a bit more ####
@@ -221,10 +223,10 @@ filter.matches <- function(pars){
                       #       
                       #     }
                           
-                        # Skip alignment ####
+                        # Skip alignment, just update the row with fit data ####
                           
                           fit <- fit1
-                          
+
                         # Either way, we now have a fit. Propagate that information:
                         
                           rf <- updateMatchInfoRow(rf, fit)
@@ -237,53 +239,32 @@ filter.matches <- function(pars){
                           
                         # Return the data in a list
                         
-                          return(list(rf = rf,
-                                      fit = fit))
-                    })
+                          return(rf)
+                          
+                    }) %>% do.call(rbind,.)
                         
-                    # Build updated new.matches
-    
-                      new.matches <- rfs.new %>% lapply(function(rf) rf$rf) %>% do.call(rbind,.)
-    
-                    # Build fits list
-    
-                      new.fits <- rfs.new %>% lapply(function(rf) rf$fit)
-    
-                      rm(rfs.new)
-    
-                  return(list(match.info = new.matches,
-                              fits = new.fits))                # # Build updated new.matches
+                  return(rfs.new)                
     
                   # return(rfs.new)
-                }) 
+                }) %>% do.call(rbind,.)
                 
-              # Extract updated match.info
-              
-                member.matches <- member.data %>% lapply(function(member) member$match.info) %>% do.call(rbind,.)
-                    
-              # Extract updated fits 
-              
-                member.fits <- member.data %>% lapply(function(member) member$fits)
-              
+                # plot(member.data$fit.intercept, member.data$fit.scale)
+
             } else {
               
-              member.matches <- NULL
-              member.fits <- NULL
+              return(NULL)
               
             }
 
-            
-            return(list(match.info = member.matches,
-                        fits = member.fits))
+            return(member.matches)
             
         }, mc.cores = pars$par$ncores) %>% unlist(recursive = F)
         
-        # saveRDS(new.data, paste0(tmpdir, "/new.data.RDS"))
-        new.data <- readRDS(paste0(tmpdir, "/new.data.RDS"))
-        new.data <- split(new.data, names(new.data))
-        
+        saveRDS(new.data, paste0(tmpdir, "/new.data.match.info.RDS"))
+        # new.data <- readRDS(paste0(tmpdir, "/new.data.RDS"))
+
           match.info <- rbind(match.info, 
-                              new.data$match.info %>% do.call(rbind,.))
+                              new.data %>% do.call(rbind,.))
             row.names(match.info) <- NULL
             
           rm(new.data)
@@ -301,16 +282,16 @@ filter.matches <- function(pars){
 
  ######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
-        # # source('./../span.R')
-        # # source('./../filter.matches_shiftDelta.R')
-        # 
-        # message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
-        # res <- filter.matches_shiftDelta(match.info, feature, ppm = fse.result$ppm, fits.feature,
-        #                                  ppm.tol = pars$matching$filtering$ppm.tol)
-        # match.info <- res$match.info
-        # 
-        # message('\nmatches reduced to ', nrow(match.info),' ...')
-        # 
+        # source('./../span.R')
+        # source('./../filter.matches_shiftDelta.R')
+
+        message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
+        res <- filter.matches_shiftDelta(match.info, feature, ppm = fse.result$ppm,
+                                         ppm.tol = pars$matching$filtering$ppm.tol)
+        match.info <- res$match.info
+
+        message('\nmatches reduced to ', nrow(match.info),' ...')
+
         # Savepoint
           # saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
           match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))

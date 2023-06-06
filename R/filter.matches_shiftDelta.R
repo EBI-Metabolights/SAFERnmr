@@ -18,7 +18,6 @@
 filter.matches_shiftDelta <- function(match.info,
                                       feature,
                                       ppm,
-                                      fits.feature,
                                       ppm.tol = 0.5){
   
   
@@ -52,7 +51,6 @@ filter.matches_shiftDelta <- function(match.info,
         
         keep <- abs(match.info$ppm.difference) <= ppm.tol
         match.info <- match.info[keep,]
-        fits.feature <- fits.feature[keep]
 
        #####   
           
