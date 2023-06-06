@@ -62,8 +62,9 @@ select.evidence_refmet <- function(ref = NULL,
       
           correct.refnum <- match.info$ref == ref$id
           match.info <- match.info[correct.refnum, ]
-          backfits <- backfits[correct.refnum ]
           
+          backfits <- backfits[correct.refnum ]
+        
           # Add ref start and end as fields for each spec feature (depending on corresponding match info row)
           
             rf.specFits <- lapply(1:length(backfits), function(x) 

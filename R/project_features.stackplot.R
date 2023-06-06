@@ -20,7 +20,6 @@
 #'
 #' @export
 project_features.stackplot <- function(xmat, ppm,
-                                       plot.range,
                                        label,
                                        bestfits,
                                        exp.by = 0.05,
@@ -33,7 +32,9 @@ project_features.stackplot <- function(xmat, ppm,
   require(scales)
   require(reshape2)
   
+  
   # Only plot the fits that passed:
+    bestfits$pass.fit <- 1:71
     bestfits$fit.feats <- bestfits$fit.feats[bestfits$pass.fit,, drop = F]
     bestfits$fit.positions <- bestfits$fit.positions[bestfits$pass.fit, , drop = F]
     bestfits$fit.xrow <- bestfits$fit.xrow[bestfits$pass.fit]
@@ -57,44 +58,32 @@ project_features.stackplot <- function(xmat, ppm,
             exp.ranges[1, ] <- apply(exp.ranges[1,,drop=F] - exp.by, 2, function(x) max(c(x,lbound)))
             exp.ranges[2, ] <- apply(exp.ranges[2,,drop=F] + exp.by, 2, function(x) min(c(x,ubound)))
         
-    # If any non-intersecting ppm ranges, then split into multiple plots
-        # ntrsxns <- range.intersect.all(exp.ranges) 
-        #   diag(ntrsxns) <- 0
-        # v <- rowSums(ntrsxns) > 0
-        # rl <- run.labels(v)
-        #   rl <- rl - min(rl) + 1 # handles solo spec-feature case
-        
-        # plot.list <- unique(rl)
-        
-        plot.list <- range.groups(exp.ranges)
-        nplots <- length(plot.list)
-        
+            
         # Compile info for each plot
-          plots <- lapply(plot.list, function(p){
-            list(rows = sort(p), # sort because max.cliques gives ~random order
-                 range = exp.ranges[, p] %>% c %>% range)
-          })
-    
+        
+          plots <-  list(rows = bestfits$fit.xrow, # sort because max.cliques gives ~random order
+                         range = exp.ranges %>% c %>% range)
+
     # For each in plot.list (each ppm range)
-      plots.all.ranges <- 
-            lapply(1:nplots, function(p){
+            
               # Cut the xmat to that region, but retain the ppms
               #   * ppms are the x-axis, not inds
                 # p <- 1
-                plotn <- plots[[p]]
+                plotn <- plots
                 
                 # Get the xmat rows for this plot 
                 #   (i.e. those spec-features with this broader ppm range)
                 #   - bestfits$fit.xrow is the xmat rows used for fitting. 
                 #   - plotn$rows are the relative rows indices for the fit.feats matrix
                 
-                rowinds <- bestfits$fit.xrow[plotn$rows]
+                rowinds.x <- bestfits$fit.xrow[plotn$rows]
+                rowinds <- 1:length(bestfits$fit.xrow[plotn$rows])
                 colinds <- plotn$range %>% vectInds(., ppm) %>% fillbetween
-                
+  # browser()              
                  # Make little x, shift vals ####
                   
                   if (length(rowinds) > 1){
-                    x.rev <- xmat[rev(rowinds), colinds,drop = F]
+                    x.rev <- xmat[rev(rowinds.x), colinds,drop = F]
                   } else {x.rev <- xmat[rowinds, colinds, drop = F]}
 
                   # Sort by row intensity, if desired
@@ -105,6 +94,7 @@ project_features.stackplot <- function(xmat, ppm,
                       rowinds <- rowinds[neworder]
                       x.rev <- x.rev[neworder, ]
                     }
+  
                   # Shift the values according to vshift ####
                     v.adjustments <- rev(1:nrow(x.rev)) * vshift * mean(x.rev, na.rm = T)
                     x.rev <- x.rev + v.adjustments
@@ -112,7 +102,7 @@ project_features.stackplot <- function(xmat, ppm,
                       
                   # Also shift the fit features ####
                     if (length(rowinds) > 1){
-                      f.rev <- bestfits$fit.feats[rev(plotn$rows), ,drop = F] + v.adjustments
+                      f.rev <- bestfits$fit.feats[rev(rowinds), ,drop = F] + v.adjustments
                     } else {f.rev <- bestfits$fit.feats + v.adjustments}
 
                       na.cols <- is.na(colSums(f.rev))
@@ -124,15 +114,15 @@ project_features.stackplot <- function(xmat, ppm,
                    
                   # Also reverse the ppmranges for the fit features, and adjust them with hshift
                     if (length(rowinds) > 1){
-                      f.ppm <- bestfits$fit.positions[rev(plotn$rows), ,drop = F] %>% 
+                      f.ppm <- bestfits$fit.positions[rev(rowinds), ,drop = F] %>% 
                         apply(1, complete.indsVect) %>% t %>%
                         apply(., 1, function(x) ppm[x]) %>% t + h.adjustments
                     } else {
-                      f.ppm <- bestfits$fit.positions[plotn$rows, ,drop = F] %>% 
+                      f.ppm <- bestfits$fit.positions[rowinds, ,drop = F] %>% 
                         apply(1, complete.indsVect) %>% t %>%
                         apply(., 1, function(x) ppm[x]) %>% t + h.adjustments
                     }
-                      # na.ppms <- f.ppm[, na.cols]
+                      
 
                   # Melt xrev into df for plotting in ggplot ####
                     df <- as.data.frame(t(x.rev))
@@ -169,10 +159,11 @@ project_features.stackplot <- function(xmat, ppm,
                                         panel.grid.major = ggplot2::element_blank())
                     
                 # For each spectrum, add plot objs: ####
+                  browser()
                   for (s in 1:nrow(x.rev)){
-                    # s <- 0
-                      
-                      # s <- s+1
+                    s <- 0
+
+                      s <- s+1
                               g <- g + geom_area(data = data.frame(vals = x.rev[s,],
                                                                    ppms = x.ppm[s,]),
                                        na.rm = TRUE,
@@ -191,18 +182,16 @@ project_features.stackplot <- function(xmat, ppm,
                                        colour = "gray",
                                        linewidth = 0.5,
                                        fill="pink",alpha=0.4)
-                      # plot(g)
+                      plot(g)
                   }
                  
                 g <- g + labs(title = paste0(round(min(f.ppm,na.rm = T),2),"-",
                                              round(max(f.ppm,na.rm = T),2)," ppm")) + 
                 theme(plot.title = element_text(hjust = 0.5))
-               return(list(g.obj = g,
-                           row.inds = rowinds))
-      
-            })
+            
     
-    return(list(plots = plots.all.ranges,
+    return(list(plots = list(g.obj = g,
+                           row.inds = rowinds),
                 pars = list(exp.by = exp.by,
                             vshift = vshift,
                             hshift = hshift)

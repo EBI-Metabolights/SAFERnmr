@@ -57,7 +57,10 @@ backfit.rfs <- function(match.info,
                         feature, 
                         xmat,
                         ref.mat){
-
+  
+scattermore::scattermoreplot(x = 1:sum(match.info$fit.scale<0.1), 
+                             y = sort(match.info$fit.scale[match.info$fit.scale<0.1]))
+  
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
     # Sort by ref, so we can group chunks by ref
@@ -125,11 +128,9 @@ backfit.rfs <- function(match.info,
               fit <- apply.fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
               ref.region <- c(mi$ref.start, mi$ref.end)
               
-            # If sfe has not been done:
-            
               feat.cols <- c(mi$feat.start, mi$feat.end) %>% as.numeric %>% chunk$feature$position[mi$feat,.] %>% fillbetween
   
-            # If sfe HAS been done, wait to do this at the spectrum level using lags
+            # get info for the individual spec-features
             
               sfs <- data.frame(lag = chunk$feature$sfe[[mi$feat]]$lags,
                                 spec.number = chunk$feature$sfe[[mi$feat]]$feat$ss)

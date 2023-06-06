@@ -87,7 +87,7 @@ filter.matches <- function(pars){
         n.matches.before <- nrow(match.info)
         
         new.data <- mclapply(matched.feats, function(fstack.row) {
-            # fstack.row <- matched.feats[1]
+            # fstack.row <- matched.feats[36]
             # print(fstack.row)
           
           # Which cluster did it belong to?
@@ -109,7 +109,7 @@ filter.matches <- function(pars){
             
               clust.lags <- clust.info$lag.table %>% pw.lags.relative.to(clust.key)
             
-              # lag.features(feature$stack, clust.lags, to = clust.key) %>% trim.sides %>% simplePlot(linecolor = 'black')
+              # lag.features(feature$stack, clust.lags, to = clust.key) %>% trim.sides %>% stackplot #%>% simplePlot(linecolor = 'black')
 
           # Match info for key feature
             clust.matches <- match.info[match.info$feat == clust.key, ]
@@ -148,7 +148,7 @@ filter.matches <- function(pars){
      
                     rfs.new <- lapply(1:nrow(new.matches), function(nm.row){
                       rf <- new.matches[nm.row,]
-                      # rf <- 2
+                      # rf <- new.matches[1,]
                       ref.num <- rf$ref
                       ref.reg <- rf[c("ref.start", "ref.end")] %>% unlist %>% fillbetween
                       feat.reg <- rf[c("feat.start", "feat.end")] %>% unlist %>% fillbetween
@@ -157,7 +157,7 @@ filter.matches <- function(pars){
                     
                       # Extract out the feature
                       
-                        feat <- feature$stack[cluster.member, ]
+                        feat <- feature$stack[cluster.member, ] %>% scale.between
                         
                       # Update the feature bounds to match THIS feature, not the key feature ####
                         # First, expand to use the whole feature (so we know how to ss the ref region):
@@ -180,7 +180,7 @@ filter.matches <- function(pars){
     
                       # Calculate the fit between the initial rf and the cluster.member ####
                         
-                        fit1 <- fit.leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
+                        fit1 <- fit.leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = T, scale.v2 = T)
                           # fit1$plot %>% plot
                         
                       # # Try to optimize the alignment a bit more ####
@@ -221,13 +221,19 @@ filter.matches <- function(pars){
                       #       
                       #     }
                           
-                        # Skip alignment
+                        # Skip alignment ####
                           
                           fit <- fit1
                           
                         # Either way, we now have a fit. Propagate that information:
                         
                           rf <- updateMatchInfoRow(rf, fit)
+                            # rbind(fit1$feat.fit, fit1$spec.fit) %>% simplePlot(linecolor = 'black')
+                            
+                            # clust.matches[1,] # match this is copied from: initial feature 351 to ref 5
+                            # ff <- apply.fit(mi.row = clust.matches[1,], feat.stack = feature$stack, ref.stack = ref.mat)
+                            # ff <- apply.fit(mi.row = rf, feat.stack = feature$stack, ref.stack = ref.mat)
+                            # rbind(ff$feat.fit, ff$spec.fit) %>% simplePlot(linecolor = 'black')
                           
                         # Return the data in a list
                         
