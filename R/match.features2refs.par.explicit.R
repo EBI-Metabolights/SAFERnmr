@@ -198,8 +198,7 @@ match.features2refs.par.explicit <- function(pars){
                 # Format results ####
     
                   return(list(matches = allmatches.feat,
-                              peak.quality = peak.quality,
-                              fits = allmatches.fits))
+                              peak.quality = peak.quality))
     
                 }
             
