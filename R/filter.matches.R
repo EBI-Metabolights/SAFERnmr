@@ -22,7 +22,7 @@ filter.matches <- function(pars){
   
 ################ Read parameters file ##################
   
-  browser()
+  
   tmpdir <- '/Users/mjudge/Documents/current_run_5'#pars$dirs$temp
   this.run <- paste0(tmpdir)
 
@@ -277,7 +277,7 @@ filter.matches <- function(pars){
                 
               }
               
-          }, mc.cores = 10)
+          }, mc.cores = pars$par$ncores)
           
           a <- new.data %>% unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
             rm(new.data)
