@@ -22,8 +22,8 @@ filter.matches <- function(pars){
   
 ################ Read parameters file ##################
   
-  
-  tmpdir <- pars$dirs$temp
+  browser()
+  tmpdir <- '/Users/mjudge/Documents/current_run_5'#pars$dirs$temp
   this.run <- paste0(tmpdir)
 
 ##################################################################################################################
@@ -48,22 +48,16 @@ filter.matches <- function(pars){
       match.info <- do.call(rbind, matches.split$matches)
         rownames(match.info) <- NULL
         
-      # peak.qualities aligns with fit and match.info now, but feat number does not index it (there are missing features)!
+      # peak.qualities aligns with match.info now, but feat number does not index it (there are missing features)!
         pq.featureNumbers <- unique(match.info[,'feat']) # this does not sort (just for good measure)
         
       peak.qualities <- matches.split$peak.quality
-      # fits.feature <- matches.split$fits %>% unlist(recursive = F)
         rm(matches.split)
-        
-        # Slim down fits.feature
-          # already recorded in match.info
-          # match.info$fit.intercept
-          # match.info$fit.scale
           
 ######################### Remove singlets ############################################
 
       # Do the filtering (functionalized)
-        res <- filter.matches_singlets(match.info, fits.feature, 
+        res <- filter.matches_singlets(match.info,
                                        peak.qualities, pq.featureNumbers, 
                                        pars$matching$filtering$res.area.threshold)
         match.info <- res$match.info
