@@ -52,17 +52,18 @@ select.evidence_refmet <- function(ref = NULL,
           rfs.selection <- rfs.used$score.mat.coords$ref == ref$id & 
                               rfs.used$score.mat.coords$ss.spec %in% sample$number
           
-          if(!any(rfs.selection)){return(no.evidence(ref$number, ld))}
+          if(!any(rfs.selection)){return(no.evidence(ref, ld))}
           
           inds <- match.info$id %in% (rfs.used$tot[rfs.selection] %>% unlist) # inds not always = ids 
           match.info <- match.info[inds, ]
           backfits <- backfits[inds ]
           
         # Ensure the rfs are all specific to this ref..
-      
-          correct.refnum <- match.info$ref == ref$id
-          match.info <- match.info[correct.refnum, ]
           
+          correct.refnum <- match.info$ref == ref$id
+            if(!any(correct.refnum)){return(no.evidence(ref, ld))}
+          
+          match.info <- match.info[correct.refnum, ]
           backfits <- backfits[correct.refnum ]
         
           # Add ref start and end as fields for each spec feature (depending on corresponding match info row)
