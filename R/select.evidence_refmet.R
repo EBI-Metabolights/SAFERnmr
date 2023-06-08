@@ -1,12 +1,33 @@
-# Filters for relevant ref and 
-# - ref list
-# - backfit list
-# - match.info table
-# 
-# The idea here is to figure out which rfs, of those used for scoring, apply
-# to the ref and subset spectra selected by ref.ind and spec.ind, respectively.
-# These rfs can then be passed onto the plotting function.
-
+#' For use in filtering evidence down to the relevant plot region and reference 
+#' compound. 
+#' 
+#' Filters for relevant ref and 
+#' - ref list
+#' - backfit list
+#' - match.info table
+#' 
+#' The idea here is to figure out which rfs, of those used for scoring, apply
+#' to the ref and subset spectra selected by ref.ind and spec.ind, respectively.
+#' These rfs can then be passed onto the plotting function, e.g. fastStack.withFeatures()
+#'
+#' @param ref ref info row (as used in resultsViewer)
+#' @param sample sample info row (as used in resultsViewer)
+#' @param match.info dataframe of match info (i.e., ref features)
+#' @param backfits spectrum-level backfit info dataframe for each rf (row of  match.info)
+#' @param rfs.used list of rfs used in each backfit (indices in match.info) 
+#' @param lib.data.processed spectral matrix- interpolated reference data
+#' @param ppm.tolerance max allowed distance for selected ref region and spec region
+#' @param cutoff.residuals.feat unused
+#' @param cutoff.residuals.spec unused
+#' 
+#' @return list containing expanded fit data for each backfit passing the filters
+#' @import yaml
+#' @importFrom magrittr %>%
+#' 
+#' @import shiny
+#' @import plotly
+#' 
+#' @export
 select.evidence_refmet <- function(ref = NULL, 
                                    sample = NULL,
                                      # Big objects to subset using ref.ind:

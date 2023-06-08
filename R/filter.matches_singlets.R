@@ -39,6 +39,7 @@ filter.matches_singlets <- function(match.info, peak.qualities, pq.featureNumber
         
       # Apply singlet filters to each mi row, and add the results as fields. 
         match.info <- mclapply(1:nrow(match.info), function(m){
+          # print(m)
           
           ########### singlet filter for fit features ################
             mi <- match.info[m, ]
@@ -54,7 +55,7 @@ filter.matches_singlets <- function(match.info, peak.qualities, pq.featureNumber
           
           ########### singlet filter for feature-not-never-fit regions ################
             
-            peak.quality <- peak.qualities[[which(match.info[m,'feat'] == pq.featureNumbers)]]
+            peak.quality <- peak.qualities[[which(match.info$feat[m] == pq.featureNumbers)]]
             f.adj <- ff$feat.fit - ff$feat.fit * peak.quality
             f.adj <- f.adj - min(f.adj, na.rm = T)
             mi$numpeaks.feat.nnf <- pk.maxs(f.adj, mask = !is.na(f.adj)) %>% length # not sure if mask here is always the same as above

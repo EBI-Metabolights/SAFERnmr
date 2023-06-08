@@ -8,7 +8,7 @@ pipeline('/Users/mjudge/Documents/current_run/params.yaml')
 ImperialNMRTool::filter.matches(pars)
 ImperialNMRTool::score.matches(pars) 
 
-
+show.me.the.evidence(results.dir = '/Users/mjudge/Documents/current_run_5')
 
 
 ImperialNMRTool::tina(pars)

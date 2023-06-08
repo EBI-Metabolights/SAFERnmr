@@ -12,7 +12,7 @@
 #' 
 #' @import pbapply
 #' 
-#' @export filter.matches
+#' @export
 filter.matches <- function(pars){
 
   message('--------------------------------------------------------------')
@@ -23,7 +23,7 @@ filter.matches <- function(pars){
 ################ Read parameters file ##################
   
   
-  tmpdir <- '/Users/mjudge/Documents/current_run_5'#pars$dirs$temp
+  tmpdir <- pars$dirs$temp
   this.run <- paste0(tmpdir)
 
 ##################################################################################################################
@@ -38,18 +38,28 @@ filter.matches <- function(pars){
 
     feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
     ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
+    # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
     matches <- readRDS(paste0(this.run, "/matches.RDS"))
+      errors <- matches[names(matches) %in% c('call', 'message')]
+      matches <- matches[names(matches) %in% c('matches', 'peak.quality')]
+      
+###########################################################################################  
+     # No full feature fits beyond this point. Just storing coefficients and positions. Try
+     # to move this line up further. 
+###########################################################################################        
+      
     cluster <- readRDS(paste0(this.run, "/cluster.final.RDS"))
 
     # Format matches ####
       
       matches.split <- split(matches, names(matches))
         rm(matches)
-      match.info <- do.call(rbind, matches.split$matches)
+      match.info <- rbindlist(matches.split$matches)
         rownames(match.info) <- NULL
+        # saveRDS(match.info, paste0(this.run, "/match.info.RDS"))
         
       # peak.qualities aligns with match.info now, but feat number does not index it (there are missing features)!
-        pq.featureNumbers <- unique(match.info[,'feat']) # this does not sort (just for good measure)
+        pq.featureNumbers <- unique(match.info$feat) # this does not sort (just for good measure)
         
       peak.qualities <- matches.split$peak.quality
         rm(matches.split)
@@ -57,19 +67,9 @@ filter.matches <- function(pars){
 ######################### Remove singlets ############################################
 
       # Do the filtering (functionalized)
-        res <- filter.matches_singlets(match.info,
-                                       peak.qualities, pq.featureNumbers, 
-                                       pars$matching$filtering$res.area.threshold)
-        match.info <- res$match.info
-        # fits.feature <- res$fits.feature
-        
-        
-###########################################################################################  
-     # No full feature fits beyond this point. Just storing coefficients and positions. Try
-     # to move this line up further. 
-###########################################################################################        
-
-        
+        match.info <- filter.matches_singlets(match.info,
+                                               peak.qualities, pq.featureNumbers, 
+                                               pars$matching$filtering$res.area.threshold)
         
 ######################### Propagate matches to feature clusters  ##########################
 
