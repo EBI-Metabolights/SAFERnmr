@@ -4,7 +4,7 @@
 \alias{show.me.the.evidence}
 \title{show.me.the.evidence : results viewer shiny app}
 \usage{
-show.me.the.evidence(results.dir = "./")
+show.me.the.evidence(results.dir = NULL)
 }
 \arguments{
 \item{results.dir}{A list of input parameters.}

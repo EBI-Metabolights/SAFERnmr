@@ -54,8 +54,7 @@ select.evidence_refmet <- function(ref = NULL,
           
     # if (is.null(spec.ind)){spec.ind <- 1:nrow(xmat)}
   
-browser()    
-          
+
 ############ Function body ######################     
 
     # Subset the evidence for annotation of the given ref in all samples: ####

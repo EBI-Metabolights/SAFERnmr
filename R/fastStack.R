@@ -35,7 +35,7 @@ fastStack <- function(x, ppm,
   
         df.lines <- data.frame(ppm = ppm, int = floor(xs) %>% t %>% c) %>% na.omit
   
-        ggplot() +
+        g <- ggplot() +
           ggplot2::scale_x_reverse(breaks = scales::breaks_pretty()) + 
           scattermore::geom_scattermost(xy = df.lines,
                                         interpolate = interpolate,
@@ -46,9 +46,11 @@ fastStack <- function(x, ppm,
         
       } else {
         
-        simplePlot(xs, xvect = ppm)
+        g <- simplePlot(xs, xvect = ppm)
         
       }
+    
+    g
   
 }
 
@@ -116,11 +118,14 @@ fastStack.withFeatures <- function(xmat, ppm,
         # Apply the appropriate shift to each bf
         f.stack <- lapply(1:nrow(f.stack), function(r) {
           
-          f.stack[r, ] + vshifts[x.rows == bfs$fit.xrow[r]]
+          f.stack[r, ] + vshifts[x.rows == bfs$fit.xrow[r]]-0.5*vshift
           
         }) %>% do.call(rbind,.)
         # simplePlot(f.stack)
 
+    # Apply h shifts
+    # ppm.mat = outer(ppm[cols.x], hshifts, "+")
+        
     # Work out which points should be removed to give the impression of being covered up? ####
         #   - if value is < any other values lower down in that column, set to NA
         #   - i.e. remove points if they are exceeded by a lower row
@@ -130,7 +135,7 @@ fastStack.withFeatures <- function(xmat, ppm,
         
         xs <- rm.covered.points(xs)
           # simplePlot(xs)
-        f.stack <- rm.covered.points(xs, f.stack, f.rows.in.x)
+        # f.stack <- rm.covered.points(xs, f.stack, f.rows.in.x)
           # simplePlot(f.stack)
           # use this for features?
   
@@ -175,30 +180,74 @@ fastStack.withFeatures <- function(xmat, ppm,
   # Plotting ####
       if (raster){ 
         
-        df.lines <- data.frame(ppm = ppm[cols.x], 
-                               int = xs %>% t %>% c) %>% na.omit
+          
+        df.lines <- data.frame(ppm = ppm[cols.x],
+                               int = xs %>% t %>% c,
+                               color = alpha('black', alpha = 1)) %>% na.omit
         
         
-        g <- ggplot() +
-          scattermore::geom_scattermost(xy = df.lines,
-                                        interpolate = plt.pars$interpolate,
-                                        pointsize = plt.pars$pointsize,
-                                        pixels = plt.pars$pixels) +
-          theme_clean_nmr()
+        # g <- ggplot() +
+        #   scattermore::geom_scattermost(xy = df.lines,
+        #                                 interpolate = plt.pars$interpolate,
+        #                                 pointsize = plt.pars$pointsize,
+        #                                 pixels = plt.pars$pixels) +
+        #   theme_clean_nmr()
 
          # Calculate feature fills
           
           # outlines
           df.feats <- data.frame(ppm = ppm[cols.x], 
-                                 int = f.stack %>% t %>% c) %>% na.omit
-       
-        g <- g +
-          scattermore::geom_scattermost(xy = df.feats,
-                                interpolate = plt.pars$interpolate,
-                                pointsize = plt.pars$pointsize,
-                                pixels = plt.pars$pixels,
-                                color = 'blue')
-    
+                                 int = f.stack %>% t %>% c,
+                                 color = alpha('blue', alpha = 5)) %>% na.omit
+          # df.feats <- data.frame(ppm = df.feats$ppm, 
+          #                            int = outer(df.feats$int, vshift*(seq(-10,10,by = 2))/10, '-') %>% c,
+          #                            df.feats$color)
+          
+        # df <- rbind(df.lines, df.feats)
+        # g <- g +
+        #   scattermore::geom_scattermost(xy = df.feats,
+        #                         xlim = c(max(df.feats[, 1]), min(df.feats[, 1])),
+        #                         interpolate = plt.pars$interpolate,
+        #                         pointsize = plt.pars$pointsize,
+        #                         pixels = plt.pars$pixels,
+        #                         color = 'blue') 
+          # ggplot2::scale_x_reverse(breaks = scales::breaks_pretty())
+        
+          
+          
+          scattermore::scattermoreplot(
+                                        x = df.lines$ppm,
+                                        y = df.lines$int,
+                                        xlab = 'ppm',
+                                        ylab = '',
+                                        size = plt.pars$pixels,
+                                        cex = .0,
+                                        xlim = c(max(df.lines$ppm), min(df.lines$ppm)),
+                                        col = 'black',
+                                        yaxt="n"
+                                      ) 
+          par(new=TRUE)
+          scattermore::scattermoreplot(
+                                        x = df.feats$ppm,
+                                        y = df.feats$int,
+                                        xlab = 'ppm',
+                                        ylab = '',
+                                        size = plt.pars$pixels,
+                                        cex = .1,
+                                        xlim = c(max(df.lines$ppm), min(df.lines$ppm)),
+                                        col = alpha('blue', alpha = .2),
+                                        yaxt="n"
+                                      ) 
+          
+          # scattermore::scattermoreplot(
+          #                           x = df$ppm,
+          #                           y = df$int,
+          #                           xlab = 'ppm',
+          #                           ylab = '',
+          #                           xlim = c(max(df$ppm), min(df$ppm)),
+          #                           col = df$color
+          #                         ) 
+          
     
       } else {
         
@@ -287,7 +336,7 @@ fastStack.withFeatures <- function(xmat, ppm,
             
       }
 
-        return(g)
+        # return(g)
 
         
 }

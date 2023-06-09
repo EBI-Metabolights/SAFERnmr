@@ -79,7 +79,7 @@ score.matches <- function(pars){
               
             # return slimmed df (expanded this score to all ss.spec x rf combinations) 
             # - this is just for scoring - needs very little data
-              data.frame(match = m, # match # = backfit #
+              data.frame(match = mi$id, # match # = backfit #
                          ref = mi$ref,
                          feat = mi$feat,
                          ref.start = mi$ref.start,

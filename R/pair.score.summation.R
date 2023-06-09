@@ -59,9 +59,6 @@
 #' @import pbapply
 #'
 pair.score.summation <- function(pars, refmat){
-# # Dependencies ####
-# 
-#   # library(magrittr)
 
 ## Parallelize the ss.spec - reference pair score summation? ####      
       message('Reading in data for pair score summation...')
@@ -109,13 +106,13 @@ pair.score.summation <- function(pars, refmat){
      
     # Calculate the score in parallel ####
         t1 <- Sys.time()
-        # For each ref:
+        
             
             score.list <- mclapply(by.ref, mc.cores = pars$par$ncores, 
                                            FUN = function(r.list)                             
             {
+              # For each ref:
               
-              # message("Ref: ", r.num,"...")
               # r.list <- by.ref[[1]]
               
               # Make sure there are actually spectra in the interactions list ####
@@ -148,6 +145,12 @@ pair.score.summation <- function(pars, refmat){
                   # Loop through the matches associated with this ref - ss.spec pair ####
                   # Update the bff values in v with any higher bff at that point ####
                     for (j in rp.rows){
+                      # j indexes the rows of rp.rows (ss.ref.pairs belonging to this chunk = this ref #)
+                      # that match this dataset spectrum (ss.spec). These could include many matches. A 
+                      # match could also give rise to many rp.rows, because of the different spectra. rp.rows
+                      # could be derived from multiple matches as long as they involve the same ref and 
+                      # have backfits to ss.spec. 
+                      # 
                       # i <- i + 1
                       # j <- rp.rows[i]
                       # Get the ref range for the matched ref-feat
@@ -159,12 +162,12 @@ pair.score.summation <- function(pars, refmat){
                         # print(bff)
                         replace <- (bff > cum.bff.tot[ref.range])
                         cum.bff.tot[ref.range[replace]] <- bff
-                        cbt.best[ref.range[replace]] <- j # record which backfit it came from
+                        cbt.best[ref.range[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from 
 
                         bff <- ref.pairs[j, ]$bff.res
                         replace <- (bff > cum.bff.res[ref.range])
                         cum.bff.res[ref.range[replace]] <- bff
-                        cbr.best[ref.range[replace]] <- j # record which backfit it came from
+                        cbr.best[ref.range[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from
 
                     }
                     

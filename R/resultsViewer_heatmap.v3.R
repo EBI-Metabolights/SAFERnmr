@@ -14,9 +14,11 @@
 #' @import plotly
 #' 
 #' @export
-show.me.the.evidence <- function(results.dir = "./"){
+show.me.the.evidence <- function(results.dir = NULL){
 #######################################################################################
-  # results.dir <- '/Users/mjudge/Documents/current_run_5'
+  if (is.null(results.dir)) {
+    results.dir <- getwd()
+  }
   # for the selectizer:
   sort.choices <- c("Scores - cluster", "Search for compound...") # "Compound names - cluster", 'Compound names - alphabetical', 
   
@@ -558,7 +560,7 @@ server <- function(input, output, session) {
                   message('\tin ', length(values$selectedCols), ' samples...')
                   
               # If all those pieces are in place, go on to selecting evidence: ####
-                      browser()
+                      
                       metab.evidence <- select.evidence_refmet(ref = values$selectedRow %>% refs[.,], 
                                                                sample = values$selectedCols %>% samples[.,],
                                                                # Big objects to subset using ref.ind:
