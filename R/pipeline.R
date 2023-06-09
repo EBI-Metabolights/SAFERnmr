@@ -248,5 +248,5 @@ pipeline <- function(params_loc, params_obj) {
 
   # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
   # write.table(matches, sep = '\t', file = 'matches_scored_named.txt', row.names = F, col.names = T)
-  saveRDS(sessionInfo(), paste0(this.run, "/session.info.RDS"))
+  saveRDS(sessionInfo(), paste0(pars$dirs$temp, "/session.info.RDS"))
 }

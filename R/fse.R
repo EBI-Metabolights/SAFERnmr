@@ -80,7 +80,8 @@ fse <- function(pars){
   
 ################ Get MTBLS1 data from RDS ##################
 
-    X_raw <- readRDS(paste0(this.run, "/spectral.matrix.RDS"))
+    X_raw <- readRDS(pars$files$spectral.matrix)
+    # X_raw <- readRDS(paste0(this.run, "/spectral.matrix.RDS"))
       xmat <- X_raw[-1,]          # spectral matrix (each row is a spectrum; 
                                   # doesn't require alignment. normalization ok
                                   # but not necessary. scaling, no.)
