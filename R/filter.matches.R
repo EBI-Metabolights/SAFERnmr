@@ -103,12 +103,14 @@ filter.matches <- function(pars){
         # source('./../filter.matches_shiftDelta.R')
   printTime()
         message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
-        res <- filter.matches_shiftDelta(match.info, feature, ppm = ppm,
+        res <- filter.matches_shiftDelta(match.info, feature$position, ppm = ppm,
                                          ppm.tol = pars$matching$filtering$ppm.tol)
+        # scattermore::scattermoreplot(x = 1:nrow(res), y = res$ppm.difference %>% sort)
+
+        message('\n\t', nrow(res),' / ', nrow(match.info), ' matches survived (', round(nrow(res)/nrow(match.info)*100), ' %).')
+
         match.info <- res
-
-        message('\n\t', nrow(match.info),' matches survived.')
-
+        
         # Savepoint
           saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
           # match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
@@ -134,11 +136,13 @@ filter.matches <- function(pars){
         message('Saving backfits...\n\n\n')
         saveRDS(backfit.results, paste0(this.run,"/backfit.results.RDS"))
         # backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
+
       printTime()
       
   message('-----------------------------------------------------------------')
   message('-----------------  Matching Filtering Complete ------------------')
   message('-----------------------------------------------------------------')
-  
+  message('\nWe just generated ', length(backfit.results$backfits), ' pieces of annotation evidence.')
+  message("\nNow, let's turn these into PCRS x sample scores.")
 }
   

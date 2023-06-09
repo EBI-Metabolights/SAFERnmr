@@ -67,7 +67,7 @@ backfit.rfs <- function(match.info,
     
     # Assign each row of match.ind to a chunk based on number of cores
       
-      ncores <- 5 # pars$par$ncores
+      ncores <- pars$par$ncores
       chunk.size <- max(1, nrow(match.info) / ncores)
       m.grp <- ceiling((1:nrow(match.info)) / chunk.size)
       
@@ -109,7 +109,9 @@ backfit.rfs <- function(match.info,
       # - 1 chunk (~1Mb / 50 rows @ 150 spectra and 130K points)
       # - 1 xmat
       # - 1 ppm vector        
-      
+      message('\tcomputing backfits over ', ncores, ' cores...')
+      message('\tlarge numbers of matches or large datasets will take some time.')
+      message('\tgo eat or get a coffee...')
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
             
@@ -265,7 +267,7 @@ backfit.rfs <- function(match.info,
       
     print(Sys.time()-t1)  
     
-  message('\tbackfit calculations finished - un-chunking and formatting results...')
+  message('\tbackfit calculations finished. un-chunking and formatting results...')
     
   # Unchunk match.info ####
   
@@ -293,6 +295,9 @@ backfit.rfs <- function(match.info,
     backfits <- backfits[order(mi.order)]
 
     message('\tbackfitting completed on ', length(backfits), ' ref-features.')
+    message('\thopefully your lunch was nice and you are now properly caffeinated...')
+    
+
   # Return list ####
     return(list(match.info = match.info,
                 backfits = backfits))
