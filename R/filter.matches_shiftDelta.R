@@ -12,11 +12,11 @@
 #'
 #' @return A list with two elements: the filtered `match.info` data frame, and the filtered `fits.feature` list which have been filtered by ppm shift difference.
 #' @importFrom magrittr %>%
-#' @import pbapply
+#' @importFrom Rfast rowmeans
 #'
 #' @export
 filter.matches_shiftDelta <- function(match.info,
-                                      feature,
+                                      feature.positions,
                                       ppm,
                                       ppm.tol = 0.5){
   
@@ -24,22 +24,32 @@ filter.matches_shiftDelta <- function(match.info,
   
       ######################### Calculate deltappm distance (specppm - featureppm)  #############################    
     
-        
-          # Each feature has a delta range/distribution ####
-          # Each spec match with a feature has a delta range. 
-          # Each feature has a delta range/distribution. Compare them:  ####
+          # Get the xmat column of each feature's first element (even if NA)
+          
+          # This allows much much slimmer data. 
+            fpos.el1.xmat <- lapply(1:nrow(feature.positions), function(r) {
+              
+                            fp <- feature.positions[r, ]
+                            first.nonNA <- which.min(fp)
+                            
+                            return(   fp[first.nonNA] - first.nonNA +1  )
+                            
+                          }) %>% unlist
+              
+          # Calc the ppms that correspond to each feature range:
+            mean.ppm.feat <- Rfast::rowmeans(
+                                              cbind(ppm[fpos.el1.xmat[match.info$feat] + match.info$feat.start],
+                                                    ppm[fpos.el1.xmat[match.info$feat] + match.info$feat.end])
+                                              )
             
-            match.info[,'ppm.difference'] <- pblapply(1:nrow(match.info), function(m){
-              
-              fnum <- match.info$feat[m]
-              
-              f.inds.trim <- match.info[m, c("feat.start","feat.end")] %>% as.numeric
-              feat.range <- f.inds.trim %>% feature$position[fnum,.] %>% range(na.rm = T) %>% ppm[.]
-              ref.range <- match.info[m, c("ref.start", "ref.end")] %>% as.numeric %>% ppm[.]
-              return(mean(feat.range) - mean(ref.range))
-              # match.info$feat.end %>% sort %>% plot
-              
-            }) %>% unlist
+          # Simply convert the ref ranges to ppms:
+            mean.ppm.ref <- Rfast::rowmeans(
+                                              cbind(ppm[match.info$ref + match.info$ref.start],
+                                                    ppm[match.info$ref + match.info$ref.end])
+                                              )
+          # Take the difference
+            match.info$ppm.difference <- mean.ppm.feat-mean.ppm.ref
+            
             
             # scattermore::scattermoreplot(sort(match.info[,'ppm.difference']), 
             #                              1:nrow(match.info), xlab = "ppm difference", ylab = "match")

@@ -95,6 +95,7 @@ filter.matches <- function(pars){
         
         match.info <- propagate.matches(match.info, cluster)
         saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
+        # match.info <- readRDS(paste0(tmpdir, "/match.info.propagated.RDS"))
         
 ######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
@@ -111,10 +112,7 @@ filter.matches <- function(pars){
         # Savepoint
           saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
           # match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
-          # saveRDS(fits.feature, paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
-          # fits.feature <- readRDS(paste0(this.run, "/fits.feature.propagated.filtered.RDS"))
-  
-  
+
 #########################################################################################################
     # At this point, match.info is set. Assign IDs
                           
