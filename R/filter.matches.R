@@ -142,7 +142,7 @@ filter.matches <- function(pars){
   message('-----------------------------------------------------------------')
   message('-----------------  Matching Filtering Complete ------------------')
   message('-----------------------------------------------------------------')
-  message('\nWe just generated ', length(backfit.results$backfits), ' pieces of annotation evidence.')
+  message('\nWe just generated ', length(backfit.results$backfits %>% unlist(recursive = F)), ' pieces of annotation evidence.')
   message("\nNow, let's turn these into PCRS x sample scores.")
 }
   
