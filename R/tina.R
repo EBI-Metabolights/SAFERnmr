@@ -60,6 +60,7 @@ tina <- function(pars){
   message('-------------------------------------------------------')
   message('-------------------      TINA       -------------------')
   message('-------------------------------------------------------')
+  printTime()
   message('\n\n\n')
   
   
@@ -94,7 +95,7 @@ tina <- function(pars){
 
 
     # Build feature filter
-
+          printTime()
           filts  <- filterFeatures(feature, ppm = ppm,
                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
@@ -177,6 +178,7 @@ tina <- function(pars){
         
     # Do spec-feature extraction for all features
         message('\n\n\t---- Spec-Feature Extraction (SFE) ----')
+        printTime()
         t1 <- Sys.time()
             features.specd <- parallel::mclapply(1:nrow(feature$stack),
                                                  FUN = function(i){
@@ -265,8 +267,9 @@ tina <- function(pars){
               
    # OPTICS-based ####
       message('\n\t---- OPTICS-based clustering ----')
-        
+      
     if (nrow(feature.ma$stack) > 1000){
+      printTime()
       t1 <- Sys.time()
       results <- tina_combineFeatures_optics(feature.ma$stack,
                                              max.eps = 50,
@@ -296,6 +299,7 @@ tina <- function(pars){
         print(Sys.time() - t1)
         # length(clusters$cluster.labs %>% unique)
     } else {
+      message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
       clusters <- list(method = 'none',
                        results = NULL,
                        cluster.labs = 1:nrow(feature.ma$stack),
@@ -320,7 +324,7 @@ tina <- function(pars){
     
           # Force garbage collection to slim down workspace
             gc()
-
+          printTime()
           t1 <- Sys.time()
             # *** Note: this is parallelized for ncores - 2
             # *** Note: currently not using rmse cutoff.

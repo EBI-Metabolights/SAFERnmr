@@ -75,7 +75,8 @@ filter.matches_singlets <- function(match.info, peak.qualities, pq.featureNumber
         }, mc.cores = pars$par$ncores)
         
       # Rbind results
-        
+      
+        saveRDS(match.info, paste0(pars$dirs$temp, "/match.info.filt"))
         match.info <- rbindlist(match.info)
         match.info <- filter(match.info, 
                               numpeaks.feat > 1 &

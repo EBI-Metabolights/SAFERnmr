@@ -18,7 +18,7 @@ match.features2refs.par.explicit <- function(pars){
   message('\n-----------------------------------------------------------------')
   message('-------------------  Parallel Matching to PRCSs -------------------')
   message('-------------------------------------------------------------------')
-
+  printTime()
   # mem.snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
 
 ################ Read parameters file ##################

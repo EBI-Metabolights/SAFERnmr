@@ -19,8 +19,19 @@ show.me.the.evidence <- function(results.dir = "./"){
   # results.dir <- '/Users/mjudge/Documents/current_run_5'
   # for the selectizer:
   sort.choices <- c("Scores - cluster", "Search for compound...") # "Compound names - cluster", 'Compound names - alphabetical', 
-
+  
+  
 ## Params ###############################################################################
+  
+  # Locate us ####
+  
+    # Handle whether or not user adds /
+      if (stringr::str_sub(results.dir, start= -1) != "/"){
+        results.dir <- paste0(results.dir, '/')
+      }
+
+  pars <- yaml::yaml.load_file(paste0(results.dir,'params.yaml'), eval.expr = TRUE)
+  
   study <- pars$study$id
   ppm.tolerance = pars$matching$filtering$ppm.tol
   cutoff.residuals.feat = .5 # currently unused
@@ -28,16 +39,6 @@ show.me.the.evidence <- function(results.dir = "./"){
   vshift = 1 
   hshift = 0
   
-
-  # Locate us ####
-  
-  
-  # Handle whether or not user adds /
-    if (stringr::str_sub(results.dir, start= -1) != "/"){
-      results.dir <- paste0(results.dir, '/')
-    }
-
-  pars <- yaml::yaml.load_file(paste0(results.dir,'params.yaml'), eval.expr = TRUE)
 
 ##########################     Setup/Read Data    ####################################
 
@@ -50,9 +51,9 @@ show.me.the.evidence <- function(results.dir = "./"){
         lib.info <- readRDS(paste0(results.dir, "lib.info.RDS"))
         lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
           # ppm isn't needed anymore; using spectral matrix ppm.
-          lib.data.processed <- lib.data.processed %>% lapply(function(x) {x$data <- NULL; x$ppm <- NULL; return(x)})
+            lib.data.processed <- lib.data.processed %>% lapply(function(x) {x$data <- NULL; x$ppm <- NULL; return(x)})
           # add compound names as column in match.info
-          match.info$ref.name <- lib.info$ref.list$Compound.Name[match.info$ref]
+            match.info$ref.name <- lib.info$ref.list$Compound.Name[match.info$ref]
           
     # Read in spectral matrix data
         fse.result <- readRDS(paste0(results.dir, "fse.result.RDS"))
