@@ -8,7 +8,7 @@ pars <- yaml::yaml.load_file(run_params, eval.expr = TRUE)
 ImperialNMRTool::filter.matches(pars)
 ImperialNMRTool::score.matches(pars) 
 
-show.me.the.evidence(results.dir = '/Users/mjudge/Documents/current_run_5')
+show.me.the.evidence(results.dir = '/Users/mjudge/Documents/current_run')
 
 
 ImperialNMRTool::tina(pars)
