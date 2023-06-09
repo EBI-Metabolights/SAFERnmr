@@ -54,7 +54,7 @@ select.evidence_refmet <- function(ref = NULL,
           
     # if (is.null(spec.ind)){spec.ind <- 1:nrow(xmat)}
   
-    
+browser()    
           
 ############ Function body ######################     
 
@@ -101,7 +101,7 @@ select.evidence_refmet <- function(ref = NULL,
           # Find all those which involve the spectra we're into
           
             rf.specFits <- rf.specFits[rf.specFits$ss.spec %in% sample$number, ]
-            if(nrow(rf.specFits) == 0){return(no.evidence(ref$number, ld))}
+            if(nrow(rf.specFits) == 0){return(no.evidence(ref, ld))}
             
       # Build a slimmed-down object that project_features.stackplot() will accept ####
         # Filter out features whose origins in the data are too far from their ref spec match: ####
@@ -114,7 +114,7 @@ select.evidence_refmet <- function(ref = NULL,
             spec.dist.from.rf <- range.dist(spec.rngs, ref.rngs)
             close.enough <- spec.dist.from.rf <= ppm.tolerance
 
-            if(!any(close.enough)){return(no.evidence(ref$number, ld))}
+            if(!any(close.enough)){return(no.evidence(ref, ld))}
             
             rf.specFits <- rf.specFits[close.enough, ]
               ref.rngs <- ref.rngs[, close.enough]

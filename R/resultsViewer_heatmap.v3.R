@@ -113,8 +113,7 @@ show.me.the.evidence <- function(results.dir = "./"){
       scores.matrix<- scores.matrix[, sample.order]
       mat <- scores.matrix
       
-#############################################################################################
-
+##########################     ACCESSORY FUNCTIONS    #####################################
 drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap'){
   if(dropRowNames){
     rownames(mat) <- NULL
@@ -559,7 +558,7 @@ server <- function(input, output, session) {
                   message('\tin ', length(values$selectedCols), ' samples...')
                   
               # If all those pieces are in place, go on to selecting evidence: ####
-                      
+                      browser()
                       metab.evidence <- select.evidence_refmet(ref = values$selectedRow %>% refs[.,], 
                                                                sample = values$selectedCols %>% samples[.,],
                                                                # Big objects to subset using ref.ind:
@@ -692,6 +691,7 @@ server <- function(input, output, session) {
 }
 
 # Run app ####
+
 
 
 shinyApp(ui, server)
