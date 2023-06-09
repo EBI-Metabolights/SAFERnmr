@@ -2,6 +2,7 @@
 #'
 #' @return timestamp (message)
 #' 
-#' @exportprintTime <- function(){
+#' @export
+printTime <- function(){
   message('\n\ttimestamp : ', Sys.time(), '\n')
 }

@@ -3,7 +3,8 @@
 #' This function removes matches that have only one peak in their respective feature, reference or feature-not-never-fit regions.
 #'
 #' @param match.info The match information data.frame obtained within filter.matches.
-#' @param fits.feature A list of fitted features.
+#' @param feature.stack e.g. feature$stack
+#' @param ref.mat spectral matrix for reference compounds
 #' @param peak.qualities A list of peak quality vectors (~ feature points' relevance in the reference database)
 #' @param pq.featureNumbers A vector of feature numbers to index the peak.qualities list. This is necessary when only a subset of features are matched and feature fits are filtered.
 #' @param res.area.thresh The minimum reference spectrum resonance area that must be accounted for by the fit feature in order to consider it matched.
@@ -15,7 +16,7 @@
 #' @importFrom dplyr filter
 #'
 #' @export
-filter.matches_singlets <- function(match.info, peak.qualities, pq.featureNumbers, res.area.threshold){
+filter.matches_singlets <- function(match.info, feature.stack, ref.mat, peak.qualities, pq.featureNumbers, res.area.threshold){
     
       
 ######################################################################################################################## 
@@ -38,13 +39,14 @@ filter.matches_singlets <- function(match.info, peak.qualities, pq.featureNumber
         
         
       # Apply singlet filters to each mi row, and add the results as fields. 
-        match.info <- mclapply(1:nrow(match.info), function(m){
+        match.info <- mclapply(1:nrow(match.info), 
+                               function(m){
           # print(m)
           
           ########### singlet filter for fit features ################
             mi <- match.info[m, ]
             
-            ff <- apply.fit(mi.row = mi, feat.stack = feature$stack, ref.stack = ref.mat)
+            ff <- apply.fit(mi.row = mi, feat.stack = feature.stack, ref.stack = ref.mat)
             
             mask <- !is.na(ff$residuals)
             mi$numpeaks.feat <- pk.maxs(ff$feat.fit, mask) %>% length
@@ -76,7 +78,7 @@ filter.matches_singlets <- function(match.info, peak.qualities, pq.featureNumber
         
       # Rbind results
       
-        saveRDS(match.info, paste0(pars$dirs$temp, "/match.info.filt"))
+        saveRDS(match.info, paste0(pars$dirs$temp, "/match.info.filt.RDS"))
         match.info <- rbindlist(match.info)
         match.info <- filter(match.info, 
                               numpeaks.feat > 1 &

@@ -3,7 +3,7 @@ setwd('/Users/mjudge/Documents/GitHub/icl_nmr_R')
 devtools::document()
 run_params <- '/Users/mjudge/Documents/current_run/params.yaml'
 pars <- yaml::yaml.load_file(run_params, eval.expr = TRUE)
-pipeline('/Users/mjudge/Documents/current_run/params.yaml')
+# pipeline('/Users/mjudge/Documents/current_run/params.yaml')
 
 ImperialNMRTool::filter.matches(pars)
 ImperialNMRTool::score.matches(pars) 

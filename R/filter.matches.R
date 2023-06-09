@@ -68,7 +68,7 @@ filter.matches <- function(pars){
 ######################### Remove singlets ############################################
     printTime()
       # Do the filtering (functionalized)
-        match.info <- filter.matches_singlets(match.info,
+        match.info <- filter.matches_singlets(match.info, feature$stack, ref.mat,
                                                peak.qualities, pq.featureNumbers, 
                                                pars$matching$filtering$res.area.threshold)
         
@@ -92,10 +92,11 @@ filter.matches <- function(pars){
         #   
         # This boils down to a match.info row for every feature. Fits can be rebuilt
         # on the fly from this and the feature/spectral matrix/ref matrix.
-        pars$par$ncores <- 5
+        
         match.info <- propagate.matches(match.info, cluster)
-        pars$par$ncores <- 3
- ######################### Calculate deltappm distance (specppm - featureppm)  #############################
+        saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
+        
+######################### Calculate deltappm distance (specppm - featureppm)  #############################
 
         # source('./../span.R')
         # source('./../filter.matches_shiftDelta.R')
