@@ -2,7 +2,7 @@
 % Please edit documentation in R/pipeline.R
 \name{pipeline}
 \alias{pipeline}
-\title{Feature shape based annotation pipeline
+\title{Feature shape based annotation pipeline ####
  /
  To run from here, you need the following files in ./data:
  params.yaml         # parameter file

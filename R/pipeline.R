@@ -1,7 +1,7 @@
 ###################################################################################################################################
 ###################################################################################################################################
 ###################################################################################################################################
-## Feature shape based annotation pipeline
+## Feature shape based annotation pipeline ####
 ## /
 # To run from here, you need the following files in ./data:
   # params.yaml         # parameter file
@@ -15,7 +15,8 @@
 # no strong normalization, no scaling, no alignment) in the form of and RDS file 
 # with a matrix (row 1 = ppm vector, each additional row is a 1D NMR sample). 
 # 
-# FSE: the spectral matrix is decomposed into compound features using feature
+# FSE: ####
+# the spectral matrix is decomposed into compound features using feature
 # shape extraction. First, a local STOCSY is performed at every point along the 
 # spectrum (within a sliding window of ~ 100 points; enough to capture multiple
 # resonances within any multiplet). For each of these STOCSYs, the central peak
@@ -74,7 +75,7 @@
 # for a given dataset, as these comprise a list of somewhat independently tested
 # feature shapes, and duplication is not an issue. 
 #   
-# TINA (TINA Is Not Alignment): 
+# TINA (TINA Is Not Alignment): ####
 #
 # We cannot eliminate all poor shapes, but there are a couple of useful heuristics
 # which generally reduce unnecessary computation downstream. First, there are many 
@@ -110,7 +111,7 @@
 # primarily a means of combining highly similar features to reduce the computational
 # burden of pairwise comparisons to reference spectra. 
 # 
-# Matching:
+# Matching: ####
 # Matching is accomplished by cross-correlating all pairwise feature - reference 
 # spectrum pairs. Since there are feature-level comparisons to make (i.e. a single
 # feature across all matches), iteration over features is serial. Iteration over
@@ -145,9 +146,9 @@
 # outside of RStudio due to memory leaks/overhead. 
 # 
 #
-# MTJ 2023
+# MTJ 2023 ####
 
-#'  Feature shape based annotation pipeline
+#'  Feature shape based annotation pipeline ####
 #'  /
 #'  To run from here, you need the following files in ./data:
 #'  params.yaml         # parameter file
@@ -163,7 +164,7 @@
 #'
 #'
 #' # MTJ 2023
-#'
+#' 
 #' @param params_loc Path to a YAML file containing user-specified parameters
 #' @param params_obj List of parameters
 #' 
