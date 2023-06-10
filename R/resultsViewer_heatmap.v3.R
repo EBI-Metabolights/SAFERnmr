@@ -116,14 +116,39 @@ show.me.the.evidence <- function(results.dir = NULL){
       scores.matrix<- scores.matrix[, sample.order]
       mat <- scores.matrix
       
+      
+      
+      # drawHeatmap(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap')
+      
 ##########################     ACCESSORY FUNCTIONS    #####################################
 drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap'){
   if(dropRowNames){
     rownames(mat) <- NULL
   } else {
+    
       if(!is.na(clipRowNames)){ # assume integer
-        rownames(mat) <- rownames(mat) %>% stringr::str_trunc(clipRowNames)
+          rownames(mat) <- rownames(mat) %>% stringr::str_trunc(clipRowNames, ellipsis = '')
       }
+    
+      # If rownames are not unique, modify them
+        # - what we want to do is give the first n characters
+          rn <- data.frame(name = rownames(mat)) %>% 
+                  dplyr::group_by(name) %>%
+                  # add row number within each group
+                  dplyr::mutate(instance = dplyr::row_number()) %>%
+                  dplyr::ungroup()
+          
+          rn$unique.name <- lapply(1:nrow(rn), function(r) {
+            
+              paste(
+                      rn$name[r],
+                      rep(' ', rn$instance[r]-1),
+                      collapse = ''
+              )
+       
+            }) %>% unlist
+          rownames(mat) <- rn$unique.name
+
   }
 
   if(nrow(mat) == 1){
@@ -293,7 +318,6 @@ ui <-
               h3(textOutput("stackplotTitle")),
               sliderInput(inputId = 'vshift.slide', label = "vshift", min = 0, max = 5, value = 1, step = .05),
               # sliderInput(inputId = 'hshift.slide', "hshift", -.1, .1, 0.5, step = 0.001),
-              verbatimTextOutput("relayout"),
               verbatimTextOutput("state.description"),
               plotOutput("stack.ref.feats")
             
@@ -343,7 +367,9 @@ server <- function(input, output, session) {
   
   values <- reactiveValues(selectedRow = NULL,
                            selectedCols = NULL,
-                           selectedRange = NULL)
+                           selectedRange = NULL,
+                           refplot.xlim = NULL,
+                           refplot.xlim.previous = NULL)
 
   ####### Right-side stuff ######
   
@@ -451,6 +477,8 @@ server <- function(input, output, session) {
   ####### Left-side stuff  ######
 
         # Plot selected ref, record region selection in event_register ####
+        
+          # Make the actual plot
           output$ref.plot = renderPlotly({
             
               req(values$selectedRow)
@@ -468,7 +496,8 @@ server <- function(input, output, session) {
                   event_register(event = "plotly_brushed")
 
             })
-            
+          
+          # Change the title if the selectizer was used
           output$ref.plot.title <- renderPrint({
 
             req(values$selectized)
@@ -502,80 +531,99 @@ server <- function(input, output, session) {
               values$selectedRange <- selectedRange()
             })
 
-            
-        # Update xlim for stackplot if ref plot zoom changes
-          output$relayout <- renderPrint({event_data("plotly_relayout", "source")})
-          refplot.xlim <- reactive({
+        # Update slider.vshift for stackplot
 
-            # Identify selected ppm range within ref - is there a selected range in the ref plot?? ####
-
-              zoom <- event_data(source = 'refspec',
-                                 event = "plotly_relayout")
-                                       # priority = "event") # this will reset to null with new ref
-
-              paste0('ref plotly zoom changed to:', zoom.range)
-
-                #          if(is.null(zoom.range[['xaxis.range']]) == TRUE){
-                #             xmin <<- zoom.range[[1]]
-                #             xmax <<- zoom.range[[2]]
-                #          }else{
-                #             xmin <<- zoom.range[['xaxis.range']][1]
-                #             xmax <<- zoom.range[['xaxis.range']][2]
-                #          }
-                # selectedRange <- zoom.range$x[1:2] # ppm units
-                #
-                #   message('selected ref region : ', round(selectedRange[1], 3), '-', round(selectedRange[2], 3), ' ppm')
-                #
-                # selectedRange
+          slider.vshift <- reactive({
+                vshift <- input$vshift.slide
+                
           })
 
           # Update in reactive variable as well
-            # observeEvent(selectedRange(),{
-            #   values$selectedRange <- selectedRange()
-            # })
           
-        # Feature Plot: plot a stack plot for each group of overlapping ref feats mapped to bounds ####
-          #  Make title ####
-          #  Use the stackplot title to communicate instructions on selecting data. 
-          
-            output$stackplotTitle <- renderText({
-  
-              req(values$selectedRow)
-              req(values$selectedRange)
-              req(values$selectedCols)
-                
-              # Can't do anything without a row selection:
-                
-                if (is.null( values$selectedRow )) { 
-                  
-                  "Click on a cell in the heatmap to look an individual row (compound)"
-                  
-                }
-              
-              # Next, select the range: 
-              
-                if (is.null( values$selectedRange )) {
-    
-                  "Use the drag box selection tool to select a feature in the reference spectrum above"
-    
-                }
-              
-              # Finally, if no samples are selected, indicate that's necessary
-
-                if (is.null( values$selectedCols ) ) { 
-                  
-                  "Select samples (not too many!) in the scores plot pane (lower right)"
-                  
-                }
-    
-                  paste0("Ref-feature backfits to spectra for ",
-                             paste0(round(values$selectedRange[1], 3), '-', round(values$selectedRange[2], 3)), ' ppm')
-    
-                
+            observeEvent(slider.vshift(),{
+              values$slider.vshift <- slider.vshift()
             })
-          # Make 
-          # Feat plot stuff ####
             
+        # Update xlim for stackplot if ref plot zoom changes
+
+           refplot.xlim <- reactive({
+
+            # Identify selected ppm range within ref - is there a selected range in the ref plot?? ####
+              # if plotly ref spec zoom is updated, do this:
+             
+              zoom <- event_data("plotly_relayout", "refspec")
+                                       # priority = "event") # this will reset to null with new ref
+
+                #   Unfortunately, the plotly relayout output changes depending on the situation, 
+                #   so go through some checks. It will only give a useful region if the user zooms 
+                #   in. It will reset to NULL when selection tool is activated. 
+                # 
+                #   see: https://stackoverflow.com/questions/49268902/get-axis-ranges-after-plotly-resize-in-shiny
+                #   (borrowed some code)
+              
+                if(is.null(zoom) || names(zoom[1]) %in% c("xaxis.autorange", "width")) {
+                  # For cases when a new ref plot is made
+                  
+                  xlim <- NULL
+
+                } else {
+
+                    xlim <- c(zoom$`xaxis.range[0]`, zoom$`xaxis.range[1]`)
+                    
+                    if (length(xlim) == 0){
+                      
+                      # For cases when plotly errantly reports null zoom range because selection was activated
+                      
+                      message('refplot zoom data length(xlim) == 0, but plotly_relayout != NULL:')
+                      message('\tselection box activation detected. Using previous zoom region.')
+                      
+                      # The observeEvent(refplot.xlim()) will parse this:
+                        
+                        xlim <- "use.previous"
+                      
+                    } else {
+                      # When it works as expected and zoom range is reported. 
+                      # the value was set above; just report the new range to message.
+                      # NULL values or closures should never make it to this code. 
+                      
+                      message('zoomed to ref region : ')
+                      message(round(xlim[1], 3), '-', round(xlim[2], 3), ' ppm') #
+                      
+                    }
+                }
+
+                xlim
+          })
+
+          # Update in reactive variable as well
+            # Make decision about whether or not to actually update the range, depending on whether
+            # it looks like plotly errantly reset the range. If so, use the previous value (stored
+            # as a temp value). 
+            
+            observeEvent(refplot.xlim(),{
+              
+              if (is.character(refplot.xlim())){
+                
+                # If it's a character, that's because it's 'use.previous'. 
+                
+                  values$refplot.xlim <- values$refplot.xlim.previous
+                
+              } else {
+                
+                # Set the value if it looks like a real range
+                
+                  values$refplot.xlim <- refplot.xlim()
+                  
+                # Also record as 'previous' value. In the event that values$refplot.xlim
+                # is set to NULL because selection tool was used, we can still access it 
+                # there. 
+                  
+                  values$refplot.xlim.previous <- values$refplot.xlim
+                
+              }
+            })
+            
+        # Print a description of the selections ####
             output$state.description <- renderText({
                   if (is.null(values$selectedRange))
                     {
@@ -588,16 +636,67 @@ server <- function(input, output, session) {
 
                   paste0('\n\tselected row (compound): ', values$selectedRow %>% refs$name[.],
                          '\n\tselected cols: ', length(values$selectedCols),
-                         '\n\tselectedRange: ', sel.rng)
+                         '\n\tselectedRange: ', sel.rng)#,
+                         # '\n\tref plot zoom: ', paste(values$refplot.xlim))
             })
+            
+          
+          
+        # Feature Plot: plot a stack plot for each group of overlapping ref feats mapped to bounds ####
+          #  Make title ####
+          #  Use the stackplot title to communicate instructions on selecting data. 
+          
+            output$stackplotTitle <- renderText({
+              
+              "In dvelepments"
+  
+              # req(values$selectedRow)
+              # req(values$selectedRange)
+              # req(values$selectedCols)
+              #   
+              # # Can't do anything without a row selection:
+              #   
+              #   if (is.null( values$selectedRow )) { 
+              #     
+              #     "Click on a cell in the heatmap to look an individual row (compound)"
+              #     
+              #   }
+              # 
+              # # Next, select the range: 
+              # 
+              #   if (is.null( values$selectedRange )) {
+              # 
+              #     "Use the drag box selection tool to select a feature in the reference spectrum above"
+              # 
+              #   }
+              # 
+              # # Finally, if no samples are selected, indicate that's necessary
+              # 
+              #   if (is.null( values$selectedCols ) ) { 
+              #     
+              #     "Select samples (not too many!) in the scores plot pane (lower right)"
+              #     
+              #   }
+              # 
+              #     paste0("Ref-feature backfits to spectra for ",
+              #                paste0(round(values$selectedRange[1], 3), '-', round(values$selectedRange[2], 3)), ' ppm')
+    
+                
+            })
+            
+          # Feat plot stuff ####
             
             output$stack.ref.feats <- renderPlot({
               
               # Check we have the necessary filters ####
-              
+                  
                   req(values$selectedRow)
                   req(values$selectedCols)
                   req(values$selectedRange)
+                  req(values$slider.vshift)
+                  req(values$refplot.xlim)
+                    # No need to filter on this - plot is triggered by selection box (which is more specific)
+                    if(is.null(values$refplot.xlim)){return(NULL)}
                   req(ppm.tolerance)
                   req(vshift)
                   req(hshift)
@@ -665,10 +764,14 @@ server <- function(input, output, session) {
   
                                 # Compute the feature stackplots ####
   
-                                  plt.pars <- list(vshift = 1, pixels = c(512, 512), pointsize = 0, interpolate = T, exp.by = 0.05)
-                                  # bfs$fit.feats <- bfs$fit.feats[1:71,]
-                                  # bfs$fit.positions <- bfs$fit.positions[1:71,]
-                                  # bfs$fit.xrow <- bfs$fit.xrow[1:71]
+                                  plt.pars <- list(vshift = values$slider.vshift, 
+                                                   pixels = c(512, 512), 
+                                                   pointsize = 0, 
+                                                   interpolate = T, 
+                                                   # exp.by = 0.05,
+                                                   xlim = values$refplot.xlim # this should never arrive here as NULL - screen out beforehand
+                                                   )
+                                  
                                   return(
                                     
                                             fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars)

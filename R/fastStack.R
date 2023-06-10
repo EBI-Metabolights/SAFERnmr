@@ -65,22 +65,24 @@ fastStack.withFeatures <- function(xmat, ppm,
                                    raster = T, 
                                    bfs, plt.pars){
   
-   exp.by <- ceiling(plt.pars$exp.by / ((ppm %>% range %>% diff) / length(ppm)))
+   
    
 # Put features in an x-sized matrix:
   # For each spectrum, put the features in:
     
     # Expand the ranges (better vis, but keep in bounds of ppm axis): ####
-    
-      exp.ranges <- apply(bfs$fit.positions, 1, function(x){x %>% range(na.rm = TRUE) %>% sort})
-      if(length(exp.ranges) == 0){return(NULL)}
-        lbound <- 1
-        ubound <- length(ppm)
-        exp.ranges[1, ] <- apply(exp.ranges[1,,drop=F] - exp.by, 2, function(x) max(c(x,lbound)))
-        exp.ranges[2, ] <- apply(exp.ranges[2,,drop=F] + exp.by, 2, function(x) min(c(x,ubound)))
+      # exp.by <- ceiling(plt.pars$exp.by / ((ppm %>% range %>% diff) / length(ppm)))
+      # exp.ranges <- apply(bfs$fit.positions, 1, function(x){x %>% range(na.rm = TRUE) %>% sort})
+      # if(length(exp.ranges) == 0){return(NULL)}
+      #   lbound <- 1
+      #   ubound <- length(ppm)
+      #   exp.ranges[1, ] <- apply(exp.ranges[1,,drop=F] - exp.by, 2, function(x) max(c(x,lbound)))
+      #   exp.ranges[2, ] <- apply(exp.ranges[2,,drop=F] + exp.by, 2, function(x) min(c(x,ubound)))
       
     # Get the xmat cols of interest ####
-      cols.x <- exp.ranges %>% range(na.rm = T) %>% fillbetween
+      # cols.x <- exp.ranges %>% range(na.rm = T) %>% fillbetween
+      # message(paste(plt.pars$xlim, sep = " "))
+      cols.x <- plt.pars$xlim %>% vectInds(ppm) %>% fillbetween
       ss.rows <- bfs$fit.xrow
       x.rows <- unique(ss.rows)
     
@@ -96,9 +98,21 @@ fastStack.withFeatures <- function(xmat, ppm,
             ss.vals <- rep(NA, length(cols.x))
 
             # Get the positions within the matrix
-
-              inds <- pos - min(cols.x) + 1
-              ss.vals[inds[!is.na(inds)]] <- val[!is.na(val)]
+              # Since the introduction of xlim, these do not match 
+              # however:
+              #   we can convert the pos vector to pos within cols.x
+              #   but: need to check to make sure these inds aren't 
+              #   negative or > length(cols.x)
+              # * inds, val, and pos are size(feature)
+              # * ss.vals can be a different size.
+              # * make indices of size(pos) that shoot values into the correct
+              #   places in ss.vals. 
+              
+              inds <- (pos - min(cols.x) + 1)
+                not.in.region <- inds < 1 | inds > length(cols.x)
+                use <- !(not.in.region | is.na(val))
+                
+              ss.vals[inds[use]] <- val[use] # don't use NA elements of val
 
             return(ss.vals)
 
