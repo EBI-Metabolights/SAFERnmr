@@ -4,7 +4,7 @@ devtools::document()
 run_params <- '/Users/mjudge/Documents/current_run/params.yaml'
 pars <- yaml::yaml.load_file(run_params, eval.expr = TRUE)
 
-
+devtools::document()
 show.me.the.evidence(results.dir = '/Users/mjudge/Documents/current_run')
 
 x <- readRDS('/Users/mjudge/Downloads/MTBLS430_1r_noesygppr1d.comp_spectralMatrix.RDS')

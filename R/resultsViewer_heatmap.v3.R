@@ -25,6 +25,7 @@ show.me.the.evidence <- function(results.dir = NULL){
   
 ## Params ###############################################################################
   
+  message('Evidence Viewer: reading data...')
   # Locate us ####
   
     # Handle whether or not user adds /
@@ -289,8 +290,10 @@ ui <-
            # Stackplot pane ####
            
             fluidRow(
-            
               h3(textOutput("stackplotTitle")),
+              sliderInput(inputId = 'vshift.slide', label = "vshift", min = 0, max = 5, value = 1, step = .05),
+              # sliderInput(inputId = 'hshift.slide', "hshift", -.1, .1, 0.5, step = 0.001),
+              verbatimTextOutput("relayout"),
               verbatimTextOutput("state.description"),
               plotOutput("stack.ref.feats")
             
@@ -340,7 +343,7 @@ server <- function(input, output, session) {
   
   values <- reactiveValues(selectedRow = NULL,
                            selectedCols = NULL,
-                           selectedRegion = NULL)
+                           selectedRange = NULL)
 
   ####### Right-side stuff ######
   
@@ -498,37 +501,91 @@ server <- function(input, output, session) {
             observeEvent(selectedRange(),{
               values$selectedRange <- selectedRange()
             })
+
+            
+        # Update xlim for stackplot if ref plot zoom changes
+          output$relayout <- renderPrint({event_data("plotly_relayout", "source")})
+          refplot.xlim <- reactive({
+
+            # Identify selected ppm range within ref - is there a selected range in the ref plot?? ####
+
+              zoom <- event_data(source = 'refspec',
+                                 event = "plotly_relayout")
+                                       # priority = "event") # this will reset to null with new ref
+
+              paste0('ref plotly zoom changed to:', zoom.range)
+
+                #          if(is.null(zoom.range[['xaxis.range']]) == TRUE){
+                #             xmin <<- zoom.range[[1]]
+                #             xmax <<- zoom.range[[2]]
+                #          }else{
+                #             xmin <<- zoom.range[['xaxis.range']][1]
+                #             xmax <<- zoom.range[['xaxis.range']][2]
+                #          }
+                # selectedRange <- zoom.range$x[1:2] # ppm units
+                #
+                #   message('selected ref region : ', round(selectedRange[1], 3), '-', round(selectedRange[2], 3), ' ppm')
+                #
+                # selectedRange
+          })
+
+          # Update in reactive variable as well
+            # observeEvent(selectedRange(),{
+            #   values$selectedRange <- selectedRange()
+            # })
           
         # Feature Plot: plot a stack plot for each group of overlapping ref feats mapped to bounds ####
-            
-          output$stackplotTitle <- renderText({
-
-            req(values$selectedRange)
-
-            if (is.null( values$selectedRange )) {
-
-              "Click on a cell in the heatmap to look an individual row (compound)"
-
-            } else {
-
-              paste0("Ref-feature backfits to spectra for ",
-                         paste0(round(values$selectedRange[1], 3), '-', round(values$selectedRange[2], 3)), ' ppm')
-
-            }
-          })
+          #  Make title ####
+          #  Use the stackplot title to communicate instructions on selecting data. 
           
+            output$stackplotTitle <- renderText({
+  
+              req(values$selectedRow)
+              req(values$selectedRange)
+              req(values$selectedCols)
+                
+              # Can't do anything without a row selection:
+                
+                if (is.null( values$selectedRow )) { 
+                  
+                  "Click on a cell in the heatmap to look an individual row (compound)"
+                  
+                }
+              
+              # Next, select the range: 
+              
+                if (is.null( values$selectedRange )) {
+    
+                  "Use the drag box selection tool to select a feature in the reference spectrum above"
+    
+                }
+              
+              # Finally, if no samples are selected, indicate that's necessary
+
+                if (is.null( values$selectedCols ) ) { 
+                  
+                  "Select samples (not too many!) in the scores plot pane (lower right)"
+                  
+                }
+    
+                  paste0("Ref-feature backfits to spectra for ",
+                             paste0(round(values$selectedRange[1], 3), '-', round(values$selectedRange[2], 3)), ' ppm')
+    
+                
+            })
+          # Make 
           # Feat plot stuff ####
             
             output$state.description <- renderText({
                   if (is.null(values$selectedRange))
                     {
                       sel.rng <- values$selectedRange
-                      
+
                   } else {
                       sel.rng <- round(values$selectedRange, 3)
                       sel.rng <- paste0(sel.rng[1], '-', sel.rng[2], ' ppm')
                     }
-              
+
                   paste0('\n\tselected row (compound): ', values$selectedRow %>% refs$name[.],
                          '\n\tselected cols: ', length(values$selectedCols),
                          '\n\tselectedRange: ', sel.rng)

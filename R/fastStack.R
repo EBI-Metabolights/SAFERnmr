@@ -111,14 +111,18 @@ fastStack.withFeatures <- function(xmat, ppm,
     # Apply the vshifts ####
       
         vshift <- plt.pars$vshift * sd(x, na.rm = T)
-        vshifts <- (1:nrow(x)) * vshift # make vector of shifts 
+        vshifts <- (1:nrow(x)) * vshift # make vector of shifts, simple row # multiple of vshift.
         xs <- apply(x, 2, function(r) r + vshifts)
         # simplePlot(xs)
         
-        # Apply the appropriate shift to each bf
+        # Apply the appropriate shift to each bf (according to the row it matches in xs)
+          # they're all currently at 0. Not necessarily ordered. But all belonging 
+          # to row 3 in xmat, for instance, will jump up that amount. Likewise with each
+          # of the other rows in xs the bf.fits could belong to (and share vshift with).
+          
         f.stack <- lapply(1:nrow(f.stack), function(r) {
           
-          f.stack[r, ] + vshifts[x.rows == bfs$fit.xrow[r]]-0.5*vshift
+          f.stack[r, ] + vshifts[x.rows == bfs$fit.xrow[r]]#-0.5*vshift
           
         }) %>% do.call(rbind,.)
         # simplePlot(f.stack)
@@ -213,7 +217,8 @@ fastStack.withFeatures <- function(xmat, ppm,
         #                         color = 'blue') 
           # ggplot2::scale_x_reverse(breaks = scales::breaks_pretty())
         
-          
+          yrange <- range(c(df.lines$int, df.feats$int))
+          xrange <- range(c(df.lines$ppm, df.feats$ppm)) %>% rev
           
           scattermore::scattermoreplot(
                                         x = df.lines$ppm,
@@ -222,7 +227,8 @@ fastStack.withFeatures <- function(xmat, ppm,
                                         ylab = '',
                                         size = plt.pars$pixels,
                                         cex = .0,
-                                        xlim = c(max(df.lines$ppm), min(df.lines$ppm)),
+                                        ylim = yrange,
+                                        xlim = xrange,
                                         col = 'black',
                                         yaxt="n"
                                       ) 
@@ -234,7 +240,8 @@ fastStack.withFeatures <- function(xmat, ppm,
                                         ylab = '',
                                         size = plt.pars$pixels,
                                         cex = .1,
-                                        xlim = c(max(df.lines$ppm), min(df.lines$ppm)),
+                                        ylim = yrange,
+                                        xlim = xrange,
                                         col = alpha('blue', alpha = .2),
                                         yaxt="n"
                                       ) 
