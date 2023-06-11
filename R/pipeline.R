@@ -150,7 +150,7 @@
 
 #'  Feature shape based annotation pipeline ####
 #'  /
-#'  To run from here, you need the following files in ./data:
+#'  To run from here, you need paths to the following files:
 #'  params.yaml         # parameter file
 #'  spectral.matrix.RDS # spectral matrix
 #'  data.list.RDS       # library files
@@ -174,7 +174,7 @@
 #' 
 #' @importFrom utils write.table
 #' @import magrittr
-#' 
+#' @importFrom yaml yaml.load_file
 #' 
 #' @export
 pipeline <- function(params_loc, params_obj) {
@@ -196,7 +196,14 @@ pipeline <- function(params_loc, params_obj) {
   # if (run_params$galaxy$enabled == FALSE) {
   #   setup(run_params)
   # }
+  
   pars <- run_params
+  
+  if (!is.null(pars$dirs$temp)){
+    if(!dir.exists(pars$dirs$temp)){
+      dir.create(pars$dirs$temp, showWarnings = F)
+    }
+  }
 
 ################################################################################################################################### 
 ## Feature Shape Extraction
