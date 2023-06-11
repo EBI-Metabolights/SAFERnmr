@@ -4,7 +4,7 @@
 \alias{pipeline}
 \title{Feature shape based annotation pipeline ####
  /
- To run from here, you need the following files in ./data:
+ To run from here, you need paths to the following files:
  params.yaml         # parameter file
  spectral.matrix.RDS # spectral matrix
  data.list.RDS       # library files
