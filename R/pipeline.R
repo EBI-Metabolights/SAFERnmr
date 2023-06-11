@@ -199,7 +199,9 @@ pipeline <- function(params_loc, params_obj) {
   
   pars <- run_params
   
-  if (!is.null(pars$dirs$temp)){
+  if (is.null(pars$dirs$temp)){
+    pars$dirs$temp <- '.'
+  } else {
     if(!dir.exists(pars$dirs$temp)){
       dir.create(pars$dirs$temp, showWarnings = F)
     }
