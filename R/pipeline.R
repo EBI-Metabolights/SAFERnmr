@@ -210,26 +210,26 @@ pipeline <- function(params_loc, params_obj) {
   file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'))
   file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
   
-# ################################################################################################################################### 
-# ## Feature Shape Extraction
-# 
-#   fse(pars)
-# 
-# ################################################################################################################################### 
-# ## TINA / SAFARI
-# # - filter out feature shapes which make no sense
-# # - associate features whose shapes are highly similar
-# 
-#   tina(pars)
-#   
-# ################################################################################################################################### 
-# ## Match spectra to the database 
-# # - match using convolution-based cross-correlation
-# # - parallelized
-#   
-#   match.features2refs.par.setup(pars)
-#   gc() # garbage collect before big parallel compute
-#   match.features2refs.par.explicit(pars)
+################################################################################################################################### 
+## Feature Shape Extraction
+
+  fse(pars)
+
+################################################################################################################################### 
+## TINA / SAFARI
+# - filter out feature shapes which make no sense
+# - associate features whose shapes are highly similar
+
+  tina(pars)
+  
+################################################################################################################################### 
+## Match spectra to the database 
+# - match using convolution-based cross-correlation
+# - parallelized
+  
+  match.features2refs.par.setup(pars)
+  gc() # garbage collect before big parallel compute
+  match.features2refs.par.explicit(pars)
     
   
 ################################################################################################################################### 
