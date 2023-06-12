@@ -76,7 +76,6 @@ match.features2refs.par.explicit <- function(pars){
               # f.mat = f.mat.split[[chunk]]
               
               f.stack <- f.stack %>% matrix(ncol = length(f.subset))
-              mem.snapshot(paste0(tmpdir, '/', Sys.time(), '_fstack_has_',ncol(f.stack),'_columns.txt'))
               # f.mat <- f.mat %>% matrix(ncol = length(f.subset))
               # simplePlot(trim.sides(t(f.stack)))
         
