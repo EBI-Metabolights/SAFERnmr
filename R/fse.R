@@ -247,7 +247,7 @@ fse <- function(pars){
         # # Plot all the storm results in grid (postage stamp) format
         # 
           
-            everyNth <- every.nth(select = number.of.plots, 
+            everyNth <- every_nth(select = number.of.plots, 
                                   from = sum(succeeded))
             
             plot_stormRefRegions_grid(xmat, ppm,

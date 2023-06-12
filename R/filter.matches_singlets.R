@@ -27,8 +27,8 @@ filter.matches_singlets <- function(match.info,
 
       # # Dependencies ####
       #   source('./../extractPeaks_corr.R')
-      #   source('./../pk.maxs.R')
-      #   source('./../pk.bounds.R')
+      #   source('./../pk_maxs.R')
+      #   source('./../pk_bounds.R')
       #   source('./../corr_expand.R')
       #   source('./../ind2subR.R')
       #   source('./../stackplot.R')
@@ -49,21 +49,21 @@ filter.matches_singlets <- function(match.info,
           ########### singlet filter for fit features ################
             mi <- match.info[m, ]
             
-            ff <- apply.fit(mi.row = mi, feat.stack = feature.stack, ref.stack = ref.mat)
+            ff <- apply_fit(mi.row = mi, feat.stack = feature.stack, ref.stack = ref.mat)
             
             mask <- !is.na(ff$residuals)
-            mi$numpeaks.feat <- pk.maxs(ff$feat.fit, mask) %>% length
+            mi$numpeaks.feat <- pk_maxs(ff$feat.fit, mask) %>% length
           
           ########### singlet filter for fit ref regions ################
           
-            mi$numpeaks.ref <- pk.maxs(ff$spec.fit, mask) %>% length
+            mi$numpeaks.ref <- pk_maxs(ff$spec.fit, mask) %>% length
           
           ########### singlet filter for feature-not-never-fit regions ################
             
             peak.quality <- peak.qualities[[which(match.info$feat[m] == pq.featureNumbers)]]
             f.adj <- ff$feat.fit - ff$feat.fit * peak.quality
             f.adj <- f.adj - min(f.adj, na.rm = T)
-            mi$numpeaks.feat.nnf <- pk.maxs(f.adj, mask = !is.na(f.adj)) %>% length # not sure if mask here is always the same as above
+            mi$numpeaks.feat.nnf <- pk_maxs(f.adj, mask = !is.na(f.adj)) %>% length # not sure if mask here is always the same as above
           
           ########### singlet filter for refpeaks.matched ################
           

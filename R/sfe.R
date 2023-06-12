@@ -26,7 +26,7 @@
 #'                ss = ss,
 #'                driver.relative = driver)
 #'                
-#'   al.fts <- apply.lags.feat(feat = feat,
+#'   al.fts <- apply_lags_feat(feat = feat,
 #'                             xmat = xmat, 
 #'                             lags = lags$lag.in.f2)
 #'   
@@ -60,7 +60,7 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
     profile <- feature$stack[f.ind, , drop = F]
     
     f.pos <- feature$position[f.ind, ,drop = F]
-      cols <- f.pos %>% trim.sides(out = "inds")
+      cols <- f.pos %>% trim_sides(out = "inds")
       driver <- (cols %in% feature$driver.relative[f.ind]) %>% which
       f.pos <- f.pos[cols]
       profile <- profile[cols]
@@ -74,7 +74,7 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                    ss = ss,
                    driver.relative = driver)
       
-      aligned <- align.spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
+      aligned <- align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
       # stackplot(aligned$valsmat)
     
     
@@ -87,7 +87,7 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
         # m <- 1
       # Fit this spec to the profile to scale to match other instances (invert fit later)
       
-        fit <- fit.leastSquares(v1 = aligned$feat$profile,
+        fit <- fit_leastSquares(v1 = aligned$feat$profile,
                          v2 = aligned$valsmat[m,], 
                          ppm = ppm[aligned$feat$position],
                          plots = F,

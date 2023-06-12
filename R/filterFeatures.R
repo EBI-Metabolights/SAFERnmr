@@ -59,8 +59,8 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
          # print(f)
          # f <- 98
          feature$stack[f, , drop = FALSE] %>% 
-           trim.sides %>%
-           detect.baseline.effect 
+           trim_sides %>%
+           detect_baseline_effect 
       })
       
       bl.effect.ul <- bl.effect %>% unlist %>% as.logical
@@ -71,13 +71,13 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
       not.monotonic <- pass.prom & pass.fit & not.singlet
       
       # filt <- !nullfeatures & inbounds & rl.pass & ss.pass
-      # feature$stack[which(!not.monotonic),] %>% apply(1,scale.between) %>% t %>% trim.sides %>% simplePlot
+      # feature$stack[which(!not.monotonic),] %>% apply(1,scale_between) %>% t %>% trim_sides %>% simplePlot
       # which(
       #   which(
       #      not.monotonic) %in% c(1068,1102,1116,1130,1136,1144,1151,1163,1166,1172,1173,1192,1225,1227)
       #   )
       # )
-      # feature$stack[c(1068,1102,1116,1130,1136,1144,1151,1163,1166,1172,1173,1192,1225,1227),] %>% apply(1,scale.between) %>% t %>% trim.sides %>% simplePlot
+      # feature$stack[c(1068,1102,1116,1130,1136,1144,1151,1163,1166,1172,1173,1192,1225,1227),] %>% apply(1,scale_between) %>% t %>% trim_sides %>% simplePlot
       # sum(!not.monotonic)
       
   # Build the filter set

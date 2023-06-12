@@ -25,7 +25,7 @@ fitFeature <- function(feature, spectrum, spectrum.position,
   
     # least squares fitting
     if (method == "least squares"){
-      res <- fit.leastSquares(feature, spectrum)
+      res <- fit_leastSquares(feature, spectrum)
         feature.fit <- res$feature.fit
         ratio <- res$ratio
     }

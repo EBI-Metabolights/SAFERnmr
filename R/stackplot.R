@@ -70,7 +70,7 @@ stackplot <- function(ymat = NULL, xvect = NULL,
     d <- d %>% filter(!is.na(`Spectral Intensity`))
     
     # Scale the spectra down to range of shift_by
-      d$`Spectral Intensity` <- d$`Spectral Intensity` %>% scale.between(., 
+      d$`Spectral Intensity` <- d$`Spectral Intensity` %>% scale_between(., 
                                                                          lower = 0, 
                                                                          upper = (max(shift_by)-min(shift_by)) / vshift)
 

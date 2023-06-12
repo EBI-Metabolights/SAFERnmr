@@ -41,7 +41,7 @@ updateMatchInfoRow <- function(mi.row, fit)
                       
                       # Update scores
                       
-                        mi.row$wasserstein.score <- fit$wasserstein.score <- score.wasserstein(feat, spec)
+                        mi.row$wasserstein.score <- fit$wasserstein.score <- score_wasserstein(feat, spec)
                         mi.row$sum.residuals <- fit$sum.residuals
                         mi.row$rmse <- fit$rmse
                         mi.row$rmse.weighted <- NA # can't get, keep previous?

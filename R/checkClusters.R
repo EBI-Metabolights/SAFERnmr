@@ -118,7 +118,7 @@ checkClusters <- function(clusters, feature,
 # setwd("/Users/mjudge/Documents/galaxy.instance/annoTateR")
 # pars <- yaml.load_file("./data/params.yaml", eval.expr=TRUE) # load param file from copy
 # feature.stack <- readRDS(paste0(pars$dirs$temp,'/feature.stack.RDS'))
-# matches <- feat.align(featureStack = feature.stack, max.hits = 1)
+# matches <- feat_align(featureStack = feature.stack, max.hits = 1)
 
 
 

@@ -227,9 +227,9 @@ pipeline <- function(params_loc, params_obj) {
 # - match using convolution-based cross-correlation
 # - parallelized
   
-  match.features2refs.par.setup(pars)
+  match_features2refs_par_setup(pars)
   gc() # garbage collect before big parallel compute
-  match.features2refs.par.explicit(pars)
+  match_features2refs_par_explicit(pars)
     
   
 ################################################################################################################################### 
@@ -254,10 +254,10 @@ pipeline <- function(params_loc, params_obj) {
 #     features) at each point in the reference signature
 #   - Fraction of ref signature explained [0,1], scaled by the best backfit   
 #     feasibility score at each point in the ref signature
-#   - calls a script "pair.score.summation.R" which has a parallelized section
+#   - calls a function "pair_score_summation.R" which has a parallelized section
 #   *** Format as MAF file and print match plots on request ***
 
-  score.matches(pars)
+  score_matches(pars)
 
   # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
   # write.table(matches, sep = '\t', file = 'matches_scored_named.txt', row.names = F, col.names = T)

@@ -23,15 +23,15 @@
 fastStack <- function(x, ppm, 
                       raster = F, vshift = 1, pixels = c(512, 512), pointsize = 0, interpolate = T){
     vshift <- vshift * sd(x, na.rm = T)
-    # x <- scale.between(x) # catch coefficients? to apply to features?
+    # x <- scale_between(x) # catch coefficients? to apply to features?
     xs <- apply(x, 2, function(r) r + (1:nrow(x)) * vshift)
    
-    xs <- rm.covered.points(xs)
+    xs <- rm_covered_points(xs)
     
     # Raster or no?
       
       if (raster){
-        # xs <- scale.between(xs, 1, nrow(mat))
+        # xs <- scale_between(xs, 1, nrow(mat))
   
         df.lines <- data.frame(ppm = ppm, int = floor(xs) %>% t %>% c) %>% na.omit
   
@@ -57,7 +57,7 @@ fastStack <- function(x, ppm,
 
 # ####
 
-# This is a much, much faster version of project_features.stackplot() that offers scattermore-driven
+# This is a much, much faster version of project_features_stackplot() that offers scattermore-driven
 # rastered plotting, as well as vectorized vector-graphic ggplots. Still working on plotting AUC for 
 # features, but this is pretty good for now. 
 # 
@@ -151,9 +151,9 @@ fastStack.withFeatures <- function(xmat, ppm,
         
         f.rows.in.x <- lapply(ss.rows, function(ssr) which(x.rows %in% ssr)) %>% unlist
         
-        xs <- rm.covered.points(xs)
+        xs <- rm_covered_points(xs)
           # simplePlot(xs)
-        # f.stack <- rm.covered.points(xs, f.stack, f.rows.in.x)
+        # f.stack <- rm_covered_points(xs, f.stack, f.rows.in.x)
           # simplePlot(f.stack)
           # use this for features?
   

@@ -32,7 +32,7 @@
 #'
 #'
 #' @export
-fit.batman <- function(feat, spec, 
+fit_batman <- function(feat, spec, 
                        exclude.lowest = .5,
                        ppm = NULL,# in practice I see convergence about here
                        plots = FALSE){
@@ -63,7 +63,7 @@ fit.batman <- function(feat, spec,
   # plot(v2)
   # points(exclude.pts, v2[exclude.pts], col = 'red')
 
-  # simplePlot(rbind(v1,v2) %>% trim.sides)
+  # simplePlot(rbind(v1,v2) %>% trim_sides)
   
   
   keypoint <- which.min(pairedRatios)
@@ -74,19 +74,19 @@ fit.batman <- function(feat, spec,
   
   # fraction.v2.unaccounted <- sum(v2.fit[use]  -  v1.fit[use], na.rm = TRUE) / sum(v2.fit[use], na.rm = TRUE)
   g <- NULL
-  # simplePlot(rbind(v1 * ratio,v2) %>% trim.sides)
+  # simplePlot(rbind(v1 * ratio,v2) %>% trim_sides)
   if (plots){
     
-    if (is.null(ppm)){ppm <- 1:length(v1.fit %>% t %>% trim.sides)}
+    if (is.null(ppm)){ppm <- 1:length(v1.fit %>% t %>% trim_sides)}
     
-      v2.inds <- v2 %>% t %>% trim.sides(out = "inds")
+      v2.inds <- v2 %>% t %>% trim_sides(out = "inds")
       g <- simplePlot(v2[v2.inds],
                       xvect = ppm[v2.inds],
                       linecolor = "gray",
                       opacity = .9, 
                       linewidth = 1)
 
-      v1.inds <- v1 %>% t %>% trim.sides(out = "inds")
+      v1.inds <- v1 %>% t %>% trim_sides(out = "inds")
       g <- g + new_scale_color() +
               geom_line(data = data.frame(vals = v1.fit[v1.inds],
                                           ppm = ppm[v1.inds],
@@ -125,12 +125,12 @@ fit.batman <- function(feat, spec,
 #' @importFrom magrittr %>%
 #'
 #' @export
-fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE){
+fit_leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE){
   require(Metrics)
 
   use <- !is.na(v1+v2)
-        # simplePlot(rbind(v1,v2) %>% trim.sides)
-        # simplePlot(rbind(v1[use],v2[use]) %>% trim.sides)
+        # simplePlot(rbind(v1,v2) %>% trim_sides)
+        # simplePlot(rbind(v1[use],v2[use]) %>% trim_sides)
 
   # Check if there's even a need to fit. 
   # If not, skip it, scale if needed, and make a dummy fit.
@@ -138,17 +138,17 @@ fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
     if (all(v1[use] == v2[use])){
         # If scaling v2, also do v1
         if (scale.v2){
-          v2 <- v2 %>% scale.between
-          v1 <- v1 %>% scale.between #
+          v2 <- v2 %>% scale_between
+          v1 <- v1 %>% scale_between #
         }
       
-        res <- dummy.fit(v1[use], v2[use])
+        res <- dummy_fit(v1[use], v2[use])
       
     } else {
       
       # Do the least squares fit
       
-        if (scale.v2){v2 <- v2 %>% scale.between}
+        if (scale.v2){v2 <- v2 %>% scale_between}
         
         res <- lm(v2[use]~v1[use], na.action = na.exclude)
         
@@ -208,13 +208,13 @@ fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
   g <- NULL
   # # Old plots
   #   if (plots == "simple"){
-  #     g <- simplePlot(rbind(v1.fit, v2,v2,v2) %>% trim.sides) # ,-res$residuals
+  #     g <- simplePlot(rbind(v1.fit, v2,v2,v2) %>% trim_sides) # ,-res$residuals
   #     # g %>% plot
   #   }
   
   if (plots){
     mat <-  rbind(v1.fit, v2)
-    mat.cols <- mat %>% trim.sides(out = "inds")
+    mat.cols <- mat %>% trim_sides(out = "inds")
     mat <- mat[,mat.cols]
     
     if (is.null(ppm)){ppm <- 1:ncol(mat)} else {ppm <- ppm[mat.cols]}
@@ -257,7 +257,7 @@ fit.leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
               plot = g))
 }
 
-dummy.fit <- function(v1,v2){
+dummy_fit <- function(v1,v2){
   list(coefficients = c(0,1),
        residuals = rep(0, length(v1)),
        fitted.values = v1)

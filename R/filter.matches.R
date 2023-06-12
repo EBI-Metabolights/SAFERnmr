@@ -99,7 +99,7 @@ filter.matches <- function(pars){
           if (cluster$method == 'none'){
             # do nothing
           } else {
-            match.info <- propagate.matches(match.info, cluster, feature$stack, 
+            match.info <- propagate_matches(match.info, cluster, feature$stack, 
                                             ref.mat, pars$par$ncores, pars$matching$r.thresh, pars$matching$p.thresh)
             saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
           }
@@ -113,7 +113,7 @@ filter.matches <- function(pars){
         # source('./../filter.matches_shiftDelta.R')
   printTime()
         message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
-        res <- filter.matches_shiftDelta(match.info, feature$position, ppm = ppm,
+        res <- filter_matches_shiftDelta(match.info, feature$position, ppm = ppm,
                                          ppm.tol = pars$matching$filtering$ppm.tol)
         # scattermore::scattermoreplot(x = 1:nrow(res), y = res$ppm.difference %>% sort)
 
@@ -138,7 +138,7 @@ filter.matches <- function(pars){
     # Back-fit each matched reference region to the subset spectra
       # adjusted to account for sfe
 
-        backfit.results <- backfit.rfs(match.info, 
+        backfit.results <- backfit_rfs(match.info, 
                                        feature, # has sfe data 
                                        xmat,
                                        ref.mat, 

@@ -57,10 +57,10 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
       
     # Loop though candidate lags and evaluate fit at each one ####
       
-      # inds.trim.feat <- trim.sides(feat, out = "inds")
+      # inds.trim.feat <- trim_sides(feat, out = "inds")
       feat <- t(c(feat))
       ref <- t(c(ref))
-      inds.trim.feat <- trim.sides(feat, out = "inds")
+      inds.trim.feat <- trim_sides(feat, out = "inds")
       # simplePlot(feat[inds.trim.feat])
       # simplePlot(r[ref.pos-round(0.5*length(feat))])
 
@@ -70,7 +70,7 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
             # lag<- lags[1]
             ref.pos <- lag - pad.size + inds.trim.feat 
             # Fit (for checking - don't calc here in loop!)
-            # fit <- fit.leastSquares(feat[inds.trim.feat], ref[ref.pos], plots = T)
+            # fit <- fit_leastSquares(feat[inds.trim.feat], ref[ref.pos], plots = T)
             # fit$plot
             use <- !is.na(feat[inds.trim.feat] + ref[ref.pos])
             
@@ -131,6 +131,6 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
     # plot(t(r))
     #   points(lag, r[lag], col = 'red', cex = 1)
     #   ref.hit <- ref.long[(1:length(feat)) + lag - r.pad.size]
-    #   fit <- fit.leastSquares(feat, ref.hit, plots = T)
+    #   fit <- fit_leastSquares(feat, ref.hit, plots = T)
     #     fit$plot %>% plot
       

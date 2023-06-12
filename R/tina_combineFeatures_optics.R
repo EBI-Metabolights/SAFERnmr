@@ -66,7 +66,7 @@ tina_combineFeatures_optics <- function(featureStack,
   
   ############ Setup ####        
     # Scale the features ####
-      featureStack <- apply(featureStack, 1, scale.between) %>% t
+      featureStack <- apply(featureStack, 1, scale_between) %>% t
       
     # Calculate pairwise correlations ####
       # message("Computing feature correlations (assuming max-aligned)...")
@@ -166,7 +166,7 @@ tina_combineFeatures_optics <- function(featureStack,
         everyNth <- c(T,rep(F, max(floor(length(clusters) / max.plots ) - 1,0)))
         plots <- pblapply(clusters[everyNth], function(x) 
           {
-                fs <- featureStack[x, ,drop = FALSE] %>% trim.sides
+                fs <- featureStack[x, ,drop = FALSE] %>% trim_sides
                 return(simplePlot(fs))
           })
         

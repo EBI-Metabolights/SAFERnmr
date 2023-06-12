@@ -70,7 +70,7 @@ storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
     
     # For the first driver, use pkMax
     if (is.null(driver)){
-      driver.init <- next.driver(ref.profile = ref, current.driver = NULL, 
+      driver.init <- next_driver(ref.profile = ref, current.driver = NULL, 
                                  ref.idx = ref.idx, behavior = 'maxPk') %>% .$idx 
       
     } else {driver.init <- driver}
@@ -205,7 +205,7 @@ storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
       
     # Identify the new driver ########
         
-        ref.max <- next.driver(ref.profile = ref, current.driver = ref.max, 
+        ref.max <- next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx 
             
         # ref %>% simplePlot(xvect = ref.idx) + geom_vline(xintercept = ref.max) + geom_vline(xintercept = c(min(ref.expanded$wind), max(ref.expanded$wind)))
@@ -371,7 +371,7 @@ storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
      # Set variables relevant to output
     # - handle failure mode cases
     # - ensure index ranges match up
-      ref.max = next.driver(ref.profile = ref, current.driver = ref.max, 
+      ref.max = next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx
     
       finalreg <- plotrng %>% fillbetween

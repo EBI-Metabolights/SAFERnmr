@@ -8,7 +8,7 @@ ImperialNMRTool::filter.matches(pars)
 ImperialNMRTool::score.matches(pars) 
 
 devtools::document()
-show.me.the.evidence(results.dir = '/Users/mjudge/Documents/current_run')
+show_me_the_evidence(results.dir = '/Users/mjudge/Documents/current_run')
 
 'Dihydrouracil'
 

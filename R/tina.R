@@ -127,7 +127,7 @@ tina <- function(pars){
     if (pars$tina$plots$filtered.features){
         message('printing good features to pdf...')
 
-        everyNth <- every.nth(select = pars$storm$number.of.plots,
+        everyNth <- every_nth(select = pars$storm$number.of.plots,
                               from = sum(filt))
 
         plot_stormRefRegions_grid(xmat = NULL, ppm,
@@ -149,7 +149,7 @@ tina <- function(pars){
         if (any(bad.ones)){
           message('\n\n', sum(bad.ones), ' features failed ', filt.name, ' filter. Plotting profiles to pdf...')
 
-              everyNth <- every.nth(select = pars$storm$number.of.plots,
+              everyNth <- every_nth(select = pars$storm$number.of.plots,
                                     from = sum(bad.ones))
               message('Plotting every ', sum(everyNth), ' / ', length(everyNth), ' features...')
               plot_stormRefRegions_grid(xmat = NULL, ppm,
@@ -215,7 +215,7 @@ tina <- function(pars){
     # Align to feature maximum ####
 
         message('\n\taligning features to max peak...')
-        feature.ma <- align.max(feature, scaling = FALSE)
+        feature.ma <- align_max(feature, scaling = FALSE)
 
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
         # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
@@ -353,7 +353,7 @@ tina <- function(pars){
         message("Generating plots. Progress:")
         cluster.list <- clusters$groups
         
-        everyNth <- every.nth(select = pars$storm$number.of.plots, 
+        everyNth <- every_nth(select = pars$storm$number.of.plots, 
                               from = cluster.list)
         clust.subset <- seq_along(cluster.list) %>% .[everyNth]
         
@@ -362,9 +362,9 @@ tina <- function(pars){
           # print(x)
                 feat.inds <- clust.info[[x]]$labels
                 fs <- feature.ma$stack %>% 
-                  lag.features(., clust.info[[x]]$lag.table, 
+                  lag_features(., clust.info[[x]]$lag.table, 
                                to = clust.info[[x]]$key.feat) %>% 
-                  trim.sides 
+                  trim_sides 
                 
                 return(simplePlot(fs))
           })
