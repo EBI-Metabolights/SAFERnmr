@@ -213,23 +213,23 @@ pipeline <- function(params_loc, params_obj) {
 ################################################################################################################################### 
 ## Feature Shape Extraction
 
-  # fse(pars)
+  fse(pars)
 
 ################################################################################################################################### 
 ## TINA / SAFARI
 # - filter out feature shapes which make no sense
 # - associate features whose shapes are highly similar
 
-  # tina(pars)
+  tina(pars)
   
 ################################################################################################################################### 
 ## Match spectra to the database 
 # - match using convolution-based cross-correlation
 # - parallelized
   
-  # match_features2refs_par_setup(pars)
-  # gc() # garbage collect before big parallel compute
-  # match_features2refs_par_explicit(pars)
+  match_features2refs_par_setup(pars)
+  gc() # garbage collect before big parallel compute
+  match_features2refs_par_explicit(pars)
   
   
 ################################################################################################################################### 

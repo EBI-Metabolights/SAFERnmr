@@ -85,8 +85,13 @@ show_me_the_evidence <- function(results.dir = NULL){
 
 ##########################     Cluster    ####################################      
 
-      clust.refs <- T
-      clust.samples <- T
+      if (nrow(scores.matrix) > 1){
+        clust.refs <- T
+        clust.samples <- T
+      } else {
+        clust.refs <- F
+        clust.samples <- T
+      }
 
       # hclust: column subsetting doesn't work when names are used. ### #
       ref.order <- 1:nrow(scores.matrix)
@@ -111,8 +116,8 @@ show_me_the_evidence <- function(results.dir = NULL){
         samples <- samples[sample.order, ]
         samples$col.mat <- 1:nrow(samples)                    
 
-      scores.matrix<- scores.matrix[ref.order, ]
-      scores.matrix<- scores.matrix[, sample.order]
+      scores.matrix<- scores.matrix[ref.order, ,drop =F]
+      scores.matrix<- scores.matrix[, sample.order, drop =F]
       mat <- scores.matrix
       
       
