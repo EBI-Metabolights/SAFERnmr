@@ -92,8 +92,11 @@ match.features2refs.par.setup <- function(pars) {
     message("Loading and processing reference spectrum data...\n")
 
     # Import and process the spectra for this dataset ####
-
-      lib.data <- readRDS(pars$files$lib.data)
+      if (pars$galaxy$enabled) {
+        lib.data <- readRDS(pars$galaxy$gissmo_location)
+      } else {
+        lib.data <- readRDS(pars$files$lib.data)
+      }
       message(" - interpolating ref data to study ppm axis...\n\n")
       lib.data.processed <- prepRefs.for.dataset(lib.data,
           ppm.dataset = ppm,
