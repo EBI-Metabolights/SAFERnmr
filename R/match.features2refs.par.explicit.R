@@ -135,8 +135,7 @@ match.features2refs.par.explicit <- function(pars){
                 
                 # Escape and return nothing if there are no matches to evaluate: ####
                     if (nrow(allmatches.feat) == 0){return(list(matches = NA,
-                                                                peak.quality = NA,
-                                                                fits = NA))}
+                                                                peak.quality = NA))}
     
                 ######################################################################
     
