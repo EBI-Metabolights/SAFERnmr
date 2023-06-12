@@ -52,7 +52,7 @@ match.features2refs.par.setup <- function(pars) {
 
     # If throttling comparisons, keep just a random subset of features
     
-        max.features <- length(cluster.final$keys) #nrow(featureStack)
+        max.features <- length(cluster.final$keys)
         
         if ( pars$debug$enabled == TRUE &
              nrow(featureStack) > pars$debug$throttle_features) 
