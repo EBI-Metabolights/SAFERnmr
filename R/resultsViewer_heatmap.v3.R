@@ -105,7 +105,7 @@ show.me.the.evidence <- function(results.dir = NULL){
                          name = lib.info$Compound.Name) # name
         refs <- refs[ref.order, ]
         refs$row.mat <- 1:nrow(refs)         # this is the row number in mat
-                         
+
       samples <- data.frame(number = 1:ncol(scores.matrix),
                             id = 1:ncol(scores.matrix),
                             name = 1:ncol(scores.matrix) %>% as.character)
@@ -316,11 +316,10 @@ ui <-
            
             fluidRow(
               h3(textOutput("stackplotTitle")),
+              # verbatimTextOutput("state.description"),
+              plotOutput("stack.ref.feats"),
               sliderInput(inputId = 'vshift.slide', label = "vshift", min = 0, max = 5, value = 1, step = .05),
               # sliderInput(inputId = 'hshift.slide', "hshift", -.1, .1, 0.5, step = 0.001),
-              verbatimTextOutput("state.description"),
-              plotOutput("stack.ref.feats")
-            
             )
     ),
 
@@ -353,6 +352,7 @@ ui <-
               h3(textOutput("selectedRow_name")),
               
               plotlyOutput("scatterScores")
+              
             )
     )
   )
@@ -373,7 +373,7 @@ server <- function(input, output, session) {
 
   ####### Right-side stuff ######
   
-        # Make heatmap
+        # Make heatmap ####
           output$heat <- renderPlotly({
             
             # Plot_ly add_heatmap (but how to select???) ####
@@ -382,7 +382,7 @@ server <- function(input, output, session) {
             
           })
           
-        # Select row from heatmap
+        # Select row from heatmap ####
         
           sel.row.from.heatmap <- reactive({
             
@@ -403,7 +403,7 @@ server <- function(input, output, session) {
             
           })
         
-        # Update values$selectedRow if sel.row.from.heatmap was updated
+        # Update values$selectedRow if sel.row.from.heatmap was updated  ####
           observeEvent(sel.row.from.heatmap(), {
                          values$selectedRow <- sel.row.from.heatmap()
                          
@@ -413,7 +413,7 @@ server <- function(input, output, session) {
 
                        })
           
-        # Format compound (row) name for printing as title
+        # Format compound (row) name for printing as title  ####
           output$selectedRow_name <- renderPrint({
             
             req(values$selectedRow)
@@ -423,14 +423,14 @@ server <- function(input, output, session) {
               
             } else {
               
-              # paste0(rownames(mat) %>% .[values$selectedRow])
-              paste0(values$selectedRow %>% refs$name[.])
+              paste0(values$selectedRow %>% refs$name[.],
+                     ' match scores in each sample')
               
             }
             
           })
           
-        # Make scatterplot
+        # Make scatterplot of samples x score for the selected reference  ####
           output$scatterScores <- renderPlotly({ ####
 
             # Check that a row was selected
@@ -448,7 +448,7 @@ server <- function(input, output, session) {
 
           })
           
-        # Gather scatterplot selection if changed
+        # Gather scatterplot selection if changed  ####
           selectedCols <- reactive({
                 
               # Get the column (sample) selection from the scatterplot
@@ -648,38 +648,42 @@ server <- function(input, output, session) {
           
             output$stackplotTitle <- renderText({
               
-              "In dvelepments"
   
               # req(values$selectedRow)
               # req(values$selectedRange)
               # req(values$selectedCols)
-              #   
-              # # Can't do anything without a row selection:
-              #   
-              #   if (is.null( values$selectedRow )) { 
-              #     
-              #     "Click on a cell in the heatmap to look an individual row (compound)"
-              #     
-              #   }
-              # 
-              # # Next, select the range: 
-              # 
-              #   if (is.null( values$selectedRange )) {
-              # 
-              #     "Use the drag box selection tool to select a feature in the reference spectrum above"
-              # 
-              #   }
-              # 
-              # # Finally, if no samples are selected, indicate that's necessary
-              # 
-              #   if (is.null( values$selectedCols ) ) { 
-              #     
-              #     "Select samples (not too many!) in the scores plot pane (lower right)"
-              #     
-              #   }
-              # 
-              #     paste0("Ref-feature backfits to spectra for ",
-              #                paste0(round(values$selectedRange[1], 3), '-', round(values$selectedRange[2], 3)), ' ppm')
+              
+              # "PCRS features fit to individual spectra"
+              
+                
+              # Can't do anything without a row selection:
+
+                if (is.null( values$selectedRow )) {
+
+                  return("Click on a cell in the heatmap to look an individual row (compound)")
+
+                }
+
+              # Next, select the range:
+
+                if (is.null( values$selectedRange )) {
+
+                  return("Use the drag box selection tool to select a feature in the reference spectrum above")
+
+                }
+
+              # Finally, if no samples are selected, indicate that's necessary
+
+                if (is.null( values$selectedCols ) ) {
+
+                  return("Select samples (not too many!) in the scores plot pane (lower right)")
+
+                }
+
+                  return(paste0("PCRS features fit to individual spectra for selected region: ",
+                                paste0(round(values$selectedRange[1], 3), 
+                                       '-', 
+                                       round(values$selectedRange[2], 3)), ' ppm'))
     
                 
             })

@@ -90,11 +90,10 @@ match.features2refs.par.setup <- function(pars) {
     ##################################################################################################################
     ## Ref data import ####
     message("Loading and processing reference spectrum data...\n")
-    # lib.info <- readRDS(paste0(this.run, "/lib.info.RDS"))
 
     # Import and process the spectra for this dataset ####
 
-      lib.data <- readRDS(paste0(this.run, "/lib.data.RDS"))
+      lib.data <- readRDS(pars$files$lib.data)
       message(" - interpolating ref data to study ppm axis...\n\n")
       lib.data.processed <- prepRefs.for.dataset(lib.data,
           ppm.dataset = ppm,
@@ -103,6 +102,7 @@ match.features2refs.par.setup <- function(pars) {
       )
       
         rm(lib.data)
+        
       message('\nsaving processed ref library to file...')
       saveRDS(lib.data.processed, paste0(this.run, "/lib.data.processed.RDS"))
 

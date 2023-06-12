@@ -231,7 +231,10 @@ fastStack.withFeatures <- function(xmat, ppm,
         #                         color = 'blue') 
           # ggplot2::scale_x_reverse(breaks = scales::breaks_pretty())
         
-          yrange <- range(c(df.lines$int, df.feats$int))
+          # yrange <- range(c(df.lines$int, df.feats$int))
+          points.has.feature <- df.lines$ppm %in% df.feats$ppm
+          yrange <- range(c(df.lines$int[points.has.feature], df.feats$int))
+          
           xrange <- range(c(df.lines$ppm, df.feats$ppm)) %>% rev
           
           scattermore::scattermoreplot(

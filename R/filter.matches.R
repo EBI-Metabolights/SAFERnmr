@@ -93,8 +93,16 @@ filter.matches <- function(pars){
         # This boils down to a match.info row for every feature. Fits can be rebuilt
         # on the fly from this and the feature/spectral matrix/ref matrix.
         
-        match.info <- propagate.matches(match.info, cluster)
-        saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
+        # Only run if there are actually clusters!
+          
+          if (cluster$method == 'none'){
+            # do nothing
+          } else {
+            match.info <- propagate.matches(match.info, cluster, feature$stack, ref.mat)
+            saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
+          }
+        
+        
         # match.info <- readRDS(paste0(tmpdir, "/match.info.propagated.RDS"))
         
 ######################### Calculate deltappm distance (specppm - featureppm)  #############################
@@ -122,7 +130,7 @@ filter.matches <- function(pars){
 
 ######################### Back-fit reference to spectra  #############################    
     
-      message('Back-fitting ref-feats to each spectrum in the relevant subset...\n\n')
+      message('\n\nBack-fitting ref-feats to each spectrum in the relevant subset...\n')
     printTime()
     
     # Back-fit each matched reference region to the subset spectra

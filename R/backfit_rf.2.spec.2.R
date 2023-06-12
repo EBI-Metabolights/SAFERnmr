@@ -111,7 +111,8 @@ backfit.rfs <- function(match.info,
       # - 1 ppm vector        
       message('\tcomputing backfits over ', ncores, ' cores...')
       message('\tlarge numbers of matches or large datasets will take some time.')
-      message('\tgo eat or get a coffee...')
+      message('\tgo eat or get a coffee...\n\n')
+      
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
             
@@ -265,10 +266,12 @@ backfit.rfs <- function(match.info,
         
       }, mc.cores = ncores)
       
-    print(Sys.time()-t1)  
+     
     
-  message('\tbackfit calculations finished. un-chunking and formatting results...')
-    
+  message('\tbackfit calculations finished. \n')
+  print(round(Sys.time()-t1))
+  message('\tun-chunking and formatting results...\n')
+  
   # Unchunk match.info ####
   
     match.info <- lapply(chunks, function(chunk) {
@@ -285,17 +288,17 @@ backfit.rfs <- function(match.info,
   
   # Unlist the backfit tables so each one matches a row in match.info ####
   # (they are currently split across chunks): ####
-    saveRDS(backfits.by.chunk, paste0(tmpdir, '/backfits.init.RDS'))
+    # saveRDS(backfits.by.chunk, paste0(pars$dirs$temp, '/backfits.init.RDS'))
       # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
     backfits <- backfits.by.chunk %>% unlist(recursive = F)
 
   # Undo mi.order for both objects ####
-    message('\tunsorting the match.info and backfits...')
+    message('\tunsorting the match.info and backfits...\n')
     match.info <- match.info[order(mi.order),]
     backfits <- backfits[order(mi.order)]
 
     message('\tbackfitting completed on ', length(backfits), ' ref-features.')
-    message('\thopefully your lunch was nice and you are now properly caffeinated...')
+    message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
     
 
   # Return list ####

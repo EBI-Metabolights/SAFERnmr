@@ -146,8 +146,8 @@
 # outside of RStudio due to memory leaks/overhead. 
 # 
 #
-# MTJ 2023 ####
-
+# MTJ 2023 
+# Pipeline wrapper function ####
 #'  Feature shape based annotation pipeline ####
 #'  /
 #'  To run from here, you need paths to the following files:
@@ -207,6 +207,9 @@ pipeline <- function(params_loc, params_obj) {
     }
   }
 
+  file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'))
+  file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
+  
 ################################################################################################################################### 
 ## Feature Shape Extraction
 

@@ -34,7 +34,7 @@ filter.matches_singlets <- function(match.info, feature.stack, ref.mat, peak.qua
                   '\n\t- for which the fit feature has 1 or fewer resonances...',
                   '\n\t- involving ref features with 1 or fewer resonances...',
                   '\n\t- involving not-never-fit feature regions with 1 or fewer resonances...',
-                  '\n\t- for which 1 or fewer resonances had at least ', pars$matching$filtering$res.area.threshold, 
+                  '\n\t- for which 1 or fewer resonances had at least ', res.area.threshold, 
                ' of their area explained by the matching feature...')
         
         

@@ -25,8 +25,8 @@
 #' @importFrom data.table rbindlist
 #' 
 #' @export
-propagate.matches <- function(match.info, cluster){
-
+propagate.matches <- function(match.info, cluster, feature.stack, ref.mat){
+        
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
         n.matches.before <- nrow(match.info)
@@ -40,8 +40,10 @@ propagate.matches <- function(match.info, cluster){
           feats.by.size <- matched.feats[order(cluster.size)]
         
         # Compute new match.info for cluster members ####
+          t1 <- Sys.time()
           new.data <- mclapply(feats.by.size, function(fstack.row) {
-            # fstack.row <- feats.by.size[136]
+            print(fstack.row)
+            # fstack.row <- feats.by.size[2]
             # Which cluster does this feature it belong to? ####
               # Behind each row of fstack is 1 or more feature indices
                 
@@ -119,7 +121,7 @@ propagate.matches <- function(match.info, cluster){
                     
                       # Extract out the feature
                       
-                        feat <- feature$stack[cluster.member, ] %>% scale.between
+                        feat <- feature.stack[cluster.member, ] %>% scale.between
                         
                       # Update the feature bounds to match THIS feature, not the key feature ####
                         # First, expand to use the whole feature (so we know how to ss the ref region):
@@ -232,6 +234,7 @@ propagate.matches <- function(match.info, cluster){
             
           added.feats <- match.info$rmse.weighted %>% is.na %>% match.info$feat[.] %>% unique %>% length
           message('\n\t', n.matches.before, ' matches were propagated to ', nrow(match.info), ' matches:')
+                  print(Sys.time()-t1)
                   message('\n\tfeatures before: ', length(matched.feats))
                   message('\n\tfeatures added : ', added.feats)
                   message('\n\tfeatures after : ', length(unique(match.info$feat)))

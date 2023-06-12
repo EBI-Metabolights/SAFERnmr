@@ -31,7 +31,7 @@ score.matches <- function(pars){
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
     feature <- readRDS(paste0(this.run,"/feature.final.RDS"))
-    lib.info <- readRDS(paste0(this.run,"/lib.info.RDS"))
+    lib.info <- readRDS(pars$files$lib.info)
     
     # match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
 
