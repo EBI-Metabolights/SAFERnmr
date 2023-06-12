@@ -18,5 +18,5 @@ Encoding: UTF-8
 Imports: optparse, stringr, yaml, pbapply, devtools, batch, rlang, ggplot2, scales, purrr, matrixStats, 
     pracma, grid, lattice, modeltools, ggnewscale, colorRamps, Metrics, transport, fftw, gridExtra, umap,
     tictoc, plotly, shiny, ggridges, foreach, coop, doParallel, fpc, plyr, reshape2, parallelly, pryr, stringr,
-    stats4, magrittr, dbscan, parallelDist, Rfast
+    stats4, magrittr, dbscan, parallelDist, Rfast, scattermore
 License: GPL-2
