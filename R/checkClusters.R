@@ -73,7 +73,7 @@ checkClusters <- function(clusters, feature,
                           {
                                   # print(i)
                                   # cluster <- clust[[193]]                   
-                                  c.info <- check.cluster(clust.feats = 1:length(cluster$labels), 
+                                  c.info <- check_cluster(clust.feats = 1:length(cluster$labels), 
                                                           feature.stack = cluster$f.stack)
                                   
                                   c.info$labels <- c.info$labels %>% cluster$labels[.]

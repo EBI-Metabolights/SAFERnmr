@@ -150,7 +150,7 @@ backfit_rfs <- function(match.info,
               
                 spec.region <- xmat[ss.spec, spec.cols]
               
-                fit.feat2spec <- fit.batman(fit$feat.fit, spec.region, 
+                fit.feat2spec <- fit_batman(fit$feat.fit, spec.region, 
                                             exclude.lowest = .5)
                 
                   # plot_fit(fit.feat2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
