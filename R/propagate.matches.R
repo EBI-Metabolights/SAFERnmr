@@ -42,7 +42,7 @@ propagate.matches <- function(match.info, cluster, feature.stack, ref.mat){
         # Compute new match.info for cluster members ####
           t1 <- Sys.time()
           new.data <- mclapply(feats.by.size, function(fstack.row) {
-            print(fstack.row)
+            # print(fstack.row)
             # fstack.row <- feats.by.size[2]
             # Which cluster does this feature it belong to? ####
               # Behind each row of fstack is 1 or more feature indices
