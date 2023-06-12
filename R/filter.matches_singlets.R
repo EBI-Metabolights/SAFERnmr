@@ -16,7 +16,7 @@
 #' @importFrom dplyr filter
 #'
 #' @export
-filter.matches_singlets <- function(match.info, feature.stack, ref.mat, peak.qualities, pq.featureNumbers, res.area.threshold){
+filter.matches_singlets <- function(match.info, feature.stack, ref.mat, peak.qualities, pq.featureNumbers, res.area.threshold, ncores){
     
       
 ######################################################################################################################## 
@@ -74,11 +74,11 @@ filter.matches_singlets <- function(match.info, feature.stack, ref.mat, peak.qua
           ########### Return row #########
           return(mi)
             
-        }, mc.cores = pars$par$ncores)
+        }, mc.cores = ncores)
         
       # Rbind results
       
-        saveRDS(match.info, paste0(pars$dirs$temp, "/match.info.filt.RDS"))
+        # saveRDS(match.info, paste0(/match.info.filt.RDS"))
         match.info <- rbindlist(match.info)
         match.info <- filter(match.info, 
                               numpeaks.feat > 1 &

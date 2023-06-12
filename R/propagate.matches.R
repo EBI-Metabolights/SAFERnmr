@@ -25,7 +25,7 @@
 #' @importFrom data.table rbindlist
 #' 
 #' @export
-propagate.matches <- function(match.info, cluster, feature.stack, ref.mat){
+propagate.matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh){
         
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
@@ -223,7 +223,7 @@ propagate.matches <- function(match.info, cluster, feature.stack, ref.mat){
                 
               }
               
-          }, mc.cores = pars$par$ncores)
+          }, mc.cores = ncores)
           
           a <- new.data %>% unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
             rm(new.data)
@@ -240,9 +240,9 @@ propagate.matches <- function(match.info, cluster, feature.stack, ref.mat){
                   message('\n\tfeatures after : ', length(unique(match.info$feat)))
           
         # Re-filter for corr, pval
-          message('\n\tfiltering new matches for rval > ', pars$matching$r.thresh, ' and pval < ', pars$matching$p.thresh, ' ...')
-          keep <- match.info$rval >= pars$matching$r.thresh & 
-            match.info$pval <= pars$matching$p.thresh
+          message('\n\tfiltering new matches for rval > ', r.thresh, ' and pval < ', p.thresh, ' ...')
+          keep <- match.info$rval >= r.thresh & 
+            match.info$pval <= p.thresh
           
           match.info <- match.info[keep, ]
           # scattermore::scattermoreplot(x = 1:nrow(match.info), y = match.info$rval %>% sort)

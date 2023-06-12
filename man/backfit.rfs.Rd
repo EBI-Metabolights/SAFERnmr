@@ -4,7 +4,7 @@
 \alias{backfit.rfs}
 \title{Back-fit reference features to a subset of spectra}
 \usage{
-backfit.rfs(match.info, feature, xmat, ref.mat)
+backfit.rfs(match.info, feature, xmat, ref.mat, ncores)
 }
 \arguments{
 \item{match.info}{A data frame containing information about the matches between features and reference spectra}

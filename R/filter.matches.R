@@ -70,7 +70,8 @@ filter.matches <- function(pars){
       # Do the filtering (functionalized)
         match.info <- filter.matches_singlets(match.info, feature$stack, ref.mat,
                                                peak.qualities, pq.featureNumbers, 
-                                               pars$matching$filtering$res.area.threshold)
+                                               pars$matching$filtering$res.area.threshold,
+                                               ncores)
         
         saveRDS(match.info, paste0(tmpdir, "/match.info.filtered.RDS"))
     
@@ -98,7 +99,7 @@ filter.matches <- function(pars){
           if (cluster$method == 'none'){
             # do nothing
           } else {
-            match.info <- propagate.matches(match.info, cluster, feature$stack, ref.mat)
+            match.info <- propagate.matches(match.info, cluster, feature$stack, ref.mat, ncores, r.thresh, p.thresh)
             saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
           }
         
@@ -139,7 +140,8 @@ filter.matches <- function(pars){
         backfit.results <- backfit.rfs(match.info, 
                                        feature, # has sfe data 
                                        xmat,
-                                       ref.mat)
+                                       ref.mat, 
+                                       ncores)
         
         message('Saving backfits...\n\n\n')
         saveRDS(backfit.results, paste0(this.run,"/backfit.results.RDS"))

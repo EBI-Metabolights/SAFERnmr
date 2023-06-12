@@ -56,7 +56,8 @@
 backfit.rfs <- function(match.info, 
                         feature, 
                         xmat,
-                        ref.mat){
+                        ref.mat,
+                        ncores){
   
   
   # Chunk the data by ref (more or less) ####
@@ -67,7 +68,6 @@ backfit.rfs <- function(match.info,
     
     # Assign each row of match.ind to a chunk based on number of cores
       
-      ncores <- pars$par$ncores
       chunk.size <- max(1, nrow(match.info) / ncores)
       m.grp <- ceiling((1:nrow(match.info)) / chunk.size)
       

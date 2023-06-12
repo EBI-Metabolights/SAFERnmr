@@ -4,7 +4,15 @@
 \alias{propagate.matches}
 \title{Propagate matches from cluster keys to the rest of each cluster.}
 \usage{
-propagate.matches(match.info, cluster, feature.stack, ref.mat)
+propagate.matches(
+  match.info,
+  cluster,
+  feature.stack,
+  ref.mat,
+  ncores,
+  r.thresh,
+  p.thresh
+)
 }
 \arguments{
 \item{match.info}{match info table (each row describes an rf)}

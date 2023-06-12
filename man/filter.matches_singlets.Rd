@@ -10,7 +10,8 @@
   ref.mat,
   peak.qualities,
   pq.featureNumbers,
-  res.area.threshold
+  res.area.threshold,
+  ncores
 )
 }
 \arguments{
