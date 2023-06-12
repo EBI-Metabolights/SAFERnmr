@@ -115,11 +115,11 @@ project_features_stackplot <- function(xmat, ppm,
                   # Also reverse the ppmranges for the fit features, and adjust them with hshift
                     if (length(rowinds) > 1){
                       f.ppm <- bestfits$fit.positions[rev(rowinds), ,drop = F] %>% 
-                        apply(1, complete.indsVect) %>% t %>%
+                        apply(1, complete_indsVect) %>% t %>%
                         apply(., 1, function(x) ppm[x]) %>% t + h.adjustments
                     } else {
                       f.ppm <- bestfits$fit.positions[rowinds, ,drop = F] %>% 
-                        apply(1, complete.indsVect) %>% t %>%
+                        apply(1, complete_indsVect) %>% t %>%
                         apply(., 1, function(x) ppm[x]) %>% t + h.adjustments
                     }
                       

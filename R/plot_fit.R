@@ -23,7 +23,7 @@ plot_fit <- function(fit, type = "simple",
   # will make strange plots (later, interpolate a linear scale between the provided points).
   
   if (is.null(ppm)){ppm <- which(!is.na(fit$spec.fit))}
-  # if (any(is.na(ppm))){complete.indsVect(ppm)}
+  # if (any(is.na(ppm))){complete_indsVect(ppm)}
     
   if (type == "simple"){
     

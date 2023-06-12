@@ -10,7 +10,7 @@ feature.scale(featureStack, peaks)
 \arguments{
 \item{featureStack}{feature profile matrix (each row is a feature)}
 
-\item{peaks}{peaks for each, from feature.extractPeaks}
+\item{peaks}{peaks for each, from feature_extractPeaks}
 }
 \value{
 scaled feature matrix

@@ -62,7 +62,7 @@ next_driver <- function(current.driver,
         ref.idx <- ref.idx.expanded
         # simplePlot(ref.profile, xvect = ref.idx)
         
-      ref.pks <- feature.extractPeaks(list(stack = matrix(ref.profile, nrow = 1))) %>% .[[1]]
+      ref.pks <- feature_extractPeaks(list(stack = matrix(ref.profile, nrow = 1))) %>% .[[1]]
 
     # Option 2: Just pick the max and bounds of the highest peak. 
     

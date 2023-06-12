@@ -14,7 +14,7 @@
 #' @importFrom magrittr %>%
 #'
 #' @author MTJ
-apply.lags.feat <- function(feat, xmat, lags){
+apply_lags_feat <- function(feat, xmat, lags){
   
   
   indsmat <- lapply(1:length(lags), function(x) {

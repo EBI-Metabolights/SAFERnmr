@@ -15,7 +15,7 @@
 #' @importFrom Rfast rowmeans
 #'
 #' @export
-filter.matches_shiftDelta <- function(match.info,
+filter_matches_shiftDelta <- function(match.info,
                                       feature.positions,
                                       ppm,
                                       ppm.tol = 0.5){

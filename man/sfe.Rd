@@ -52,7 +52,7 @@ Using feature shape from filtered fse results, attempt to align the feature to e
                ss = ss,
                driver.relative = driver)
                
-  al.fts <- apply.lags.feat(feat = feat,
+  al.fts <- apply_lags_feat(feat = feat,
                             xmat = xmat, 
                             lags = lags$lag.in.f2)
 }

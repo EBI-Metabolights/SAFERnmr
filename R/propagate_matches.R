@@ -127,7 +127,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                         # First, expand to use the whole feature (so we know how to ss the ref region):
                           ref.feat <- ref.inds <- rep(NA, length(feat))
                             ref.inds[feat.reg] <- ref.reg
-                            ref.inds <- complete.indsVect(ref.inds)
+                            ref.inds <- complete_indsVect(ref.inds)
                             
                         # Then, re-subset the feature and ref inds to match new feature:
                           f.inds <- feat %>% trim_sides(out = "inds") %>% range

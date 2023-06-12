@@ -238,7 +238,7 @@ pipeline <- function(params_loc, params_obj) {
 # - filter for (deltappm)
 # - backfit ref subsignatures to individual dataset spectra
 
-  filter.matches(pars) 
+  filter_matches(pars) 
   
   
 ################################################################################################################################### 

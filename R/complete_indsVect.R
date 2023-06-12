@@ -7,12 +7,12 @@
 #' 
 #' @return vector with values completed
 #'
-#' @export
 #'
 #' @importFrom magrittr %>%
 #'
 #' @author MTJ
-complete.indsVect <- function(indVect){
+#' @export
+complete_indsVect <- function(indVect){
   iv.min <- which.min(indVect)
   startval <- (1 - iv.min) + indVect[iv.min]
   endval <- (startval + length(indVect)) -1

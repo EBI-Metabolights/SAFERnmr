@@ -3,7 +3,7 @@
 #'
 #'
 #' @param featureStack feature profile matrix (each row is a feature)
-#' @param peaks peaks for each, from feature.extractPeaks
+#' @param peaks peaks for each, from feature_extractPeaks
 #'
 #' @return scaled feature matrix
 #' 

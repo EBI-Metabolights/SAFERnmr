@@ -12,7 +12,7 @@
 #'
 #' @export
 #' @importFrom magrittr %>%
-    check.cluster <- function(clust.feats, feature.stack){
+check_cluster <- function(clust.feats, feature.stack){
         
         if (length(clust.feats) == 1){
           return(singleFeat(feature.stack[clust.feats, ,drop = F], clust.feats))
