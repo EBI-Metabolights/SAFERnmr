@@ -171,12 +171,12 @@ match.features2refs.par.setup <- function(pars) {
     
   # Feat data is split between nodes:
       message('\nSplitting feature matrices for distribution across nodes...')
-      chunk.size <- max(1, nfeats / pars$par$ncores)
+      chunk.size <- max(1, nfeats / pars$par$ncores) # at least one per core
       f.grp <- ceiling((1:nfeats) / chunk.size)
       split.scheme <- lapply(unique(f.grp), function(g) {
           list(
-              f.inds = which(f.grp == g),
-              f.subset = which(f.grp == g) %>% f.subset[.] 
+              f.inds = which(f.grp == g),                   # stack inds
+              f.subset = which(f.grp == g) %>% f.subset[.]  # inds of keys (just pass for match info)
           )
       })
 

@@ -53,11 +53,19 @@ filter.matches <- function(pars){
 
     # Format matches ####
       
+      
       matches.split <- split(matches, names(matches))
         rm(matches)
+        
       match.info <- rbindlist(matches.split$matches)
         rownames(match.info) <- NULL
         # saveRDS(match.info, paste0(this.run, "/match.info.RDS"))
+        if (!is.data.frame(match.info)){
+          stop('match info is not a dataframe.')
+        } else {
+          message('\n\n\tmatch.info is a dataframe with ', nrow(match.info), ' rows...\n\n')
+        }
+        
         
       # peak.qualities aligns with match.info now, but feat number does not index it (there are missing features)!
         pq.featureNumbers <- unique(match.info$feat) # this does not sort (just for good measure)

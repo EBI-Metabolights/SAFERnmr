@@ -42,7 +42,7 @@ filter.matches_singlets <- function(match.info,
         
         
       # Apply singlet filters to each mi row, and add the results as fields. 
-        match.info <- mclapply(1:nrow(match.info), 
+        match.info <- lapply(1:nrow(match.info), 
                                function(m){
           # print(m)
           
@@ -77,10 +77,10 @@ filter.matches_singlets <- function(match.info,
           ########### Return row #########
           return(mi)
             
-        }, mc.cores = ncores)
+        })#, mc.cores = ncores)
         
       # Rbind results
-      
+        message('\n\n\tafter match singlet filtering, match.info is a ', typeof(match.info), '...\n\n')
         # saveRDS(match.info, paste0(/match.info.filt.RDS"))
         match.info <- rbindlist(match.info)
         match.info <- filter(match.info, 
