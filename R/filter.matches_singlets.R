@@ -16,7 +16,10 @@
 #' @importFrom dplyr filter
 #'
 #' @export
-filter.matches_singlets <- function(match.info, feature.stack, ref.mat, peak.qualities, pq.featureNumbers, res.area.threshold, ncores){
+filter.matches_singlets <- function(match.info, 
+                                    feature.stack, ref.mat, 
+                                    peak.qualities, pq.featureNumbers, 
+                                    res.area.threshold, ncores){
     
       
 ######################################################################################################################## 
