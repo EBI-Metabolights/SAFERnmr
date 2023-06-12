@@ -68,7 +68,7 @@ filter_matches <- function(pars){
 ######################### Remove singlets ############################################
     printTime()
       # Do the filtering (functionalized)
-        match.info <- filter.matches_singlets(match.info, feature$stack, ref.mat,
+        match.info <- filter_matches_singlets(match.info, feature$stack, ref.mat,
                                                peak.qualities, pq.featureNumbers, 
                                                pars$matching$filtering$res.area.threshold,
                                                pars$par$ncores)

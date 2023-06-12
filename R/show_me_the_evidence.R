@@ -39,7 +39,6 @@ show_me_the_evidence <- function(results.dir = NULL){
   ppm.tolerance = pars$matching$filtering$ppm.tol
   cutoff.residuals.feat = .5 # currently unused
   cutoff.residuals.spec = .5 # currently unused
-  vshift = 1 
   hshift = 0
   
 

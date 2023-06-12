@@ -79,235 +79,235 @@ tina <- function(pars){
     min.subset <- pars$tina$min.subset          # don't keep features if their subsets are too small (basically does nothing)
     prom.ratio <- pars$tina$prom.ratio
 
-# ########### Setup ###################################################################################
-# 
-# 
-#     # Run tina_setup to set up successful features
-# 
-#         feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
-#         message('\n\t---- Feature Filtering ----')
-#         
-#     # Run feature filter function to get the filter:
-#     #   - in defined ppm range?
-#     #   - long enough runs?
-#     #   - large enough subset?
-#     #   - has at least 1 true peak > 0.3 of the range of intensities?
-# 
-# 
-#     # Build feature filter
-#           printTime()
-#           filts  <- filterFeatures(feature, ppm = ppm,
-#                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
-#                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
-#                                     max.features = nrow(feature$stack))
-# 
-#           saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
-#           # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
-# 
-#     # Re-run tina_setup on the filtered features
-# 
-#         filt <- filts$all$not.null &
-#                      filts$all$inbounds.ppm &
-#                      filts$all$ss.pass &
-#                      filts$all$not.singlet &
-#                      filts$all$not.monotonic &
-#                      filts$all$not.null.driver &
-#                      filts$all$rand.subset
-# 
-#       # Rerun setup on filtered features
-#         feature <- tina_setup(fse.result$storm_features[filt], xmat)
-#        
-#         message('\n\tFeature filtering complete. Saving results...')
-#         saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
-#         # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
-#         
-# ################ Plotting Filtered features #######################
-#  
-#   # Plot the good features that passed: ####
-#     if (pars$tina$plots$filtered.features){
-#         message('printing good features to pdf...')
-# 
-#         everyNth <- every_nth(select = pars$storm$number.of.plots,
-#                               from = sum(filt))
-# 
-#         plot_stormRefRegions_grid(xmat = NULL, ppm,
-#                                   fse.result$storm_features %>% .[filt] %>% .[everyNth], # if not doing a small region
-#                                   plotLoc = paste0(tmpdir,'/'),
-#                                   filename = 'filtered.features.pdf',
-#                                   calcStocsy = FALSE, n_xticks = 4)
-#     }
-#         
-#   # Plot some of each filter type, if any, to get an idea of what we removed: ####
-# 
-#     if (pars$tina$plots$filtered.out){
-#       res <- lapply(1:length(filts$all), function(filt.num){
-#         # Plot the bad ones
-#         # filt.num <- 6
-#         bad.ones <- !filts$all[[filt.num]]
-#         filt.name <- filts$all %>% names %>% .[filt.num]
-# 
-#         if (any(bad.ones)){
-#           message('\n\n', sum(bad.ones), ' features failed ', filt.name, ' filter. Plotting profiles to pdf...')
-# 
-#               everyNth <- every_nth(select = pars$storm$number.of.plots,
-#                                     from = sum(bad.ones))
-#               message('Plotting every ', sum(everyNth), ' / ', length(everyNth), ' features...')
-#               plot_stormRefRegions_grid(xmat = NULL, ppm,
-#                                         fse.result$storm_features %>% .[bad.ones] %>% .[everyNth], # if not doing a small region
-#                                         plotLoc = paste0(tmpdir,'/'),
-#                                         filename = paste0('failed_filter_', filt.name, '.pdf'),
-#                                         calcStocsy = FALSE, n_xticks = 4)
-#         }
-#       })
-#       rm(res)
-#     }
-#       
-#       
-# 
-# ########### SFE  ################################################################################## 
-# 
-#     # Force garbage collection to slim down workspace
-#         # Remove everything except
-#         # - feature
-#         # - xmat
-#         # - ppm
-#         # - pars
-#         rm(filts)
-#         rm(fse.result)
-#         gc()
-#         
-#     # Do spec-feature extraction for all features
-#         message('\n\n\t---- Spec-Feature Extraction (SFE) ----')
-#         printTime()
-#         t1 <- Sys.time()
-#             features.specd <- parallel::mclapply(1:nrow(feature$stack),
-#                                                  FUN = function(i){
-#                 sfe(feature, i,
-#                          xmat,
-#                          ppm,
-#                          r.thresh = 0.8)
-#               }, mc.cores = pars$par$ncores)
-# 
-#             message('\n\tParallel sfe done on ', length(features.specd), ' features.')
-#         print(Sys.time() -t1)
-# 
-#         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
-#         # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
-# 
-# ########### Adjust feature object with sfe results  ############################################################
-#     # Apply/add new feature info to old features #####
-#       # profile stack must be updated
-#       # - needs to allow for resizing?
-#       # - sfe will return trimmed profiles and undo any alignment of features
-#         message('\n\tapplying sfe results to feature stack...')
-#         # Get the width of the new feature mat ####
-#           n.cols <- lapply(features.specd, function(res){
-#             res$feat$profile %>% length
-#           }) %>% unlist %>% max
-# 
-#         # Make new feature mat ####
-#           feature$stack <- lapply(features.specd, function(res){
-#             needed <- n.cols - length(res$feat$profile)
-#             return(  c(res$feat$profile, rep(NA, needed))  )
-#           }) %>% do.call(rbind, .)
-# 
-# 
-#     # Align to feature maximum ####
-# 
-#         message('\n\taligning features to max peak...')
-#         feature.ma <- align_max(feature, scaling = FALSE)
-# 
-#         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
-        feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
-#         rm(feature)
-#         
-#     # Plot all feature ranges ####
-#           pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
-#               width = dim, # The width of the plot in inches
-#               height = dim)
-#               feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
-#               subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
-#               plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
-#               segments(feature.shift_range[1,], 1:ncol(feature.shift_range),
-#                        feature.shift_range[2,], 1:ncol(feature.shift_range),
-#                        lwd = 0.1)
-#           dev.off()
-#        
-#           
-#           
-#     # FINAL feature object to export: ####
-#     # final feature object (everything should apply to max-aligned)
-#     # - stack
-#     # - position
-#     # - driver.relative
-#     # - sfe
-#     #   - list of feature-specific objects
-#   
-#         # Erase the feature profiles - not necessary
-#         features.specd <- lapply(features.specd, function(x) {
-#           x$feat$profile <- NULL
-#           x$feat$position <- NULL
-#           x$feat$corr <- NULL
-#           x
-#         })
-#         
-#         message('\n\twriting post-sfe features to file...')
-#         feature.final <- list(stack = feature.ma$stack,
-#                               position = feature.ma$position,
-#                               driver.relative = feature.ma$subset,
-#                               sfe = features.specd)
-#         saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
-#         
-#         rm(features.specd)
-#         gc()
-#         
-# ###############################################################################################################           
-#         
-# # The TINA part  ####
-#               
-#    # OPTICS-based ####
-#       message('\n\t---- OPTICS-based clustering ----')
-#       
-#     if (nrow(feature.ma$stack) > 1000){
-#       printTime()
-#       t1 <- Sys.time()
-#       results <- tina_combineFeatures_optics(feature.ma$stack,
-#                                              max.eps = 50,
-#                                              minPts = 2,
-#                                              eps.stepsize = .01,
-#                                              max.plots = 600,
-#                                              plot.loc = this.run,
-#                                              plot.name = "feature_clusters.pdf",
-#                                              nfeats = pars$tina$nfeats,
-#                                              dist.threads = parallel::detectCores() - 1) # pars$par$ncores
-# 
-#       # Label the "noise" points as individual clusters
-#         noiseclust <- which(results$labels == 0)
-#         stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
-#         stray.feats <- results$clusters[[noiseclust]] %>% as.list
-#         
-#       # What if a cluster is > max size allowed?
-# 
-#       # Update the results object
-#       # (remove noiseclust, add to the end the broken noise clust)
-#         results$clusters <- c(results$clusters[-noiseclust], stray.feats)
-#         clusters <- list(method = 'optics',
-#                          results = results,
-#                          cluster.labs = clusts2labs(results$clusters),
-#                          groups = results$clusters)
-# 
-#         print(Sys.time() - t1)
-#         # length(clusters$cluster.labs %>% unique)
-#     } else {
-#       message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
-#       clusters <- list(method = 'none',
-#                        results = NULL,
-#                        cluster.labs = 1:nrow(feature.ma$stack),
-#                        groups = as.list(1:nrow(feature.ma$stack)))
-#     }
-# 
-#     saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
-    clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
+########### Setup ###################################################################################
+
+
+    # Run tina_setup to set up successful features
+
+        feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
+        message('\n\t---- Feature Filtering ----')
+        
+    # Run feature filter function to get the filter:
+    #   - in defined ppm range?
+    #   - long enough runs?
+    #   - large enough subset?
+    #   - has at least 1 true peak > 0.3 of the range of intensities?
+
+
+    # Build feature filter
+          printTime()
+          filts  <- filterFeatures(feature, ppm = ppm,
+                                    ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
+                                    min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
+                                    max.features = nrow(feature$stack))
+
+          saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
+          # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
+
+    # Re-run tina_setup on the filtered features
+
+        filt <- filts$all$not.null &
+                     filts$all$inbounds.ppm &
+                     filts$all$ss.pass &
+                     filts$all$not.singlet &
+                     filts$all$not.monotonic &
+                     filts$all$not.null.driver &
+                     filts$all$rand.subset
+
+      # Rerun setup on filtered features
+        feature <- tina_setup(fse.result$storm_features[filt], xmat)
+       
+        message('\n\tFeature filtering complete. Saving results...')
+        saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
+        # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
+        
+################ Plotting Filtered features #######################
+ 
+  # Plot the good features that passed: ####
+    if (pars$tina$plots$filtered.features){
+        message('printing good features to pdf...')
+
+        everyNth <- every_nth(select = pars$storm$number.of.plots,
+                              from = sum(filt))
+
+        plot_stormRefRegions_grid(xmat = NULL, ppm,
+                                  fse.result$storm_features %>% .[filt] %>% .[everyNth], # if not doing a small region
+                                  plotLoc = paste0(tmpdir,'/'),
+                                  filename = 'filtered.features.pdf',
+                                  calcStocsy = FALSE, n_xticks = 4)
+    }
+        
+  # Plot some of each filter type, if any, to get an idea of what we removed: ####
+
+    if (pars$tina$plots$filtered.out){
+      res <- lapply(1:length(filts$all), function(filt.num){
+        # Plot the bad ones
+        # filt.num <- 6
+        bad.ones <- !filts$all[[filt.num]]
+        filt.name <- filts$all %>% names %>% .[filt.num]
+
+        if (any(bad.ones)){
+          message('\n\n', sum(bad.ones), ' features failed ', filt.name, ' filter. Plotting profiles to pdf...')
+
+              everyNth <- every_nth(select = pars$storm$number.of.plots,
+                                    from = sum(bad.ones))
+              message('Plotting every ', sum(everyNth), ' / ', length(everyNth), ' features...')
+              plot_stormRefRegions_grid(xmat = NULL, ppm,
+                                        fse.result$storm_features %>% .[bad.ones] %>% .[everyNth], # if not doing a small region
+                                        plotLoc = paste0(tmpdir,'/'),
+                                        filename = paste0('failed_filter_', filt.name, '.pdf'),
+                                        calcStocsy = FALSE, n_xticks = 4)
+        }
+      })
+      rm(res)
+    }
+      
+      
+
+########### SFE  ################################################################################## 
+
+    # Force garbage collection to slim down workspace
+        # Remove everything except
+        # - feature
+        # - xmat
+        # - ppm
+        # - pars
+        rm(filts)
+        rm(fse.result)
+        gc()
+        
+    # Do spec-feature extraction for all features
+        message('\n\n\t---- Spec-Feature Extraction (SFE) ----')
+        printTime()
+        t1 <- Sys.time()
+            features.specd <- parallel::mclapply(1:nrow(feature$stack),
+                                                 FUN = function(i){
+                sfe(feature, i,
+                         xmat,
+                         ppm,
+                         r.thresh = 0.8)
+              }, mc.cores = pars$par$ncores)
+
+            message('\n\tParallel sfe done on ', length(features.specd), ' features.')
+        print(Sys.time() -t1)
+
+        saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
+        # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
+
+########### Adjust feature object with sfe results  ############################################################
+    # Apply/add new feature info to old features #####
+      # profile stack must be updated
+      # - needs to allow for resizing?
+      # - sfe will return trimmed profiles and undo any alignment of features
+        message('\n\tapplying sfe results to feature stack...')
+        # Get the width of the new feature mat ####
+          n.cols <- lapply(features.specd, function(res){
+            res$feat$profile %>% length
+          }) %>% unlist %>% max
+
+        # Make new feature mat ####
+          feature$stack <- lapply(features.specd, function(res){
+            needed <- n.cols - length(res$feat$profile)
+            return(  c(res$feat$profile, rep(NA, needed))  )
+          }) %>% do.call(rbind, .)
+
+
+    # Align to feature maximum ####
+
+        message('\n\taligning features to max peak...')
+        feature.ma <- align_max(feature, scaling = FALSE)
+
+        saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
+        # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
+        rm(feature)
+        
+    # Plot all feature ranges ####
+          pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
+              width = dim, # The width of the plot in inches
+              height = dim)
+              feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
+              subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
+              plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
+              segments(feature.shift_range[1,], 1:ncol(feature.shift_range),
+                       feature.shift_range[2,], 1:ncol(feature.shift_range),
+                       lwd = 0.1)
+          dev.off()
+       
+          
+          
+    # FINAL feature object to export: ####
+    # final feature object (everything should apply to max-aligned)
+    # - stack
+    # - position
+    # - driver.relative
+    # - sfe
+    #   - list of feature-specific objects
+  
+        # Erase the feature profiles - not necessary
+        features.specd <- lapply(features.specd, function(x) {
+          x$feat$profile <- NULL
+          x$feat$position <- NULL
+          x$feat$corr <- NULL
+          x
+        })
+        
+        message('\n\twriting post-sfe features to file...')
+        feature.final <- list(stack = feature.ma$stack,
+                              position = feature.ma$position,
+                              driver.relative = feature.ma$subset,
+                              sfe = features.specd)
+        saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
+        
+        rm(features.specd)
+        gc()
+        
+###############################################################################################################           
+        
+# The TINA part  ####
+              
+   # OPTICS-based ####
+      message('\n\t---- OPTICS-based clustering ----')
+      
+    if (nrow(feature.ma$stack) > 1000){
+      printTime()
+      t1 <- Sys.time()
+      results <- tina_combineFeatures_optics(feature.ma$stack,
+                                             max.eps = 50,
+                                             minPts = 2,
+                                             eps.stepsize = .01,
+                                             max.plots = 600,
+                                             plot.loc = this.run,
+                                             plot.name = "feature_clusters.pdf",
+                                             nfeats = pars$tina$nfeats,
+                                             dist.threads = parallel::detectCores() - 1) # pars$par$ncores
+
+      # Label the "noise" points as individual clusters
+        noiseclust <- which(results$labels == 0)
+        stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
+        stray.feats <- results$clusters[[noiseclust]] %>% as.list
+        
+      # What if a cluster is > max size allowed?
+
+      # Update the results object
+      # (remove noiseclust, add to the end the broken noise clust)
+        results$clusters <- c(results$clusters[-noiseclust], stray.feats)
+        clusters <- list(method = 'optics',
+                         results = results,
+                         cluster.labs = clusts2labs(results$clusters),
+                         groups = results$clusters)
+
+        print(Sys.time() - t1)
+        # length(clusters$cluster.labs %>% unique)
+    } else {
+      message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
+      clusters <- list(method = 'none',
+                       results = NULL,
+                       cluster.labs = 1:nrow(feature.ma$stack),
+                       groups = as.list(1:nrow(feature.ma$stack)))
+    }
+
+    saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
+    # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
     rm(xmat)
     rm(ppm)
     
