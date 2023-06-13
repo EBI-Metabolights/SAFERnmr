@@ -706,8 +706,8 @@ server <- function(input, output, session) {
                     # No need to filter on this - plot is triggered by selection box (which is more specific)
                     if(is.null(values$refplot.xlim)){return(NULL)}
                   req(ppm.tolerance)
-                  req(vshift)
-                  req(hshift)
+                  # req(vshift)
+                  # req(hshift)
                   
                   message('\n\nTrying stackplot for')
                   

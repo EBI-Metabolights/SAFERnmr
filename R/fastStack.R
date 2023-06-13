@@ -235,7 +235,7 @@ fastStack.withFeatures <- function(xmat, ppm,
           points.has.feature <- df.lines$ppm %in% df.feats$ppm
           yrange <- range(c(df.lines$int[points.has.feature], df.feats$int))
           
-          xrange <- range(c(df.lines$ppm, df.feats$ppm)) %>% rev
+          xrange <- range(c(df.lines$ppm)) %>% rev
           
           scattermore::scattermoreplot(
                                         x = df.lines$ppm,
@@ -247,7 +247,9 @@ fastStack.withFeatures <- function(xmat, ppm,
                                         ylim = yrange,
                                         xlim = xrange,
                                         col = 'black',
-                                        yaxt="n"
+                                        yaxt="n",
+                                        xaxs = "i", 
+                                        yaxs = "i"
                                       ) 
           par(new=TRUE)
           scattermore::scattermoreplot(
@@ -260,7 +262,9 @@ fastStack.withFeatures <- function(xmat, ppm,
                                         ylim = yrange,
                                         xlim = xrange,
                                         col = alpha('blue', alpha = .2),
-                                        yaxt="n"
+                                        yaxt="n",
+                                        xaxs = "i", 
+                                        yaxs = "i"
                                       ) 
           
           # scattermore::scattermoreplot(
