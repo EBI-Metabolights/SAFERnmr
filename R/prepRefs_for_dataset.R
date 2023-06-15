@@ -66,6 +66,7 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
                 return( list(tag = ref.spec$tag,
                              ref.name = ref.spec$ref.name,
                              compound.name = ref.spec$compound.name,
+                             id = ref.spec$id,
                              ppm = ref.spec$ppm,
                              data = ref.spec$data,
                              mapped = list(ppm = ref.ppm,

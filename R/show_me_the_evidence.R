@@ -9,6 +9,7 @@
 #' @return spins up a shiny app from the results directory
 #' @import yaml
 #' @importFrom magrittr %>%
+#' @importFrom stringr str_replace
 #' 
 #' @import shiny
 #' @import plotly
@@ -51,11 +52,40 @@ show_me_the_evidence <- function(results.dir = NULL){
 
     # Read in library data
         lib.info <- readRDS(paste0(results.dir, "lib.info.RDS"))
+          lib.info <- lib.info$ref.list
         lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
+        
           # ppm isn't needed anymore; using spectral matrix ppm.
             lib.data.processed <- lib.data.processed %>% lapply(function(x) {x$data <- NULL; x$ppm <- NULL; return(x)})
+            
+            message('*** running patch to map lib.info to lib.data.processed ***')
+            # Library file may not match lib.info (may be smaller, as it is field-specific).
+            # Map them.
+            
+              # make ids for ldp (like li, but shorter)
+                ldp.ids <- lapply(lib.data.processed, function(ldp) {
+                  paste0(ldp$tag,'_',ldp$ref.name)
+                })
+              
+              # there are fewer of these
+                ldp.ids <- ldp.ids %>% stringr::str_replace_all("/", "_")
+
+              # there are more of these
+                li.ids <- lib.info$id %>% stringr::str_replace_all("/", "_")
+              
+              # ldp.id is longer, so grep in that for li.id. li strings are part of ldp strings
+                in.ldp <- lapply(li.ids, function(li.id) {
+                  grepl(pattern = li.id, ldp.ids) %>% which
+                })
+                
+                lib.info <- lib.info[(lapply(in.ldp, length) %>% unlist) == 1,]
+                lib.info <- lib.info[unlist(in.ldp),]
+
+              if (length(lib.data.processed) != nrow(lib.info)){stop('lib.info could not be mapped to lib.data.processed')}
+              else {message('all mapped successfully!\n')}
+                
           # add compound names as column in match.info
-            match.info$ref.name <- lib.info$ref.list$Compound.Name[match.info$ref]
+            match.info$ref.name <- lib.info$Compound.Name[match.info$ref]
           
     # Read in spectral matrix data
         fse.result <- readRDS(paste0(results.dir, "fse.result.RDS"))
@@ -66,17 +96,18 @@ show_me_the_evidence <- function(results.dir = NULL){
     # Read in scores matrix 
       scores.matrix <- readRDS(paste0(results.dir,"ss.ref.sumScores.RDS")) %>% t
         colnames(scores.matrix) <- 1:ncol(scores.matrix)
+        
       rfs.used <- readRDS(paste0(results.dir,"rfs.used.RDS"))
       
 ##########################     Filter    ####################################          
           
       # Remove all compounds without any scores > 0.5
 
-        keeprefs <-  apply(scores.matrix, 1, max) > 0 
+        keeprefs <-  apply(scores.matrix, 1, max) > 0
         refs.used <- which(keeprefs)
         
         scores.matrix <- scores.matrix[keeprefs %>% as.logical,,drop=F]
-        lib.info <- lib.info$ref.list[keeprefs %>% as.logical,]
+        lib.info <- lib.info[keeprefs %>% as.logical,]
         lib.data.processed <- lib.data.processed[keeprefs %>% as.logical]
         
         fits.inds <- match.info$ref %in% refs.used
@@ -85,6 +116,7 @@ show_me_the_evidence <- function(results.dir = NULL){
 
 ##########################     Cluster    ####################################      
 
+      
       if (nrow(scores.matrix) > 1){
         clust.refs <- T
         clust.samples <- T
@@ -121,8 +153,6 @@ show_me_the_evidence <- function(results.dir = NULL){
       mat <- scores.matrix
       
       
-      
-      # drawHeatmap(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap')
       
 ##########################     ACCESSORY FUNCTIONS    #####################################
 drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap'){
@@ -296,6 +326,8 @@ drawScatterScores <- function(mat, dropRowNames = F, source.name = 'scatter'){
   fig
 }
  
+      # browser()
+      # drawHeatmap(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap')
       
 # Layout ##################
 ui <-
