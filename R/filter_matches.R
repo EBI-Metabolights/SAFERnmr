@@ -41,6 +41,8 @@ filter_matches <- function(pars){
     ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
     # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
     matches <- readRDS(paste0(this.run, "/matches.RDS"))
+      nomatch <- (lapply(matches, length) %>% unlist) == 1
+      matches <- matches[!nomatch]
       errors <- matches[names(matches) %in% c('call', 'message')]
       matches <- matches[names(matches) %in% c('matches', 'peak.quality')]
       
@@ -63,6 +65,7 @@ filter_matches <- function(pars){
         pq.featureNumbers <- unique(match.info$feat) # this does not sort (just for good measure)
         
       peak.qualities <- matches.split$peak.quality
+        if (length(pq.featureNumbers != length(peak.qualities))) { stop(' peak qualities not of same length as pq.featureNumbers!')}
         rm(matches.split)
           
 ######################### Remove singlets ############################################

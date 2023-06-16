@@ -40,7 +40,7 @@ filter_matches_singlets <- function(match.info,
                   '\n\t- for which 1 or fewer resonances had at least ', res.area.threshold, 
                ' of their area explained by the matching feature...')
         
-        
+        browser()
       # Apply singlet filters to each mi row, and add the results as fields. 
         match.info <- mclapply(1:nrow(match.info), 
                                function(m){
@@ -81,7 +81,7 @@ filter_matches_singlets <- function(match.info,
         
       # Rbind results
       
-        # saveRDS(match.info, paste0(/match.info.filt.RDS"))
+        saveRDS(match.info, 'match.info.filt.RDS') # for now; for debug 
         match.info <- rbindlist(match.info)
         match.info <- filter(match.info, 
                               numpeaks.feat > 1 &

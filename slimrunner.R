@@ -8,6 +8,9 @@ devtools::document('/Users/mjudge/Documents/GitHub/icl_nmr_R')
 # pars <- yaml::yaml.load_file('/Users/mjudge/Documents/mtbls430/430.params.yaml', eval.expr = TRUE)
 
 devtools::document('/Users/mjudge/Documents/GitHub/icl_nmr_R')
-# show_me_the_evidence(results.dir = '/Users/mjudge/Documents/hpc_run_430_13JUN/MTBLS430Jun13')
+show_me_the_evidence(results.dir = '/Users/mjudge/Documents/hpc_run_430_13JUN/MTBLS430Jun13')
 show_me_the_evidence(results.dir = '/Users/mjudge/Downloads/MTLBS1_1')
+
+devtools::document('[github directory]')
+show_me_the_evidence(results.dir = '[results-directory]')
 
