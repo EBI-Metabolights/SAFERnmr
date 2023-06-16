@@ -191,6 +191,7 @@ tina <- function(pars){
             message('\n\tParallel sfe done on ', length(features.specd), ' features.')
         print(Sys.time() -t1)
 
+        
         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
         # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
 
@@ -199,18 +200,27 @@ tina <- function(pars){
       # profile stack must be updated
       # - needs to allow for resizing?
       # - sfe will return trimmed profiles and undo any alignment of features
+      
         message('\n\tapplying sfe results to feature stack...')
         # Get the width of the new feature mat ####
           n.cols <- lapply(features.specd, function(res){
             res$feat$profile %>% length
           }) %>% unlist %>% max
-
+        
         # Make new feature mat ####
           feature$stack <- lapply(features.specd, function(res){
             needed <- n.cols - length(res$feat$profile)
             return(  c(res$feat$profile, rep(NA, needed))  )
           }) %>% do.call(rbind, .)
 
+      # Remove features which didn't pass SFE
+        passed.sfe <- !(lapply(features.specd, is.null) %>% unlist)
+        feature$stack <- feature$stack[passed.sfe, ]
+        feature$position <- feature$position[passed.sfe, ]
+        feature$driver.relative <- feature$driver.relative[passed.sfe]
+        feature$passed$sfe <- passed.sfe
+        feature$sfe <- feature$sfe[passed.sfe]
+        
 
     # Align to feature maximum ####
 
@@ -223,8 +233,7 @@ tina <- function(pars){
         
     # Plot all feature ranges ####
           pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
-              width = dim, # The width of the plot in inches
-              height = dim)
+              )
               feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
               subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
               plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
@@ -265,6 +274,9 @@ tina <- function(pars){
         
 # The TINA part  ####
               
+        
+    
+        
    # OPTICS-based ####
       message('\n\t---- OPTICS-based clustering ----')
       
@@ -279,7 +291,7 @@ tina <- function(pars){
                                              plot.loc = this.run,
                                              plot.name = "feature_clusters.pdf",
                                              nfeats = pars$tina$nfeats,
-                                             dist.threads = parallel::detectCores() - 1) # pars$par$ncores
+                                             dist.threads = pars$par$ncores) # 
 
       # Label the "noise" points as individual clusters
         noiseclust <- which(results$labels == 0)
@@ -363,8 +375,11 @@ tina <- function(pars){
                 feat.inds <- clust.info[[x]]$labels
                 fs <- feature.ma$stack %>% 
                   lag_features(., clust.info[[x]]$lag.table, 
-                               to = clust.info[[x]]$key.feat) %>% 
-                  trim_sides 
+                               to = clust.info[[x]]$key.feat)
+                if (all(is.na(fs))){
+                  message('cluster for cluster ', x, ' is all NAs..')
+                }
+                 fs <- trim_sides(fs)
                 
                 return(simplePlot(fs))
           })
