@@ -11,9 +11,7 @@
 #' @export
 fillbetween <- function(inds){
   # Check inds (surp)
-  # if (length(inds) <= 1 | any(is.na(inds)) | any(is.infinite(inds)) | any(is.null(inds))){stop('fillbetween: inds contain non-numeric!')} #return(inds)
-  if (length(inds) <= 1 | any(is.na(inds)) | any(is.infinite(inds)) | any(is.null(inds))){return(NULL)} 
-  
+  if (length(inds) <= 1 | any(is.na(inds)) | any(is.infinite(inds)) | any(is.null(inds))){stop('fillbetween: inds contain non-numeric!')} #return(inds)
   flip <- inds[1] > inds[2]
   # if (is.null(flip)){stop('fillbetween: inds are not numeric.')}
   if (flip){
