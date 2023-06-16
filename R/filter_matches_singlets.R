@@ -40,7 +40,7 @@ filter_matches_singlets <- function(match.info,
                   '\n\t- for which 1 or fewer resonances had at least ', res.area.threshold, 
                ' of their area explained by the matching feature...')
         
-        browser()
+        
       # Apply singlet filters to each mi row, and add the results as fields. 
         match.info <- mclapply(1:nrow(match.info), 
                                function(m){
