@@ -65,7 +65,7 @@ filter_matches <- function(pars){
         pq.featureNumbers <- unique(match.info$feat) # this does not sort (just for good measure)
         
       peak.qualities <- matches.split$peak.quality
-        if (length(pq.featureNumbers != length(peak.qualities))) { stop(' peak qualities not of same length as pq.featureNumbers!')}
+        if (length(pq.featureNumbers) != length(peak.qualities)) { stop(' peak qualities not of same length as pq.featureNumbers!')}
         rm(matches.split)
           
 ######################### Remove singlets ############################################
