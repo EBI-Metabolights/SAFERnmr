@@ -133,12 +133,16 @@ fastStack.withFeatures <- function(xmat, ppm,
           # they're all currently at 0. Not necessarily ordered. But all belonging 
           # to row 3 in xmat, for instance, will jump up that amount. Likewise with each
           # of the other rows in xs the bf.fits could belong to (and share vshift with).
+          # nrow(f.stack) == length(ss.rows)
           
-        f.stack <- lapply(1:nrow(f.stack), function(r) {
-          
-          f.stack[r, ] + vshifts[x.rows == bfs$fit.xrow[r]]#-0.5*vshift
-          
-        }) %>% do.call(rbind,.)
+        f.rows.in.x <- lapply(ss.rows, function(ssr) which(x.rows %in% ssr)) %>% unlist
+        f.stack <- f.stack + vshifts[f.rows.in.x]
+        
+        # f.stack <- lapply(1:nrow(f.stack), function(r) {
+        #   
+        #   f.stack[r, ] + vshifts[x.rows == ss.rows[r]]#-0.5*vshift
+        #   
+        # }) %>% do.call(rbind,.)
         # simplePlot(f.stack)
 
     # Apply h shifts
@@ -148,8 +152,6 @@ fastStack.withFeatures <- function(xmat, ppm,
         #   - if value is < any other values lower down in that column, set to NA
         #   - i.e. remove points if they are exceeded by a lower row
         #   - for features, don't compute (if they overlap, we may want to show that)
-        
-        f.rows.in.x <- lapply(ss.rows, function(ssr) which(x.rows %in% ssr)) %>% unlist
         
         xs <- rm_covered_points(xs)
           # simplePlot(xs)
@@ -258,7 +260,7 @@ fastStack.withFeatures <- function(xmat, ppm,
                                         xlab = 'ppm',
                                         ylab = '',
                                         size = plt.pars$pixels,
-                                        cex = .2,
+                                        cex = .4,
                                         ylim = yrange,
                                         xlim = xrange,
                                         col = alpha('blue', alpha = .5),
