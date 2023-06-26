@@ -48,11 +48,11 @@ To Run the Results Viewer (R Shiny app):
 
 In RStudio, run this to build the package locally (like using a library() call):
 
-  devtools::document('replace_with_cloned_github_directory') # e.g. '/Users/mjudge/Documents/GitHub/icl_nmr_R'
+   devtools::document('replace_with_cloned_github_directory') # e.g. '/Users/mjudge/Documents/GitHub/icl_nmr_R'
   
 Run this to start the app (replacing the filepath):
 
-  show_me_the_evidence('replace_with_downloaded_data_directory') # e.g. '/Users/mjudge/Downloads/mtbls1_demo'
+   show_me_the_evidence('replace_with_downloaded_data_directory') # e.g. '/Users/mjudge/Downloads/mtbls1_demo'
 
 Instructions:
 - use the heatmap or the search box to select a compound with high scores (or compound of interest)
