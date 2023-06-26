@@ -1,6 +1,6 @@
 # icl_nmr_R
 
-This is a beta repo for the SAFER approach to 1D NMR data annotation.
+This is a beta repo for the SAFER approach to 1D NMR data annotation. The current branch is [v2.0.3](https://github.com/EBI-Metabolights/icl_nmr_R/tree/v2.0.3).
 
 The guiding principles here are: 
 - compound feature shapes, convey most of the information about chemical structure present in 1H1D NMR data
