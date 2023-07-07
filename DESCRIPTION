@@ -5,14 +5,18 @@ Description: Workflow for automatic processing and annotation of 1D 1H-NMR spect
     Entrypoint to the workflow is hurricane.r, and it takes an argument which is the location 
     of a parameters file, which itself contains the location of the files the workflow needs,
     and the workflow parameters. To read more visit the github repository at github.com/EBI-Metabolights/icl_nmr_R
-Version: 0.2.0.0
-Date: 2022-09-12
+Version: 0.2.0.2
+Date: 2023-05-30
 Authors@R: c(
     person("Michael T. Judge", "PostDoc / Developer", role = c("aut")),
     person("Goncalo G. Graca", "PostDoc / Developer", role = c("aut")),
     person("Callum Martin", "Developer", role = c("cre"), email="cmartin@ebi.ac.uk"))
 Maintainer: Callum Martin <cmartin@ebi.ac.uk>
 Depends: R (>= 4.0.0)
-Imports: optparse, BiocManager, stringr, MassSpecWavelet, yaml, pbapply, devtools, batch, flexclust, rlang, pracma, RcppHungarian, grid, lattice, modeltools, stats4
+RoxygenNote: 7.2.3
+Encoding: UTF-8
+Imports: optparse, stringr, yaml, pbapply, devtools, batch, rlang, ggplot2, scales, purrr, matrixStats, 
+    pracma, grid, lattice, modeltools, ggnewscale, colorRamps, Metrics, transport, fftw, gridExtra, umap,
+    tictoc, plotly, shiny, ggridges, foreach, coop, doParallel, fpc, plyr, reshape2, parallelly, pryr, stringr,
+    stats4, magrittr, dbscan, parallelDist, Rfast, scattermore
 License: GPL-2
-RoxygenNote: 7.2.1

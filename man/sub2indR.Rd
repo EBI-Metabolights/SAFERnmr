@@ -2,25 +2,25 @@
 % Please edit documentation in R/sub2indR.R
 \name{sub2indR}
 \alias{sub2indR}
-\title{sub2indR}
+\title{Convert Subscripts to Linear Indices in Column-Major Order}
 \usage{
 sub2indR(rows, cols, m)
 }
 \arguments{
-\item{rows}{rows object}
+\item{rows}{The row subscripts.}
 
-\item{cols}{columns object}
+\item{cols}{The column subscripts.}
 
-\item{m}{coefficient}
+\item{m}{The number of rows in the matrix.}
 }
 \value{
-linear indices
+The linear indices corresponding to the input subscripts.
 }
 \description{
-Convert row, column subscripts to linear indices.
-Comparable to sub2ind in MATLAB.
+This function converts subscripts of a matrix to their corresponding linear indices in a column-major order. Intended to replicate MATLAB's sub2ind.
 }
-\details{
-MTJ mjudge-at-imperial.ac.uk
-9MARCH2022
+\examples{
+sub2indR(1:3, 1:3, 3)
+# [1] 1 4 7 2 5 8 3 6 9
+
 }

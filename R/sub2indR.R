@@ -1,15 +1,18 @@
-#' sub2indR
+#' Convert Subscripts to Linear Indices in Column-Major Order
 #'
-#' Convert row, column subscripts to linear indices.
-#' Comparable to sub2ind in MATLAB.
+#' This function converts subscripts of a matrix to their corresponding linear indices in a column-major order. Intended to replicate MATLAB's sub2ind.
 #'
-#' MTJ mjudge-at-imperial.ac.uk
-#' 9MARCH2022
-#' @param rows rows object
-#' @param cols columns object
-#' @param m coefficient
-#' @return linear indices
+#' @param rows The row subscripts.
+#' @param cols The column subscripts.
+#' @param m The number of rows in the matrix.
+#'
+#' @return The linear indices corresponding to the input subscripts.
+#'
+#' @examples
+#' sub2indR(1:3, 1:3, 3)
+#' # [1] 1 4 7 2 5 8 3 6 9
+#'
 #' @export
-sub2indR <- function(rows, cols, m) {
-  return((cols - 1) * m + rows)
+sub2indR <- function(rows,cols,m){
+  return((as.vector(cols)-1)*m + as.vector(rows))
 }

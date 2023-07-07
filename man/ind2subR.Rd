@@ -2,25 +2,26 @@
 % Please edit documentation in R/ind2subR.R
 \name{ind2subR}
 \alias{ind2subR}
-\title{ind2subR}
+\title{Convert linear indices to row and column subscripts}
 \usage{
 ind2subR(inds, m)
 }
 \arguments{
-\item{inds}{The linear indices to be converted IE linear index
-(1 = [1,1], 2 = [2,1], 3 = [3,1], 4 = [1,2], 5 = [2,2])}
+\item{inds}{A numeric vector of linear indices from a matrix}
 
-\item{m}{The number of rows IE m = nrow(matrix)}
+\item{m}{A positive integer representing the number of rows in the corresponding matrix}
 }
 \value{
-List of row and column indices.
+A list with two elements: \code{rows}, a vector of row subscripts corresponding to the linear indices, and \code{cols}, a vector of column subscripts corresponding to the linear indices
+
+list with row and column indices matching the linear indices given in inds
 }
 \description{
-Utility function for converting linear indices (as defined in MATLAB) to row
-and column indices. Got the solution from
-http://cran.r-project.org/doc/contrib/Hiebeler-matlabR.pdf via
-https://stackoverflow.com/questions/4452039/converting-between-matrix-subscripts-and-linear-indices-like-ind2sub-sub2ind-in
+This function takes a numeric vector of linear indices \code{inds} and a positive integer \code{m}, representing the number of columns in a matrix, and returns a list with two elements: \code{rows}, a vector of row subscripts corresponding to the linear indices, and \code{cols}, a vector of column subscripts corresponding to the linear indices. Meant to replicate MATLAB's ind2sub.
 }
-\details{
-MTJ 28FEB2022
+\examples{
+inds <- 1:9
+m <- 4
+ind2subR(inds, m)
+# Returns: list(rows = c(1, 2, 3, 4, 1, 2, 3, 4, 1), cols = c(1, 1, 1, 1, 2, 2, 2, 2, 3))
 }

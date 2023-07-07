@@ -1,51 +1,65 @@
-# R Package for ICL NMR tool
+# icl_nmr_R
 
-A package 'wrapper' for the tools and functions written by michael judge and goncalo graca, as part of efforts to make the overall NMR pipeline functional in galaxy.
+This is a beta repo for the SAFER approach to 1D NMR data annotation. The current branch is [v2.0.3](https://github.com/EBI-Metabolights/icl_nmr_R/tree/v2.0.3).
 
+The guiding principles here are: 
+- compound feature shapes, convey most of the information about chemical structure present in 1H1D NMR data
+- feature shape + chemical shift confer far more specificity in spectral annotation than peak lists
+- increasing the specificity of the information on which matches are based decreases the liklihood of false positives
+- empirically/statistically derived relationships in the data are important in guiding annotation, and are more scalable than expert knowledge
 
-## Installation
-You can install the package using the R CLI straight from this repository.
+SAFER (Spectral Annotation by Feature Extraction and Reference matching) consists of three major steps:
+1) feature definition and extraction,
+2) feature-based mapping between pure compound reference spectra (PCRSs) and
+3) back-fitting of reference-extracted features to dataset spectra to gauge the believablity of the fits
 
-1 - run `install.package("devtools")` to install the devtools utility library which includes the `install_github` function.
+In more detail: 
+    1) Feature Shape Extraction
+        - a modified version of SubseT Optimization by Reference Matching (STORM) is used to extract hypothetical feature shapes from a dataset of 1D NMR spectra
+        - features are extracted and quantified in-place in each spectrum
+        - singlet and other non-specific feature shapes are removed (leaving compound features)
+        - feature shapes are clustered to simplify the set, yielding a set of shapes to be matched
+    2) Matching to PCRSs
+        - each feature shape is cross-correlated with each PCRS
+        - the shape is least squares fit to the ref region
+        - several metrics are recorded and cutoffs are applied for rvalue and pvalue
+    3) Backfitting extracted ref-features to dataset spectra
+        - feature shape is fit, and this fit is applied to the ref-feature
+  
+Each fit constitutes a potential association between a region in a reference spectrum and a region in a sample spectrum, as well as the fit values that match their intensities. There will typically be millions of these between the average dataset and the current 1300 PCRSs. These can be thought of as individual pieces of evidence for a given annotation for its region of a given sample spectrum. All the best evidence for each reference in each spectrum can be summed up and weighted by its quality to derive a metabolite-sample score, which is then linked back to each independent piece of peak-specific evidence. 
 
-2 - run `library(devtools)` to load the library into the session.
+To use this package (still writing this):
+   1) set up the params file
+   2) ensure the 4 necessary files are present
+   3) Run in R:
+      devtools::document('replace_with_cloned_github_directory')
+      pipeline('path_to_data_directory')
 
-3 - run `install_github("EBI-Metabolights/icl_nmr_R")` to install the package.
-
-4 - run `library(ImperialNMRTool)` to load the package into the session.
-
-To quickly verify if the package is installed you can run `??hurricane` . This will bring up the manual page for this function, and if loaded means that the package itself was installed and loaded successfully. The manual pages for each function contain the information you will need to run them. 
-
-## Running the workflow
-
-If you are runnning this in a normal (non cluster / workflow manager) environment, it is easiest to do so in RStudio. If you have followed the installation steps above, the package is primed to be run. The entrypoint to the package, `ImperialNMRTool::hurricane()` takes one parameter, a params.yaml file. This file needs to be replete with the parameters you want to run the workflow with. This package has some example data that you can make use of, found in `/inst/extdata`.
-
-### Parameters file
-The parameters .yaml file for the workflow takes the following structure:
-
-
-```
-general_pars:
-  peaks_location: peaks.RDS     # location of peaks.RDS file.
-  spec_location: spec.RDS       # location of spec.RDS file.
-  output_dir: ~/                # tells the workflow where to write the output files.
-
-sd_pars:
- cutoff : 0.8                   # standard cutoff for STOCSY
+To Run the Results Viewer (R Shiny app): 
+1) Ensure you have R and Rstudio installed - shiny needs these to run.
+2) Clone or download the github repo (most functions won't be needed for this demo)
+3) Download and expand the demo data here: https://drive.google.com/file/d/1cBw8ZyY703Z1S5httWJ_J7OStgMZPOnQ/view?usp=sharing  
+   These are the results files from a recent run on an unaligned dataset, which can be 
+   found here (in case you want that as well):
  
-am_pars:
- rank_limit: 5                  # rank limit for exporting matches IE take the top 5 matches discard the rest
- dist_thresh: 0.02              # no sense in allowing < precision of db peaks (0.01 ppm for hmdb)
- matchMethod: hungarian_scaled  # or basic, itmin, hungarian, hungarian_scaled
- refdb_file: hmdb_spectra_28FEB2022.RDS # location of reference spectra .RDS file.
- 
-vis_pars:
- matlab_root:  /Applications/MATLAB_R2021b.app/bin # deprecated, will be removed in future release
-``` 
- The four parameters that need to be configured to your local setup in order for the workflow to run are peaks_location, spec_location, output_dor and refdb_file.
+   https://www.ebi.ac.uk/metabolights/editor/MTBLS1, with the spectral matrix available here:
+   http://ftp.ebi.ac.uk/pub/databases/metabolights/studies/mariana/spectral_matrices/MTBLS1_nmrML_missing_spectralMatrix.RDS 
+   ^ This is an auto-generated spectral matrix file extracted from processed data from MTBLS1
 
- Once this file is prepared, you can run the workflow from RStudio / the command line via `ImperialNMRTool::hurricane("/path/to/your/params.yaml")`
- 
+In RStudio, run this to build the package locally (like using a library() call):
 
-#### Help / contact
-This repository is maintained by the [MetaboLights](https://www.ebi.ac.uk/metabolights/) team at the EMBL-EBI. You can send any requests or queries to metabolights-help@ebi.ac.uk , quoting this repository.
+   devtools::document('replace_with_cloned_github_directory') # e.g. '/Users/mjudge/Documents/GitHub/icl_nmr_R'
+  
+Run this to start the app (replacing the filepath):
+
+   show_me_the_evidence('replace_with_downloaded_data_directory') # e.g. '/Users/mjudge/Downloads/mtbls1_demo'
+
+Instructions:
+- use the heatmap or the search box to select a compound with high scores (or compound of interest)
+- select a spetral region of the PCRS, as well as some samples (a subset of high-scoring samples is usually best for the stackplot)
+- a stackplot will appear with evidence for the selected peak plotted in blue
+- pan and zoom in the PCRS window to move around the spectrum, or use the vshift slide bar to adjust the spacing in the stackplot
+
+Feel free to suggest improvements and report bugs on this repo!
+
+
