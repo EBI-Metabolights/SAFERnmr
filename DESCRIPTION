@@ -1,12 +1,10 @@
-Package: ImperialNMRTool
+Package: SAFER
 Type: Package
-Title: Tool for Nuclear Magnetic Resonance based spectrography.
-Description: Workflow for automatic processing and annotation of 1D 1H-NMR spectra from MetaboLights repository.
-    Entrypoint to the workflow is hurricane.r, and it takes an argument which is the location 
-    of a parameters file, which itself contains the location of the files the workflow needs,
-    and the workflow parameters. To read more visit the github repository at github.com/EBI-Metabolights/icl_nmr_R
-Version: 0.2.0.2
-Date: 2023-05-30
+Title: Spectral annotation by Feature Extraction and Reference matching
+Description: Automated feature extraction and metabolite annotation of 1H 1D NMR spectroscopy. 
+    To read more visit the github repository at github.com/EBI-Metabolights/SAFER
+Version: 0.1.1
+Date: 2023-07-07
 Authors@R: c(
     person("Michael T. Judge", "PostDoc / Developer", role = c("aut")),
     person("Goncalo G. Graca", "PostDoc / Developer", role = c("aut")),

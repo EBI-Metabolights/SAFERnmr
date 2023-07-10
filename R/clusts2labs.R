@@ -9,11 +9,11 @@
 #'
 #' @return A numeric vector of feature-sorted cluster labels.
 #'
-#' @export
 #'
 #' @importFrom magrittr %>%
 #'
 #' @author MTJ
+#' @export
 clusts2labs <- function(clusters){
   # Take cluster-feature pairs, return feature-sorted cluster labels:
   cluster.labs <- lapply(1:length(clusters), 
