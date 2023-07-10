@@ -1,4 +1,5 @@
-# icl_nmr_R
+# SAFER
+(Spectral Annotation by Feature Extraction and Reference matching)
 
 This is a beta repo for the SAFER approach to 1D NMR data annotation (v2.0.3).
 
