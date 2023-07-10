@@ -184,7 +184,7 @@ pipeline <- function(params_loc, params_obj) {
     # load default params
     filepath <- base::system.file(
       "extdata", "default_params.yaml",
-      package = "ImperialNMRTool"
+      package = "SAFER"
     )
     run_params <- yaml::yaml.load_file(filepath, eval.expr = TRUE)
     default <- TRUE
