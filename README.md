@@ -1,6 +1,7 @@
-# SAFER
+## SAFER
 (Spectral Annotation by Feature Extraction and Reference matching)
 
+# Background
 This is a beta repo for the SAFER approach to 1D NMR data annotation (v2.0.3).
 
 The guiding principles here are: 
@@ -29,14 +30,14 @@ In more detail:
   
 Each fit constitutes a potential association between a region in a reference spectrum and a region in a sample spectrum, as well as the fit values that match their intensities. There will typically be millions of these between the average dataset and the current 1300 PCRSs. These can be thought of as individual pieces of evidence for a given annotation for its region of a given sample spectrum. All the best evidence for each reference in each spectrum can be summed up and weighted by its quality to derive a metabolite-sample score, which is then linked back to each independent piece of peak-specific evidence. 
 
-To use this package (still writing this):
+# To use this package (still writing this):
    1) set up the params file
    2) ensure the 4 necessary files are present
    3) Run in R:
       devtools::document('replace_with_cloned_github_directory')
       pipeline('path_to_data_directory')
 
-To Run the Results Viewer (R Shiny app): 
+# To Run the Results Viewer (R Shiny app): 
 1) Ensure you have R and Rstudio installed - shiny needs these to run.
 2) Clone or download the github repo (most functions won't be needed for this demo)
 3) Download and expand the demo data here: https://drive.google.com/file/d/1cBw8ZyY703Z1S5httWJ_J7OStgMZPOnQ/view?usp=sharing  
