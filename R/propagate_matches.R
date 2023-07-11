@@ -26,7 +26,28 @@
 #' 
 #' @export
 propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh){
-        
+    
+  
+        # Set up default empty row:
+          emptyRow <- function(){
+            data.frame( 
+              feat = NA,
+              ref = NA,
+              lag = NA, 
+              rval = NA,
+              pval = NA,
+              pts.matched = NA,
+              pts.feat = NA,
+              feat.start = NA,
+              feat.end = NA,
+              ref.start = NA,
+              ref.end = NA,
+              fit.intercept = NA,
+              fit.scale = NA,
+              wasserstein.score = NA
+            )
+          }
+  
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
         n.matches.before <- nrow(match.info)
@@ -49,7 +70,6 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                 
                 # For now, just assume these are the row numbers in the original featureStack (with all cluster members)
   
-                  # fstack.row <- matched.feats[[1]]
                   clust.number <- which(cluster$keys %in% fstack.row) # just an index, not the key feature
             
               
@@ -208,27 +228,34 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                           return(rf)
                           
                     })
-                        
+                    
                   return(rfs.new)                
-    
+                  # this gives a list where each element holds an individual df row
               })
                 
+                
                 return(member.matches)
+                  # this gives a list of those lists
                   # distribution of fit info can be interesting
                   # plot(member.matches$fit.intercept, member.matches$fit.scale)
-  
+                  
               } else {
                 # If single feature, don't expand.
+                # return(list(emptyRow()))
                 return(NULL)
-                
               }
               
           }, mc.cores = ncores)
           
+          # new.data <- list(list(match.info[1:10,]),list(list(emptyRow())))
+          # new.data <- list(list(match.info[1:10,]),list(NULL))
+          saveRDS(new.data, './new.data.RDS')
           a <- new.data %>% unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
             rm(new.data)
             
-          match.info <- rbind(match.info, a)
+          # Rbind the new matches to the end of match.info
+            match.info <- rbind(match.info, a)
+            # match.info <- match.info[!is.na(match.info$feat),]
 
             row.names(match.info) <- NULL
             
@@ -249,3 +276,4 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
           message('\n\t', sum(!keep), ' matches excluded by rval/pval filter (',  round(sum(!keep)/length(keep)*100), ' %)')
   return(match.info)
 }
+
