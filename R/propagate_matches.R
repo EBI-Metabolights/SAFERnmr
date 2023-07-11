@@ -44,7 +44,14 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
               ref.end = NA,
               fit.intercept = NA,
               fit.scale = NA,
-              wasserstein.score = NA
+              wasserstein.score = NA,
+              sum.residuals = NA, 
+              rmse = NA, 
+              rmse.weighted = NA,
+              numpeaks.feat = NA, 
+              numpeaks.ref = NA, 
+              numpeaks.feat.nnf = NA, 
+              refpeaks.matched = NA
             )
           }
   
@@ -241,21 +248,20 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                   
               } else {
                 # If single feature, don't expand.
-                # return(list(emptyRow()))
-                return(NULL)
+                return(list(list(emptyRow())))
               }
               
           }, mc.cores = ncores)
           
-          # new.data <- list(list(match.info[1:10,]),list(list(emptyRow())))
-          # new.data <- list(list(match.info[1:10,]),list(NULL))
           saveRDS(new.data, './new.data.RDS')
+          
           a <- new.data %>% unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
             rm(new.data)
             
           # Rbind the new matches to the end of match.info
             match.info <- rbind(match.info, a)
-            # match.info <- match.info[!is.na(match.info$feat),]
+            # remove any null rows (indicated by NA in the feat column)
+            match.info <- match.info[!is.na(match.info$feat),]
 
             row.names(match.info) <- NULL
             
@@ -269,7 +275,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
         # Re-filter for corr, pval
           message('\n\tfiltering new matches for rval > ', r.thresh, ' and pval < ', p.thresh, ' ...')
           keep <- match.info$rval >= r.thresh & 
-            match.info$pval <= p.thresh
+                  match.info$pval <= p.thresh
           
           match.info <- match.info[keep, ]
           # scattermore::scattermoreplot(x = 1:nrow(match.info), y = match.info$rval %>% sort)
