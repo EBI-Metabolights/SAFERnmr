@@ -252,7 +252,14 @@ tina <- function(pars){
         })
         
         nullfeats <- feature.ma$stack %>% apply(1, function(x) all(is.na(x))) %>% unlist
-          if (any(nullfeats)){warning('TINA: before clustering: there are ', sum(nullfeats),'null features. Consider inspecting.')}
+          if (any(nullfeats)){warning('TINA: there were ', sum(nullfeats),' null features after sfe. Removing...')
+            feature.ma$stack <- feature.ma$stack[!nullfeats, ,drop = F]
+            feature.ma$position <- feature.ma$position[!nullfeats, ,drop = F]
+            feature.ma$subset$ss.all <- feature.ma$subset$ss.all[!nullfeats, ,drop = F]
+            feature.ma$subset$sizes <- feature.ma$subset$sizes[!nullfeats]
+            feature.ma$region$sizes <- feature.ma$region$sizes[!nullfeats]
+            feature.ma$driver.relative <- feature.ma$driver.relative[!nullfeats]
+          }
             
         message('\n\twriting post-sfe features to file...')
         feature.final <- list(stack = feature.ma$stack,
@@ -260,6 +267,7 @@ tina <- function(pars){
                               driver.relative = feature.ma$subset,
                               sfe = features.specd)
         saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
+        # feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
         
         rm(features.specd)
         gc()
@@ -282,7 +290,7 @@ tina <- function(pars){
                                              plot.loc = this.run,
                                              plot.name = "feature_clusters.pdf",
                                              nfeats = pars$tina$nfeats,
-                                             dist.threads = parallel::detectCores() - 1) # pars$par$ncores
+                                             dist.threads = pars$par$ncores) #parallel::detectCores() - 4) # pars$par$ncores
 
       # Label the "noise" points as individual clusters
         noiseclust <- which(results$labels == 0)
