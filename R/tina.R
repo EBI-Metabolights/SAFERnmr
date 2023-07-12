@@ -27,17 +27,7 @@
 #' feature shapes into tight clusters when low n_neighbors (e.g. 5) and min_dist
 #' (e.g. 0.05) are used. This does not capture global relationships as well, but
 #' we only use it to identify tight clusters.
-#' All pairwise correlations (PCCs) are calculated for the feature shapes. A mask
-#' for correlation thresholding is applied to the distance matrix (generated using
-#' apcluster::negDistMat(pts, r=2), squared negative euclidean distance) to ensure
-#' that clustered features have a high correlation as well. apcluster uses a q
-#' parameter to optimize the initial preferences. Higher q -> stricter clusters.
-#' Raising the lambda (dampening) parameter helps avoid oscillations which prevent
-#' convergence, although raising this too high can make updates too slow to
-#' converge within the number of iterations.
 #' See
-#' https://cran.r-project.org/web/packages/apcluster/vignettes/apcluster.pdf for
-#' a full description of affinity propagation parameters
 #' Ultimately, it doesn't matter much what clustering method is used, as this is
 #' primarily a means of combining highly similar features to reduce the computational
 #' burden of pairwise comparisons to reference spectra.
@@ -49,8 +39,6 @@
 #'
 #' @export
 #' @import ggridges
-#' @importFrom umap umap
-#' @importFrom apcluster apcluster
 #' @importFrom plotly plot_ly
 #' @importFrom tictoc tic toc
 #' @importFrom gridExtra grid.arrange
