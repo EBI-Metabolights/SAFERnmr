@@ -251,6 +251,9 @@ tina <- function(pars){
           x
         })
         
+        nullfeats <- feature.ma$stack %>% apply(1, function(x) all(is.na(x))) %>% unlist
+          if (any(nullfeats)){warning('TINA: before clustering: there are ', sum(nullfeats),'null features. Consider inspecting.')}
+            
         message('\n\twriting post-sfe features to file...')
         feature.final <- list(stack = feature.ma$stack,
                               position = feature.ma$position,

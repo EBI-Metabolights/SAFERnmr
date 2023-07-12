@@ -160,12 +160,15 @@ tina_combineFeatures_optics <- function(featureStack,
     # Produce plots ####
         message("Generating plots. Progress:")
         c.labs <- unique(clusters)
-        cluster.list <- lapply(unique(clusters), function(x) which(clusters == x))
+        cluster.list <- lapply(c.labs, function(x) which(clusters == x))
         
         clusters <- cluster.list[c.labs > 0] # remove noise points
         everyNth <- c(T,rep(F, max(floor(length(clusters) / max.plots ) - 1,0)))
         plots <- pblapply(clusters[everyNth], function(x) 
           {
+              # Check to see if plot will be empty (should never happen)
+                if (all(is.na(featureStack[x, ,drop = FALSE]))){warning('TINA: clustering: no non-NA columns in cluster ', x,'!')}
+          
                 fs <- featureStack[x, ,drop = FALSE] %>% trim_sides
                 return(simplePlot(fs))
           })

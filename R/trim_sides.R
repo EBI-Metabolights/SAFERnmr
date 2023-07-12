@@ -17,7 +17,17 @@ trim_sides <- function(mat, out = "mat"){
   # Enforce matrix format (so columns are trimmed)
     if (!is.matrix(mat)){mat <- matrix(c(mat), nrow = 1)}
   
-  inds <- apply(mat, 2, function(x) !all(is.na(x))) %>% which %>% range %>% fillbetween
+  # Does each column have only NAs?
+    cols.withVals <- !(   colSums(is.na(mat))   == nrow(mat))
+  
+  # Error handling in case < 2 columns have values
+    if (sum(cols.withVals)<2){
+      warning('trim.sides: matrix has < 2 columns with values. Result will have 0 columns/NULL inds.')
+      inds <- NULL
+    } else {
+      inds <- cols.withVals %>% which %>% range %>% fillbetween
+    }
+  
   # If all we want are the inds, give those
   if (out == "inds"){
     return( inds )
