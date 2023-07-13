@@ -240,7 +240,9 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                   # this gives a list where each element holds an individual df row
               })
                 
-                
+                if(nrow(member.matches)==0){
+                  return(list(list(emptyRow())))
+                }
                 return(member.matches)
                   # this gives a list of those lists
                   # distribution of fit info can be interesting
