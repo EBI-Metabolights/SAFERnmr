@@ -239,6 +239,8 @@ tina <- function(pars){
           x
         })
         
+      # Double-check for null features after sfe. Remove from feature.ma (this is much lighter than feature.final,
+      # and will be used for downstream work in this file. 
         nullfeats <- feature.ma$stack %>% apply(1, function(x) all(is.na(x))) %>% unlist
           if (any(nullfeats)){warning('TINA: there were ', sum(nullfeats),' null features after sfe. Removing...')
             feature.ma$stack <- feature.ma$stack[!nullfeats, ,drop = F]

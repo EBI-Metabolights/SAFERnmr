@@ -25,7 +25,7 @@
 #' @importFrom data.table rbindlist
 #' 
 #' @export
-propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh){
+propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh, this.run){
     
   
         # Set up default empty row:
@@ -69,7 +69,8 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
         
         # Compute new match.info for cluster members ####
           t1 <- Sys.time()
-          new.data <- mclapply(feats.by.size, function(fstack.row) {
+          # new.data <- mclapply(feats.by.size, function(fstack.row) {
+          new.data <- lapply(feats.by.size, function(fstack.row) {
             # print(fstack.row)
             # fstack.row <- feats.by.size[2]
             # Which cluster does this feature it belong to? ####
@@ -113,7 +114,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                 
                 member.matches <- lapply(nonkey.members, function(cluster.member){
                   
-                  # print(cluster.member)
+                  print(cluster.member)
                   # cluster.member <- nonkey.members[1]
                   
                     # Copy the match info to other member ####
@@ -127,39 +128,30 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                       lag <- clust.lags$lag.in.f2[ clust.lags$f1 == cluster.member ]
                       new.matches$lag <- new.matches$lag + lag
                       
-                      # Default is the lag which puts this feature along the ref at the same spot as the key feature.
-                      # Update all:
-                        new.matches$ref.start <- new.matches$ref.start - lag
-                        new.matches$ref.end <- new.matches$ref.end - lag
-                        # new.matches[, c("ref.start", "ref.end")] <- new.matches[, c("ref.start", "ref.end")] - lag
-                    
      # ####                   
      ############ # For each ref feat for that cluster member: ####################################################
      
                     rfs.new <- lapply(1:nrow(new.matches), function(nm.row){
                     # Extract data for each new match ####
-                      rf <- new.matches[nm.row,]
-                      # rf <- new.matches[1,]
-                      ref.num <- rf$ref
-                      ref.reg <- rf$ref.start:rf$ref.end
-                      feat.reg <- rf$feat.start:rf$feat.end
                       
+                      rf <- new.matches[nm.row,]
+
                     # Get the lags and fits for the new matches to rfs ####
                     
                       # Extract out the feature
-                      
                         feat <- feature.stack[cluster.member, ] %>% scale_between
-                        
+                        # feat <- feature.stack[508, ] %>% scale_between
+                          # simplePlot(feat)
+                          
                       # Update the feature bounds to match THIS feature, not the key feature ####
                         # First, expand to use the whole feature (so we know how to ss the ref region):
-                          ref.feat <- ref.inds <- rep(NA, length(feat))
-                            ref.inds[feat.reg] <- ref.reg
-                            ref.inds <- complete_indsVect(ref.inds)
+                        # Make the ref feat (full length)
+                          ref.pos <- rf$lag - pad.size + (0:(ncol(feature.stack)-1))
+                          ref.feat <- ref.mat[ref.pos, rf$ref]
+                            # simplePlot(ref.feat)
                             
                         # Then, re-subset the feature and ref inds to match new feature:
                           f.inds <- feat %>% trim_sides(out = "inds") %>% range
-                          # rf[c("feat.start", "feat.end")] <- f.inds
-                          # rf[c("ref.start", "ref.end")] <- ref.inds[f.inds]
                           rf$feat.start <- f.inds[1]
                           rf$feat.end <- f.inds[2]
                           rf$ref.start <- ref.inds[f.inds[1]]
@@ -167,16 +159,22 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
     
                         # Finally, update our temp vars for these two:
                           feat.reg <- rf$feat.start:rf$feat.end
-                          ref.reg <- rf$ref.start:rf$ref.end
-                          
-                      # Make ref feat same size as full feature ####
-                        # fill in the values
-                          ref.feat[feat.reg] <- ref.mat[ref.reg, ref.num] # remember that ref mat is transposed
-    
+
                       # Calculate the fit between the initial rf and the cluster.member ####
-                        
+                        # Check to ensure feature and ref actually have data
+                          if (all(is.na(feat[feat.reg])) | all(is.na(ref.feat[feat.reg]))){
+                            # Just return empty row
+                              return(emptyRow())
+                            # browser()
+                            # if (all(is.na(feat[feat.reg]))){
+                            #   stop('feature ', rf$feat, ' is all NA in the match region.')}
+                            # else {
+                            #   stop('ref ', rf$ref, ' is all NA in the match region.')
+                            # }
+                          }
+                      
                         fit <- fit_leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
-                          # fit1$plot %>% plot
+                          # fit$plot %>% plot
                         
                       # # Try to optimize the alignment a bit more (adds time!) ####
                       # 
@@ -240,7 +238,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                   # this gives a list where each element holds an individual df row
               })
                 
-                if(nrow(member.matches)==0){
+                if(is.null(member.matches)){
                   return(list(list(emptyRow())))
                 }
                 return(member.matches)
@@ -253,9 +251,10 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                 return(list(list(emptyRow())))
               }
               
-          }, mc.cores = ncores)
+          })#, mc.cores = ncores)
           
-          saveRDS(new.data, './new.data.RDS')
+          saveRDS(new.data, paste0(this.run,'/new.data.RDS'))
+          # new.data <- readRDS('/Users/mjudge/Documents/new.data.RDS')
           
           a <- new.data %>% unlist(recursive = F) %>% unlist(recursive = F) %>% rbindlist
             rm(new.data)
