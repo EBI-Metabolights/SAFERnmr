@@ -184,7 +184,7 @@ pipeline <- function(params_loc, params_obj) {
     # >>> This is the usual route <<<
     # load supplied params
     run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
-    file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'))
+    file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'))
   }
 
   # if (run_params$galaxy$enabled == FALSE) {
