@@ -69,8 +69,8 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
         
         # Compute new match.info for cluster members ####
           t1 <- Sys.time()
-          # new.data <- mclapply(feats.by.size, function(fstack.row) {
-          new.data <- lapply(feats.by.size, function(fstack.row) {
+          new.data <- mclapply(feats.by.size, function(fstack.row) {
+          # new.data <- lapply(feats.by.size, function(fstack.row) {
             # print(fstack.row)
             # fstack.row <- feats.by.size[2]
             # Which cluster does this feature it belong to? ####
@@ -251,7 +251,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                 return(list(list(emptyRow())))
               }
               
-          })#, mc.cores = ncores)
+          }, mc.cores = ncores)
           
           saveRDS(new.data, paste0(this.run,'/new.data.RDS'))
           # new.data <- readRDS('/Users/mjudge/Documents/new.data.RDS')
