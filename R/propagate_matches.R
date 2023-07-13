@@ -25,7 +25,7 @@
 #' @importFrom data.table rbindlist
 #' 
 #' @export
-propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh, this.run){
+propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh, pad.size, this.run){
     
   
         # Set up default empty row:
@@ -146,8 +146,8 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                       # Update the feature bounds to match THIS feature, not the key feature ####
                         # First, expand to use the whole feature (so we know how to ss the ref region):
                         # Make the ref feat (full length)
-                          ref.pos <- rf$lag - pad.size + (0:(ncol(feature.stack)-1))
-                          ref.feat <- ref.mat[ref.pos, rf$ref]
+                          ref.inds <- rf$lag - pad.size + (0:(ncol(feature.stack)-1))
+                          ref.feat <- ref.mat[ref.inds, rf$ref]
                             # simplePlot(ref.feat)
                             
                         # Then, re-subset the feature and ref inds to match new feature:
