@@ -179,9 +179,12 @@ pipeline <- function(params_loc, params_obj) {
     )
     run_params <- yaml::yaml.load_file(filepath, eval.expr = TRUE)
     default <- TRUE
+    
   } else {
+    # >>> This is the usual route <<<
     # load supplied params
     run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
+    file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'))
   }
 
   # if (run_params$galaxy$enabled == FALSE) {
@@ -198,7 +201,7 @@ pipeline <- function(params_loc, params_obj) {
     }
   }
 
-  file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'))
+  
   file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
   
 ################################################################################################################################### 
