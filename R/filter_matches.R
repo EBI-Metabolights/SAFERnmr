@@ -103,7 +103,7 @@ filter_matches <- function(pars){
             # do nothing
           } else {
             match.info <- propagate_matches(match.info, cluster, feature$stack, 
-                                            ref.mat, pars$par$ncores, pars$matching$r.thresh, pars$matching$p.thresh, this.run)
+                                            ref.mat, pars$par$ncores, pars$matching$r.thresh, pars$matching$p.thresh, pad.size, this.run)
             saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
           }
         
