@@ -11,7 +11,9 @@ propagate_matches(
   ref.mat,
   ncores,
   r.thresh,
-  p.thresh
+  p.thresh,
+  pad.size,
+  this.run
 )
 }
 \arguments{
