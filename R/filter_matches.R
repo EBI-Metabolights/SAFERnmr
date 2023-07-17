@@ -39,7 +39,7 @@ filter_matches <- function(pars){
 
     feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
     ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
-    # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
+    matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
     matches <- readRDS(paste0(this.run, "/matches.RDS"))
       nomatch <- (lapply(matches, length) %>% unlist) == 1
       matches <- matches[!nomatch]
@@ -77,6 +77,7 @@ filter_matches <- function(pars){
                                                pars$par$ncores)
         
         saveRDS(match.info, paste0(tmpdir, "/match.info.filtered.RDS"))
+        # match.info <- readRDS(paste0(tmpdir, "/match.info.filtered.RDS"))
     
     
 ######################### Propagate matches to feature clusters  ##########################
