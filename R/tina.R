@@ -269,7 +269,7 @@ tina <- function(pars){
    # OPTICS-based ####
       message('\n\t---- OPTICS-based clustering ----')
       
-    if (nrow(feature.ma$stack) > 1000){
+    if (nrow(feature.ma$stack) > 1000 | pars$tina$do.clustering){
       printTime()
       t1 <- Sys.time()
       results <- tina_combineFeatures_optics(feature.ma$stack,
@@ -320,6 +320,7 @@ tina <- function(pars){
     # - identify key feature
     # - align all to key
     # - rmse-based threshold for removing features from cluster
+    # - single features (or no clustering) : pass through with dummy vals
     
       message('\n\tcheckClusters: optimizing intra-cluster alignment and selecting representative features...')
     
@@ -349,7 +350,7 @@ tina <- function(pars){
       # ....
       
   ############ Plot the cleaned clusters ####
-  if (pars$tina$plots$cleaned.clusters){
+  if (pars$tina$do.clustering & pars$tina$plots$cleaned.clusters){
     # Produce plots ####
         message("Generating plots. Progress:")
         cluster.list <- clusters$groups

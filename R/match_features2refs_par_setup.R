@@ -36,6 +36,7 @@ match_features2refs_par_setup <- function(pars) {
       ppm <- fse.result$ppm
       rm(fse.result)
       
+    # This runs even if there was no clustering (clusters of 1 feature each):
     cluster.final <- readRDS(paste0(this.run, "/cluster.final.RDS"))
     
       c.labs <- cluster.final$labels

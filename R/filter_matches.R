@@ -99,6 +99,8 @@ filter_matches <- function(pars){
         # on the fly from this and the feature/spectral matrix/ref matrix.
         
         # Only run if there are actually clusters!
+          # don't use pars$tina$do.clustering here, because even if that's on, if there are < 1K features it won't cluster.
+          # After this step, clusters are no longer relevant. 
           
           if (cluster$method == 'none'){
             # do nothing
