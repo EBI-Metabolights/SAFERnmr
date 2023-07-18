@@ -268,8 +268,10 @@ tina <- function(pars){
               
    # OPTICS-based ####
       message('\n\t---- OPTICS-based clustering ----')
-      
-    if (nrow(feature.ma$stack) > 1000 | pars$tina$do.clustering){
+    # Check to see if clustering param was provided; if not, turn it off
+      if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
+          
+    if (nrow(feature.ma$stack) > 1000 & pars$tina$do.clustering){
       printTime()
       t1 <- Sys.time()
       results <- tina_combineFeatures_optics(feature.ma$stack,
