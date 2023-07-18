@@ -185,7 +185,7 @@ fse <- function(pars){
         message("Running storm on ",numPairs, " provided protofeatures. Progress:")
         
         storm_rnd1 <- 
-              pblapply(regions_subset,
+              mclapply(regions_subset,
                   function (x) {
                     # print(x)
                     # Set up the region
@@ -215,7 +215,7 @@ fse <- function(pars){
                                                     driver = driver)
                         res$cpp.driver <- driver
                         return(res)
-                  }
+                  }, mc.cores = ncores
               )
 
           
@@ -242,27 +242,6 @@ fse <- function(pars){
             fm %>% group_by(status) %>% count %>% as.data.frame
       
             
-################ Plotting Results #######################
- 
-        # # Plot all the storm results in grid (postage stamp) format
-        # 
-          
-            everyNth <- every_nth(select = number.of.plots, 
-                                  from = sum(succeeded))
-            
-            plot_stormRefRegions_grid(xmat, ppm,
-                                      storm_rnd1[succeeded %>% which %>% .[everyNth]], # if not doing a small region
-                                      plotLoc = plot.location,
-                                      filename = plot.filename,
-                                      calcStocsy = FALSE, n_xticks = 4)
-       # Plot all in region
-          # use <- seq(12810, 12972)
-            # plot_stormRefRegions_grid(xmat,ppm,
-            #                           storm_rnd1[succeeded %>% which %>% .[use]], # if not doing a small region
-            #                           plotLoc = plot.location,
-            #                           filename = str_c(plot.filename,".citrate.pdf"),
-            #                           calcStocsy = FALSE,n_xticks = 4)
-            
 # ##### Save #####
   
     fse.result <- list(storm_features = storm_rnd1[succeeded],
@@ -273,6 +252,27 @@ fse <- function(pars){
     message("Saving results...")
 
     saveRDS(fse.result, paste0(this.run, "/fse.result.RDS"))
+    
+################ Plotting Results #######################
+ 
+        # # Plot all the storm results in grid (postage stamp) format
+        # 
+          
+            # everyNth <- every_nth(select = number.of.plots, 
+            #                       from = sum(succeeded))
+            # 
+            # plot_stormRefRegions_grid(xmat, ppm,
+            #                           storm_rnd1[succeeded %>% which %>% .[everyNth]], # if not doing a small region
+            #                           plotLoc = plot.location,
+            #                           filename = plot.filename,
+            #                           calcStocsy = FALSE, n_xticks = 4)
+       # Plot all in region
+          # use <- seq(12810, 12972)
+            # plot_stormRefRegions_grid(xmat,ppm,
+            #                           storm_rnd1[succeeded %>% which %>% .[use]], # if not doing a small region
+            #                           plotLoc = plot.location,
+            #                           filename = str_c(plot.filename,".citrate.pdf"),
+            #                           calcStocsy = FALSE,n_xticks = 4)
     
     message("\nData written to ", this.run, "/fse.result.RDS")
     message("\nFeature Shape Extraction completed.\n\n\n")
