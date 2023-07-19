@@ -208,7 +208,8 @@ tina <- function(pars){
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
         # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
         rm(feature)
-        
+
+##################################################################################################################                
     # Plot all feature ranges ####
           pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
               width = dim, # The width of the plot in inches
@@ -220,9 +221,10 @@ tina <- function(pars){
                        feature.shift_range[2,], 1:ncol(feature.shift_range),
                        lwd = 0.1)
           dev.off()
-       
           
-          
+            
+          ######################################################################################################## 
+                    
     # FINAL feature object to export: ####
     # final feature object (everything should apply to max-aligned)
     # - stack
@@ -269,7 +271,7 @@ tina <- function(pars){
    # OPTICS-based ####
       message('\n\t---- OPTICS-based clustering ----')
     # Check to see if clustering param was provided; if not, turn it off
-      if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
+      # if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
           
     if (nrow(feature.ma$stack) > 1000 & pars$tina$do.clustering){
       printTime()
