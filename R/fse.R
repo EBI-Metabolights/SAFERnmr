@@ -215,7 +215,7 @@ fse <- function(pars){
                                                     driver = driver)
                         res$cpp.driver <- driver
                         return(res)
-                  }, mc.cores = ncores
+                  }, mc.cores = pars$par$ncores
               )
 
           
