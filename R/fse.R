@@ -94,6 +94,7 @@ fse <- function(pars){
   # Corr Pocket Pairs 
 
     half.window <- (pars$corrpockets$half.window / digital.res) %>% ceiling  
+        if (half.window > 1000){stop('Window size is too large. Please keep to < 1000 points.')}
                                 # Window for the sliding correlation calculation. 
                                 # This x 2 should capture any 2 adjacent resonances
                                 # in a multiplet. 
