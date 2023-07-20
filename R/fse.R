@@ -86,15 +86,18 @@ fse <- function(pars){
                                   # doesn't require alignment. normalization ok
                                   # but not necessary. scaling, no.)
       ppm <- X_raw[1,]            # ppm vector (corresponding to cols of xmat)
-      
+        digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
+        
+        
 ################ Set up parameters ##################
     
   # Corr Pocket Pairs 
 
-    half.window <- pars$corrpockets$half.window          
+    half.window <- (pars$corrpockets$half.window / digital.res) %>% ceiling  
                                 # Window for the sliding correlation calculation. 
                                 # This x 2 should capture any 2 adjacent resonances
                                 # in a multiplet. 
+                                # Provided in ppm, converted here to (column) elements
 
     noise.percentile <- pars$corrpockets$noise.percentile     
                                 # noise characterization... For every spectral
