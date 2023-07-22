@@ -56,6 +56,8 @@ next_driver <- function(current.driver,
   
     # Extract the peaks from the NA-expanded ref profile:
       ref.profile.expanded <- ref.idx.expanded <- rep(NA, span(ref.idx))
+        # if (any(is.na((ref.idx-min(ref.idx, na.rm = T)+1)))){browser()}
+        if (any(is.na(ref.idx))){ref.idx <- na.omit(ref.idx)}
         ref.profile.expanded[ref.idx-min(ref.idx, na.rm = T)+1] <- ref.profile
         ref.profile <- ref.profile.expanded
         ref.idx.expanded[ref.idx-min(ref.idx, na.rm = T)+1] <- ref.idx

@@ -187,9 +187,10 @@ fse <- function(pars){
         
           
         message("Running storm on ",numPairs, " provided protofeatures. Progress:")
-        
+        browser()
         storm_rnd1 <- 
               mclapply(regions_subset,
+              # pblapply(regions_subset,
                   function (x) {
                     # print(x)
                     # Set up the region
@@ -243,7 +244,7 @@ fse <- function(pars){
             fm <- fmodes %>% plyr::ldply(rbind)
             colnames(fm) <- 'status'
             
-            fm %>% group_by(status) %>% count %>% as.data.frame
+            print(fm %>% group_by(status) %>% count %>% as.data.frame)
       
             
 # ##### Save #####

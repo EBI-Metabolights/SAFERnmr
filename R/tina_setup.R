@@ -32,6 +32,10 @@ tina_setup <- function(a, xmat){
         # Extract final region inds with regard to peak
           relinds <- lapply(1:length(a),
                             function(x) a[[x]]$finalRegion %in% a[[x]]$ref.idx %>% which)
+          # an error (which -> %in%) would imply the finalRegion does not contain the peak.
+          # Error in a[[x]]$finalRegion : $ operator is invalid for atomic vectors:
+          # - a is not what you think it is. Last time this failed because of next_driver()
+          # indexing failing due to NAs in ref.idx (fixed). 
 
           featureStack <- relinds %>% unlist %>% max %>% matrix(NA, nrow = length(a), ncol = .)
           positionStack <- featureStack

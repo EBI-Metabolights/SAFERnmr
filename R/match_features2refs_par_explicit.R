@@ -86,7 +86,7 @@ match_features2refs_par_explicit <- function(pars){
                                           .combine='c', .multicombine=TRUE,
                                           .errorhandling="pass") %do%
                 {
-                  mem_snapshot(paste0(tmpdir, '/', Sys.time(), '_feature_',f.num,'.txt'))
+                  # mem_snapshot(paste0(tmpdir, '/', Sys.time(), '_feature_',f.num,'.txt'))
                   # Make the fft and conj'd feature on the fly, since it's only ever used once:
                   #  in the next foreach statement. 
                   

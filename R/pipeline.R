@@ -184,6 +184,7 @@ pipeline <- function(params_loc, params_obj) {
     # >>> This is the usual route <<<
     # load supplied params
     run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
+    dir.create(run_params$dirs$temp, showWarnings = F)
     file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'))
   }
 
