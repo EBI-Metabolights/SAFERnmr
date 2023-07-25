@@ -31,7 +31,7 @@ score_matches <- function(pars){
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
     feature <- readRDS(paste0(this.run,"/feature.final.RDS"))
-    lib.info <- readRDS(pars$files$lib.info)
+    lib.info <- readRDS(paste0(this.run,"/lib.info.RDS"))
     
     # match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
 
@@ -63,7 +63,7 @@ score_matches <- function(pars){
       ss.ref.pairs <- pblapply(1:nrow(match.info), function(m) 
         {
           # Get data for this match
-          
+            print(m)
             bf <- backfits[[m]]
             mi <- match.info[m,]
             

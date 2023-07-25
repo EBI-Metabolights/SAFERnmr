@@ -187,7 +187,7 @@ fse <- function(pars){
         
           
         message("Running storm on ",numPairs, " provided protofeatures. Progress:")
-        browser()
+        
         storm_rnd1 <- 
               mclapply(regions_subset,
               # pblapply(regions_subset,

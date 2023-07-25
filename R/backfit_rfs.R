@@ -59,7 +59,13 @@ backfit_rfs <- function(match.info,
                         ref.mat,
                         ncores){
   
-  
+  emptyRow <- function(){data.frame(ss.spec = NA,
+                                        fit.intercept = NA, 
+                                        fit.scale = NA,
+                                        spec.start = NA,
+                                        spec.end = NA,
+                                        bffs.res = NA, # tmp "bff"
+                                        bffs.tot = NA)}
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
     # Sort by ref, so we can group chunks by ref
@@ -116,10 +122,10 @@ backfit_rfs <- function(match.info,
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
             
-        backfits.chunk <- lapply(1:nrow(chunk$match.info), 
+        backfits.chunk <- lapply(1:nrow(chunk$match.info),
                            function(m) {
         #############        For each match:         ###############
-          
+            
           # Get data, expand fit ####
             
             mi <- chunk$match.info[m, ]
@@ -128,6 +134,7 @@ backfit_rfs <- function(match.info,
             
               fit <- apply_fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
               ref.region <- c(mi$ref.start, mi$ref.end)
+              # plot_fit(fit, type = "simple") %>% plot
               
               feat.cols <- c(mi$feat.start, mi$feat.end) %>% as.numeric %>% chunk$feature$position[mi$feat,.] %>% fillbetween
   
@@ -139,109 +146,128 @@ backfit_rfs <- function(match.info,
           # Calculate rf fit for each spec-feature: ####
           
             fits <- lapply(1:nrow(sfs), function(s){
-              
-              sf <- sfs[s,]
-              
-              ss.spec <- sf$spec.number
-              spec.cols <- feat.cols + sf$lag
-              
-              
+              # Get the ref region and spec data: ####
+                
+                sf <- sfs[s,]
+                ss.spec <- sf$spec.number
+                spec.cols <- feat.cols + sf$lag
+
               # Back-fit the ref region to the filled spec data ####
               
                 spec.region <- xmat[ss.spec, spec.cols]
               
                 fit.feat2spec <- fit_batman(fit$feat.fit, spec.region, 
                                             exclude.lowest = .5)
-                
-                  # plot_fit(fit.feat2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
-                
-                fit.ref <- fit.feat2spec$ratio * fit$spec.fit + fit.feat2spec$intercept # here spec.fit is the ref.feature!
-                  # plot(fit.ref)
-                  # plot(spec.region)
-                  # rbind(fit.ref, spec.region) %>% simplePlot(linecolor = "black")
-                
-                residuals <- fit.ref - spec.region
+                # If fit failed, return empty row: 
+                  if (is.null(fit.feat2spec$ratio + fit.feat2spec$intercept)){
+                      return(emptyRow()) # tmp "bff"
+                  } else {
+                    # Go on and do calculations
+                    # plot_fit(fit.feat2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
                   
-  
-              # Get pct. overshoot vector ####
-                posres <- residuals > 0
-                  posres[is.na(posres)] <- 0
-                  
-              # Assume each run of positive overshoot is a resonance. ####
-              #    what % of its prominence is overshoot?             ####
-              
-                runs <- run.labels(posres)
-                
-                if (!any(runs > 0))
-                  {
-                    ovs.res <- 0
-                    ovs.tot <- 0
-                  }
-                else{
-                  peaks <- extractPeaks_corr(fit.ref, plots = F)
-                  valleys <- peaks$bounds %>% unlist %>% unique
-                  
-                  # res.proms <- prominences(peaks, v2 = fit.ref)
-                  max.prom <- range(fit.ref, na.rm = T) %>% diff
-                  
-                  # For each run, expand outwards to nearest local minima in ref spec
-                  
-                    worst.res <- lapply(1:max(runs), function(r) {
-                        # r <- 1
-                        # print(r)
-                        inds <- which(runs == r)
-                          if(length(inds) < 3 | sum(peaks$truePeak) < 1)
-                          {
-                            return(list(ratio.res = 0,
-                                        ratio.total = 0))
-                          }
-                          
-                        # Which ref peak are we looking at? What's its local prominence?
-                        # Expand out from the boundaries of the peak in the positive residuals
-                        # until you hit the next ref valley.
-                          valleys.below <- valleys <= min(inds)
-                          
-                          if (any(valleys.below))
-                            {lower.bound <- max(valleys[valleys.below])}
-                          else{lower.bound <- min(inds)}
-  
-                          valleys.above <- valleys >= max(inds)
-                          
-                          if (any(valleys.above))
-                            {upper.bound <- min(valleys[valleys.above])}
-                          else{upper.bound <- max(inds)}
-                          
-                          ref.prom <- range(fit.ref[lower.bound:upper.bound], na.rm = T) %>% diff
-                          
-                        # What's the height of the positive residual peak here?
-                          pos.res.prom <- range(residuals[inds], na.rm = T) %>% diff 
-                          # (these will only be the positive residuals)
+                      fit.ref <- fit.feat2spec$ratio * fit$spec.fit + fit.feat2spec$intercept # here spec.fit is the ref.feature!
+                        # plot(fit.ref)
+                        # plot(spec.region)
+                        # rbind(fit.ref, spec.region) %>% simplePlot(linecolor = "black", xdir = 'normal')
+                      
+                      residuals <- fit.ref - spec.region
                         
-                        # What's the ratio?
-                          ratio.res <- pos.res.prom/ref.prom
-                          
-                        # or, weight using the ref peak's relative importance in the ref feature
-                        # * note: this could increase the score if pos.res straddles >1 resonance
-                          ratio.total <- pos.res.prom / max.prom
-                          
-                          return(list(ratio.res = ratio.res,
-                                      ratio.total = ratio.total))
-                          
-                    })
+        
+                    # Get pct. overshoot vector ####
+                      posres <- residuals > 0
+                        posres[is.na(posres)] <- 0
+                        
+                    # Assume each run of positive overshoot is a resonance. ####
+                    #    what % of its prominence is overshoot?             ####
                     
-                    ovs.res <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.res) %>% unlist
-                    ovs.tot <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.total) %>% unlist
-                }
-                
-              # Return results ####
-                return(data.frame(ss.spec = ss.spec,
-                                  fit.intercept = fit.feat2spec$intercept, 
-                                  fit.scale = fit.feat2spec$ratio,
-                                  spec.start = spec.cols[1],
-                                  spec.end = tail(spec.cols,1),
-                                  bffs.res = max(ovs.res), # tmp "bff"
-                                  bffs.tot = max(ovs.tot))) # tmp "bff"
+                      runs <- run.labels(posres)
+                      
+                      if (!any(runs > 0))
+                        {
+                          ovs.res <- 0
+                          ovs.tot <- 0
+                        }
+                      else{
+                        peaks <- extractPeaks_corr(fit.ref, plots = F)
+                        valleys <- peaks$bounds %>% unlist %>% unique
+                        
+                        # res.proms <- prominences(peaks, v2 = fit.ref)
+                        max.prom <- range(fit.ref, na.rm = T) %>% diff
+                        
+                        # For each run, expand outwards to nearest local minima in ref spec
+                        
+                          worst.res <- lapply(1:max(runs), function(r) {
+                              # r <- 1
+                              # print(r)
+                              inds <- which(runs == r)
+                                if(length(inds) < 3 | sum(peaks$truePeak) < 1)
+                                {
+                                  return(list(ratio.res = 0,
+                                              ratio.total = 0))
+                                }
+                                
+                              # Which ref peak are we looking at? What's its local prominence?
+                              # Expand out from the boundaries of the peak in the positive residuals
+                              # until you hit the next ref valley.
+                                valleys.below <- valleys <= min(inds)
+                                
+                                if (any(valleys.below))
+                                  {lower.bound <- max(valleys[valleys.below])}
+                                else{lower.bound <- min(inds)}
+        
+                                valleys.above <- valleys >= max(inds)
+                                
+                                if (any(valleys.above))
+                                  {upper.bound <- min(valleys[valleys.above])}
+                                else{upper.bound <- max(inds)}
+                                
+                                ref.prom <- range(fit.ref[lower.bound:upper.bound], na.rm = T) %>% diff
+                                
+                              # What's the height of the positive residual peak here?
+                                pos.res.prom <- range(residuals[inds], na.rm = T) %>% diff 
+                                # (these will only be the positive residuals)
+                              
+                              # What's the ratio?
+                                ratio.res <- pos.res.prom/ref.prom
+                                
+                              # or, weight using the ref peak's relative importance in the ref feature
+                              # * note: this could increase the score if pos.res straddles >1 resonance
+                                ratio.total <- pos.res.prom / max.prom
+                                
+                                return(list(ratio.res = ratio.res,
+                                            ratio.total = ratio.total))
+                                
+                          })
+                          
+                          ovs.res <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.res) %>% unlist
+                          ovs.tot <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.total) %>% unlist
+                      }
+                  }
+                  # Return results ####
+                    # To be double-sure no NULLs getting in:
+                    if (
+                          !is.numeric(ss.spec + fit.feat2spec$intercept + 
+                                      fit.feat2spec$ratio + spec.cols[1] + 
+                                      tail(spec.cols,1) + max(ovs.res) + 
+                                      max(ovs.tot))
+                        )
+                    {
+                      
+                      return(emptyRow())
+
+                    } else {
+                      
+                      return(data.frame(ss.spec = ss.spec,
+                                        fit.intercept = fit.feat2spec$intercept, 
+                                        fit.scale = fit.feat2spec$ratio,
+                                        spec.start = spec.cols[1],
+                                        spec.end = tail(spec.cols,1),
+                                        bffs.res = max(ovs.res), # tmp "bff"
+                                        bffs.tot = max(ovs.tot))) # tmp "bff"
+                    }
             }) %>% do.call(rbind,.)
+            
+            fits <- fits[!is.na(rowSums(fits)),]
             
           # Calculate bff from ovs score ####
           # 
@@ -264,7 +290,8 @@ backfit_rfs <- function(match.info,
         
         return(backfits.chunk)
         
-      }, mc.cores = ncores)
+      }, mc.cores = ncores
+      )
       
      
     

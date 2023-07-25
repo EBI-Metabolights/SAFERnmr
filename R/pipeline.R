@@ -202,7 +202,7 @@ pipeline <- function(params_loc, params_obj) {
     }
   }
 
-  
+  # Don't use lib.info path from now on. Assume it's in tmpdir
   file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
   
 ################################################################################################################################### 
