@@ -65,7 +65,10 @@ backfit_rfs <- function(match.info,
                                         spec.start = NA,
                                         spec.end = NA,
                                         bffs.res = NA, # tmp "bff"
-                                        bffs.tot = NA)}
+                                        bffs.tot = NA,
+                                        rmse = NA,
+                                        rmse.biased = NA)}
+  
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
     # Sort by ref, so we can group chunks by ref
@@ -118,13 +121,14 @@ backfit_rfs <- function(match.info,
       message('\tcomputing backfits over ', ncores, ' cores...')
       message('\tlarge numbers of matches or large datasets will take some time.')
       message('\tgo eat or get a coffee...\n\n')
-      browser()
+     
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
-            
+        # chunk <- chunks[[1]]
         backfits.chunk <- lapply(1:nrow(chunk$match.info),
                            function(m) {
         #############        For each match:         ###############
+            # m <- 1
             
           # Get data, expand fit ####
             
@@ -132,12 +136,13 @@ backfit_rfs <- function(match.info,
             
             # Rebuild the feature fit to ref region
             
-              fit <- apply_fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
-              ref.region <- c(mi$ref.start, mi$ref.end)
-              # plot_fit(fit, type = "simple") %>% plot
+              f.pos <- chunk$feature$position[mi$feat,]
+              feat.cols <- (mi$feat.start:mi$feat.end) %>% f.pos[.]
               
-              feat.cols <- c(mi$feat.start, mi$feat.end) %>% as.numeric %>% chunk$feature$position[mi$feat,.] %>% fillbetween
-  
+              fit <- apply_fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
+                # plot_fit(fit, type = "simple") %>% plot
+                fit$spec.fit[is.na(feat.cols)] <- NA # do not use ref region @ feature gaps!
+                
             # get info for the individual spec-features
             
               sfs <- data.frame(lag = chunk$feature$sfe[[mi$feat]]$lags,
@@ -147,35 +152,60 @@ backfit_rfs <- function(match.info,
           
             fits <- lapply(1:nrow(sfs), function(s){
               # Get the ref region and spec data: ####
-                
+                # s <- 1
                 sf <- sfs[s,]
                 ss.spec <- sf$spec.number
                 spec.cols <- feat.cols + sf$lag
 
               # Back-fit the ref region to the filled spec data using the feature ####
               
-                spec.region <- xmat[ss.spec, spec.cols]
+                spec.region <- xmat[ss.spec, spec.cols %>% range(na.rm = T) %>% fillbetween]
               
                 fit.feat2spec <- fit_batman(fit$feat.fit, spec.region, 
                                             exclude.lowest = .5)
+                  # plot_fit(fit.feat2spec, type = "simple") %>% plot
+                  
                 # If fit failed, return empty row: 
                   if (is.null(fit.feat2spec$ratio + fit.feat2spec$intercept)){
-                      return(emptyRow()) # tmp "bff"
-                  } else {
-                    # Go on and do calculations
-                    # plot_fit(fit.feat2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
                     
-                      fit.ref <- fit.feat2spec$ratio * fit$spec.fit + fit.feat2spec$intercept # here spec.fit is the ref.feature!
-                        # plot(fit.ref)
-                        # plot(spec.region)
-                        # rbind(fit.ref, spec.region) %>% simplePlot(linecolor = "black", xdir = 'normal')
+                      return(emptyRow()) # tmp "bff"
+                    
+                  } else {
+                    
+                    # Propagate fit ####
+                    
                       
-                      residuals <- fit.ref - spec.region
-                        
-        
+                      fit.ref2spec <- fit.feat2spec
+                      fit.ref <- fit.feat2spec$ratio * fit$spec.fit + fit.feat2spec$intercept # here spec.fit is the ref.feature!
+                        fit.ref2spec$feat.fit <- fit.ref
+                        # plot_fit(fit.ref2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
+                        # plot_fit(fit.ref2spec, type = "simple") %>% plot
+
+                      # rvalue is not useful here
+                      
+                    # Calculate scores ####
+                      
+                      srf <- rbind(fit.ref, spec.region) %>% scale_between()
+                      
+                      residuals <- srf[1,] - srf[2,]
+                      use <- !is.na(fit.ref - spec.region)
+                      
+                      # rbind(srf[1,],srf[2,], resid.biased, rep(0, length(resid.biased))) %>% simplePlot
+                      # plot(resid.biased)
+                      rmse <- Metrics::rmse(srf[1,use], srf[2,use]) # this would penalize underfits equally
+                      
+                      not.neg <- residuals >= 0  &  use
+                      # sqrt(sum(residuals[not.neg]^2)/length(residuals))
+                      # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
+                      # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
+                      # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
+                      resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
+                      rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
+                      
                     # Get pct. overshoot vector ####
-                      posres <- residuals > 0
-                        posres[is.na(posres)] <- 0
+                      posres <- not.neg
+                        residuals <- fit.ref - spec.region # NOT scaled
+                        # posres[is.na(posres)] <- 0 # no longer any NAs
                         
                     # Assume each run of positive overshoot is a resonance. ####
                     #    what % of its prominence is overshoot?             ####
@@ -186,13 +216,13 @@ backfit_rfs <- function(match.info,
                         {
                           ovs.res <- 0
                           ovs.tot <- 0
-                        }
-                      else{
-                        peaks <- extractPeaks_corr(fit.ref, plots = F)
-                        valleys <- peaks$bounds %>% unlist %>% unique
-                        
-                        # res.proms <- prominences(peaks, v2 = fit.ref)
-                        max.prom <- range(fit.ref, na.rm = T) %>% diff
+                      }else{
+                        # Calculate the backfit overlaps (res and tot)
+                          peaks <- extractPeaks_corr(fit.ref, plots = F)
+                          valleys <- peaks$bounds %>% unlist %>% unique
+                          
+                          # res.proms <- prominences(peaks, v2 = fit.ref)
+                          max.prom <- range(fit.ref, na.rm = T) %>% diff
                         
                         # For each run, expand outwards to nearest local minima in ref spec
                         
@@ -242,16 +272,13 @@ backfit_rfs <- function(match.info,
                           ovs.res <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.res) %>% unlist
                           ovs.tot <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.total) %>% unlist
                       }
+                      # Failed peak extraction does NOT error here, results in 0s for ovs scores
                   }
                   # Return results ####
                     # To be double-sure no NULLs getting in:
-                    if (
-                          !is.numeric(ss.spec + fit.feat2spec$intercept + 
+                    if (!is.numeric(ss.spec + fit.feat2spec$intercept + 
                                       fit.feat2spec$ratio + spec.cols[1] + 
-                                      tail(spec.cols,1) + max(ovs.res) + 
-                                      max(ovs.tot))
-                        )
-                    {
+                                      tail(spec.cols,1))){
                       
                       return(emptyRow())
 
@@ -263,7 +290,9 @@ backfit_rfs <- function(match.info,
                                         spec.start = spec.cols[1],
                                         spec.end = tail(spec.cols,1),
                                         bffs.res = max(ovs.res), # tmp "bff"
-                                        bffs.tot = max(ovs.tot))) # tmp "bff"
+                                        bffs.tot = max(ovs.tot),
+                                        rmse = rmse,
+                                        rmse.biased = rmse.biased)) # tmp "bff"
                     }
             }) %>% do.call(rbind,.)
             
