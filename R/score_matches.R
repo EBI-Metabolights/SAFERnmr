@@ -84,6 +84,8 @@ score_matches <- function(pars){
               data.frame(match = mi$id, # match # = backfit #
                          ref = mi$ref,
                          feat = mi$feat,
+                         feat.start = mi$feat.start,
+                         feat.end = mi$feat.end,
                          ref.start = mi$ref.start,
                          ref.end = mi$ref.end,
                          ss.spec = bf$ss.spec,

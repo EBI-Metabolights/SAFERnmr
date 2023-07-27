@@ -73,8 +73,13 @@ pair_score_summation <- function(pars, refmat){
         refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
       
       # # Normalize refs 
-        refmat <- refmat / Rfast::colsums(refmat, na.rm = T)
-
+        refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
+        
+      # Read in feature data and compress
+        feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
+        features.compressed <- feature$position %>% compress_stack
+        rm(feature)
+        
       message('Splitting data for parallelization...')
       # Pre-split the table and refs (reduce overhead) ####
         by.ref <- pbapply::pblapply(unique(ss.ref.pairs$ref), function(r) 
@@ -82,10 +87,15 @@ pair_score_summation <- function(pars, refmat){
           ref.pairs <- ss.ref.pairs[which(ss.ref.pairs$ref == r),]
           # We don't need the data for the fits, just the descriptive stats
           
+          f.nums <- ref.pairs$feat %>% unique
+          selection <- features.compressed %>% cstack_selectRows(f.nums)
+          
           if (nrow(ref.pairs) > 0){
             
             return(list(ref.num = r,
                         refspec = refmat[r, ],
+                        feat.models = selection,
+                        feat.nums = f.nums,
                         ref.pairs = ref.pairs))
           }  
           return(NULL)
@@ -94,10 +104,10 @@ pair_score_summation <- function(pars, refmat){
       rm(refmat)
       
       # Good idea to do some load-balancing here...
-        workloads <- lapply(chunks, function(x) nrow(ref.pairs)) %>% unlist
+        workloads <- lapply(by.ref, function(x) x$ref.pairs %>% nrow) %>% unlist
         plan <- distribute(workloads, across = pars$par$ncores, messages = F)
         
-        chonks <- lapply(1:ncores, function(core.number){
+        chonks <- lapply(1:pars$par$ncores, function(core.number){
           chonk <- by.ref[plan$core.ids == core.number]
           return(chonk)
         })
@@ -131,7 +141,10 @@ pair_score_summation <- function(pars, refmat){
                   r.num <- r.list$ref.num
                   refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
                   ref.pairs <- r.list$ref.pairs
-                
+                  feat.models <- cstack_expandRows(r.list$feat.models) %>% is.na %>% "!"()
+                  # how to use feat.num to index feat.models?
+                    ref.pairs$feat <- ref.pairs$feat %>% factor(levels = f.nums) %>% as.integer
+                    
                 # Compute ss interactions (combinations) for this ref ####
                   comb <- expand.grid(unique(ref.pairs$ref), unique(ref.pairs$ss.spec))
                     colnames(comb) <- c("ref", "ss.spec")
@@ -146,13 +159,17 @@ pair_score_summation <- function(pars, refmat){
                       
                     # Select relevant backfits and matches ####
                       rp.rows <- which(ref.pairs$ss.spec == ss.spec)
-  
+
                     # Make a tmp score and best.rf.index.used vector of length(refspec) for each score ####
                       
                       cum.bff.tot <- cum.bff.res <- cbt.best <- cbr.best <- rep(0, length(refspec))
   
                     # Loop through the matches associated with this ref - ss.spec pair ####
                     # Update the bff values in v with any higher bff at that point ####
+                      # refspec[is.na(refspec)] <- 0
+                      # reg <- 22000:27000
+                      # reg <- 24430:24550
+                      # scattermore::scattermoreplot(x = reg, y = cum.bff.res[reg], ylim=c(0,1))
                       for (j in rp.rows){
                         # j indexes the rows of rp.rows (ss.ref.pairs belonging to this chunk = this ref #)
                         # that match this dataset spectrum (ss.spec). These could include many matches. A 
@@ -160,24 +177,32 @@ pair_score_summation <- function(pars, refmat){
                         # could be derived from multiple matches as long as they involve the same ref and 
                         # have backfits to ss.spec. 
                         # 
-                        # i <- i + 1
-                        # j <- rp.rows[i]
+                        # idx <- idx + 1
+                        # j <- rp.rows[idx]
                         # Get the ref range for the matched ref-feat
                           # Where is the ref range? It's in the backfit, now.
             
-                          ref.range <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
+                          # ref.range <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
+                          ref.pts <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
+                          feat.model <- feat.models[ref.pairs$feat[j],] %>% .[ref.pairs$feat.start[j] : ref.pairs$feat.end[j]]
+                          ref.pts <- ref.pts[feat.model]
                           
                           bff <- ref.pairs[j, ]$bff.tot
                           # print(bff)
-                          replace <- (bff > cum.bff.tot[ref.range])
-                          cum.bff.tot[ref.range[replace]] <- bff
-                          cbt.best[ref.range[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from 
+                          replace <- (bff > cum.bff.tot[ref.pts])
+                          cum.bff.tot[ref.pts[replace]] <- bff
+                          cbt.best[ref.pts[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from 
   
                           bff <- ref.pairs[j, ]$bff.res
-                          replace <- (bff > cum.bff.res[ref.range])
-                          cum.bff.res[ref.range[replace]] <- bff
-                          cbr.best[ref.range[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from
-  
+                          replace <- (bff > cum.bff.res[ref.pts])
+                          cum.bff.res[ref.pts[replace]] <- bff
+                          cbr.best[ref.pts[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from
+                          
+                          # If you want to watch this happen...
+                          # Sys.sleep(.1)
+                          # scattermore::scattermoreplot(x = 1:length(cum.bff.res), y = cum.bff.res)
+                          # reg <- 24430:24550
+                          # scattermore::scattermoreplot(x = reg, y = cum.bff.res[reg], ylim=c(0,1))
                       }
                       
                     # Calculate score and report as data.frame of ss.spec-reference pairs ####
