@@ -36,7 +36,7 @@ score_matches <- function(pars){
     # match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
 
     lib.data.processed <- readRDS(paste0(this.run, "/lib.data.processed.RDS"))
-    backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
+    backfit.results <- readRDS(paste0(this.run, "/backfit.results2.RDS"))
       match.info <- backfit.results$match.info
       backfits <- backfit.results$backfits
     
@@ -62,8 +62,9 @@ score_matches <- function(pars){
       
       ss.ref.pairs <- pblapply(1:nrow(match.info), function(m) 
         {
+          # m <- 1
           # Get data for this match
-            print(m)
+            # print(m)
             bf <- backfits[[m]]
             mi <- match.info[m,]
             
@@ -74,8 +75,9 @@ score_matches <- function(pars){
           
             # Fast way (should be fine) ####
               
-              pct.ref <- sum(mi$ref.start:mi$ref.end %>% refmat[mi$ref, .], na.rm = T)
+              # pct.ref <- sum(mi$ref.start:mi$ref.end %>% refmat[mi$ref, .], na.rm = T)
                 # no need to sum the whole spectrum again; already normed to 1.
+                # this is now done during backfitting.
               
             # return slimmed df (expanded this score to all ss.spec x rf combinations) 
             # - this is just for scoring - needs very little data
@@ -87,7 +89,9 @@ score_matches <- function(pars){
                          ss.spec = bf$ss.spec,
                          bff.res = bf$bffs.res,
                          bff.tot = bf$bffs.tot,
-                         pct.ref = pct.ref)
+                         rmse = bf$rmse,
+                         rmse.biased = bf$rmse.biased,
+                         pct.ref = bf$pct.ref)
               
         }) %>% do.call(rbind,.)
 

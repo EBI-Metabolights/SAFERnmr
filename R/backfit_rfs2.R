@@ -39,6 +39,8 @@
 #' 
 #' Alternatively, one can loop through the rfs relevant to a given PRCS, then pull
 #' the ss-level table for each, and use that for scoring.
+#' 
+#' Note: as of 26JUL2023, this function will handle the pct.ref as well (instead of during score_matches().)
 #'
 #' @param match.info A data frame containing information about the matches between features and reference spectra
 #' @param feature List containing feature intensities and positions
@@ -79,7 +81,8 @@ backfit_rfs <- function(match.info,
       
       chunk.size <- max(1, nrow(match.info) / ncores)
       m.grp <- ceiling((1:nrow(match.info)) / chunk.size)
-      
+      refsums <- Rfast::colsums(ref.mat, na.rm = T)
+        
     # Assign feature, ref.mat, and match.info subsets to each chunk 
       chunks <- lapply(unique(m.grp), function(x) 
       {
@@ -95,6 +98,7 @@ backfit_rfs <- function(match.info,
         list(match.info = mi,
              ref.numbers = ref.numbers,
              refs = ref.mat[,ref.numbers, drop = F],
+             ref.sums = refsums[ref.numbers],
              feat.numbers = feat.numbers,
              feature = list(stack = feature$stack[feat.numbers, , drop=F],
                             position = feature$position[feat.numbers, , drop=F],
@@ -124,11 +128,12 @@ backfit_rfs <- function(match.info,
      
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
-        # chunk <- chunks[[1]]
+        # chunk <- chunks[[2]]
+        
         backfits.chunk <- lapply(1:nrow(chunk$match.info),
                            function(m) {
         #############        For each match:         ###############
-            # m <- 1
+            # m <- 1000
             
           # Get data, expand fit ####
             
@@ -138,10 +143,16 @@ backfit_rfs <- function(match.info,
             
               f.pos <- chunk$feature$position[mi$feat,]
               feat.cols <- (mi$feat.start:mi$feat.end) %>% f.pos[.]
-              
+                gaps <- is.na(feat.cols)
+                
               fit <- apply_fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
                 # plot_fit(fit, type = "simple") %>% plot
-                fit$spec.fit[is.na(feat.cols)] <- NA # do not use ref region @ feature gaps!
+                fit$spec.fit[gaps] <- NA # here, spec.fit is for the ref. do not use ref region @ feature gaps!
+                
+                # Calculate % of ref signature covered by this ref feat:
+                  ref.reg <- chunk$refs[mi$ref.start:mi$ref.end, mi$ref]
+                    ref.reg[gaps] <- NA
+                  pct.ref = sum(ref.reg, na.rm=T) / chunk$ref.sums[mi$ref]
                 
             # get info for the individual spec-features
             
@@ -180,7 +191,7 @@ backfit_rfs <- function(match.info,
                         fit.ref2spec$feat.fit <- fit.ref
                         # plot_fit(fit.ref2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
                         # plot_fit(fit.ref2spec, type = "simple") %>% plot
-
+                        
                       # rvalue is not useful here
                       
                     # Calculate scores ####
@@ -201,7 +212,7 @@ backfit_rfs <- function(match.info,
                       # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
                       resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
                       rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
-                      
+
                     # Get pct. overshoot vector ####
                       posres <- not.neg
                         residuals <- fit.ref - spec.region # NOT scaled
@@ -277,8 +288,8 @@ backfit_rfs <- function(match.info,
                   # Return results ####
                     # To be double-sure no NULLs getting in:
                     if (!is.numeric(ss.spec + fit.feat2spec$intercept + 
-                                      fit.feat2spec$ratio + spec.cols[1] + 
-                                      tail(spec.cols,1))){
+                                      fit.feat2spec$ratio + spec.cols[1] + ovs.res + ovs.tot +
+                                      tail(spec.cols,1) + rmse + rmse.biased + pct.ref)){
                       
                       return(emptyRow())
 
@@ -294,6 +305,7 @@ backfit_rfs <- function(match.info,
                                         rmse = rmse,
                                         rmse.biased = rmse.biased)) # tmp "bff"
                     }
+                
             }) %>% do.call(rbind,.)
             
             fits <- fits[!is.na(rowSums(fits)),]
@@ -312,7 +324,8 @@ backfit_rfs <- function(match.info,
               fits$bffs.res[fits$bffs.res<0] <- 0
             fits$bffs.tot <- 1-fits$bffs.tot
               fits$bffs.tot[fits$bffs.tot<0] <- 0
-          
+            fits$pct.ref <- pct.ref
+            
           # Return the minimal list of fits (minimal data)  ####
             return(fits)
         })
