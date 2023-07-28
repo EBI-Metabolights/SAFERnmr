@@ -36,7 +36,7 @@ score_matches <- function(pars){
     # match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
 
     lib.data.processed <- readRDS(paste0(this.run, "/lib.data.processed.RDS"))
-    backfit.results <- readRDS(paste0(this.run, "/backfit.results2.RDS"))
+    backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
       match.info <- backfit.results$match.info
       backfits <- backfit.results$backfits
     
@@ -105,7 +105,7 @@ score_matches <- function(pars){
   
       # Compute scores in function
         
-        pair_score_summation(pars, refmat)
+        pair_score_summation(pars, refmat) #  refs on rows
         
         ss.ref.pair.scores <- readRDS(paste0(this.run, "/ss.ref.pair.scores.RDS"))
         rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))

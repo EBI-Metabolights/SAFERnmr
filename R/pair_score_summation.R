@@ -74,7 +74,7 @@ pair_score_summation <- function(pars, refmat){
       # report as pairs with coords in matrix
       
         ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
-        refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
+        # refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
       
       # # Normalize refs 
         refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
@@ -284,7 +284,7 @@ pair_score_summation <- function(pars, refmat){
         
       # Each row of ss.ref.pair.scores data frame gets a list of rfs that contributed (to each score, separately).
       # Only included the ss.ref pairs which actually had rfs to add up
-      
+     
         rfs.used.tot.rfs <- score.list %>% lapply(function(x) {
           x$bfs.used.tot
         })
@@ -293,9 +293,15 @@ pair_score_summation <- function(pars, refmat){
           x$bfs.used.res
         })
         
-        rfs.used.min.rfs <- score.list %>% lapply(function(x) {
-          x$bfs.used.res
+        rfs.used.rmseb.rfs <- score.list %>% lapply(function(x) {
+          x$bfs.used.rmseb
         })
+        
+        rfs.used.min.rfs <- score.list %>% lapply(function(x) {
+          x$bfs.used.min.score
+        })
+        
+        
         
       # Coordinate in scores matrix between the two scores; lists of rfs differ
         rfs.used.score.coord <- score.list %>% lapply(function(x) 
@@ -310,11 +316,13 @@ pair_score_summation <- function(pars, refmat){
         
           rfs.used <- list(tot = rfs.used.tot.rfs,
                            res = rfs.used.res.rfs,
+                           rmseb = rfs.used.rmseb.rfs,
+                           min = rfs.used.min.rfs,
                            score.mat.coords = rfs.used.score.coord)
         
       message('\nwriting scores to file...')
       saveRDS(ss.ref.pair.scores, paste0(this.run, "/ss.ref.pair.scores.RDS"))
-      saveRDS(rfs.used, paste0(this.run, "/rfs.used2.RDS"))
+      saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
       
       message('Pair score summation complete.')
       # return(ss.ref.pair.scores, bfs.used)
