@@ -41,6 +41,10 @@
 #' 
 #' Update 27MAY2023: also records best ref feature for each ss x ref pair, to limit
 #' evidence presentation to only those which contribute to scores. 
+#' Upate 27JUL2023: no longer scoring for span of ref feature, but only for the 
+#' non-NA points (exclude NA gaps during scoring. To do this, added feature compression.
+#' Ref vectors could also be vastly compressed (individually or otherwise) to save
+#' on memory if needed. 
 #'
 #' @param pars A list of parameters specifying input/output directories and parallelization settings.
 #'
@@ -70,12 +74,16 @@ pair_score_summation <- function(pars, refmat){
       # report as pairs with coords in matrix
       
         ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
-        refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
+        # refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
       
       # # Normalize refs 
-      #   ref.sums <- mclapply(1:nrow(refmat), function(x) sum(refmat[x, ], na.rm=T), mc.cores = 10) %>% unlist
-      #   refmat <- refmat/ref.sums
-
+        refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
+        
+      # Read in feature data and compress
+        feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
+        features.compressed <- feature$position %>% compress_stack
+        rm(feature)
+        
       message('Splitting data for parallelization...')
       # Pre-split the table and refs (reduce overhead) ####
         by.ref <- pbapply::pblapply(unique(ss.ref.pairs$ref), function(r) 
@@ -83,10 +91,15 @@ pair_score_summation <- function(pars, refmat){
           ref.pairs <- ss.ref.pairs[which(ss.ref.pairs$ref == r),]
           # We don't need the data for the fits, just the descriptive stats
           
+          f.nums <- ref.pairs$feat %>% unique
+          selection <- features.compressed %>% cstack_selectRows(f.nums)
+          
           if (nrow(ref.pairs) > 0){
             
             return(list(ref.num = r,
                         refspec = refmat[r, ],
+                        feat.models = selection,
+                        feat.nums = f.nums,
                         ref.pairs = ref.pairs))
           }  
           return(NULL)
@@ -94,99 +107,171 @@ pair_score_summation <- function(pars, refmat){
         
       rm(refmat)
       
-     message('Setting up parallel processes...')
-    # Par dependencies ####
-        # library(doParallel)
-        # library(parallel)
-        # library(foreach)
-
-   
+      # Good idea to do some load-balancing here... ####
+        workloads <- lapply(by.ref, function(x) x$ref.pairs %>% nrow) %>% unlist
+        plan <- distribute(workloads, across = pars$par$ncores, messages = F)
+        
+        chonks <- lapply(1:pars$par$ncores, function(core.number){
+          chonk <- by.ref[plan$core.ids == core.number]
+          return(chonk)
+        })
+        
+        rm(by.ref)
+      
       
       message('Computing scores...')
-     
-    # Calculate the score in parallel ####
+
+          
+    # Calculate the scores in parallel ####
+    
         t1 <- Sys.time()
         
             
-            score.list <- mclapply(by.ref, mc.cores = pars$par$ncores, 
+            score.list <- mclapply(chonks, mc.cores = pars$par$ncores, 
                                            FUN = function(r.list)                             
             {
-              # For each ref:
-              
-              # r.list <- by.ref[[1]]
-              
-              # Make sure there are actually spectra in the interactions list ####
-                if(nrow(r.list$ref.pairs) < 1){return(NULL)}
-              
-              # Extract the interactions info from the r.list object for this ref ####
-                r.num <- r.list$ref.num
-                refspec <- r.list$refspec /sum(r.list$refspec, na.rm = T) # already normed
-                ref.pairs <- r.list$ref.pairs
-              
-              # Compute ss interactions (combinations) for this ref ####
-                comb <- expand.grid(unique(ref.pairs$ref), unique(ref.pairs$ss.spec))
-                  colnames(comb) <- c("ref", "ss.spec")
-                  # v.zeros <- rep(0, length(refspec))
-              
-              # Loop through ref-ss.spec combinations and calculate scores ####
-                lapply(1:nrow(comb), function(i){
-                    # print(i)
-                  # Select the pair ####
-                    ref <- comb$ref[i]
-                    ss.spec <- comb$ss.spec[i]
+              # chonk <- chonks[[1]]                               
+              # Go through this list of by.refs
+                                                                         
+              lapply(chonk, function(r.list){
+                  
+                # For each ref:
+                
+                # r.list <- chonk[[1]]
+                
+                # Make sure there are actually spectra in the interactions list ####
+                  if(nrow(r.list$ref.pairs) < 1){return(NULL)}
+                
+                # Extract the interactions info from the r.list object for this ref ####
+                  r.num <- r.list$ref.num
+                  refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
+                  ref.pairs <- r.list$ref.pairs
+                  feat.models <- cstack_expandRows(r.list$feat.models) %>% is.na %>% "!"()
+                  # how to use feat.num to index feat.models?
+                    ref.pairs$feat <- ref.pairs$feat %>% factor(levels = r.list$feat.nums) %>% as.integer
+                    # NOTE: this is only temporary and ref.pairs$feat should ONLY be used 
+                    # to pull from feat.models after this point in this function!!!
+                    # MTJ double-checked this on 28JUL2023
                     
-                  # Select relevant backfits and matches ####
-                    rp.rows <- which(ref.pairs$ss.spec == ss.spec)
+                # Compute ss interactions (combinations) for this ref ####
+                  comb <- expand.grid(unique(ref.pairs$ref), unique(ref.pairs$ss.spec))
+                    colnames(comb) <- c("ref", "ss.spec")
 
-                  # Make a tmp score and best.rf.index.used vector of length(refspec) for each score ####
+                # Set up cumulative score vector objs (will be recycled each sample iteration) ####
+              
+                  bff.tot <- list(score.name = 'bff.tot',
+                                  scores = rep(0, length(refspec)),
+                                  rf.ids = rep(0, length(refspec)))
+                  bff.res <- bff.tot
+                    bff.res$score.name = 'bff.res'
+                  rmseb <- bff.tot
+                    rmseb$score.name = 'rmse.biased'
+                  min.score <- bff.tot
+                    min.score$score.name = 'min.score'
+
+                  ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$bff.res,
+                                                              ref.pairs$bff.tot,
+                                                              ref.pairs$rmse.biased))
                     
-                    cum.bff.tot <- cum.bff.res <- cbt.best <- cbr.best <- rep(0, length(refspec))
+                # Loop through ref-ss.spec combinations and calculate scores ####
+                # - score objects will be re-copied for each lapply iteration, so 
+                #   no need to reset between samples. 
+                # - only the 5 score objects are retained 
+                
+                  lapply(1, function(i){
+                      # print(i)
+                    # Select the pair ####
+                      ref <- comb$ref[i]
+                      ss.spec <- comb$ss.spec[i]
+                      
+                    # Select relevant backfits and matches ####
+                      rp.rows <- which(ref.pairs$ss.spec == ss.spec)
 
-                  # Loop through the matches associated with this ref - ss.spec pair ####
-                  # Update the bff values in v with any higher bff at that point ####
-                    for (j in rp.rows){
-                      # j indexes the rows of rp.rows (ss.ref.pairs belonging to this chunk = this ref #)
-                      # that match this dataset spectrum (ss.spec). These could include many matches. A 
-                      # match could also give rise to many rp.rows, because of the different spectra. rp.rows
-                      # could be derived from multiple matches as long as they involve the same ref and 
-                      # have backfits to ss.spec. 
-                      # 
-                      # i <- i + 1
-                      # j <- rp.rows[i]
-                      # Get the ref range for the matched ref-feat
-                        # Where is the ref range? It's in the backfit, now.
-          
-                        ref.range <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
+                    # Loop through the matches associated with this ref - ss.spec pair ####
+                    # Update the bff values in v with any higher bff at that point ####
+                      ## Plotting to show in action:
+                        # refspec[is.na(refspec)] <- 0
+                        # reg <- 22000:27000
+                        # reg <- 19000:27000
+                        # jpeg(file=paste0("rf.scoring",'ref_',ref,".jpeg"), width=1200, height=700)
+                        #   simplePlot(xvect = reg, ymat = refspec[reg], linecolor = "blue", xdir = 'normal')
+                        # dev.off()
+                        # jpeg(file=paste0("rf.scoring",'spec_',ss.spec,".jpeg"), width=1200, height=700)
+                        #   simplePlot(xvect = reg, ymat = xmat[ss.spec, reg], linecolor = "blue", xdir = 'normal')
+                        # dev.off()
                         
-                        bff <- ref.pairs[j, ]$bff.tot
-                        # print(bff)
-                        replace <- (bff > cum.bff.tot[ref.range])
-                        cum.bff.tot[ref.range[replace]] <- bff
-                        cbt.best[ref.range[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from 
-
-                        bff <- ref.pairs[j, ]$bff.res
-                        replace <- (bff > cum.bff.res[ref.range])
-                        cum.bff.res[ref.range[replace]] <- bff
-                        cbr.best[ref.range[replace]] <- ref.pairs$match[j] # record which backfit (match #) it came from
-
-                    }
-                    
-                  # Calculate score and report as data.frame of ss.spec-reference pairs ####
-                  use <- cum.bff.tot > 0
-                  score.tot <- sum(cum.bff.tot[use] * refspec[use], na.rm = T)
-                  score.res <- sum(cum.bff.res[use] * refspec[use], na.rm = T)
-                  
-                  list(
-                         bfs.used.tot = unique(cbt.best[cbt.best > 0]), # keep these around; they're the best evidence
-                         bfs.used.res = unique(cbr.best[cbr.best > 0]), # keep these around; they're the best evidence
-                         pair.scores = data.frame(ss.spec = ss.spec,
-                                                  ref = r.num,
-                                                  score.tot = score.tot, 
-                                                  score.res = score.res)
-                  )
-                  
-              }) 
+                        # j <- 0
+                        # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
+                        #   scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                        # dev.off()
+                      for (j in rp.rows){
+                        # j indexes the rows of rp.rows (ss.ref.pairs belonging to this chunk = this ref #)
+                        # that match this dataset spectrum (ss.spec). These could include many matches. A 
+                        # match could also give rise to many rp.rows, because of the different spectra. rp.rows
+                        # could be derived from multiple matches as long as they involve the same ref and 
+                        # have backfits to ss.spec. 
+                        # 
+                        # idx <- idx + 1
+                        # j <- rp.rows[idx]
+                        # Get the ref range for the matched ref-feat
+                          # Where is the ref range? It's in the backfit, now.
             
+                          # ref.range <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
+                          
+                          feat.model <- feat.models[ref.pairs$feat[j],] %>% .[ref.pairs$feat.start[j] : ref.pairs$feat.end[j]]
+                          ref.pts <- (ref.pairs$ref.start[j] : ref.pairs$ref.end[j]) %>% .[feat.model]
+
+                        # Calculate the scores
+                          # bff total 
+                            
+                            bff.tot <- update_scoreObj(ref.pairs[j, ], bff.tot, ref.pts)
+                            
+                          # bff (resonance) 
+                          
+                            bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+                            
+                          # rmse biased
+                          
+                            rmseb <- update_scoreObj(ref.pairs[j, ], rmseb, ref.pts)
+                            
+                          # Or: pick the worst score from each of them
+                          
+                            min.score <- update_scoreObj(ref.pairs[j, ], rmseb, ref.pts)
+                          
+                          # If you want to watch this happen...
+                          # Sys.sleep(.2)
+                          # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
+                          #   scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                          # dev.off()
+                          
+                      }
+                    
+                    # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
+                    
+                      bff.tot <- sum_score(bff.tot, refspec)
+                      bff.res <- sum_score(bff.res, refspec)
+                      rmseb <- sum_score(rmseb, refspec)
+                      min.score <- sum_score(min.score, refspec)
+                    
+                    # Return a list of score information for this sample-ref pair: ####
+                    
+                      list(
+                             bfs.used.tot = bff.tot$rf.ids.tot, # keep these around; they're the best evidence
+                             bfs.used.res = bff.res$rf.ids.tot, # keep these around; they're the best evidence
+                             bfs.used.rmseb = rmseb$rf.ids.tot, # keep these around; they're the best evidence
+                             bfs.used.min.score = min.score$rf.ids.tot, # keep these around; they're the best evidence
+                             pair.scores = data.frame(ss.spec = ss.spec,
+                                                      ref = r.num,
+                                                      score.tot = bff.tot$scores.tot, 
+                                                      score.res = bff.res$scores.tot,
+                                                      score.rmseb = rmseb$scores.tot,
+                                                      score.min = min.score$scores.tot)
+                      )
+                    
+                })
+                  
+              }) %>% unlist(recursive = F)   
+              
             }) %>% unlist(recursive = F, use.names = F)
       
         print(Sys.time() - t1)
@@ -199,7 +284,7 @@ pair_score_summation <- function(pars, refmat){
         
       # Each row of ss.ref.pair.scores data frame gets a list of rfs that contributed (to each score, separately).
       # Only included the ss.ref pairs which actually had rfs to add up
-      
+     
         rfs.used.tot.rfs <- score.list %>% lapply(function(x) {
           x$bfs.used.tot
         })
@@ -207,6 +292,16 @@ pair_score_summation <- function(pars, refmat){
         rfs.used.res.rfs <- score.list %>% lapply(function(x) {
           x$bfs.used.res
         })
+        
+        rfs.used.rmseb.rfs <- score.list %>% lapply(function(x) {
+          x$bfs.used.rmseb
+        })
+        
+        rfs.used.min.rfs <- score.list %>% lapply(function(x) {
+          x$bfs.used.min.score
+        })
+        
+        
         
       # Coordinate in scores matrix between the two scores; lists of rfs differ
         rfs.used.score.coord <- score.list %>% lapply(function(x) 
@@ -221,6 +316,8 @@ pair_score_summation <- function(pars, refmat){
         
           rfs.used <- list(tot = rfs.used.tot.rfs,
                            res = rfs.used.res.rfs,
+                           rmseb = rfs.used.rmseb.rfs,
+                           min = rfs.used.min.rfs,
                            score.mat.coords = rfs.used.score.coord)
         
       message('\nwriting scores to file...')
@@ -230,4 +327,56 @@ pair_score_summation <- function(pars, refmat){
       message('Pair score summation complete.')
       # return(ss.ref.pair.scores, bfs.used)
 }
-      
+
+
+#########################################################################################################
+#' Update ref-sample scoring vectors (accessory function for pair_score_summation())
+#' @param rp ref.pair row 
+#' @param score.obj list containing
+#'                    - score.name (must be a column name in rp), 
+#'                    - score.vect (vector of length(refspec) indexed by ref.pts) containing current scores for each ref point
+#'                    - rf.vect (vector of length(refspec) indexed by ref.pts) containing corresponding rf.id for rf which set the current score at each point
+#' @param ref.pts indices of score.vect and rf.vect corresponding to this rf; those we are currently updating
+#'
+#' @return score object with relevant points updated in both vectors  
+#' Example: bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+#'
+#' @export
+update_scoreObj <- function(rp, score.obj, ref.pts){
+  # Get score from refpair row rp
+    rf.score <- as.numeric(rp[score.obj$score.name])
+  
+  # Compare to scores vect (already subsetted for ref.pts)
+    replace <- (rf.score > score.obj$scores[ref.pts])
+  
+  # For points which had a score lower than this rf's score, replace:
+    score.obj$scores[ref.pts[replace]] <- rf.score  
+    
+  # Also record which rf gave rise to those updated scores:
+    score.obj$rf.ids[ref.pts[replace]] <- rp$match # record which backfit (match #) it came from
+
+  return(score.obj)
+}
+
+#########################################################################################################
+#' Sum the score in the scoresObj
+#' @param rp ref.pair row 
+#' @param score.obj list containing
+#'                    - score.name (must be a column name in rp), 
+#'                    - score.vect (vector of length(refspec) indexed by ref.pts) containing current scores for each ref point
+#'                    - rf.vect (vector of length(refspec) indexed by ref.pts) containing corresponding rf.id for rf which set the current score at each point
+#' @param ref.pts indices of score.vect and rf.vect corresponding to this rf; those we are currently updating
+#'
+#' @return score object with relevant points updated in both vectors  
+#' Example: bff.res <- update_scoreObj(ref.pair[j, ], bff.res, ref.pts)
+#'
+#' @export
+sum_score <- function(score.obj, refspec){
+
+  use <- score.obj$scores > 0
+  score.obj$scores.tot <- sum(score.obj$scores[use] * refspec[use], na.rm = T)
+  score.obj$rf.ids.tot <- unique(score.obj$rf.ids[use])
+  
+  return(score.obj)
+}
+   

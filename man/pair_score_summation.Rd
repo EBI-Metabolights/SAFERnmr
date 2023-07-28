@@ -56,5 +56,9 @@ across the score vector gives a total association score between a reference
 spectrum and a dataset spectrum.
 
 Update 27MAY2023: also records best ref feature for each ss x ref pair, to limit
-evidence presentation to only those which contribute to scores.
+evidence presentation to only those which contribute to scores. 
+Upate 27JUL2023: no longer scoring for span of ref feature, but only for the 
+non-NA points (exclude NA gaps during scoring. To do this, added feature compression.
+Ref vectors could also be vastly compressed (individually or otherwise) to save
+on memory if needed.
 }
