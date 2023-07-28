@@ -24,7 +24,7 @@ plot_fit <- function(fit, type = "simple",
   
   if (is.null(ppm)){ppm <- which(!is.na(fit$spec.fit))}
   # if (any(is.na(ppm))){complete_indsVect(ppm)}
-    
+  
   if (type == "simple"){
     
       g <- simplePlot(fit$spec.fit,

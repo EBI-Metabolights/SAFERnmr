@@ -125,15 +125,16 @@ backfit_rfs <- function(match.info,
       message('\tcomputing backfits over ', ncores, ' cores...')
       message('\tlarge numbers of matches or large datasets will take some time.')
       message('\tgo eat or get a coffee...\n\n')
-     
+    
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
+      # backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
         # chunk <- chunks[[2]]
         
         backfits.chunk <- lapply(1:nrow(chunk$match.info),
                            function(m) {
         #############        For each match:         ###############
-            # m <- 1000
+            # m <- 570
             
           # Get data, expand fit ####
             
@@ -144,10 +145,15 @@ backfit_rfs <- function(match.info,
               f.pos <- chunk$feature$position[mi$feat,]
               feat.cols <- (mi$feat.start:mi$feat.end) %>% f.pos[.]
                 gaps <- is.na(feat.cols)
+                rbind(chunk$feature$stack[mi$feat,mi$feat.start:mi$feat.end], 
+                      chunk$refs[mi$ref.start:mi$ref.end, mi$ref]) %>% simplePlot
                 
-              fit <- apply_fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
-                # plot_fit(fit, type = "simple") %>% plot
-                fit$spec.fit[gaps] <- NA # here, spec.fit is for the ref. do not use ref region @ feature gaps!
+              # Apply feature fit to ref region
+                fit <- apply_fit(mi, feat.stack = chunk$feature$stack, ref.stack = chunk$refs)
+                  # fit$feat.fit %>% simplePlot
+                  # fit$spec.fit %>% simplePlot
+                  # plot_fit(fit, type = "simple") %>% plot
+                  fit$spec.fit[gaps] <- NA # here, spec.fit is for the ref. do not use ref region @ feature gaps!
                 
                 # Calculate % of ref signature covered by this ref feat:
                   ref.reg <- chunk$refs[mi$ref.start:mi$ref.end, mi$ref]
@@ -172,8 +178,8 @@ backfit_rfs <- function(match.info,
               
                 spec.region <- xmat[ss.spec, spec.cols %>% range(na.rm = T) %>% fillbetween]
               
-                fit.feat2spec <- fit_batman(fit$feat.fit, spec.region, 
-                                            exclude.lowest = .5)
+                # fit.feat2spec <- fit_batman(fit$spec.fit, spec.region, 
+                #                             exclude.lowest = .5)
                   # plot_fit(fit.feat2spec, type = "simple") %>% plot
                   
                 # If fit failed, return empty row: 
@@ -186,9 +192,11 @@ backfit_rfs <- function(match.info,
                     # Propagate fit ####
                     
                       
-                      fit.ref2spec <- fit.feat2spec
-                      fit.ref <- fit.feat2spec$ratio * fit$spec.fit + fit.feat2spec$intercept # here spec.fit is the ref.feature!
-                        fit.ref2spec$feat.fit <- fit.ref
+                      fit.ref2spec <- fit_batman(fit$spec.fit, spec.region, 
+                                            exclude.lowest = .5)
+                      
+                      # fit.ref <- fit.feat2spec$ratio * fit$spec.fit + fit.feat2spec$intercept # here spec.fit is the ref.feature!
+                        fit.ref <- fit.ref2spec$feat.fit
                         # plot_fit(fit.ref2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
                         # plot_fit(fit.ref2spec, type = "simple") %>% plot
                         
@@ -206,13 +214,17 @@ backfit_rfs <- function(match.info,
                       rmse <- Metrics::rmse(srf[1,use], srf[2,use]) # this would penalize underfits equally
                       
                       not.neg <- residuals >= 0  &  use
-                      # sqrt(sum(residuals[not.neg]^2)/length(residuals))
-                      # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
-                      # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
-                      # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
-                      resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
-                      rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
-
+                      if(!any(not.neg)){
+                        rmse.biased <- 0
+                      }else{
+                        # sqrt(sum(residuals[not.neg]^2)/length(residuals))
+                        # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
+                        # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
+                        # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
+                        resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
+                        rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
+                      }
+                      
                     # Get pct. overshoot vector ####
                       posres <- not.neg
                         residuals <- fit.ref - spec.region # NOT scaled
@@ -324,7 +336,10 @@ backfit_rfs <- function(match.info,
               fits$bffs.res[fits$bffs.res<0] <- 0
             fits$bffs.tot <- 1-fits$bffs.tot
               fits$bffs.tot[fits$bffs.tot<0] <- 0
+            fits$rmse.biased <- 1-fits$rmse.biased
+            
             fits$pct.ref <- pct.ref
+            
             
           # Return the minimal list of fits (minimal data)  ####
             return(fits)

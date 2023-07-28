@@ -25,7 +25,8 @@ filter_matches_shiftDelta <- function(match.info,
       ######################### Calculate deltappm distance (specppm - featureppm)  #############################    
     
           # Get the xmat column of each feature's first element (even if NA)
-          
+            # (feat.start is based of that element)
+            
           # This allows much much slimmer data. 
             fpos.el1.xmat <- lapply(1:nrow(feature.positions), function(r) {
               

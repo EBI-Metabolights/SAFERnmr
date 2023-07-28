@@ -144,7 +144,7 @@ filter_matches <- function(pars){
     # Back-fit each matched reference region to the subset spectra
       # adjusted to account for sfe
 
-        backfit.results <- backfit_rfs(match.info[1:10000,], 
+        backfit.results <- backfit_rfs(match.info, 
                                        feature, # has sfe data 
                                        xmat,
                                        ref.mat, 
