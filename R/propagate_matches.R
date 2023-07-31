@@ -18,6 +18,13 @@
 #'
 #' @param match.info match info table (each row describes an rf)
 #' @param cluster object (list) with cluster information, as provided by tina
+#' @param feature.stack feature profiles on rows
+#' @param ref.mat refs
+#' @param ncores pars
+#' @param r.thresh pars
+#' @param p.thresh pars
+#' @param pad.size from matching
+#' @param this.run pars
 #' 
 #' @return updated and expanded match.info object. * Note: weighted.rmse and peak-specific fields may be duplicated/missing, as they cannot be computed here (or don't matter going forward)
 #' @importFrom parallel mclapply
@@ -29,32 +36,9 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
     
   
         # Set up default empty row:
-          emptyRow <- function(){
-            data.frame( 
-              feat = NA,
-              ref = NA,
-              lag = NA, 
-              rval = NA,
-              pval = NA,
-              pts.matched = NA,
-              pts.feat = NA,
-              feat.start = NA,
-              feat.end = NA,
-              ref.start = NA,
-              ref.end = NA,
-              fit.intercept = NA,
-              fit.scale = NA,
-              wasserstein.score = NA,
-              sum.residuals = NA, 
-              rmse = NA, 
-              rmse.weighted = NA,
-              numpeaks.feat = NA, 
-              numpeaks.ref = NA, 
-              numpeaks.feat.nnf = NA, 
-              refpeaks.matched = NA
-            )
-          }
-  
+          emptyRow <- match.info[1,]
+          emptyRow[,1:ncol(emptyRow)] <- NA
+
         message('\n Propagating matches to cluster members...')
         matched.feats <- match.info$feat %>% unique
         n.matches.before <- nrow(match.info)
@@ -98,7 +82,8 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
           
         # Compute new match.info for cluster members ####
           t1 <- Sys.time()
-          new.data <- mclapply(feats.by.size, function(fstack.row) {
+          # new.data <- mclapply(feats.by.size, function(fstack.row) {
+          new.data <- pblapply(feats.by.size, function(fstack.row) {
             
             # Which cluster does this feature it belong to? ####
               # Behind each row of fstack is 1 or more feature indices
@@ -186,7 +171,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                           
                         # Calculate the fit between the initial rf and the cluster.member ####
                           # there are a lot of ways this can fail, so for now, putting in a tryCatch:
-                          # if (sum(is.na(feat[feat.reg] + ref.feat[feat.reg])) < 4){return(emptyRow())}
+                          # if (sum(is.na(feat[feat.reg] + ref.feat[feat.reg])) < 4){return(emptyRow)}
                           
                           rf <- tryCatch(
                                   {
@@ -197,10 +182,10 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                          
                                   },
                                   error=function(cond) {
-                                      return(emptyRow())
+                                      return(emptyRow)
                                   },
                                   warning=function(cond) {
-                                      return(emptyRow())
+                                      return(emptyRow)
                                   }
                           )
                       
@@ -214,7 +199,7 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                 
                 if(is.null(member.matches)){
                   
-                  return(emptyRow())
+                  return(emptyRow)
                   
                 }
                 
@@ -227,10 +212,11 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                   
               } else {
                 # If single feature, don't expand.
-                return(emptyRow())
+                return(emptyRow)
               }
               
-          }, mc.cores = ncores)
+          }#, mc.cores = ncores
+     )
           
           saveRDS(new.data, paste0(this.run,'/new.data.RDS'))
           # new.data <- readRDS('/Users/mjudge/Documents/new.data.RDS')

@@ -20,6 +20,20 @@ propagate_matches(
 \item{match.info}{match info table (each row describes an rf)}
 
 \item{cluster}{object (list) with cluster information, as provided by tina}
+
+\item{feature.stack}{feature profiles on rows}
+
+\item{ref.mat}{refs}
+
+\item{ncores}{pars}
+
+\item{r.thresh}{pars}
+
+\item{p.thresh}{pars}
+
+\item{pad.size}{from matching}
+
+\item{this.run}{pars}
 }
 \value{
 updated and expanded match.info object. * Note: weighted.rmse and peak-specific fields may be duplicated/missing, as they cannot be computed here (or don't matter going forward)
