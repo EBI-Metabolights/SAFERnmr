@@ -173,7 +173,7 @@ tina <- function(pars){
                 sfe(feature, i,
                          xmat,
                          ppm,
-                         r.thresh = 0.8)
+                         r.thresh = pars$storm$correlation.r.cutoff)
               }, mc.cores = pars$par$ncores)
 
             message('\n\tParallel sfe done on ', length(features.specd), ' features.')
@@ -181,7 +181,10 @@ tina <- function(pars){
 
         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
         # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
-
+        failed <- lapply(features.specd, function(res){
+          
+        })
+        
 ########### Adjust feature object with sfe results  ############################################################
     # Apply/add new feature info to old features #####
       # profile stack must be updated

@@ -86,18 +86,26 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
       
         # m <- 1
       # Fit this spec to the profile to scale to match other instances (invert fit later)
-      
-        fit <- fit_leastSquares(v1 = aligned$feat$profile,
-                         v2 = aligned$valsmat[m,], 
-                         ppm = ppm[aligned$feat$position],
-                         plots = F,
-                         scale.v2 = F)
+        fit <- NULL
+        
+        fit <- tryCatch(expr = {
+        
+          fit_leastSquares(v1 = aligned$feat$profile,
+                           v2 = aligned$valsmat[m,], 
+                           ppm = ppm[aligned$feat$position],
+                           plots = F,
+                           scale.v2 = F)
+        })
+
         return(fit)
     })
 
+    
     rmses <- lapply(fits, function(fit) fit$rmse) %>% unlist
     fits <- lapply(fits, function(fit) fit$fit)
     
+    # is.null(res$feat) | is.null(res$fits) | is.null(res$)
+  
   # Return updated feature ####
 
         return(list(feat = aligned$feat,
