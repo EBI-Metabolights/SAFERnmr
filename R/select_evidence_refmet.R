@@ -119,12 +119,13 @@ select_evidence_refmet <- function(ref = NULL,
               ref.rngs <- ref.rngs[, close.enough]
               spec.rngs <- spec.rngs[, close.enough]
               
-   ########## Expand the fits? ##########
+   ########## Expand the fits ##########
    
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
             # Compute on the fly
               rff <- rf.specFits[x, ]
+              
               rf <- rff$ref.start:rff$ref.end %>% ld$mapped$data[.]
               fit.ref <- as.numeric(rff$fit.intercept) + (rf * as.numeric(rff$fit.scale))
               return(fit.ref)

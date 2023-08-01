@@ -113,7 +113,8 @@ score_matches <- function(pars){
       
       # Put into matrix
         
-          scores <- ss.ref.pair.scores$score.tot
+          scores <- ss.ref.pair.scores$score.min
+          # scores <- ss.ref.pair.scores$score.tot
           # scattermore::scattermoreplot(seq_along(scores), sort(scores))
           # hist(scores, breaks = 1000)
           

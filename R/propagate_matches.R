@@ -49,174 +49,156 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
             cluster$groups[[clust.number]] %>% length
           }) %>% unlist
           
+          plan <- distribute(workloads = cluster.size, across = ncores)
           feats.by.size <- matched.feats[order(cluster.size)]
         
         # Partition data ####
           # browser()
-          # chunks <- lapply(feats.by.size, function(f) {
-          #   f <- feats.by.size[3000]
-          #   # Pull cluster info ####
-          # 
-          #     clust.key <- cluster$keys[clust.number] # actual name of the key - should be fstack.row
-          #     cluster.members <- cluster$groups[[clust.number]]
-          #     clust.info <- cluster$info[[clust.number]]
-          # 
-          #     # Put lag table in terms of matching to key ####
-          # 
-          #       clust.lags <- clust.info$lag.table %>% pw_lags_relative_to(clust.key)
-          # 
-          #       # lag_features(feature$stack, clust.lags, to = clust.key) %>% trim_sides %>% stackplot #%>% simplePlot(linecolor = 'black')
-          # 
-          #   # Match info for key feature and cluster members
-          # 
-          #     clust.matches <- match.info[match.info$feat == clust.key, ]
-          #     nonkey.members <- cluster.members[cluster.members != clust.key]
-          # 
-          #   # Feature profile for key feature and cluster members
-          #     member.feats <- lapply(nonkey.members, function(cluster.member){
-          #       feat <- feature.stack[cluster.member, ] 
-          #     })
-          # 
-          # })
-          
+          chunks <- lapply(unique(plan$core.ids), function(chunk.number) {
+            matched.feats[plan$core.ids == chunk.number]
+          })
+          browser()
           
         # Compute new match.info for cluster members ####
           t1 <- Sys.time()
-          # new.data <- mclapply(feats.by.size, function(fstack.row) {
-          new.data <- pblapply(feats.by.size, function(fstack.row) {
-            
-            # Which cluster does this feature it belong to? ####
-              # Behind each row of fstack is 1 or more feature indices
-                
-                # For now, just assume these are the row numbers in the original featureStack (with all cluster members)
-  
-                  clust.number <- which(cluster$keys %in% fstack.row) # just an index, not the key feature
+          new.data <- mclapply(chunks, function(chunk) {
+          # new.data <- pblapply(chunks, function(chunk) {
+              # chunk <- chunks[[1]]
+              chunk.matches <- pblapply(chunk[1:10], function(fstack.row){
             
               
-            # Pull cluster info ####
-            
-              clust.key <- cluster$keys[clust.number] # actual name of the key - should be fstack.row
-              cluster.members <- cluster$groups[[clust.number]]
-              clust.info <- cluster$info[[clust.number]]
-              
-              # Put lag table in terms of matching to key ####
-              
-                clust.lags <- clust.info$lag.table %>% pw_lags_relative_to(clust.key)
-              
-                # lag_features(feature$stack, clust.lags, to = clust.key) %>% trim_sides %>% stackplot #%>% simplePlot(linecolor = 'black')
-  
-            # Match info for key feature
-              clust.matches <- match.info[match.info$feat == clust.key, ]
-              
-  
-              ############             
-              ############ # For each non-key cluster member: ############
-
-              nonkey.members <- cluster.members[cluster.members != clust.key]
-              
-              if (length(nonkey.members) > 0){
-                
-                # Copy match info for each cluster member (recopy first one), and recalculate:
-                # - match info (adjust position)
-                # - fit to ref 
-                
-                member.matches <- lapply(nonkey.members, function(cluster.member){
+              # Which cluster does this feature it belong to? ####
+                # Behind each row of fstack is 1 or more feature indices
                   
-                  # print(cluster.member)
-                  # cluster.member <- nonkey.members[1]
-                  
-                    # Copy the match info to other member ####
-                      new.matches <- clust.matches
-                      new.matches$feat <- cluster.member
-                      
-                    # Update the lag based on cluster.info ####
+                  # For now, just assume these are the row numbers in the original featureStack (with all cluster members)
     
-                      # Are the lags additive? Yes, subtract lag (f1 to f2) from lag (feat to ref)
-                      # Does the feat.start, feat.end need to be adjusted?
-                      lag <- clust.lags$lag.in.f2[ clust.lags$f1 == cluster.member ]
-                      new.matches$lag <- new.matches$lag + lag
-                      
-     # ####                   
-     ############ # For each ref feat for that cluster member: ####################################################
-     
-                    rfs.new <- lapply(1:nrow(new.matches), function(nm.row){
-                    # Extract data for each new match ####
-                      
-                      rf <- new.matches[nm.row,]
-
-                    # Get the lags and fits for the new matches to rfs ####
+                    clust.number <- which(cluster$keys %in% fstack.row) # just an index, not the key feature
+              
+                
+              # Pull cluster info ####
+              
+                clust.key <- cluster$keys[clust.number] # actual name of the key - should be fstack.row
+                cluster.members <- cluster$groups[[clust.number]]
+                clust.info <- cluster$info[[clust.number]]
+                
+                # Put lag table in terms of matching to key ####
+                
+                  clust.lags <- clust.info$lag.table %>% pw_lags_relative_to(clust.key)
+                
+                  # lag_features(feature$stack, clust.lags, to = clust.key) %>% trim_sides %>% stackplot #%>% simplePlot(linecolor = 'black')
+    
+              # Match info for key feature
+                clust.matches <- match.info[match.info$feat == clust.key, ]
+                
+    
+                ############             
+                ############ # For each non-key cluster member: ############
+  
+                nonkey.members <- cluster.members[cluster.members != clust.key]
+                
+                if (length(nonkey.members) > 0){
+                  
+                  # Copy match info for each cluster member (recopy first one), and recalculate:
+                  # - match info (adjust position)
+                  # - fit to ref 
+                  
+                  member.matches <- lapply(nonkey.members, function(cluster.member){
                     
-                      # Extract out the feature
-                        feat <- feature.stack[cluster.member, ] %>% scale_between
-                        # feat <- feature.stack[508, ] %>% scale_between
-                          # simplePlot(feat)
-                          
-                      # Update the feature bounds to match THIS feature, not the key feature ####
-                        # First, expand to use the whole feature (so we know how to ss the ref region):
-                        # Make the ref feat (full length)
-                          ref.inds <- rf$lag - pad.size + (0:(ncol(feature.stack)-1))
-                          ref.feat <- ref.mat[ref.inds, rf$ref]
-                            # simplePlot(ref.feat)
+                    # print(cluster.member)
+                    # cluster.member <- nonkey.members[1]
+                    
+                      # Copy the match info to other member ####
+                        new.matches <- clust.matches
+                        new.matches$feat <- cluster.member
+                        
+                      # Update the lag based on cluster.info ####
+      
+                        # Are the lags additive? Yes, subtract lag (f1 to f2) from lag (feat to ref)
+                        # Does the feat.start, feat.end need to be adjusted?
+                        lag <- clust.lags$lag.in.f2[ clust.lags$f1 == cluster.member ]
+                        new.matches$lag <- new.matches$lag + lag
+                        
+       # ####                   
+       ############ # For each ref feat for that cluster member: ####################################################
+       
+                      rfs.new <- lapply(1:nrow(new.matches), function(nm.row){
+                      # Extract data for each new match ####
+                        
+                        rf <- new.matches[nm.row,]
+  
+                      # Get the lags and fits for the new matches to rfs ####
+                      
+                        # Extract out the feature
+                          feat <- feature.stack[cluster.member, ] %>% scale_between
+                          # feat <- feature.stack[508, ] %>% scale_between
+                            # simplePlot(feat)
                             
-                        # Then, re-subset the feature and ref inds to match new feature:
-                          f.inds <- feat %>% trim_sides(out = "inds") %>% range
-                          rf$feat.start <- f.inds[1]
-                          rf$feat.end <- f.inds[2]
-                          rf$ref.start <- ref.inds[f.inds[1]]
-                          rf$ref.end <- ref.inds[f.inds[2]]
-    
-                        # Finally, update our temp vars for these two:
-                          feat.reg <- rf$feat.start:rf$feat.end
-                          
-                          
-                        # Calculate the fit between the initial rf and the cluster.member ####
-                          # there are a lot of ways this can fail, so for now, putting in a tryCatch:
-                          # if (sum(is.na(feat[feat.reg] + ref.feat[feat.reg])) < 4){return(emptyRow)}
-                          
-                          rf <- tryCatch(
-                                  {
-                                    fit <- fit_leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
-                                                    # fit$plot %>% plot
-                                    # Recalculate match fields for new fit information: ####
-                                    updateMatchInfoRow(rf, fit)
-                         
-                                  },
-                                  error=function(cond) {
-                                      return(emptyRow)
-                                  },
-                                  warning=function(cond) {
-                                      return(emptyRow)
-                                  }
-                          )
+                        # Update the feature bounds to match THIS feature, not the key feature ####
+                          # First, expand to use the whole feature (so we know how to ss the ref region):
+                          # Make the ref feat (full length)
+                            ref.inds <- rf$lag - pad.size + (0:(ncol(feature.stack)-1))
+                            ref.feat <- ref.mat[ref.inds, rf$ref]
+                              # simplePlot(ref.feat)
+                              
+                          # Then, re-subset the feature and ref inds to match new feature:
+                            f.inds <- feat %>% trim_sides(out = "inds") %>% range
+                            rf$feat.start <- f.inds[1]
+                            rf$feat.end <- f.inds[2]
+                            rf$ref.start <- ref.inds[f.inds[1]]
+                            rf$ref.end <- ref.inds[f.inds[2]]
+      
+                          # Finally, update our temp vars for these two:
+                            feat.reg <- rf$feat.start:rf$feat.end
+                            
+                            
+                          # Calculate the fit between the initial rf and the cluster.member ####
+                            # there are a lot of ways this can fail, so for now, putting in a tryCatch:
+                            # if (sum(is.na(feat[feat.reg] + ref.feat[feat.reg])) < 4){return(emptyRow)}
+                            
+                            rf <- tryCatch(
+                                    {
+                                      fit <- fit_leastSquares(feat[feat.reg], ref.feat[feat.reg], plots = F, scale.v2 = T)
+                                                      # fit$plot %>% plot
+                                      # Recalculate match fields for new fit information: ####
+                                      updateMatchInfoRow(rf, fit)
+                           
+                                    },
+                                    error=function(cond) {
+                                        return(emptyRow)
+                                    },
+                                    warning=function(cond) {
+                                        return(emptyRow)
+                                    }
+                            )
+                        
+                            return(rf)
+                            
+                      })
                       
-                          return(rf)
-                          
-                    })
+                    return(rfs.new)                
+                    # this gives a list where each element holds an individual df row
+                })
+                  
+                  if(is.null(member.matches)){
                     
-                  return(rfs.new)                
-                  # this gives a list where each element holds an individual df row
-              })
-                
-                if(is.null(member.matches)){
+                    return(emptyRow)
+                    
+                  }
                   
+                  member.matches <- member.matches %>% unlist(recursive = F) %>% rbindlist
+                  
+                  return(member.matches)
+                    # this gives a list of those lists
+                    # distribution of fit info can be interesting
+                    # plot(member.matches$fit.intercept, member.matches$fit.scale)
+                    
+                } else {
+                  # If single feature, don't expand.
                   return(emptyRow)
-                  
                 }
-                
-                member.matches <- member.matches %>% unlist(recursive = F) %>% rbindlist
-                
-                return(member.matches)
-                  # this gives a list of those lists
-                  # distribution of fit info can be interesting
-                  # plot(member.matches$fit.intercept, member.matches$fit.scale)
-                  
-              } else {
-                # If single feature, don't expand.
-                return(emptyRow)
-              }
-              
-          }#, mc.cores = ncores
-     )
+              }) %>% rbindlist
+            }, mc.cores = ncores
+          )
           
           saveRDS(new.data, paste0(this.run,'/new.data.RDS'))
           # new.data <- readRDS('/Users/mjudge/Documents/new.data.RDS')

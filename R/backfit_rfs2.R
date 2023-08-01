@@ -55,7 +55,7 @@
 #'
 #'
 #' @export
-backfit_rfs <- function(match.info, 
+backfit_rfs2 <- function(match.info, 
                         feature, 
                         xmat,
                         ref.mat,
@@ -124,10 +124,10 @@ backfit_rfs <- function(match.info,
       # - 1 ppm vector        
       message('\tcomputing backfits over ', ncores, ' cores...')
       message('\tlarge numbers of matches or large datasets will take some time.')
-      message('\tgo eat or get a coffee...\n\n')
+      # message('\tgo eat or get a coffee...\n\n')
   # browser()
-      # backfits.by.chunk <- lapply(chunks, function(chunk) {
-      backfits.by.chunk <- mclapply(chunks, function(chunk) {
+      backfits.by.chunk <- lapply(chunks, function(chunk) {
+      # backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
         # chunk <- chunks[[2]]
         
@@ -178,17 +178,6 @@ backfit_rfs <- function(match.info,
               
                 spec.region <- xmat[ss.spec, spec.cols %>% range(na.rm = T) %>% fillbetween]
               
-                # fit.feat2spec <- fit_batman(fit$spec.fit, spec.region, 
-                #                             exclude.lowest = .5)
-                  # plot_fit(fit.feat2spec, type = "simple") %>% plot
-                  
-                  # If fit failed, return empty row: 
-                  # if (is.null(fit.feat2spec$ratio + fit.feat2spec$intercept)){
-                  # 
-                  #     return(emptyRow()) # tmp "bff"
-
-                  # } else {
-                    
                     # Propagate fit ####
                     
                       
@@ -208,21 +197,25 @@ backfit_rfs <- function(match.info,
                       
                       residuals <- srf[1,] - srf[2,]
                       use <- !is.na(fit.ref - spec.region)
+                      if (any(use)){
+                        
                       
-                      # rbind(srf[1,],srf[2,], resid.biased, rep(0, length(resid.biased))) %>% simplePlot
-                      # plot(resid.biased)
-                      rmse <- Metrics::rmse(srf[1,use], srf[2,use]) # this would penalize underfits equally
-                      
-                      not.neg <- residuals >= 0  &  use
-                      if(!any(not.neg)){
-                        rmse.biased <- 0
-                      }else{
-                        # sqrt(sum(residuals[not.neg]^2)/length(residuals))
-                        # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
-                        # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
-                        # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
-                        resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
-                        rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
+                        # rbind(srf[1,],srf[2,], resid.biased, rep(0, length(resid.biased))) %>% simplePlot
+                        # plot(resid.biased)
+                        rmse <- Metrics::rmse(srf[1,use], srf[2,use]) # this would penalize underfits equally
+                        browser()
+                        not.neg <- residuals >= 0  &  use
+                        if(sum(not.neg) == 0){
+                          # This will catch NULL and empty vectors. NA, NaNs could get through. 
+                          rmse.biased <- 0
+                        }else{
+                          # sqrt(sum(residuals[not.neg]^2)/length(residuals))
+                          # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
+                          # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
+                          # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
+                          resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
+                          rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
+                        }
                       }
                       
                     # Get pct. overshoot vector ####
@@ -296,7 +289,7 @@ backfit_rfs <- function(match.info,
                           ovs.tot <- lapply(1:length(worst.res), function(x) worst.res[[x]]$ratio.total) %>% unlist
                       }
                       # Failed peak extraction does NOT error here, results in 0s for ovs scores
-                  #}
+                  
                   # Return results ####
                     # To be double-sure no NULLs getting in:
                     if (!is.numeric(ss.spec + fit.ref2spec$intercept + 
@@ -347,7 +340,7 @@ backfit_rfs <- function(match.info,
         
         return(backfits.chunk)
         
-      }, mc.cores = ncores
+      }#, mc.cores = ncores
       )
       
      
@@ -382,7 +375,7 @@ backfit_rfs <- function(match.info,
     backfits <- backfits[order(mi.order)]
 
     message('\tbackfitting completed on ', length(backfits), ' ref-features.')
-    message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
+    # message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
     
 
   # Return list ####

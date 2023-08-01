@@ -104,9 +104,12 @@ show_me_the_evidence <- function(results.dir = NULL){
       # Remove all compounds without any scores > 0.5
 
         keeprefs <-  apply(scores.matrix, 1, max) > 0
+        keepsamples <-  apply(scores.matrix, 2, max) > 0
         refs.used <- which(keeprefs)
+        samples.used <- which(keepsamples)
         
         scores.matrix <- scores.matrix[keeprefs %>% as.logical,,drop=F]
+        scores.matrix <- scores.matrix[,keepsamples %>% as.logical,drop=F]
         lib.info <- lib.info[keeprefs %>% as.logical,]
         lib.data.processed <- lib.data.processed[keeprefs %>% as.logical]
         

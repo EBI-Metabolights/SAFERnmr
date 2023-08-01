@@ -117,7 +117,7 @@ backfit_rfs <- function(match.info,
       # - 1 ppm vector        
       message('\tcomputing backfits over ', ncores, ' cores...')
       message('\tlarge numbers of matches or large datasets will take some time.')
-      message('\tgo eat or get a coffee...\n\n')
+      # message('\tgo eat or get a coffee...\n\n')
       browser()
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
@@ -287,7 +287,7 @@ backfit_rfs <- function(match.info,
           # Return the minimal list of fits (minimal data)  ####
             return(fits)
         })
-        
+        if (any(is.null(backfits.chunk))){browser()}
         return(backfits.chunk)
         
       }, mc.cores = ncores
@@ -325,7 +325,7 @@ backfit_rfs <- function(match.info,
     backfits <- backfits[order(mi.order)]
 
     message('\tbackfitting completed on ', length(backfits), ' ref-features.')
-    message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
+    # message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
     
 
   # Return list ####
