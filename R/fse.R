@@ -226,13 +226,20 @@ fse <- function(pars){
           
 ################ Report run stats  ######
         
-          fmodes <- lapply(1:length(storm_rnd1), 
-                           function(x) pluck(storm_rnd1[x],1,"status"))
+          fmodes <- lapply(storm_rnd1, 
+                           function(x) {
+                             if (is.character(x)){return(x)}
+                             if (x$status == 'succeeded'){
+                               if (any(is_nullish(x))){
+                                 return(  paste0(  is_nullish(x) %>% which %>% names, " contains NULL"))
+                               }
+                             }
+                             return(x$status)
+                             # if (is_nullish(x) %>% any){return('contains null results')}
+                           })
           
-          failed <- lapply(1:length(storm_rnd1), 
-                           function(x) pluck(storm_rnd1[x],1,"status") %in% "succeeded") %>% 
-                            unlist %>% "!"(.) 
-          succeeded <- !failed
+          succeeded <- lapply(fmodes, function(x) x == 'succeeded') %>% unlist
+          failed <- !succeeded
           
           message(str_c("Failed iterations (count): ", sum(failed), " (",
                         (sum(failed)/length(regions_subset) * 100) %>% round, " %)"))
@@ -254,9 +261,12 @@ fse <- function(pars){
                        ppm = ppm,
                        noisewidth = noisewidth)
             
+    if (any(is_nullish(fse.result))){stop('fse.result is nullish. Quitting...')}
+            
     message("Saving results...")
 
     saveRDS(fse.result, paste0(this.run, "/fse.result.RDS"))
+    # fse.result <- readRDS(paste0(this.run, "/fse.result.RDS"))
     
 ################ Plotting Results #######################
  
