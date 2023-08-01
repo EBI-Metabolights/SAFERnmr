@@ -126,119 +126,120 @@ fit_batman <- function(feat, spec,
 #'
 #' @export
 fit_leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE){
+  
   require(Metrics)
-
-  use <- !is.na(v1+v2)
-        # simplePlot(rbind(v1,v2) %>% trim_sides)
-        # simplePlot(rbind(v1[use],v2[use]) %>% trim_sides)
-
-  # Check if there's even a need to fit. 
-  # If not, skip it, scale if needed, and make a dummy fit.
-    
-    if (all(v1[use] == v2[use])){
-        # If scaling v2, also do v1
-        if (scale.v2){
-          v2 <- v2 %>% scale_between
-          v1 <- v1 %>% scale_between #
-        }
-      
-        res <- dummy_fit(v1[use], v2[use])
-      
-    } else {
-      
-      # Do the least squares fit
-      
-        if (scale.v2){v2 <- v2 %>% scale_between}
+  fit <- 
+        tryCatch(expr = {
+          use <- !is.na(v1+v2)
+                # simplePlot(rbind(v1,v2) %>% trim_sides)
+                # simplePlot(rbind(v1[use],v2[use]) %>% trim_sides)
         
-        res <- lm(v2[use]~v1[use], na.action = na.exclude)
+          # Check if there's even a need to fit. 
+          # If not, skip it, scale if needed, and make a dummy fit.
+            
+            if (all(v1[use] == v2[use])){
+                # If scaling v2, also do v1
+                if (scale.v2){
+                  v2 <- v2 %>% scale_between
+                  v1 <- v1 %>% scale_between #
+                }
+              
+                res <- dummy_fit(v1[use], v2[use])
+              
+            } else {
+              
+              # Do the least squares fit
+              
+                if (scale.v2){v2 <- v2 %>% scale_between}
+                
+                res <- lm(v2[use]~v1[use], na.action = na.exclude)
+                
+            }
+            
+          # Either way:
+            v1.fit <- residuals <- rep(NA, length(v1))
+          
+          # rather than subset [use] for every calc in this section, don't calc the whole v1.fit yet
+            v1.fit[use] <- res$fitted.values
         
-    }
-    
-  # Either way:
-    v1.fit <- residuals <- rep(NA, length(v1))
-  
-  # rather than subset [use] for every calc in this section, don't calc the whole v1.fit yet
-    v1.fit[use] <- res$fitted.values
-
-    fit.neg <- v1.fit < 0
-    # v1.fit[fit.neg] <- 0
-    
-    residuals[use] <- -res$residuals # (lm does spec-ref; we want ref-spec)
-    resid.frac.fit <- residuals / v1.fit
-  
-    sum.residuals <- sum(abs(residuals), na.rm = T)
-    mean.resid <- sum.residuals/sum(use)
-    overshoot <- sum(residuals[residuals > 0], na.rm = T)
-    undershoot <- sum(residuals[residuals < 0], na.rm = T)
-    rmse <- Metrics::rmse(v1.fit[use], v2[use])
-    # fraction.v2.unaccounted <- sum(v2[use] - res$fitted.values[use]) / sum(v2[use], na.rm = T)
-    
-    # Residual portions as fraction of each signal
-      res.pos <- residuals
-        res.pos[res.pos*v1.fit <= 0] <- NA
-        # simplePlot(rbind(res.pos,res.neg))
-      
-        pos.res.pct.feat <- 1 -
-                             (v1.fit - res.pos) /
-                              max(v1.fit, na.rm = T)
-        pos.res.pct.feat[pos.res.pct.feat > 1] <- 1
-        # plot(pos.res.pct.feat)
+            fit.neg <- v1.fit < 0
+            # v1.fit[fit.neg] <- 0
+            
+            residuals[use] <- -res$residuals # (lm does spec-ref; we want ref-spec)
+            resid.frac.fit <- residuals / v1.fit
+          
+            sum.residuals <- sum(abs(residuals), na.rm = T)
+            mean.resid <- sum.residuals/sum(use)
+            overshoot <- sum(residuals[residuals > 0], na.rm = T)
+            undershoot <- sum(residuals[residuals < 0], na.rm = T)
+            rmse <- Metrics::rmse(v1.fit[use], v2[use])
+            # fraction.v2.unaccounted <- sum(v2[use] - res$fitted.values[use]) / sum(v2[use], na.rm = T)
+            
+            # Residual portions as fraction of each signal
+              res.pos <- residuals
+                res.pos[res.pos*v1.fit <= 0] <- NA
+                # simplePlot(rbind(res.pos,res.neg))
+              
+                pos.res.pct.feat <- 1 -
+                                     (v1.fit - res.pos) /
+                                      max(v1.fit, na.rm = T)
+                pos.res.pct.feat[pos.res.pct.feat > 1] <- 1
+                # plot(pos.res.pct.feat)
+                
+              res.neg <- residuals
+                res.neg[res.neg*v2 >= 0] <- NA
+                res.neg <- abs(res.neg) # should this be?
+                # simplePlot(rbind(res.pos,res.neg))
+              
+                neg.res.pct.spec <- 1 -
+                                     (v2 - res.neg) /
+                                      max(v2, na.rm = T)
+                neg.res.pct.spec[neg.res.pct.spec > 1] <- 1
+                # neg.res.pct.spec <- neg.res.pct.spec ^ 2
+                # # plot(neg.res.pct.spec)
+                # spec.missing <- v2 - neg.res.pct.spec * v2
+                # Express as a pct of relevant spec signal...
+                # simplePlot(rbind(v1.fit, newspec, newspec, newspec))
+                # simplePlot(rbind(v2, newspec, newspec, newspec))
         
-      res.neg <- residuals
-        res.neg[res.neg*v2 >= 0] <- NA
-        res.neg <- abs(res.neg) # should this be?
-        # simplePlot(rbind(res.pos,res.neg))
-      
-        neg.res.pct.spec <- 1 -
-                             (v2 - res.neg) /
-                              max(v2, na.rm = T)
-        neg.res.pct.spec[neg.res.pct.spec > 1] <- 1
-        # neg.res.pct.spec <- neg.res.pct.spec ^ 2
-        # # plot(neg.res.pct.spec)
-        # spec.missing <- v2 - neg.res.pct.spec * v2
-        # Express as a pct of relevant spec signal...
-        # simplePlot(rbind(v1.fit, newspec, newspec, newspec))
-        # simplePlot(rbind(v2, newspec, newspec, newspec))
-
-  # Now that the metrics have been calculated, replace v1.fit with the whole v1.fit
-    v1.fit <- v1 * res$coefficients[2] + res$coefficients[1]
-        # simplePlot(rbind(v1.fit,v2))
-  
-  
-  g <- NULL
-  # # Old plots
-  #   if (plots == "simple"){
-  #     g <- simplePlot(rbind(v1.fit, v2,v2,v2) %>% trim_sides) # ,-res$residuals
-  #     # g %>% plot
-  #   }
-  
-  if (plots){
-    mat <-  rbind(v1.fit, v2)
-    mat.cols <- mat %>% trim_sides(out = "inds")
-    mat <- mat[,mat.cols]
-    
-    if (is.null(ppm)){ppm <- 1:ncol(mat)} else {ppm <- ppm[mat.cols]}
-    
-      g <- simplePlot(mat[2,],
-                      linecolor = "gray",
-                      xvect = ppm,
-                      opacity = .9, 
-                      linewidth = 1) # ,-res$residuals
-
-      
-      g <- g + new_scale_color() +
-              geom_line(data = data.frame(vals = mat[1,],
-                                          ppm = ppm,
-                                          corr = rep(-1, length(ppm))), 
-                        mapping = aes(x = ppm, y = vals, colour = corr),
-                        linewidth = .5,
-                        na.rm = T) +
-              scale_colour_gradientn(colours = matlab.like2(10),
-                                     limits = c(-1, 1))
-  }
-  
-
-  return(list(feat.fit = v1.fit, # this is now the updated, full v1.fit
+          # Now that the metrics have been calculated, replace v1.fit with the whole v1.fit
+            v1.fit <- v1 * res$coefficients[2] + res$coefficients[1]
+                # simplePlot(rbind(v1.fit,v2))
+          
+          
+          g <- NULL
+          # # Old plots
+          #   if (plots == "simple"){
+          #     g <- simplePlot(rbind(v1.fit, v2,v2,v2) %>% trim_sides) # ,-res$residuals
+          #     # g %>% plot
+          #   }
+          
+          if (plots){
+            mat <-  rbind(v1.fit, v2)
+            mat.cols <- mat %>% trim_sides(out = "inds")
+            mat <- mat[,mat.cols]
+            
+            if (is.null(ppm)){ppm <- 1:ncol(mat)} else {ppm <- ppm[mat.cols]}
+            
+              g <- simplePlot(mat[2,],
+                              linecolor = "gray",
+                              xvect = ppm,
+                              opacity = .9, 
+                              linewidth = 1) # ,-res$residuals
+        
+              
+              g <- g + new_scale_color() +
+                      geom_line(data = data.frame(vals = mat[1,],
+                                                  ppm = ppm,
+                                                  corr = rep(-1, length(ppm))), 
+                                mapping = aes(x = ppm, y = vals, colour = corr),
+                                linewidth = .5,
+                                na.rm = T) +
+                      scale_colour_gradientn(colours = matlab.like2(10),
+                                             limits = c(-1, 1))
+          }
+        
+         list(feat.fit = v1.fit, # this is now the updated, full v1.fit
               spec.fit = v2,
               ratio = NA,
               overshoot = overshoot,
@@ -254,7 +255,12 @@ fit_leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
               spec.missing.pct = sum(neg.res.pct.spec, na.rm = T),
               fit.neg = fit.neg,
               # fraction.spec.unaccounted = (v2 - res$fitted.values)/sum(v2, na.rm = T),
-              plot = g))
+              plot = g)
+        }, 
+        error = function(cond){
+          return(fit_obj())
+        })
+  
 }
 
 dummy_fit <- function(v1,v2){
@@ -263,3 +269,24 @@ dummy_fit <- function(v1,v2){
        fitted.values = v1)
 }
 
+fit_obj <- function(){
+  list(
+        feat.fit = NA, # this is now the updated, full v1.fit
+        spec.fit = NA,
+        ratio = NA,
+        overshoot = NA,
+        undershoot = NA,
+        fit = NA,
+        residuals = NA,
+        resid.frac.fit = NA,
+        sum.residuals = NA,
+        mean.residual = NA,
+        pts.matched = NA,
+        rmse = NA,
+        overshoot.pct.feat = NA,
+        spec.missing.pct = NA,
+        fit.neg = NA,
+        plot = NULL
+  )
+}
+  
