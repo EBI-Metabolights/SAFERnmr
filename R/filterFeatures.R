@@ -12,14 +12,15 @@
 #' @param min.subset The minimum number of spectra a feature must be present in to be included
 #' @param prom.ratio The maximum ratio of peak prominence to intensity range for a feature to be considered monotonic
 #' @param give A character string indicating whether to return the filtered feature object or the filter as a logical vector
-#' 
+#' @param max.features max number of features to keep (random subset), default is to keep all. 
+
 #' @return If \code{give = "features"}, a feature object with the filtered features. If \code{give = "filter"}, a logical vector indicating which features passed the filter.
 #' 
 #' @importFrom magrittr %>%
 #'
 #' 
 #' @export
-filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subset = 5, prom.ratio = 0.3, give = "filter", max.features = 10000){
+filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subset = 5, prom.ratio = 0.3, give = "filter", max.features = NULL){
   
   
   # No empty features, please
@@ -100,6 +101,7 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
       
       passed <- which(filt)
       
+      if (is.null(max.features)){max.features <- length(filt)}
       if (length(passed) > max.features){
         subset <- sample(x = 1:length(passed), size = max.features, replace = FALSE) %>% passed[.] # not sorted
         # subset <- runif(n = max.features, 
@@ -110,7 +112,10 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
         all.filts$rand.subset[-subset] <- F
         
         number.excluded <- length(passed) - sum(filt)
-        message('Excluding ', number.excluded, ' / ', length(passed), ' passing features (', (number.excluded/length(passed)*100) %>% round,' %) to satisfy limit of ', pars$tina$nfeats, ' features ...')
+        message('Excluding ', number.excluded, ' / ', 
+                length(passed), ' passing features (', 
+                (number.excluded/length(passed)*100) %>% round,
+                ' %) to satisfy limit of ', pars$tina$nfeats, ' features ...')
       }
   
       
