@@ -64,7 +64,7 @@ tina <- function(pars){
       ppm <- fse.result$ppm
       
       # Check fse.result for nulls
-        fse.result %>% test_nullish('fse.result') # just double-checking
+        fse.result %>% test_nullish # just double-checking
       
     bounds <- pars$tina$bounds        # only consider signatures within this region (ppm)
     min.subset <- pars$tina$min.subset          # don't keep features if their subsets are too small (basically does nothing)
@@ -75,7 +75,7 @@ tina <- function(pars){
 
     # Run tina_setup to set up successful features
 
-        feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
+        feature <- tina_setup(fse.result$storm_features, xmat)
           feature %>% test_nullish
           
         message('\n\t---- Feature Filtering ----')
@@ -93,11 +93,10 @@ tina <- function(pars){
                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
                                     max.features = nrow(feature$stack))
-            if (filts %>% is_nullish %>% any)
 
           saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
           # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
-
+          
     # Re-run tina_setup on the filtered features
 
         filt <- filts$all$not.null &
@@ -109,7 +108,7 @@ tina <- function(pars){
                      filts$all$rand.subset
 
       # Rerun setup on filtered features
-        feature <- c(fse.result$storm_features[filt], xmat)
+        feature <- tina_setup(fse.result$storm_features[filt], xmat)
           feature %>% test_nullish('feature')
         message('\n\tFeature filtering complete. Saving results...')
         saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
@@ -177,21 +176,25 @@ tina <- function(pars){
             features.specd <- parallel::mclapply(1:nrow(feature$stack),
                                                  FUN = function(i){
                 tryCatch(
-                  expr = {
-                           sfe(feature, i,
-                               xmat,
-                               ppm,
-                               r.thresh = pars$storm$correlation.r.cutoff)
-                  },
-                  error = function(cond){
-                           NA
-                  }
-                  )                                   
+                    expr = {
+                            res <- 
+                             sfe(feature, i,
+                                 xmat,
+                                 ppm,
+                                 r.thresh = pars$storm$correlation.r.cutoff)
+                              res %>% test_nullish()
+                              res
+                    },
+                    error = function(cond){
+                             NA
+                    }
+                )                                   
               }, mc.cores = pars$par$ncores)
 
             message('\n\tParallel sfe done on ', length(features.specd), ' features.')
         print(Sys.time() -t1)
 
+        # Nullish is not acceptable
         features.specd %>% test_nullish('features.specd')
         
         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
@@ -200,20 +203,39 @@ tina <- function(pars){
         
 ########### Adjust feature object with sfe results  ############################################################
     # Apply/add new feature info to old features #####
+      # * any features that failed sfe need to be removed
       # profile stack must be updated
       # - needs to allow for resizing?
       # - sfe will return trimmed profiles and undo any alignment of features
+      
         message('\n\tapplying sfe results to feature stack...')
+        
+        passed.sfe <- !(features.specd %>% is.na)
+        
+        if (!any(passed.sfe)){stop('No features passed sfe.')} 
+        
+          # Go through feature object and apply filter
+            feature$stack <- feature$stack[passed.sfe, ,drop = F]
+            feature$position <- feature$position[passed.sfe, ,drop = F]
+            feature$subset$ss.all <- feature$subset$ss.all[passed.sfe, ,drop = F]
+            feature$subset$sizes <- feature$subset$sizes[passed.sfe]
+            feature$driver.relative <- feature$driver.relative[passed.sfe]
+            features.specd <- features.specd[passed.sfe]
+            
         # Get the width of the new feature mat ####
           n.cols <- lapply(features.specd, function(res){
             res$feat$profile %>% length
-          }) %>% unlist %>% max
+          }) %>% unlist %>% max(na.rm = T)
 
-        # Make new feature mat ####
+        # Make new feature mat using sfe-derived profile ####
           feature$stack <- lapply(features.specd, function(res){
+            
             needed <- n.cols - length(res$feat$profile)
+            
             return(  c(res$feat$profile, rep(NA, needed))  )
+            
           }) %>% do.call(rbind, .)
+            
             feature %>% test_nullish('feature')
 
     # Align to feature maximum ####
@@ -231,6 +253,7 @@ tina <- function(pars){
           pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
               width = dim, # The width of the plot in inches
               height = dim)
+        
               feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
               subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
               plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
