@@ -125,11 +125,12 @@ fit_batman <- function(feat, spec,
 #' @importFrom magrittr %>%
 #'
 #' @export
-fit_leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE){
+fit_leastSquares <- function(v1 = NA, v2 = NA, ppm = NULL, plots = FALSE, scale.v2 = TRUE){
   
   require(Metrics)
   fit <- 
         tryCatch(expr = {
+          
           use <- !is.na(v1+v2)
                 # simplePlot(rbind(v1,v2) %>% trim_sides)
                 # simplePlot(rbind(v1[use],v2[use]) %>% trim_sides)
@@ -137,23 +138,27 @@ fit_leastSquares <- function(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
           # Check if there's even a need to fit. 
           # If not, skip it, scale if needed, and make a dummy fit.
             
-            if (all(v1[use] == v2[use])){
-                # If scaling v2, also do v1
-                if (scale.v2){
-                  v2 <- v2 %>% scale_between
-                  v1 <- v1 %>% scale_between #
-                }
-              
-                res <- dummy_fit(v1[use], v2[use])
-              
+            if (!any(use)){
+              return(fit_obj())
             } else {
-              
-              # Do the least squares fit
-              
-                if (scale.v2){v2 <- v2 %>% scale_between}
+              if (all(v1[use] == v2[use])){
+                  # If scaling v2, also do v1
+                  if (scale.v2){
+                    v2 <- v2 %>% scale_between
+                    v1 <- v1 %>% scale_between #
+                  }
                 
-                res <- lm(v2[use]~v1[use], na.action = na.exclude)
+                  res <- dummy_fit(v1[use], v2[use])
                 
+              } else {
+                
+                # Do the least squares fit
+                
+                  if (scale.v2){v2 <- v2 %>% scale_between}
+                  
+                  res <- lm(v2[use]~v1[use], na.action = na.exclude)
+                  
+              }
             }
             
           # Either way:

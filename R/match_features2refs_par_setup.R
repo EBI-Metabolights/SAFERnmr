@@ -36,8 +36,11 @@ match_features2refs_par_setup <- function(pars) {
       ppm <- fse.result$ppm
       rm(fse.result)
       
+       fse.result %>% test_nullish('fse.result')
+      
     # This runs even if there was no clustering (clusters of 1 feature each):
     cluster.final <- readRDS(paste0(this.run, "/cluster.final.RDS"))
+        cluster.final %>% test_nullish('cluster.final')
     
       c.labs <- cluster.final$labels
       
@@ -47,6 +50,8 @@ match_features2refs_par_setup <- function(pars) {
       message('Building feature matrix...')
       
           feature.final <- readRDS(paste0(this.run, "/feature.final.RDS")) 
+            feature.final %>% test_nullish('feature.final')
+          
           featureStack <- feature.final$stack
           
           rm(feature.final)
@@ -95,9 +100,13 @@ match_features2refs_par_setup <- function(pars) {
     # Import and process the spectra for this dataset ####
       if (pars$galaxy$enabled) {
         lib.data <- readRDS(pars$galaxy$gissmo_location)
+          
       } else {
         lib.data <- readRDS(pars$files$lib.data)
+          
       }
+        lib.data %>% test_nullish('lib.data')
+        
       message(" - interpolating ref data to study ppm axis...\n\n")
       lib.data.processed <- prepRefs_for_dataset(lib.data,
           ppm.dataset = ppm,
@@ -106,7 +115,7 @@ match_features2refs_par_setup <- function(pars) {
       )
       
         rm(lib.data)
-        
+        lib.data.processed %>% test_nullish('lib.data.processed')
       message('\nsaving processed ref library to file...')
       saveRDS(lib.data.processed, paste0(this.run, "/lib.data.processed.RDS"))
 
@@ -141,6 +150,7 @@ match_features2refs_par_setup <- function(pars) {
           # Transpose original matrix so columns are spectra, save and remove it to clear memory ####
             message("\nTransposing reference matrix (takes a few seconds)...\n\n")
             ref.mat <- t(ref.mat)
+              ref.mat %>% test_nullish('ref.mat')
             message('\nWriting ref matrix to file...')
             saveRDS(ref.mat, paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
           
@@ -159,7 +169,7 @@ match_features2refs_par_setup <- function(pars) {
     # Save ref data:
     
       
-      
+      r.mat %>% test_nullish('r.mat')
       message('\nWriting transformed ref data to file...')
       saveRDS(r.mat, paste0(this.run, "/temp_data_matching/rmat.RDS"))
       
@@ -180,8 +190,9 @@ match_features2refs_par_setup <- function(pars) {
               f.subset = which(f.grp == g) %>% f.subset[.] 
           )
       })
-
+        split.scheme %>% test_nullish('split.scheme')
       f.stack.split <- lapply(unique(f.grp), function(x) f.stack[, f.grp == x, drop = F])
+        f.stack.split %>% test_nullish('f.stack.split')
         rm(f.stack)
 
   # Save feature data

@@ -63,6 +63,9 @@ tina <- function(pars){
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
       
+      # Check fse.result for nulls
+        fse.result %>% test_nullish('fse.result') # just double-checking
+      
     bounds <- pars$tina$bounds        # only consider signatures within this region (ppm)
     min.subset <- pars$tina$min.subset          # don't keep features if their subsets are too small (basically does nothing)
     prom.ratio <- pars$tina$prom.ratio
@@ -73,6 +76,8 @@ tina <- function(pars){
     # Run tina_setup to set up successful features
 
         feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
+          feature %>% test_nullish
+          
         message('\n\t---- Feature Filtering ----')
         
     # Run feature filter function to get the filter:
@@ -88,6 +93,7 @@ tina <- function(pars){
                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
                                     max.features = nrow(feature$stack))
+            if (filts %>% is_nullish %>% any)
 
           saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
           # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
@@ -103,8 +109,8 @@ tina <- function(pars){
                      filts$all$rand.subset
 
       # Rerun setup on filtered features
-        feature <- tina_setup(fse.result$storm_features[filt], xmat)
-       
+        feature <- c(fse.result$storm_features[filt], xmat)
+          feature %>% test_nullish('feature')
         message('\n\tFeature filtering complete. Saving results...')
         saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
         # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
@@ -170,20 +176,27 @@ tina <- function(pars){
         t1 <- Sys.time()
             features.specd <- parallel::mclapply(1:nrow(feature$stack),
                                                  FUN = function(i){
-                sfe(feature, i,
-                         xmat,
-                         ppm,
-                         r.thresh = pars$storm$correlation.r.cutoff)
+                tryCatch(
+                  expr = {
+                           sfe(feature, i,
+                               xmat,
+                               ppm,
+                               r.thresh = pars$storm$correlation.r.cutoff)
+                  },
+                  error = function(cond){
+                           NA
+                  }
+                  )                                   
               }, mc.cores = pars$par$ncores)
 
             message('\n\tParallel sfe done on ', length(features.specd), ' features.')
         print(Sys.time() -t1)
 
+        features.specd %>% test_nullish('features.specd')
+        
         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
         # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
-        failed <- lapply(features.specd, function(res){
-          
-        })
+
         
 ########### Adjust feature object with sfe results  ############################################################
     # Apply/add new feature info to old features #####
@@ -201,13 +214,14 @@ tina <- function(pars){
             needed <- n.cols - length(res$feat$profile)
             return(  c(res$feat$profile, rep(NA, needed))  )
           }) %>% do.call(rbind, .)
-
+            feature %>% test_nullish('feature')
 
     # Align to feature maximum ####
 
         message('\n\taligning features to max peak...')
         feature.ma <- align_max(feature, scaling = FALSE)
-
+           feature.ma %>% test_nullish('feature.ma')
+          
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
         # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
         rm(feature)
@@ -261,6 +275,9 @@ tina <- function(pars){
                               position = feature.ma$position,
                               driver.relative = feature.ma$subset,
                               sfe = features.specd)
+        
+        feature.final %>% test_nullish('feature.final')
+         
         saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
         # feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
         
@@ -268,18 +285,21 @@ tina <- function(pars){
         gc()
         
 ###############################################################################################################           
-        
+## CLUSTERING        
 # The TINA part  ####
-              
-   # OPTICS-based ####
-      message('\n\t---- OPTICS-based clustering ----')
+    feature <- feature.final 
+      feature$sfe <- NULL
+      
     # Check to see if clustering param was provided; if not, turn it off
-      # if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
+    # if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
           
-    if (nrow(feature.ma$stack) > 1000 & pars$tina$do.clustering){
+    if (nrow(feature.final$stack) > 1000 & pars$tina$do.clustering){
+     # OPTICS-based ####
+        message('\n\t---- OPTICS-based clustering ----')
+      
       printTime()
       t1 <- Sys.time()
-      results <- tina_combineFeatures_optics(feature.ma$stack,
+      results <- tina_combineFeatures_optics(feature.final$stack,
                                              max.eps = 50,
                                              minPts = 2,
                                              eps.stepsize = .01,
@@ -307,19 +327,23 @@ tina <- function(pars){
         print(Sys.time() - t1)
         # length(clusters$cluster.labs %>% unique)
     } else {
+     # SKIP CLUSTERING ####
       message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
       clusters <- list(method = 'none',
-                       results = NULL,
+                       results = NA,
                        cluster.labs = 1:nrow(feature.ma$stack),
                        groups = as.list(1:nrow(feature.ma$stack)))
     }
 
+    # Produced object: clusters. Check for nullish elements:
+        clusters %>% test_nullish('clusters')
+        
     saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
     # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
     rm(xmat)
     rm(ppm)
     
- ###############################################################################################################   
+###############################################################################################################   
     
     # check each cluster's quality
     # - calculate all pairwise alignments + ls fits for cluster features
@@ -337,7 +361,7 @@ tina <- function(pars){
           t1 <- Sys.time()
             # *** Note: this is parallelized for ncores - 2
             # *** Note: currently not using rmse cutoff.
-            clust.info <- checkClusters(clusters = clusters, feature = feature.ma, 
+            clust.info <- checkClusters(clusters = clusters, feature = feature.final, # just needs stack
                                         par.cores = pars$par$ncores, 
                                         par.type = pars$par$type)
           print(Sys.time() - t1)
@@ -346,6 +370,7 @@ tina <- function(pars){
             ci$key.feat
           }) %>% unlist
           
+        clust.info %>% test_nullish('clust.info')
         message('\n\tcheckClusters complete. Saving...')     
       saveRDS(clust.info, paste0(tmpdir, "/clust.info.RDS"))
       # clust.info <- readRDS(paste0(tmpdir, "/clust.info.RDS"))
@@ -443,7 +468,7 @@ tina <- function(pars){
                             info = clust.info,
                             groups = clusters$groups,
                             method = clusters$method)
-      
+      cluster.final %>% test_nullish('cluster.final')
       saveRDS(cluster.final, paste0(tmpdir, "/cluster.final.RDS"))
       
 #         #### #####

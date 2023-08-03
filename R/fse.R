@@ -133,8 +133,8 @@ fse <- function(pars){
                                                               # consequences...
     plot.location <- paste0(this.run,"/")                     # where to put the plot (just dump into run folder)
     
-    plot.filename <- paste0(
-      "fse_mtbls1",
+    plot.filename <- paste0('features_',
+      pars$study$id,
       "_np_",noise.percentile,
       "_r_",correlation.r.cutoff,
       "_b_",b,".pdf")     # what to name the plot file
@@ -185,57 +185,68 @@ fse <- function(pars){
         regions_subset <- colwithPair %in% testregion %>% which
         storm_rnd1 = list()
         
-          
+        
         message("Running storm on ",numPairs, " provided protofeatures. Progress:")
         
         storm_rnd1 <- 
               mclapply(regions_subset,
               # pblapply(regions_subset,
                   function (x) {
-                    # print(x)
-                    # Set up the region
-                      # x <- regions_subset[1793]
-                      driver <- colwithPair[x]
-                      peakPos <- pocketPairs$peakMap[,driver] %>% is.na %>% "!"(.) %>% which
-                      pair.region <- pocketPairs$regions[peakPos,driver]
-
-
-                    # Do storm_pairplay
+                    # TryCatch will 
+                    tryCatch(
+                      expr = {
+                              # Set up the region
+                                # x <- regions_subset[1793]
+                                
+                                driver <- colwithPair[x]
+                                peakPos <- pocketPairs$peakMap[,driver] %>% is.na %>% "!"(.) %>% which
+                                pair.region <- pocketPairs$regions[peakPos,driver]
           
-                      # Set params
-                        pw <- length(peakPos)/2 %>% ceiling
-                        wind <- pair.region
-                        shift <- range(ppm[pair.region])
+                              # Do storm_pairplay
+                    
+                                # Set params
+                                  pw <- length(peakPos)/2 %>% ceiling
+                                  wind <- pair.region
+                                  shift <- range(ppm[pair.region])
+                                  
+                                # Use original covariance signal within corr bounds as shape seed
+                                # (could also use best spectrum index)
+                                  shape <- pocketPairs$cov[peakPos,driver]
+                                  bestSpec = cor( xmat[ ,wind] %>% t, shape ) %>% which.max
+                                  
+                                # Do the storm
+                                  
+                                  res <- storm_pairplay(xmat, ppm,
+                                                              b = (pw * b) %>% ceiling, corrthresh = correlation.r.cutoff, q = q,
+                                                              minpeak = noisewidth, refSpec = shape, ref.idx = pair.region,
+                                                              driver = driver)
+                                  res$cpp.driver <- driver
+                                  
+                                  return(res)
                         
-                      # Use original covariance signal within corr bounds as shape seed
-                      # (could also use best spectrum index)
-                        shape <- pocketPairs$cov[peakPos,driver]
-                        bestSpec = cor( xmat[ ,wind] %>% t, shape ) %>% which.max
-                        
-                      # Do the storm
-    
-                        res <- storm_pairplay(xmat, ppm,
-                                                    b = (pw * b) %>% ceiling, corrthresh = correlation.r.cutoff, q = q,
-                                                    minpeak = noisewidth, refSpec = shape, ref.idx = pair.region,
-                                                    driver = driver)
-                        res$cpp.driver <- driver
-                        return(res)
+                      },
+                      error = function(cond){
+                        return('setup error')
+                        }
+                      )
                   }, mc.cores = pars$par$ncores
               )
-
+        # Note: errors in the loop are captured and passed out as strings.
+        # NULL elements are not possible, although parts of an element could be.
+        # Those are checked below.  
           
 ################ Report run stats  ######
         
           fmodes <- lapply(storm_rnd1, 
                            function(x) {
-                             if (is.character(x)){return(x)}
+                             if (is.character(x)){return(x)} # this will get any errors from setup or storm
                              if (x$status == 'succeeded'){
                                if (any(is_nullish(x))){
-                                 return(  paste0(  is_nullish(x) %>% which %>% names, " contains NULL"))
+                                 # Even if STORM succeeded, it may contain NULLs in some return value elements. 
+                                 return(  paste0(  is_nullish(x) %>% which %>% names, " contains NULL")) 
                                }
                              }
                              return(x$status)
-                             # if (is_nullish(x) %>% any){return('contains null results')}
                            })
           
           succeeded <- lapply(fmodes, function(x) x == 'succeeded') %>% unlist
@@ -261,8 +272,7 @@ fse <- function(pars){
                        ppm = ppm,
                        noisewidth = noisewidth)
             
-    if (any(is_nullish(fse.result))){stop('fse.result is nullish. Quitting...')}
-            
+    fse.result %>% test_nullish('fse.result')        
     message("Saving results...")
 
     saveRDS(fse.result, paste0(this.run, "/fse.result.RDS"))

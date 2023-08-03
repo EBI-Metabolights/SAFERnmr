@@ -74,39 +74,41 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                    ss = ss,
                    driver.relative = driver)
       
-      aligned <- align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
-      # stackplot(aligned$valsmat)
-    
-    
-# Fit the feature to each spectrum
-     
+      tryCatch(
+        expr = {
+          aligned <- align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
+          # stackplot(aligned$valsmat) %>% plot
+
+        }, 
+        error = function(cond){
+          
+        }
+      )
+      
   # Fit the feature to each passing spectrum ####
     
     fits <- lapply(1:nrow(aligned$valsmat), function(m) {
       
-        # m <- 1
-      # Fit this spec to the profile to scale to match other instances (invert fit later)
-        fit <- NULL
+      # * fit now has tryCatch included, returns NA-filled fit obj if failed
+        fit <-  fit_leastSquares(v1 = aligned$feat$profile,
+                                 v2 = aligned$valsmat[m,], 
+                                 ppm = ppm[aligned$feat$position],
+                                 plots = F,
+                                 scale.v2 = F)
         
-        fit <- tryCatch(expr = {
-        
-          fit_leastSquares(v1 = aligned$feat$profile,
-                           v2 = aligned$valsmat[m,], 
-                           ppm = ppm[aligned$feat$position],
-                           plots = F,
-                           scale.v2 = F)
-        })
-
         return(fit)
     })
-
+      
+    # Cannot get a null value out of this
+    
+    failed.specs <- lapply(fits, function(fit) is.na(fit$rmse)) %>% unlist
     
     rmses <- lapply(fits, function(fit) fit$rmse) %>% unlist
     fits <- lapply(fits, function(fit) fit$fit)
     
-    # is.null(res$feat) | is.null(res$fits) | is.null(res$)
+    
   
-  # Return updated feature ####
+  # Return updated feature info ####
 
         return(list(feat = aligned$feat,
                     lags = aligned$lags,

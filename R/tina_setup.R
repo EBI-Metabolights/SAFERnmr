@@ -25,7 +25,7 @@
 #'
 #' @export
 tina_setup <- function(a, xmat){
-  
+      
       message("TINA Setup...")
     
       # Build a matrix to house all the features
@@ -58,9 +58,9 @@ tina_setup <- function(a, xmat){
                   #                                    ylab = "Subset size")
                   # title(main = "Subset Size Distribution pre-afc")
                   # abline(h = 5)
-          subset.diffs <- subsets %>% diff %>% abs %>% rowSums
-          subset.overlaps <- (subsets[-1,] & subsets[-nrow(subsets),]) %>% rowSums
-          subset.sizes <- subsets %>% rowSums
+          # subset.diffs <- subsets %>% diff %>% abs %>% rowSums
+          # subset.overlaps <- (subsets[-1,] & subsets[-nrow(subsets),]) %>% rowSums
+          # subset.sizes <- subsets %>% rowSums
                   # (subset.diffs / subset.overlaps) %>% sort %>% plot(xlab = "Feature Comparison",
                   #                                                    ylab = "Subsets diff/overlap")
                   # subset.ratios <- (subset.diffs / subset.overlaps) 
@@ -70,11 +70,11 @@ tina_setup <- function(a, xmat){
           
 
           # If the comparison is missing > 0.5 of the spectra in either subset
-            subset.frac.1 <- subset.overlaps / subset.sizes[-nrow(subsets)]
-            subset.frac.2 <- subset.overlaps / subset.sizes[-1]
-            subset.frac <- subset.frac.1
-            nds <- subset.frac.1 > subset.frac.2
-            subset.frac[nds] <- subset.frac.2[nds] 
+            # subset.frac.1 <- subset.overlaps / subset.sizes[-nrow(subsets)]
+            # subset.frac.2 <- subset.overlaps / subset.sizes[-1]
+            # subset.frac <- subset.frac.1
+            # nds <- subset.frac.1 > subset.frac.2
+            # subset.frac[nds] <- subset.frac.2[nds] 
             
             
             # subset.frac %>% sort %>% plot(xlab = "Feature Comparison",
@@ -82,22 +82,22 @@ tina_setup <- function(a, xmat){
             #   abline(h = 0.5, col = "red")
               
         # Look at the position region overlap (speed up later)
-            reg.frac <- rep(0, nrow(positionStack)-1)
-            reg.overlap <- reg.frac
-            for (i in 1:length(reg.frac)){
-              r1 <- positionStack[i,] %>% range(na.rm = TRUE) %>% fillbetween
-              r2 <- positionStack[i+1,] %>% range(na.rm = TRUE) %>% fillbetween
-              reg.overlap[i] <- sum(r1 %in% r2)
-              reg.frac.1 <- reg.overlap[i] / length(r1)
-              reg.frac.2 <- reg.overlap[i] / length(r2)
-              reg.frac[i] <- min(c(reg.frac.1, reg.frac.2))
-            }
-            reg.sizes <- lapply(relinds, length) %>% unlist
-              
-            # reg.frac %>% sort %>% plot(xlab = "Feature Comparison",
-            #                            ylab = "Feature Region Overlap (lesser)")
-            #   abline(h = 0.5, col = "red")
-            
+            # reg.frac <- rep(0, nrow(positionStack)-1)
+            # reg.overlap <- reg.frac
+            # for (i in 1:length(reg.frac)){
+            #   r1 <- positionStack[i,] %>% range(na.rm = TRUE) %>% fillbetween
+            #   r2 <- positionStack[i+1,] %>% range(na.rm = TRUE) %>% fillbetween
+            #   reg.overlap[i] <- sum(r1 %in% r2)
+            #   reg.frac.1 <- reg.overlap[i] / length(r1)
+            #   reg.frac.2 <- reg.overlap[i] / length(r2)
+            #   reg.frac[i] <- min(c(reg.frac.1, reg.frac.2))
+            # }
+            # reg.sizes <- lapply(relinds, length) %>% unlist
+            #   
+            # # reg.frac %>% sort %>% plot(xlab = "Feature Comparison",
+            # #                            ylab = "Feature Region Overlap (lesser)")
+            # #   abline(h = 0.5, col = "red")
+            # 
         # Get relative driver
             # print(length(a))
             
@@ -125,9 +125,9 @@ tina_setup <- function(a, xmat){
                               sizes = subset.sizes,
                               overlaps = subset.overlaps,
                               fraction = subset.frac),
-                region = list(overlaps = reg.overlap,
-                              fraction = reg.frac,
-                              sizes = reg.sizes),
+                # region = list(overlaps = reg.overlap,
+                #               fraction = reg.frac,
+                #               sizes = reg.sizes),
                 driver.relative = drivers.relative
                 )
            )

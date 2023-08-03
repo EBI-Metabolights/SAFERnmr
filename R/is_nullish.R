@@ -80,3 +80,16 @@ is_nullish <- function(x){
     }
   
 }
+
+test_nullish <- function(obj, msg=NULL){
+  
+  if (any(is_nullish(obj))){
+    call.txt <- deparse(sys.call(-1))
+    #deparse(sys.calls()[[sys.nframe()-1]]) # function name
+    if (is.null(msg)){
+      return(stop('"',call.txt, '" ...object is nullish.', call. = F))
+    }
+  } else {
+      return(stop(msg, call. = F))
+  }
+}

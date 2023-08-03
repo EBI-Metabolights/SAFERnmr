@@ -27,11 +27,15 @@ match_features2refs_par_explicit <- function(pars){
   this.run <- paste0(tmpdir)
   pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
   f.stack.split <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
+    f.stack.split %>% test_nullish('f.stack.split')
     message('Matching ', lapply(f.stack.split, ncol) %>% unlist %>% sum, ' features...\n')
   split.scheme <- readRDS(paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
+    split.scheme %>% test_nullish('split.scheme')
   ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) 
+    ref.mat %>% test_nullish('ref.mat')
   r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
-  
+    r.mat %>% test_nullish('r.mat')
+    
   # mem_snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
     # Par setup ####
       message("Setting up parallel cluster...\n\n")
@@ -50,7 +54,7 @@ match_features2refs_par_explicit <- function(pars){
         # f.stack = f.stack.split,
         # f.mat = f.mat.split,
       t1 <- Sys.time()
-      matches.all <- foreach(chunk = 1:length(split.scheme),
+      matches.all <- foreach(chunk = 1:length(split.scheme), 
                              split.grp = split.scheme,
                              f.stack = f.stack.split,
                              .combine='c', .multicombine=TRUE,
@@ -60,9 +64,9 @@ match_features2refs_par_explicit <- function(pars){
       {
         
         message('Chunk ', chunk)
+        
         # For each feature batch:
             
-              
              # Set up ####
               
               # f.stack <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.",chunk,".RDS"))
@@ -80,9 +84,9 @@ match_features2refs_par_explicit <- function(pars){
               # simplePlot(trim_sides(t(f.stack)))
         
               # Loop through all features in the current batch ####
-                matches.chunk <-  foreach(f.num = f.subset,           # what actually gets recorded
-                                          f.ind = 1:length(f.subset), # just for internal indexing
-                                          feat = f.stack,
+                matches.chunk <-  foreach(f.num = f.subset,           # what actually gets recorded as feat number
+                                          f.ind = 1:length(f.subset), # feat number within the chunk
+                                          feat = f.stack,             # actual feature profile
                                           .combine='c', .multicombine=TRUE,
                                           .errorhandling="pass") %do%
                 {
@@ -199,7 +203,12 @@ match_features2refs_par_explicit <- function(pars){
                               peak.quality = peak.quality))
     
                 }
-            
+                # The result is a list with the following fields:
+                # - matches
+                #   - list of data.frames giving the match information
+                # - peak.quality
+                #   - list of vectors giving the dataset-specific usefulness of each point in feature (down-ranks never-fit points)
+                
             # if (is.null(matches.chunk)){message('\tfailed')} else {message('\tsucceeded'); return(matches.chunk)}
           
       }

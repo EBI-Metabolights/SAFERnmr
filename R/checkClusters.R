@@ -67,6 +67,7 @@ checkClusters <- function(clusters, feature,
         
       # Par run ####
         # i <- 1
+        
         clust.info <-   foreach(cluster = clust,
                                 .combine='c',
                                 .errorhandling="pass") %dopar% 
@@ -81,7 +82,11 @@ checkClusters <- function(clusters, feature,
                                   c.info$lag.table$f1 <- c.info$lag.table$f1 %>% cluster$labels[.]
                                   c.info$lag.table$f2 <- c.info$lag.table$f2 %>% cluster$labels[.]
                                   # i <- i + 1
-                                  return(c.info)
+                                  # if(any(is_nullish(c.info))){
+                                  #   c.info$
+                                  # } else {
+                                    return(c.info)
+                                  # }
                                   
                           }
       # Clean up ####
