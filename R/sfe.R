@@ -74,16 +74,19 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                    ss = ss,
                    driver.relative = driver)
       
-      tryCatch(
+      
+      aligned <- tryCatch(
         expr = {
-          aligned <- align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
-          # stackplot(aligned$valsmat) %>% plot
+          align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
+          # stackplot(aligned$valsmat)
 
         }, 
         error = function(cond){
-          
+          NULL
         }
       )
+      
+      test_nullish(aligned)
       
   # Fit the feature to each passing spectrum ####
     
@@ -95,17 +98,25 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                                  ppm = ppm[aligned$feat$position],
                                  plots = F,
                                  scale.v2 = F)
-        
-        return(fit)
+
+        return(list(fit = fit$fit,
+                    rmse = fit$rmse))
     })
-      
+    
+    # Note: this will fail if plots are null. Just returning vals.
+    fits %>% test_nullish
     # Cannot get a null value out of this
     
     failed.specs <- lapply(fits, function(fit) is.na(fit$rmse)) %>% unlist
+    succeeded <- !failed.specs
+      if (any(succeeded)){
+        fits <- fits[succeeded]
+        aligned$lags <- aligned$lags[succeeded]
+        aligned$rvals <- aligned$rvals[succeeded]
+      }
     
     rmses <- lapply(fits, function(fit) fit$rmse) %>% unlist
     fits <- lapply(fits, function(fit) fit$fit)
-    
     
   
   # Return updated feature info ####

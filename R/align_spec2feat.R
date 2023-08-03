@@ -87,7 +87,7 @@ align_spec2feat <- function(feat, xmat, r.thresh = 0.8){
               
             }, error = function(cond) NULL)
       
-          if (is_nullish(lags)){
+          if (is_nullish(lags) %>% any){
             # indsmat <- feat.expanded$position
             # valsmat <- 
             NULL              
