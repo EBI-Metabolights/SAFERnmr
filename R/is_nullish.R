@@ -12,6 +12,8 @@
 #' return TRUE for each one if all elements are usable values. Top level
 #' is preserved. *If error message from lapply, returns TRUE.
 #' 
+#' NOTE: Using this on a SAFER::fit object will result in failure if plot is NULL.
+#' 
 #' Examples:
 #'    is_nullish(c())
 #'    
