@@ -29,11 +29,10 @@ align_spec2feat <- function(feat, xmat, r.thresh = 0.8){
     
     # Expand the position window so the xcorr includes external spectral data
     # - profile padded by NAs so we look for profile only
-    # - spec data window is simply expanded so we can actually look around ####
-    
+    # - spec data window is simply expanded so we can actually look around 
+    # - if error, then just return feat in feat.expanded ####
       
-      feat.expanded <- 
-        tryCatch(
+      feat.expanded <- tryCatch(
           expr = {
                     feat.expanded <- feat
                     cols.of.x <- c(1,ncol(xmat))
@@ -68,38 +67,59 @@ align_spec2feat <- function(feat, xmat, r.thresh = 0.8){
           
       # Align spectra for this feature: ####
       
-        # Before: simplePlot(xmat.ss[ss, f.pos.in.exp])
-          
           use.inds <- !is.na(feat$profile) # for internal NAs, we'll need to exclude sometimes
-
+          # if no data, then just return NULL ####
+          if (!any(use.inds)){return(NULL)}
+      
           # Get the current subset selection score for each spectrum ####
-          
+            # this should be robust
             r.current <- cor(feat$profile[use.inds] %>% c, 
                              xmat[, feat$position[use.inds], 
                                   drop = F] %>% t
                              )
+
+          # Generate lags
+          # if error, then just return NULL ####
+          lags <- tryCatch(
+            expr = {
+                      # Calculate best alternative lags ####
+                        feat_align_to(align = xmat.ss, to = profile.exp, max.hits = 1)
+              
+            }, error = function(cond) NULL)
+      
+          if (is_nullish(lags)){
+            # indsmat <- feat.expanded$position
+            # valsmat <- 
+            NULL              
+          }
           
-          # Calculate best alternative lags ####
-            lags <- feat_align_to(align = xmat.ss, to = profile.exp, max.hits = 1)
             feat$ss <- 1:nspec # set this to all for now, in case we pick up any additional instances in other spectra
           
           # Try out each lag to see if it improves its spectrum's subset selection score ####
             
             lags.tested <- lapply(feat$ss, function(x) {
-              
-              # Get the subset selection score for this lag
-                r.proposed <- cor(feat$profile[use.inds], xmat[x, feat$position[use.inds] + lags$lag.in.f2[x]])
-              
-              # only apply lag if improves similarity to initial profile AND passes cutoff
-                if (r.proposed > r.current[x] &  
-                    r.proposed >= r.thresh){     
+              # test suggested lags. if error, or worse score, then just return 0 for lag ####
+              tryCatch(
+                expr = {
                   
-                  return(lags$lag.in.f2[x])
-                
-              # otherwise, don't make any changes. We only make changes if improvement is clear.
-                } else {
+                  # Get the subset selection score for this lag
+                    r.proposed <- cor(feat$profile[use.inds], xmat[x, feat$position[use.inds] + lags$lag.in.f2[x]])
+                  
+                  # only apply lag if improves similarity to initial profile AND passes cutoff
+                    if (r.proposed > r.current[x] &  
+                        r.proposed >= r.thresh){     
+                      
+                      return(lags$lag.in.f2[x])
+                    
+                  # otherwise, don't make any changes. We only make changes if improvement is clear.
+                    } else {
+                      return(0)
+                    }
+                  
+                }, error = function(cond){
                   return(0)
                 }
+              )
   
             }) %>% unlist
           
@@ -110,7 +130,7 @@ align_spec2feat <- function(feat, xmat, r.thresh = 0.8){
           
             indsmat <- al.fts$inds
             valsmat <- al.fts$vals
-        
+  
         
         # After: simplePlot(valsmat)
         
@@ -128,7 +148,8 @@ align_spec2feat <- function(feat, xmat, r.thresh = 0.8){
           feat$profile <- cov(valsmat[, feat$driver.relative], valsmat)
             feat$profile[feat$corr < r.thresh] <- NA
         } else {
-          feat$corr <- rep(NA, length(feat$profile))
+          # feat$corr <- rep(NA, length(feat$profile))
+          return(NULL)
         }
         
         
