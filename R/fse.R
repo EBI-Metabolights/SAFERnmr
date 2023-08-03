@@ -186,7 +186,7 @@ fse <- function(pars){
         storm_rnd1 = list()
         
         
-        message("Running storm on ",numPairs, " provided protofeatures. Progress:")
+        message("Running storm on ",numPairs, " provided protofeatures.")
         
         storm_rnd1 <- 
               mclapply(regions_subset,
@@ -272,7 +272,7 @@ fse <- function(pars){
                        ppm = ppm,
                        noisewidth = noisewidth)
             
-    fse.result %>% test_nullish('fse.result')        
+    fse.result %>% test_nullish    
     message("Saving results...")
 
     saveRDS(fse.result, paste0(this.run, "/fse.result.RDS"))

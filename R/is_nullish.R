@@ -48,7 +48,7 @@
 #' @return whether the object has NaN, NULL, empty, or Inf values
 #'
 #' @export
-is_nullish <- function(x){
+is_nullish <- function(x=NULL){
   
   # Check if is EMPTY or NULL
     if (length(x) == 0){
@@ -88,8 +88,8 @@ test_nullish <- function(obj, msg=NULL){
     #deparse(sys.calls()[[sys.nframe()-1]]) # function name
     if (is.null(msg)){
       return(stop('"',call.txt, '" ...object is nullish.', call. = F))
-    }
-  } else {
+    } else {
       return(stop(msg, call. = F))
+    }
   }
 }
