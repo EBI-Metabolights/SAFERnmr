@@ -4,7 +4,7 @@
 \alias{is_nullish}
 \title{is_nullish: contaminated with NaN, NULL, Inf, or empty values?}
 \usage{
-is_nullish(x)
+is_nullish(x = NULL)
 }
 \value{
 whether the object has NaN, NULL, empty, or Inf values
