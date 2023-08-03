@@ -43,8 +43,15 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
   # Filter out features with runs too short
     message("Filtering out features with no runs >= ", min.runlength, " points...")
     rl.pass <- apply(feature$stack, 1,
-                   function(x) {run.lens <- x %>% is.na %>% "!"(.) %>% runs.labelBy.lengths
-                                return((run.lens >= min.runlength) %>% any)})
+                     function(x) {
+                       tryCatch(
+                         expr = {
+                                  run.lens <- x %>% is.na %>% "!"(.) %>% runs.labelBy.lengths
+                                  return((run.lens >= min.runlength) %>% any)
+                         }, 
+                         error = function(cond) FALSE
+                       )
+                   })
     
   # Filter out features without enough subset size 
     message("Filtering out features derived from < ", min.subset, " spectra...")
@@ -59,15 +66,24 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
       {
          # print(f)
          # f <- 98
-         feature$stack[f, , drop = FALSE] %>% 
-           trim_sides %>%
-           detect_baseline_effect 
+         tryCatch(
+           expr = {
+                     feature$stack[f, , drop = FALSE] %>% 
+                       trim_sides %>%
+                       detect_baseline_effect # can only produce list of three logicals
+           }, 
+           error = function(cond){
+             list(pass.prom = FALSE,
+                  pass.fit = FALSE,
+                  not.singlet = FALSE)
+            }
+         )
       })
       
       bl.effect.ul <- bl.effect %>% unlist %>% as.logical
-      pass.prom <- bl.effect.ul[c(T,F,F)]
-      pass.fit <- bl.effect.ul[c(F,T,F)]
-      not.singlet <- bl.effect.ul[c(F,F,T)]
+      pass.prom <- bl.effect.ul[c(TRUE,FALSE,FALSE)]
+      pass.fit <- bl.effect.ul[c(FALSE,TRUE,FALSE)]
+      not.singlet <- bl.effect.ul[c(FALSE,FALSE,TRUE)]
       
       not.monotonic <- pass.prom & pass.fit & not.singlet
       
@@ -92,7 +108,9 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
                      not.singlet = not.singlet,
                      not.monotonic = pass.fit)
     
-    filt <- !nullfeatures & !null.driver & inbounds & rl.pass & ss.pass & not.monotonic 
+    # filt <- !nullfeatures & !null.driver & inbounds & rl.pass & ss.pass & not.monotonic 
+    filt <- do.call(cbind, all.filts) %>% apply(1, all)
+      
     message('Filtering complete. ', sum(filt), '/', length(filt), ' features passed filters.')
     
     all.filts$rand.subset = rep(T, length(filt))
@@ -117,13 +135,14 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
                 (number.excluded/length(passed)*100) %>% round,
                 ' %) to satisfy limit of ', pars$tina$nfeats, ' features ...')
       }
-  
+      
+      passed %>% test_nullish
       
   if (give == "features"){
     # Go through feature object and apply filter
-      feature$stack <- feature$stack[filt, ]
-      feature$position <- feature$position[filt, ]
-      feature$subset$ss.all <- feature$subset$ss.all[filt, ]
+      feature$stack <- feature$stack[filt, ,drop = F]
+      feature$position <- feature$position[filt, ,drop = F]
+      feature$subset$ss.all <- feature$subset$ss.all[filt, ,drop = F]
     return(feature)
   }
   if (give == "filter"){

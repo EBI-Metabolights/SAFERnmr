@@ -39,6 +39,8 @@ detect_baseline_effect <- function(feat, cutoff.corr = 0.99, prom.ratio = 0.3){
               #                                  not.singlet = FALSE))}
             not.singlet = length(truepks)>1
               
+            if (is_nullish(not.singlet)){not.singlet <- F}
+             
         # Extract local prominences from feature ####
           
           if (length(truepks > 0)){ # can't calculate prominences of nonexistent peaks
@@ -63,7 +65,7 @@ detect_baseline_effect <- function(feat, cutoff.corr = 0.99, prom.ratio = 0.3){
               
           } else {pass.prom <- F}
 
-          
+          if (is_nullish(pass.prom)){pass.prom <- F}
             
         # See if bounds track peaks (requires > 1 peak) ####
             if (sum(truepks)>1){ # need > 1 peaks to do this
@@ -92,6 +94,8 @@ detect_baseline_effect <- function(feat, cutoff.corr = 0.99, prom.ratio = 0.3){
                  
               } else {pass.fit <- F}
               
+            if (is_nullish(pass.fit)){pass.fit <- F}
+            
         # Return results ####
           return(list(pass.prom = pass.prom,
                       pass.fit = pass.fit,
