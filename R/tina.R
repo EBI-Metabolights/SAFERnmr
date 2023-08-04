@@ -115,7 +115,7 @@ tina <- function(pars){
         # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
         
 ################ Plotting Filtered features #######################
- 
+  tryCatch(expr = { 
   # Plot the good features that passed: ####
     if (pars$tina$plots$filtered.features){
         message('printing good features to pdf...')
@@ -157,6 +157,8 @@ tina <- function(pars){
       
       
 
+  }, error = function(cond){message('Plotting filterd features failed in TINA. May want to look into this.')}
+  )
 ########### SFE  ################################################################################## 
 
     # Force garbage collection to slim down workspace
@@ -242,6 +244,8 @@ tina <- function(pars){
 
         message('\n\taligning features to max peak...')
         feature.ma <- align_max(feature, scaling = FALSE)
+           # if max align fails on a feature, remove it
+           features.specd <- features.specd[feature.ma$alignment.success]
            feature.ma %>% test_nullish('feature.ma')
           
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
@@ -250,6 +254,7 @@ tina <- function(pars){
 
 ##################################################################################################################                
     # Plot all feature ranges ####
+  tryCatch(expr = { 
           pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
               width = dim, # The width of the plot in inches
               height = dim)
@@ -261,7 +266,8 @@ tina <- function(pars){
                        feature.shift_range[2,], 1:ncol(feature.shift_range),
                        lwd = 0.1)
           dev.off()
-          
+    }, error = function(cond){message('Plotting feature ranges failed in TINA. May want to look into this.')}
+  )
             
           ######################################################################################################## 
                     
@@ -319,7 +325,7 @@ tina <- function(pars){
     if (nrow(feature.final$stack) > 1000 & pars$tina$do.clustering){
      # OPTICS-based ####
         message('\n\t---- OPTICS-based clustering ----')
-      
+    tryCatch(expr = { 
       printTime()
       t1 <- Sys.time()
       results <- tina_combineFeatures_optics(feature.final$stack,
@@ -348,14 +354,14 @@ tina <- function(pars){
                          groups = results$clusters)
 
         print(Sys.time() - t1)
-        # length(clusters$cluster.labs %>% unique)
+    }, error = function(cond){
+      message('\n\tIn TINA: OPTICS clustering failed. Reverting to no clustering.')}
+      clusters <- dummyClusters(1:nrow(feature.ma$stack))
+        
     } else {
      # SKIP CLUSTERING ####
       message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
-      clusters <- list(method = 'none',
-                       results = NA,
-                       cluster.labs = 1:nrow(feature.ma$stack),
-                       groups = as.list(1:nrow(feature.ma$stack)))
+      clusters <- dummyClusters(1:nrow(feature.ma$stack))
     }
 
     # Produced object: clusters. Check for nullish elements:
@@ -405,38 +411,40 @@ tina <- function(pars){
       # ....
       
   ############ Plot the cleaned clusters ####
-  if (pars$tina$do.clustering & pars$tina$plots$cleaned.clusters){
-    # Produce plots ####
-        message("Generating plots. Progress:")
-        cluster.list <- clusters$groups
-        
-        everyNth <- every_nth(select = pars$storm$number.of.plots, 
-                              from = cluster.list)
-        clust.subset <- seq_along(cluster.list) %>% .[everyNth]
-        
-        plots <- pblapply(clust.subset, function(x)
-          {
-          # print(x)
-                feat.inds <- clust.info[[x]]$labels
-                fs <- feature.ma$stack %>% 
-                  lag_features(., clust.info[[x]]$lag.table, 
-                               to = clust.info[[x]]$key.feat) %>% 
-                  trim_sides 
-                
-                return(simplePlot(fs))
-          })
-        
-    # Print plots to file ####
-        message("Printing checked cluster plots to file ", "...")
-        dim <- 3*round(sqrt(length(plots)))
-        pdf(file = paste0(this.run,'/','checked.clusters.pdf'),   # The directory you want to save the file in
-            width = dim, # The width of the plot in inches
-            height = dim)
-        gridExtra::grid.arrange(grobs = plots)
-        dev.off()
-        message("Complete.")            
-  }
-      
+  tryCatch(expr = {
+      if (pars$tina$do.clustering & pars$tina$plots$cleaned.clusters){
+      # Produce plots ####
+          message("Generating plots. Progress:")
+          cluster.list <- clusters$groups
+          
+          everyNth <- every_nth(select = pars$storm$number.of.plots, 
+                                from = cluster.list)
+          clust.subset <- seq_along(cluster.list) %>% .[everyNth]
+          
+          plots <- pblapply(clust.subset, function(x)
+            {
+            # print(x)
+                  feat.inds <- clust.info[[x]]$labels
+                  fs <- feature.ma$stack %>% 
+                    lag_features(., clust.info[[x]]$lag.table, 
+                                 to = clust.info[[x]]$key.feat) %>% 
+                    trim_sides 
+                  
+                  return(simplePlot(fs))
+            })
+          
+      # Print plots to file ####
+          message("Printing checked cluster plots to file ", "...")
+          dim <- 3*round(sqrt(length(plots)))
+          pdf(file = paste0(this.run,'/','checked.clusters.pdf'),   # The directory you want to save the file in
+              width = dim, # The width of the plot in inches
+              height = dim)
+          gridExtra::grid.arrange(grobs = plots)
+          dev.off()
+          message("Complete.")            
+      }
+    }, error = function(cond){message('Plotting cleaned clusters failed after checkClusters() in TINA. May want to look into this.')}
+  )
 ###############################################################################################################          
       
 # Make output objects that make sense: ####
@@ -491,7 +499,7 @@ tina <- function(pars){
                             info = clust.info,
                             groups = clusters$groups,
                             method = clusters$method)
-      cluster.final %>% test_nullish('cluster.final')
+      cluster.final %>% test_nullish
       saveRDS(cluster.final, paste0(tmpdir, "/cluster.final.RDS"))
       
 #         #### #####
@@ -499,4 +507,13 @@ tina <- function(pars){
   message('-------------------  TINA Complete  -------------------')
   message('-------------------------------------------------------')
         
+}
+
+
+dummyClusters <- function(clust.numbers){
+      clusters <- list(method = 'none',
+                       results = NA,
+                       cluster.labs = clust.numbers,
+                       groups = as.list(clust.numbers))
+      return(clusters)
 }

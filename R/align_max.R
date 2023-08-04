@@ -117,7 +117,7 @@ align_max <- function(feature, scaling = TRUE){
       feature$subset$ss.all <- subsets
       feature$subset$sizes <- subset.sizes
       feature$driver.relative <- driver.relative
-      feature$removed <- which(!keep)
+      feature$alignment.success <- keep
         
   return(feature)
 }

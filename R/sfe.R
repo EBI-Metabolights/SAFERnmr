@@ -74,7 +74,7 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                    ss = ss,
                    driver.relative = driver)
       
-      
+      # Get aligned feature obj
       aligned <- tryCatch(
         expr = {
           align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
@@ -82,7 +82,7 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
 
         }, 
         error = function(cond){
-          NULL
+          NULL # this will error on test and escape the function
         }
       )
       
