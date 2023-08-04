@@ -32,18 +32,22 @@ match_features2refs_par_setup <- function(pars) {
     message("Loading data from files...\n\n\n")
 
     fse.result <- readRDS(paste0(this.run, "/fse.result.RDS"))
+      fse.result %>% test_nullish('fse.result did not pass nullish check. Cannot proceed with matching setup.')
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
       rm(fse.result)
-      
-       fse.result %>% test_nullish('fse.result')
+       
       
     # This runs even if there was no clustering (clusters of 1 feature each):
     cluster.final <- readRDS(paste0(this.run, "/cluster.final.RDS"))
-        cluster.final %>% test_nullish('cluster.final')
+        cluster.final %>% test_nullish('cluster.final did not pass nullish check. Cannot proceed with matching setup.')
     
       c.labs <- cluster.final$labels
-      
+        # Check that cluster labels actually correspond to rows of feature matrix.
+          if(!all(c.labs %in% 1:nrow(featureStack))){
+            message('Cluster labels do not correspond with feature rows. Reverting to comprehensive feature matching...')
+            clusters <- dummyClusters()
+          }
 
     # Put features in a matrix ####
     
