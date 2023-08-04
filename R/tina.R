@@ -63,6 +63,9 @@ tina <- function(pars){
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
       
+      # Check fse.result for nulls
+        fse.result %>% test_nullish # just double-checking
+      
     bounds <- pars$tina$bounds        # only consider signatures within this region (ppm)
     min.subset <- pars$tina$min.subset          # don't keep features if their subsets are too small (basically does nothing)
     prom.ratio <- pars$tina$prom.ratio
@@ -72,7 +75,9 @@ tina <- function(pars){
 
     # Run tina_setup to set up successful features
 
-        feature <- tina_setup(fse.result$storm_features, fse.result$xmat)
+        feature <- tina_setup(fse.result$storm_features, xmat)
+          feature %>% test_nullish
+          
         message('\n\t---- Feature Filtering ----')
         
     # Run feature filter function to get the filter:
@@ -91,7 +96,7 @@ tina <- function(pars){
 
           saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
           # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
-
+          
     # Re-run tina_setup on the filtered features
 
         filt <- filts$all$not.null &
@@ -104,13 +109,13 @@ tina <- function(pars){
 
       # Rerun setup on filtered features
         feature <- tina_setup(fse.result$storm_features[filt], xmat)
-       
+          feature %>% test_nullish('feature')
         message('\n\tFeature filtering complete. Saving results...')
         saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
         # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
         
 ################ Plotting Filtered features #######################
- 
+  tryCatch(expr = { 
   # Plot the good features that passed: ####
     if (pars$tina$plots$filtered.features){
         message('printing good features to pdf...')
@@ -152,6 +157,8 @@ tina <- function(pars){
       
       
 
+  }, error = function(cond){message('Plotting filterd features failed in TINA. May want to look into this.')}
+  )
 ########### SFE  ################################################################################## 
 
     # Force garbage collection to slim down workspace
@@ -170,53 +177,88 @@ tina <- function(pars){
         t1 <- Sys.time()
             features.specd <- parallel::mclapply(1:nrow(feature$stack),
                                                  FUN = function(i){
-                sfe(feature, i,
-                         xmat,
-                         ppm,
-                         r.thresh = pars$storm$correlation.r.cutoff)
+                tryCatch(
+                    expr = {
+                            res <- 
+                             sfe(feature, i,
+                                 xmat,
+                                 ppm,
+                                 r.thresh = pars$storm$correlation.r.cutoff)
+                              res %>% test_nullish()
+                              res
+                    },
+                    error = function(cond){
+                             NA
+                    }
+                )                                   
               }, mc.cores = pars$par$ncores)
 
             message('\n\tParallel sfe done on ', length(features.specd), ' features.')
         print(Sys.time() -t1)
 
+        # Nullish is not acceptable
+        features.specd %>% test_nullish('features.specd')
+        
         saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
         # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
-        failed <- lapply(features.specd, function(res){
-          
-        })
+
         
 ########### Adjust feature object with sfe results  ############################################################
     # Apply/add new feature info to old features #####
+      # * any features that failed sfe need to be removed
       # profile stack must be updated
       # - needs to allow for resizing?
       # - sfe will return trimmed profiles and undo any alignment of features
+      
         message('\n\tapplying sfe results to feature stack...')
+        
+        passed.sfe <- !(features.specd %>% is.na)
+        
+        if (!any(passed.sfe)){stop('No features passed sfe.')} 
+        
+          # Go through feature object and apply filter
+            feature$stack <- feature$stack[passed.sfe, ,drop = F]
+            feature$position <- feature$position[passed.sfe, ,drop = F]
+            feature$subset$ss.all <- feature$subset$ss.all[passed.sfe, ,drop = F]
+            feature$subset$sizes <- feature$subset$sizes[passed.sfe]
+            feature$driver.relative <- feature$driver.relative[passed.sfe]
+            features.specd <- features.specd[passed.sfe]
+            
         # Get the width of the new feature mat ####
           n.cols <- lapply(features.specd, function(res){
             res$feat$profile %>% length
-          }) %>% unlist %>% max
+          }) %>% unlist %>% max(na.rm = T)
 
-        # Make new feature mat ####
+        # Make new feature mat using sfe-derived profile ####
           feature$stack <- lapply(features.specd, function(res){
+            
             needed <- n.cols - length(res$feat$profile)
+            
             return(  c(res$feat$profile, rep(NA, needed))  )
+            
           }) %>% do.call(rbind, .)
-
+            
+            feature %>% test_nullish('feature')
 
     # Align to feature maximum ####
 
         message('\n\taligning features to max peak...')
         feature.ma <- align_max(feature, scaling = FALSE)
-
+           # if max align fails on a feature, remove it
+           features.specd <- features.specd[feature.ma$alignment.success]
+           feature.ma %>% test_nullish('feature.ma')
+          
         saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
         # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
         rm(feature)
 
 ##################################################################################################################                
     # Plot all feature ranges ####
+  tryCatch(expr = { 
           pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
               width = dim, # The width of the plot in inches
               height = dim)
+        
               feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
               subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
               plot(feature.shift_range, subs$cols, pch = ".", cex = .01)
@@ -224,7 +266,8 @@ tina <- function(pars){
                        feature.shift_range[2,], 1:ncol(feature.shift_range),
                        lwd = 0.1)
           dev.off()
-          
+    }, error = function(cond){message('Plotting feature ranges failed in TINA. May want to look into this.')}
+  )
             
           ######################################################################################################## 
                     
@@ -261,6 +304,9 @@ tina <- function(pars){
                               position = feature.ma$position,
                               driver.relative = feature.ma$subset,
                               sfe = features.specd)
+        
+        feature.final %>% test_nullish('feature.final')
+         
         saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
         # feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
         
@@ -268,187 +314,34 @@ tina <- function(pars){
         gc()
         
 ###############################################################################################################           
+      do.clustering <- tryCatch({if(pars$tina$do.clustering){pars$tina$do.clustering}},
+                                error = function(cond){FALSE})
         
-# The TINA part  ####
-              
-   # OPTICS-based ####
-      message('\n\t---- OPTICS-based clustering ----')
-    # Check to see if clustering param was provided; if not, turn it off
-      # if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
+      tryCatch(
+        {
+          cluster_features(pars, feature.final, min.features = 1000, do.clustering)
           
-    if (nrow(feature.ma$stack) > 1000 & pars$tina$do.clustering){
-      printTime()
-      t1 <- Sys.time()
-      results <- tina_combineFeatures_optics(feature.ma$stack,
-                                             max.eps = 50,
-                                             minPts = 2,
-                                             eps.stepsize = .01,
-                                             max.plots = 600,
-                                             plot.loc = this.run,
-                                             plot.name = "feature_clusters.pdf",
-                                             nfeats = pars$tina$nfeats,
-                                             dist.threads = pars$par$ncores) #parallel::detectCores() - 4) # pars$par$ncores
-
-      # Label the "noise" points as individual clusters
-        noiseclust <- which(results$labels == 0)
-        stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
-        stray.feats <- results$clusters[[noiseclust]] %>% as.list
-        
-      # What if a cluster is > max size allowed?
-
-      # Update the results object
-      # (remove noiseclust, add to the end the broken noise clust)
-        results$clusters <- c(results$clusters[-noiseclust], stray.feats)
-        clusters <- list(method = 'optics',
-                         results = results,
-                         cluster.labs = clusts2labs(results$clusters),
-                         groups = results$clusters)
-
-        print(Sys.time() - t1)
-        # length(clusters$cluster.labs %>% unique)
-    } else {
-      message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
-      clusters <- list(method = 'none',
-                       results = NULL,
-                       cluster.labs = 1:nrow(feature.ma$stack),
-                       groups = as.list(1:nrow(feature.ma$stack)))
-    }
-
-    saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
-    # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
-    rm(xmat)
-    rm(ppm)
-    
- ###############################################################################################################   
-    
-    # check each cluster's quality
-    # - calculate all pairwise alignments + ls fits for cluster features
-    #   - returned as pw rmse matrix, lags
-    # - identify key feature
-    # - align all to key
-    # - rmse-based threshold for removing features from cluster
-    # - single features (or no clustering) : pass through with dummy vals
-    
-      message('\n\tcheckClusters: optimizing intra-cluster alignment and selecting representative features...')
-    
-          # Force garbage collection to slim down workspace
-            gc()
-          printTime()
-          t1 <- Sys.time()
-            # *** Note: this is parallelized for ncores - 2
-            # *** Note: currently not using rmse cutoff.
-            clust.info <- checkClusters(clusters = clusters, feature = feature.ma, 
-                                        par.cores = pars$par$ncores, 
-                                        par.type = pars$par$type)
-          print(Sys.time() - t1)
-
-          keys <- lapply(clust.info, function(ci){
-            ci$key.feat
-          }) %>% unlist
-          
-        message('\n\tcheckClusters complete. Saving...')     
-      saveRDS(clust.info, paste0(tmpdir, "/clust.info.RDS"))
-      # clust.info <- readRDS(paste0(tmpdir, "/clust.info.RDS"))
-      
-  ############################################################################################################### 
-    
-    # Split clusters
-    
-      # ....
-      
-  ############ Plot the cleaned clusters ####
-  if (pars$tina$do.clustering & pars$tina$plots$cleaned.clusters){
-    # Produce plots ####
-        message("Generating plots. Progress:")
-        cluster.list <- clusters$groups
-        
-        everyNth <- every_nth(select = pars$storm$number.of.plots, 
-                              from = cluster.list)
-        clust.subset <- seq_along(cluster.list) %>% .[everyNth]
-        
-        plots <- pblapply(clust.subset, function(x)
+        },
+        error = function(cond)
           {
-          # print(x)
-                feat.inds <- clust.info[[x]]$labels
-                fs <- feature.ma$stack %>% 
-                  lag_features(., clust.info[[x]]$lag.table, 
-                               to = clust.info[[x]]$key.feat) %>% 
-                  trim_sides 
-                
-                return(simplePlot(fs))
-          })
+            message('\n\tClustering failed, trying again without')
+            cluster_features(pars, feature.final, min.features = 1000, do.clustering = FALSE)
+          }
+      )
+      
         
-    # Print plots to file ####
-        message("Printing checked cluster plots to file ", "...")
-        dim <- 3*round(sqrt(length(plots)))
-        pdf(file = paste0(this.run,'/','checked.clusters.pdf'),   # The directory you want to save the file in
-            width = dim, # The width of the plot in inches
-            height = dim)
-        gridExtra::grid.arrange(grobs = plots)
-        dev.off()
-        message("Complete.")            
-  }
-      
-###############################################################################################################          
-      
-# Make output objects that make sense: ####
-
-  # TINA Results: what have we done? ####
-  
-      # Filtered features
-      # - filt
-      
-      # Produced feature object
-      # - feature stack
-      # - stack.pre.sfe (for record; not used)
-      # - position stack
-      # - ss
-      #   - matrix 
-      #   - diffs (not used)
-      #   - sizes (not used)
-      #   - overlaps (not used)
-      #   - fraction (not used)
-      # - region
-      #   - sizes (size of the feature profile, not super useful)
-      #   - fraction (not used)
-      #   - overlaps (not used)
-      # - driver.relative (driver position; column of [].stack)
-
-      # Produced feature.ma object (max-aligned)
-      # - feature stack 
-      # - position stack 
-      # - ss
-      #   - matrix 
-      # - region
-      #   - this could be updated to hold the list of regions from
-      # - driver.relative (driver position; column of [].stack)
-
-      
-  # final clusters object ####
-  # - labels (single vector labeling each cluster with its ID, matches feature stack rows)
-  # - keys (list of feature stack row/clusters$labels indices of cluster representatives)
-  # - info (results of check.clusters)
-  #   - label (cluster number)
-  #   - features.aligned ()
-  #   - key.feat
-  #   - lag.table
-  #   - profile
-  #   - rmse.mean.clust (mean rmse of all features aligned to key feature)
-  #   - rmse.pw.fits (pairwise fits between features)
-  #   - rmse.to.best (each feature's rmse to the key feature)
-
-      cluster.final <- list(labels = clusters$cluster.labs,
-                            clust.results = clusters$results,
-                            keys = keys,
-                            info = clust.info,
-                            groups = clusters$groups,
-                            method = clusters$method)
-      
-      saveRDS(cluster.final, paste0(tmpdir, "/cluster.final.RDS"))
-      
 #         #### #####
   message('-------------------------------------------------------')
   message('-------------------  TINA Complete  -------------------')
   message('-------------------------------------------------------')
         
+}
+
+
+dummyClusters <- function(clust.numbers){
+      clusters <- list(method = 'none',
+                       results = NA,
+                       cluster.labs = clust.numbers,
+                       groups = as.list(clust.numbers))
+      return(clusters)
 }

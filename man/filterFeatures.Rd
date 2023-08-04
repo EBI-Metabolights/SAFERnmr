@@ -17,7 +17,7 @@ filterFeatures(
   min.subset = 5,
   prom.ratio = 0.3,
   give = "filter",
-  max.features = 10000
+  max.features = NULL
 )
 }
 \arguments{
@@ -34,6 +34,8 @@ filterFeatures(
 \item{prom.ratio}{The maximum ratio of peak prominence to intensity range for a feature to be considered monotonic}
 
 \item{give}{A character string indicating whether to return the filtered feature object or the filter as a logical vector}
+
+\item{max.features}{max number of features to keep (random subset), default is to keep all.}
 }
 \value{
 If \code{give = "features"}, a feature object with the filtered features. If \code{give = "filter"}, a logical vector indicating which features passed the filter.

@@ -74,39 +74,52 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                    ss = ss,
                    driver.relative = driver)
       
-      aligned <- align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
-      # stackplot(aligned$valsmat)
-    
-    
-# Fit the feature to each spectrum
-     
+      # Get aligned feature obj
+      aligned <- tryCatch(
+        expr = {
+          align_spec2feat(feat = feat, xmat = xmat, r.thresh = r.thresh)
+          # stackplot(aligned$valsmat)
+
+        }, 
+        error = function(cond){
+          NULL # this will error on test and escape the function
+        }
+      )
+      
+      test_nullish(aligned)
+      
   # Fit the feature to each passing spectrum ####
     
     fits <- lapply(1:nrow(aligned$valsmat), function(m) {
       
-        # m <- 1
-      # Fit this spec to the profile to scale to match other instances (invert fit later)
-        fit <- NULL
-        
-        fit <- tryCatch(expr = {
-        
-          fit_leastSquares(v1 = aligned$feat$profile,
-                           v2 = aligned$valsmat[m,], 
-                           ppm = ppm[aligned$feat$position],
-                           plots = F,
-                           scale.v2 = F)
-        })
+      # * fit now has tryCatch included, returns NA-filled fit obj if failed
+        fit <-  fit_leastSquares(v1 = aligned$feat$profile,
+                                 v2 = aligned$valsmat[m,], 
+                                 ppm = ppm[aligned$feat$position],
+                                 plots = F,
+                                 scale.v2 = F)
 
-        return(fit)
+        return(list(fit = fit$fit,
+                    rmse = fit$rmse))
     })
-
+    
+    # Note: this will fail if plots are null. Just returning vals.
+    fits %>% test_nullish
+    # Cannot get a null value out of this
+    
+    failed.specs <- lapply(fits, function(fit) is.na(fit$rmse)) %>% unlist
+    succeeded <- !failed.specs
+      if (any(succeeded)){
+        fits <- fits[succeeded]
+        aligned$lags <- aligned$lags[succeeded]
+        aligned$rvals <- aligned$rvals[succeeded]
+      }
     
     rmses <- lapply(fits, function(fit) fit$rmse) %>% unlist
     fits <- lapply(fits, function(fit) fit$fit)
     
-    # is.null(res$feat) | is.null(res$fits) | is.null(res$)
   
-  # Return updated feature ####
+  # Return updated feature info ####
 
         return(list(feat = aligned$feat,
                     lags = aligned$lags,

@@ -4,7 +4,7 @@
 \alias{is_nullish}
 \title{is_nullish: contaminated with NaN, NULL, Inf, or empty values?}
 \usage{
-is_nullish(x)
+is_nullish(x = NULL)
 }
 \value{
 whether the object has NaN, NULL, empty, or Inf values
@@ -22,6 +22,8 @@ factor
 If x is a list, this will recursively check each element and 
 return TRUE for each one if all elements are usable values. Top level
 is preserved. *If error message from lapply, returns TRUE.
+
+NOTE: Using this on a SAFER::fit object will result in failure if plot is NULL.
 
 Examples:
    is_nullish(c())

@@ -12,6 +12,8 @@
 #' return TRUE for each one if all elements are usable values. Top level
 #' is preserved. *If error message from lapply, returns TRUE.
 #' 
+#' NOTE: Using this on a SAFER::fit object will result in failure if plot is NULL.
+#' 
 #' Examples:
 #'    is_nullish(c())
 #'    
@@ -48,7 +50,7 @@
 #' @return whether the object has NaN, NULL, empty, or Inf values
 #'
 #' @export
-is_nullish <- function(x){
+is_nullish <- function(x=NULL){
   
   # Check if is EMPTY or NULL
     if (length(x) == 0){
@@ -79,4 +81,17 @@ is_nullish <- function(x){
       
     }
   
+}
+
+test_nullish <- function(obj, msg=NULL){
+  
+  if (any(is_nullish(obj))){
+    call.txt <- deparse(sys.call(-1))
+    #deparse(sys.calls()[[sys.nframe()-1]]) # function name
+    if (is.null(msg)){
+      return(stop('"',call.txt, '" ...object is nullish.', call. = F))
+    } else {
+      return(stop(msg, call. = F))
+    }
+  }
 }

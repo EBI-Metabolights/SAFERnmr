@@ -3,7 +3,8 @@
 \name{align_spec2feat}
 \alias{align_spec2feat}
 \title{Calculate fft-based alignment of spectrum to feature.
-Report lag table.}
+Report lag table.
+If re-alignment fails for all spectra, fail}
 \usage{
 align_spec2feat(feat, xmat, r.thresh = 0.8)
 }
@@ -20,6 +21,7 @@ lag table for each spectrum in xmat
 \description{
 Calculate fft-based alignment of spectrum to feature.
 Report lag table.
+If re-alignment fails for all spectra, fail
 }
 \author{
 MTJ

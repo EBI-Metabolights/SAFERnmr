@@ -4,7 +4,7 @@
 \alias{fit_leastSquares}
 \title{Fit least squares model between two signals and calculate statistics}
 \usage{
-fit_leastSquares(v1, v2, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
+fit_leastSquares(v1 = NA, v2 = NA, ppm = NULL, plots = FALSE, scale.v2 = TRUE)
 }
 \arguments{
 \item{v1}{a numeric vector representing one of the signals}
