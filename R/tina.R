@@ -325,43 +325,44 @@ tina <- function(pars){
     if (nrow(feature.final$stack) > 1000 & pars$tina$do.clustering){
      # OPTICS-based ####
         message('\n\t---- OPTICS-based clustering ----')
-    tryCatch(expr = { 
-      printTime()
-      t1 <- Sys.time()
-      results <- tina_combineFeatures_optics(feature.final$stack,
-                                             max.eps = 50,
-                                             minPts = 2,
-                                             eps.stepsize = .01,
-                                             max.plots = 600,
-                                             plot.loc = this.run,
-                                             plot.name = "feature_clusters.pdf",
-                                             nfeats = pars$tina$nfeats,
-                                             dist.threads = pars$par$ncores) #parallel::detectCores() - 4) # pars$par$ncores
-
-      # Label the "noise" points as individual clusters
-        noiseclust <- which(results$labels == 0)
-        stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
-        stray.feats <- results$clusters[[noiseclust]] %>% as.list
-        
-      # What if a cluster is > max size allowed?
-
-      # Update the results object
-      # (remove noiseclust, add to the end the broken noise clust)
-        results$clusters <- c(results$clusters[-noiseclust], stray.feats)
-        clusters <- list(method = 'optics',
-                         results = results,
-                         cluster.labs = clusts2labs(results$clusters),
-                         groups = results$clusters)
-
-        print(Sys.time() - t1)
-    }, error = function(cond){
-      message('\n\tIn TINA: OPTICS clustering failed. Reverting to no clustering.')}
-      clusters <- dummyClusters(1:nrow(feature.ma$stack))
-        
+        tryCatch(expr = { 
+          printTime()
+          t1 <- Sys.time()
+          results <- tina_combineFeatures_optics(feature.final$stack,
+                                                 max.eps = 50,
+                                                 minPts = 2,
+                                                 eps.stepsize = .01,
+                                                 max.plots = 600,
+                                                 plot.loc = this.run,
+                                                 plot.name = "feature_clusters.pdf",
+                                                 nfeats = pars$tina$nfeats,
+                                                 dist.threads = pars$par$ncores)
+    
+          # Label the "noise" points as individual clusters
+            noiseclust <- which(results$labels == 0)
+            stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
+            stray.feats <- results$clusters[[noiseclust]] %>% as.list
+            
+          # What if a cluster is > max size allowed?
+    
+          # Update the results object
+          # (remove noiseclust, add to the end the broken noise clust)
+            results$clusters <- c(results$clusters[-noiseclust], stray.feats)
+            clusters <- list(method = 'optics',
+                             results = results,
+                             cluster.labs = clusts2labs(results$clusters),
+                             groups = results$clusters)
+    
+            print(Sys.time() - t1)
+        }, error = function(cond){
+          message('\n\tIn TINA: OPTICS clustering failed. Reverting to no clustering.')
+          clusters <- dummyClusters(1:nrow(feature.ma$stack))
+        })
+      
     } else {
      # SKIP CLUSTERING ####
-      message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
-      clusters <- dummyClusters(1:nrow(feature.ma$stack))
+        message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
+        clusters <- dummyClusters(1:nrow(feature.ma$stack))
     }
 
     # Produced object: clusters. Check for nullish elements:
