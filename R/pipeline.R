@@ -169,63 +169,87 @@
 #' 
 #' @export
 pipeline <- function(params_loc, params_obj) {
-  if (isFALSE(missing(params_obj))) {
-    run_params <- params_obj
-  } else if (missing(params_loc)) {
-    # load default params
-    filepath <- base::system.file(
-      "extdata", "default_params.yaml",
-      package = "SAFER"
-    )
-    run_params <- yaml::yaml.load_file(filepath, eval.expr = TRUE)
-    default <- TRUE
-    
-  } else {
-    # >>> This is the usual route <<<
-    # load supplied params
-    run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
-    dir.create(run_params$dirs$temp, showWarnings = F)
-    file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'))
-  }
-
-  # if (run_params$galaxy$enabled == FALSE) {
-  #   setup(run_params)
-  # }
   
-  pars <- run_params
-  
-  if (is.null(pars$dirs$temp)){
-    pars$dirs$temp <- '.'
-  } else {
-    if(!dir.exists(pars$dirs$temp)){
-      dir.create(pars$dirs$temp, showWarnings = F)
-    }
-  }
-
-  # Don't use lib.info path from now on. Assume it's in tmpdir
-  file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
+  # status <- NULL
+  # status <- tryCatch({
+                if (isFALSE(missing(params_obj))) {
+                  run_params <- params_obj
+                } else if (missing(params_loc)) {
+                  # load default params
+                  filepath <- base::system.file(
+                    "extdata", "default_params.yaml",
+                    package = "SAFER"
+                  )
+                  run_params <- yaml::yaml.load_file(filepath, eval.expr = TRUE)
+                  default <- TRUE
+                  
+                } else {
+                  # >>> This is the usual route <<<
+                  # load supplied params
+                  run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
+                  dir.create(run_params$dirs$temp, showWarnings = F)
+                  file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'))
+                }
+              
+                # if (run_params$galaxy$enabled == FALSE) {
+                #   setup(run_params)
+                # }
+                
+                pars <- run_params
+                
+                if (is.null(pars$dirs$temp)){
+                  pars$dirs$temp <- '.'
+                } else {
+                  if(!dir.exists(pars$dirs$temp)){
+                    dir.create(pars$dirs$temp, showWarnings = F)
+                  }
+                }
+              
+                # Don't use lib.info path from now on. Assume it's in tmpdir
+                file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
+              
+  #           }, error = function(cond){return('failed setup')})
+  # 
+  # if (!is.null(status)){return(status)}
   
 ################################################################################################################################### 
 ## Feature Shape Extraction
 
-  fse(pars)
-
+  # status <- tryCatch({
+    fse(pars)
+  #   }, error = function(cond){return('failed fse')})
+  # 
+  # if (!is.null(status)){return(status)}
+  
 ################################################################################################################################### 
 ## TINA / SAFARI
 # - filter out feature shapes which make no sense
 # - associate features whose shapes are highly similar
 
-  tina(pars)
+  # status <- tryCatch({
+    tina(pars)
+    # }, error = function(cond){return('failed tina')})
+  # 
+  # if (!is.null(status)){return(status)}
   
 ################################################################################################################################### 
 ## Match spectra to the database 
 # - match using convolution-based cross-correlation
 # - parallelized
   
-  match_features2refs_par_setup(pars)
-  gc() # garbage collect before big parallel compute
-  match_features2refs_par_explicit(pars)
+  # status <- tryCatch({
+              match_features2refs_par_setup(pars)
+  #           }, error = function(cond){return('failed match setup')})
+  # 
+  # if (!is.null(status)){return(status)}
   
+  gc() # garbage collect before big parallel compute
+  
+  # status <- tryCatch({
+              match_features2refs_par_explicit(pars)
+  #           }, error = function(cond){return('failed matching')})
+  # 
+  # if (!is.null(status)){return(status)}
   
 ################################################################################################################################### 
 ## Match filtering
@@ -233,8 +257,11 @@ pipeline <- function(params_loc, params_obj) {
 # - filter for (deltappm)
 # - backfit ref subsignatures to individual dataset spectra
 
-  filter_matches(pars) 
-  
+  # status <- tryCatch({
+              filter_matches(pars) 
+  #           }, error = function(cond){return('failed match filtering')})
+  #   
+  # if (!is.null(status)){return(status)}
   
 ################################################################################################################################### 
 ## Assess matches
@@ -252,9 +279,17 @@ pipeline <- function(params_loc, params_obj) {
 #   - calls a function "pair_score_summation.R" which has a parallelized section
 #   *** Format as MAF file and print match plots on request ***
 
-  score_matches(pars)
+  # status <- tryCatch({
+              score_matches(pars)
+  #           }, error = function(cond){return('failed match scoring')})
+  #   
+  # if (!is.null(status)){return(status)}
+  
 
   # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
   # write.table(matches, sep = '\t', file = 'matches_scored_named.txt', row.names = F, col.names = T)
+  message('Saving session info...')
   saveRDS(sessionInfo(), paste0(pars$dirs$temp, "/session.info.RDS"))
+  status <- 'success'
+  return(status)
 }

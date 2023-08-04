@@ -43,11 +43,6 @@ match_features2refs_par_setup <- function(pars) {
         cluster.final %>% test_nullish('cluster.final did not pass nullish check. Cannot proceed with matching setup.')
     
       c.labs <- cluster.final$labels
-        # Check that cluster labels actually correspond to rows of feature matrix.
-          if(!all(c.labs %in% 1:nrow(featureStack))){
-            message('Cluster labels do not correspond with feature rows. Reverting to comprehensive feature matching...')
-            clusters <- dummyClusters()
-          }
 
     # Put features in a matrix ####
     
@@ -57,6 +52,12 @@ match_features2refs_par_setup <- function(pars) {
             feature.final %>% test_nullish('feature.final')
           
           featureStack <- feature.final$stack
+          
+        # Check that cluster labels actually correspond to rows of feature matrix. If not, redo clustering as trivial clustering
+          if(!all(c.labs %in% 1:nrow(featureStack))){
+            message('Cluster labels do not correspond with feature rows. Reverting to comprehensive feature matching...')
+            cluster_features(pars, feature.final, min.features = 1000, do.clustering = FALSE)
+          }
           
           rm(feature.final)
 
@@ -106,23 +107,40 @@ match_features2refs_par_setup <- function(pars) {
         lib.data <- readRDS(pars$galaxy$gissmo_location)
           
       } else {
-        lib.data <- readRDS(pars$files$lib.data)
-          
-      }
-        lib.data %>% test_nullish('lib.data')
+          if (file.exists(pars$files$lib.data)){
+            
+            # If there is a lib.data.RDS file, derive the lib.data.processed:
+              lib.data <- readRDS(pars$files$lib.data)
+              lib.data %>% test_nullish
+              
+              message(" - interpolating ref data to study ppm axis...\n\n")
+              lib.data.processed <- prepRefs_for_dataset(lib.data,
+                  ppm.dataset = ppm,
+                  ref.sig.SD.cutoff = pars$matching$ref.sig.SD.cutoff,
+                  n.cores = pars$par$ncores
+              )
+              
+              message('\nsaving processed ref library to file...')
+              saveRDS(lib.data.processed, paste0(this.run, "/lib.data.processed.RDS"))
         
-      message(" - interpolating ref data to study ppm axis...\n\n")
-      lib.data.processed <- prepRefs_for_dataset(lib.data,
-          ppm.dataset = ppm,
-          ref.sig.SD.cutoff = pars$matching$ref.sig.SD.cutoff,
-          n.cores = pars$par$ncores
-      )
+              rm(lib.data)
+            
+          } else {
+            
+            # If lib.data.RDS doesn't exist, check for/read in lib.data.processed (e.g. if re-running from results file):
+            if (file.exists(paste0(this.run, "/lib.data.processed.RDS"))){
+               message('\nReading processed ref library data...')
+               lib.data.processed <- readRDS(paste0(this.run, "/lib.data.processed.RDS"))
+            } else {
+              stop('No "lib.data.RDS" or "lib.data.processed.RDS" file in pars$dirs$temp: "', pars$dirs$temp,'". Check params.yaml.')
+            }
+          }
+      }
+        
+      null.data <- lapply(lib.data.processed, function(x) x %>% is_nullish %>% which) %>% 
+          unlist %>% names %>% unique
+      if (length(null.data) > 0){warning('lib.data.processed field: ', paste(null.data, collapse = ', '), ' is nullish.')}
       
-        rm(lib.data)
-        lib.data.processed %>% test_nullish('lib.data.processed')
-      message('\nsaving processed ref library to file...')
-      saveRDS(lib.data.processed, paste0(this.run, "/lib.data.processed.RDS"))
-
     ##################################################################################################################
 
       
@@ -154,7 +172,7 @@ match_features2refs_par_setup <- function(pars) {
           # Transpose original matrix so columns are spectra, save and remove it to clear memory ####
             message("\nTransposing reference matrix (takes a few seconds)...\n\n")
             ref.mat <- t(ref.mat)
-              ref.mat %>% test_nullish('ref.mat')
+              ref.mat %>% test_nullish
             message('\nWriting ref matrix to file...')
             saveRDS(ref.mat, paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
           
@@ -194,13 +212,13 @@ match_features2refs_par_setup <- function(pars) {
               f.subset = which(f.grp == g) %>% f.subset[.] 
           )
       })
-        split.scheme %>% test_nullish('split.scheme')
+        split.scheme %>% test_nullish
       f.stack.split <- lapply(unique(f.grp), function(x) f.stack[, f.grp == x, drop = F])
-        f.stack.split %>% test_nullish('f.stack.split')
+        f.stack.split %>% test_nullish
         rm(f.stack)
 
   # Save feature data
-    message('\nWriting feature data to file...')
+    message('\nWriting split feature data to file...')
     saveRDS(f.stack.split, paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
 
     rm(f.stack.split)

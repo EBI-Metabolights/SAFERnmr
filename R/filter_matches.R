@@ -41,7 +41,10 @@ filter_matches <- function(pars){
     ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
     pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
     # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
+    
+    # Weed out empty matches or those which failed
     matches <- readRDS(paste0(this.run, "/matches.RDS"))
+      matches <- matches[!is_nullish(matches)]
       nomatch <- (lapply(matches, length) %>% unlist) == 1
       matches <- matches[!nomatch]
       errors <- matches[names(matches) %in% c('call', 'message')]
