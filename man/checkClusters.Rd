@@ -3,7 +3,8 @@
 \name{checkClusters}
 \alias{checkClusters}
 \title{Calculate feature cluster information - wrapper for check.cluster that parallelizes it
-See check.cluster documentation.}
+See check.cluster documentation. 
+No features are lost during this check, but clusters which fail will be split into}
 \usage{
 checkClusters(clusters, feature, par.cores = 1, par.type = "PSOCK")
 }
@@ -13,9 +14,15 @@ checkClusters(clusters, feature, par.cores = 1, par.type = "PSOCK")
 \item{feature}{feature object containing data on all the features}
 }
 \value{
-clust.info.split (list of cluster information for each cluster, concatenated)
+clust.info.split: (list of cluster information for each cluster, concatenated)
+        clusters.prev: clustering assignments before check - includes failed
+        clusters: updated clusters object 
+         - adjusted.during.check: TRUE is added if any clusters are split. This indicates
+           that the clusters in clusters$results (from OPTICS) will NOT be the same as
+           adjusted clusters. Use the clusters$cluster.labs and clusters$groups.
 }
 \description{
 Calculate feature cluster information - wrapper for check.cluster that parallelizes it
-See check.cluster documentation.
+See check.cluster documentation. 
+No features are lost during this check, but clusters which fail will be split into
 }

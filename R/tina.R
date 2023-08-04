@@ -314,195 +314,22 @@ tina <- function(pars){
         gc()
         
 ###############################################################################################################           
-## CLUSTERING        
-# The TINA part  ####
-    feature <- feature.final 
-      feature$sfe <- NULL
-      
-    # Check to see if clustering param was provided; if not, turn it off
-    # if (!exists(pars$tina$do.clustering)){pars$tina$do.clustering = F}
-          
-    if (nrow(feature.final$stack) > 1000 & pars$tina$do.clustering){
-     # OPTICS-based ####
-        message('\n\t---- OPTICS-based clustering ----')
-        tryCatch(expr = { 
-          printTime()
-          t1 <- Sys.time()
-          results <- tina_combineFeatures_optics(feature.final$stack,
-                                                 max.eps = 50,
-                                                 minPts = 2,
-                                                 eps.stepsize = .01,
-                                                 max.plots = 600,
-                                                 plot.loc = this.run,
-                                                 plot.name = "feature_clusters.pdf",
-                                                 nfeats = pars$tina$nfeats,
-                                                 dist.threads = pars$par$ncores)
-    
-          # Label the "noise" points as individual clusters
-            noiseclust <- which(results$labels == 0)
-            stray.labels <- seq_along(results$clusters[[noiseclust]]) + max(results$labels)
-            stray.feats <- results$clusters[[noiseclust]] %>% as.list
-            
-          # What if a cluster is > max size allowed?
-    
-          # Update the results object
-          # (remove noiseclust, add to the end the broken noise clust)
-            results$clusters <- c(results$clusters[-noiseclust], stray.feats)
-            clusters <- list(method = 'optics',
-                             results = results,
-                             cluster.labs = clusts2labs(results$clusters),
-                             groups = results$clusters)
-    
-            print(Sys.time() - t1)
-        }, error = function(cond){
-          message('\n\tIn TINA: OPTICS clustering failed. Reverting to no clustering.')
-          clusters <- dummyClusters(1:nrow(feature.ma$stack))
-        })
-      
-    } else {
-     # SKIP CLUSTERING ####
-        message('\n\tClustering on < 1000 features is not recommended. Skipping to avoid artifacts.')
-        clusters <- dummyClusters(1:nrow(feature.ma$stack))
-    }
-
-    # Produced object: clusters. Check for nullish elements:
-        clusters %>% test_nullish('clusters')
+      do.clustering <- tryCatch({if(pars$tina$do.clustering){pars$tina$do.clustering}},
+                                error = function(cond){FALSE})
         
-    saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
-    # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
-    rm(xmat)
-    rm(ppm)
-    
-###############################################################################################################   
-    
-    # check each cluster's quality
-    # - calculate all pairwise alignments + ls fits for cluster features
-    #   - returned as pw rmse matrix, lags
-    # - identify key feature
-    # - align all to key
-    # - rmse-based threshold for removing features from cluster
-    # - single features (or no clustering) : pass through with dummy vals
-    
-      message('\n\tcheckClusters: optimizing intra-cluster alignment and selecting representative features...')
-    
-          # Force garbage collection to slim down workspace
-            gc()
-          printTime()
-          t1 <- Sys.time()
-            # *** Note: this is parallelized for ncores - 2
-            # *** Note: currently not using rmse cutoff.
-            clust.info <- checkClusters(clusters = clusters, feature = feature.final, # just needs stack
-                                        par.cores = pars$par$ncores, 
-                                        par.type = pars$par$type)
-          print(Sys.time() - t1)
-
-          keys <- lapply(clust.info, function(ci){
-            ci$key.feat
-          }) %>% unlist
+      tryCatch(
+        {
+          cluster_features(pars, feature.final, min.features = 1000, do.clustering)
           
-        clust.info %>% test_nullish('clust.info')
-        message('\n\tcheckClusters complete. Saving...')     
-      saveRDS(clust.info, paste0(tmpdir, "/clust.info.RDS"))
-      # clust.info <- readRDS(paste0(tmpdir, "/clust.info.RDS"))
+        },
+        error = function(cond)
+          {
+            message('\n\tClustering failed, trying again without')
+            cluster_features(pars, feature.final, min.features = 1000, do.clustering = FALSE)
+          }
+      )
       
-  ############################################################################################################### 
-    
-    # Split clusters
-    
-      # ....
-      
-  ############ Plot the cleaned clusters ####
-  tryCatch(expr = {
-      if (pars$tina$do.clustering & pars$tina$plots$cleaned.clusters){
-      # Produce plots ####
-          message("Generating plots. Progress:")
-          cluster.list <- clusters$groups
-          
-          everyNth <- every_nth(select = pars$storm$number.of.plots, 
-                                from = cluster.list)
-          clust.subset <- seq_along(cluster.list) %>% .[everyNth]
-          
-          plots <- pblapply(clust.subset, function(x)
-            {
-            # print(x)
-                  feat.inds <- clust.info[[x]]$labels
-                  fs <- feature.ma$stack %>% 
-                    lag_features(., clust.info[[x]]$lag.table, 
-                                 to = clust.info[[x]]$key.feat) %>% 
-                    trim_sides 
-                  
-                  return(simplePlot(fs))
-            })
-          
-      # Print plots to file ####
-          message("Printing checked cluster plots to file ", "...")
-          dim <- 3*round(sqrt(length(plots)))
-          pdf(file = paste0(this.run,'/','checked.clusters.pdf'),   # The directory you want to save the file in
-              width = dim, # The width of the plot in inches
-              height = dim)
-          gridExtra::grid.arrange(grobs = plots)
-          dev.off()
-          message("Complete.")            
-      }
-    }, error = function(cond){message('Plotting cleaned clusters failed after checkClusters() in TINA. May want to look into this.')}
-  )
-###############################################################################################################          
-      
-# Make output objects that make sense: ####
-
-  # TINA Results: what have we done? ####
-  
-      # Filtered features
-      # - filt
-      
-      # Produced feature object
-      # - feature stack
-      # - stack.pre.sfe (for record; not used)
-      # - position stack
-      # - ss
-      #   - matrix 
-      #   - diffs (not used)
-      #   - sizes (not used)
-      #   - overlaps (not used)
-      #   - fraction (not used)
-      # - region
-      #   - sizes (size of the feature profile, not super useful)
-      #   - fraction (not used)
-      #   - overlaps (not used)
-      # - driver.relative (driver position; column of [].stack)
-
-      # Produced feature.ma object (max-aligned)
-      # - feature stack 
-      # - position stack 
-      # - ss
-      #   - matrix 
-      # - region
-      #   - this could be updated to hold the list of regions from
-      # - driver.relative (driver position; column of [].stack)
-
-      
-  # final clusters object ####
-  # - labels (single vector labeling each cluster with its ID, matches feature stack rows)
-  # - keys (list of feature stack row/clusters$labels indices of cluster representatives)
-  # - info (results of check.clusters)
-  #   - label (cluster number)
-  #   - features.aligned ()
-  #   - key.feat
-  #   - lag.table
-  #   - profile
-  #   - rmse.mean.clust (mean rmse of all features aligned to key feature)
-  #   - rmse.pw.fits (pairwise fits between features)
-  #   - rmse.to.best (each feature's rmse to the key feature)
-
-      cluster.final <- list(labels = clusters$cluster.labs,
-                            clust.results = clusters$results,
-                            keys = keys,
-                            info = clust.info,
-                            groups = clusters$groups,
-                            method = clusters$method)
-      cluster.final %>% test_nullish
-      saveRDS(cluster.final, paste0(tmpdir, "/cluster.final.RDS"))
-      
+        
 #         #### #####
   message('-------------------------------------------------------')
   message('-------------------  TINA Complete  -------------------')
