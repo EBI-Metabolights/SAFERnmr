@@ -114,7 +114,7 @@ cluster_features <- function(pars, feature, min.features = 1000, do.clustering =
         
       saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
       # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
-      saveRDS(clust.info, paste0(tmpdir, "/clust.info.RDS"))
+      saveRDS(clust.info, paste0(pars$dirs$temp, "/clust.info.RDS"))
       # clust.info <- readRDS(paste0(tmpdir, "/clust.info.RDS"))
       
   ############ Plot the cleaned clusters ####
@@ -209,5 +209,5 @@ cluster_features <- function(pars, feature, min.features = 1000, do.clustering =
       cluster.final[-which(names(cluster.final) == "clust.results")] %>% # OPTICS results will contain Inf. at times
         test_nullish 
       
-      saveRDS(cluster.final, paste0(tmpdir, "/cluster.final.RDS"))
+      saveRDS(cluster.final, paste0(pars$dirs$temp, "/cluster.final.RDS"))
 }
