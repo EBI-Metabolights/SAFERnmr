@@ -44,12 +44,18 @@ filter_matches <- function(pars){
     
     # Weed out empty matches or those which failed
     matches <- readRDS(paste0(this.run, "/matches.RDS"))
-      matches <- matches[!is_nullish(matches)]
-      nomatch <- (lapply(matches, length) %>% unlist) == 1
-      matches <- matches[!nomatch]
-      errors <- matches[names(matches) %in% c('call', 'message')]
-      matches <- matches[names(matches) %in% c('matches', 'peak.quality')]
+      # if any invalid matches for the feature
+        matches <- matches[!is_nullish(matches)]
+      # per feature, was NA returned, or was ('matches', 'peak.quality')?
+        nomatch <- (lapply(matches, length) %>% unlist) == 1 
+        matches <- matches[!nomatch]
       
+      # For each feature: 
+        # Check if there was an error message
+          errors <- matches[names(matches) %in% c('call', 'message')]
+        # Check if both of the expected fields are present
+          matches <- matches[names(matches) %in% c('matches', 'peak.quality')]
+
 ###########################################################################################  
      # No full feature fits beyond this point. Just storing coefficients and positions. Try
      # to move this line up further. 
@@ -58,9 +64,10 @@ filter_matches <- function(pars){
     cluster <- readRDS(paste0(this.run, "/cluster.final.RDS"))
 
     # Format matches ####
-      
-      matches.split <- split(matches, names(matches))
+      # At this point, matches have been thoroughly validated and can be rbinded.
+        matches.split <- split(matches, names(matches))
         rm(matches)
+        
       match.info <- rbindlist(matches.split$matches)
         rownames(match.info) <- NULL
         # saveRDS(match.info, paste0(this.run, "/match.info.RDS"))

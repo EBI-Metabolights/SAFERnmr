@@ -207,7 +207,7 @@ match_features2refs_par_explicit <- function(pars){
                     
                   }, 
                         error = function(cond){
-                    NA
+                        return(list(NA))
                   }
                   )
                 }
