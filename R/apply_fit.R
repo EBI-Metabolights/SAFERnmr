@@ -13,11 +13,21 @@
 #' @export
 #'
 #' @author MTJ
-apply_fit <- function(mi.row, feat.stack, ref.stack){
+apply_fit <- function(mi.row, feat.cstack, ref.cstack){
   # mi.row <- match.info[1,]
+  feat <- feat.cstack %>%
+    cstack_selectRows(mi.row$feat) %>% 
+    cstack_expandRows
   
-  v1 <- feat.stack[mi.row$feat, mi.row$feat.start:mi.row$feat.end] %>% scale_between
-  v2 <- ref.stack[mi.row$ref.start:mi.row$ref.end, mi.row$ref] %>% scale_between
+  ref <- ref.cstack %>%
+    cstack_selectRows(mi.row$ref) %>% 
+    cstack_expandRows
+  
+  v1 <- feat[, mi.row$feat.start:mi.row$feat.end] %>% scale_between
+  v2 <- ref[mi.row$ref, mi.row$ref.start:mi.row$ref.end] %>% scale_between
+  na.vals <- is.na(v1 + v2)
+  v1[na.vals] <- NA
+  v2[na.vals] <- NA
   # if (scaled){
   #  v1 <- v1 %>% scale_between
   #  v2 <- v2 %>% scale_between
