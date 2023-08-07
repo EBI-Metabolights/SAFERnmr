@@ -3,8 +3,8 @@
 #' 
 #'
 #' @param mi.row match.info row (mi.row)
-#' @param feat.stack feature matrix, e.g. feature$stack (feats are rows)
-#' @param ref.stack ref.mat (refs are cols) 
+#' @param feat.cstack feature matrix, e.g. feature$stack (feats are rows), compressed using compress_stack()
+#' @param ref.cstack ref.mat (refs are cols), compressed using compress_stack()
 #' 
 #' @return fit feature and spec (ref) regions
 #'
@@ -14,7 +14,8 @@
 #'
 #' @author MTJ
 apply_fit <- function(mi.row, feat.cstack, ref.cstack){
-  # mi.row <- match.info[1,]
+  
+  # mi.row <- mi match.info[1,]
   feat <- feat.cstack %>%
     cstack_selectRows(mi.row$feat) %>% 
     cstack_expandRows
@@ -24,7 +25,7 @@ apply_fit <- function(mi.row, feat.cstack, ref.cstack){
     cstack_expandRows
   
   v1 <- feat[, mi.row$feat.start:mi.row$feat.end] %>% scale_between
-  v2 <- ref[mi.row$ref, mi.row$ref.start:mi.row$ref.end] %>% scale_between
+  v2 <- ref[, mi.row$ref.start:mi.row$ref.end] %>% scale_between
   na.vals <- is.na(v1 + v2)
   v1[na.vals] <- NA
   v2[na.vals] <- NA
