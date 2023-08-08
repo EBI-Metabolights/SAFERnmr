@@ -5,14 +5,14 @@
 \title{Helper function to take fit coeffs in match.info, with feat and ref stacks,
 to expand to the fit features and spec region.}
 \usage{
-apply_fit(mi.row, feat.stack, ref.stack)
+apply_fit(mi.row, feat.cstack, ref.cstack)
 }
 \arguments{
 \item{mi.row}{match.info row (mi.row)}
 
-\item{feat.stack}{feature matrix, e.g. feature$stack (feats are rows)}
+\item{feat.cstack}{feature matrix, e.g. feature$stack (feats are rows), compressed using compress_stack()}
 
-\item{ref.stack}{ref.mat (refs are cols)}
+\item{ref.cstack}{ref.mat (refs are cols), compressed using compress_stack()}
 }
 \value{
 fit feature and spec (ref) regions

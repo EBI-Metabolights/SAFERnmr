@@ -5,7 +5,7 @@
 \title{Helper function to take fit coeffs in match.info, with feat and ref stacks,
 to expand to the fit features and spec region.}
 \usage{
-apply_fit2(mi.row, feat.stack, ref.stack)
+apply_fit2(mi.row, v1, v2)
 }
 \arguments{
 \item{mi.row}{match.info row (mi.row)}
@@ -18,8 +18,7 @@ apply_fit2(mi.row, feat.stack, ref.stack)
 fit feature and spec (ref) regions
 }
 \description{
-Helper function to take fit coeffs in match.info, with feat and ref stacks,
-to expand to the fit features and spec region.
+apply_fit2 does not assume compression. apply_fit does.
 }
 \author{
 MTJ

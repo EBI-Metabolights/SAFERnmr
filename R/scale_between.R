@@ -14,6 +14,7 @@
 #'
 #' @export
 scale_between <- function(data, lower = 0, upper = 1){
+  if (any(is_nullish(data)) | all(is.na(data))){return(NA)}
   return((data - min(data,na.rm = TRUE))/(max(data,na.rm = TRUE)-min(data,na.rm = TRUE)) # make positive and between 0 and 1
           * (upper-lower)                         # stretch to fit abs(new range)
           + lower)                                # slide down to lower bound
