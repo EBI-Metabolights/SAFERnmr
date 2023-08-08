@@ -7,7 +7,10 @@
 compress_features(feature)
 }
 \arguments{
-\item{stack}{NA-laden matrix with real values you want to retain}
+\item{feature}{feature object with 
+- stack (profiles on rows)
+- position (cols in xmat on rows), same size as stack
+- driver.relative and sfe optional}
 }
 \value{
 compressed matrix (list format)

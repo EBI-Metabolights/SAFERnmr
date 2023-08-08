@@ -78,19 +78,7 @@ filter_matches <- function(pars){
       peak.qualities <- matches.split$peak.quality
         if (length(pq.featureNumbers) != length(peak.qualities)) { stop(' peak qualities not of same length as pq.featureNumbers!')}
         rm(matches.split)
-          
-######################### Remove singlets ############################################
-    printTime()
-      # Do the filtering (functionalized)
-        match.info <- filter_matches_singlets(match.info, feature$stack, ref.mat,
-                                               peak.qualities, pq.featureNumbers, 
-                                               pars$matching$filtering$res.area.threshold,
-                                               pars$par$ncores)
         
-        saveRDS(match.info, paste0(tmpdir, "/match.info.filtered.RDS"))
-        # match.info <- readRDS(paste0(tmpdir, "/match.info.filtered.RDS"))
-    
-    
 ######################### Propagate matches to feature clusters  ##########################
 
         # For each match, produce other matches based on clusters
@@ -124,7 +112,8 @@ filter_matches <- function(pars){
         
         # match.info <- readRDS(paste0(tmpdir, "/match.info.propagated.RDS"))
         
-######################### Calculate deltappm distance (specppm - featureppm)  #############################
+        
+######################### Calculate deltappm distance (specppm - featureppm) #############################
 
         # source('./../span.R')
         # source('./../filter.matches_shiftDelta.R')
@@ -139,8 +128,19 @@ filter_matches <- function(pars){
         match.info <- res
         
         # Savepoint
-          saveRDS(match.info, paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          saveRDS(match.info, paste0(this.run, "/match.info.shiftFiltered.RDS"))
           # match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
+          
+######################### Remove singlets ############################################
+    printTime()
+      # Do the filtering (functionalized)
+        match.info <- filter_matches_singlets(match.info, feature$stack, ref.mat,
+                                               peak.qualities, pq.featureNumbers, 
+                                               pars$matching$filtering$res.area.threshold,
+                                               pars$par$ncores)
+        
+        saveRDS(match.info, paste0(tmpdir, "/match.info.filtered.RDS"))
+        # match.info <- readRDS(paste0(tmpdir, "/match.info.filtered.RDS"))
 
 #########################################################################################################
     # At this point, match.info is set. Assign IDs
