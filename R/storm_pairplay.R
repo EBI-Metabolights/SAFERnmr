@@ -204,7 +204,7 @@ storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
   ## Update the ref ###########################################################################          
       
     # Identify the new driver ########
-        
+        # if (is.na(ref.max) | is.null(ref.max)){browser()}
         ref.max <- next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx 
             
@@ -302,37 +302,6 @@ storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
         ref.pass <- (ref.pass %>% as.integer %>% runs.labelBy.lengths) > minpeak
         # plot(ref.pass %>% as.integer)
         
-        # Update to try to clean up features during storm run: 
-        #   - run peak expansion
-        #     - take the thresholded reference (using r cutoff)
-        #     - divide into runs
-        #     - expand from outermost points in the runs to nearest covariance mins
-        #     - should this occur before or after runlength selection?
-        #       - if before, then could discard a peak that was going to get optimized
-        #         - however, what shape would it be going off of? Point intensities
-        #         in ratio to other ref points is all there is, potentially.
-        #         - it's okay to optimize for different features differently
-        #       - if after, then it's possible to pull in other signals that will 
-        #       then contaminate the ref. * ref contamination is one of the biggest
-        #       issues. Remember that we're after groups of resonances which have
-        #       robust correlation support for combination into a compound feature.
-        #       - on the other hand, if ref run contraction is allowed, then runs 
-        #       will still need to be filtered on the other side of the operation.
-        
-        # Expand/contract 
-          
-          # pks <- extractPeaks_corr(covar, mask = ref.pass, plots = FALSE)
-          
-          # ref.pass <- expand.contract.runs(current.points = ref.pass,
-          #                                  expand.by = covar,
-          #                                  pks = pks,
-          #                                  min.points = minpeak)
-          # if (sum(ref.pass) == 0){browser()}
-          # ref <- covar[ref.pass]
-          
-        # Retest 
-          # ref.pass %>% as.integer %>% runs.labelBy.lengths
-        
       # Check to make sure the ref is valid
       # - contains at least 3 valid points (absolute minimum for a meaningful peak shape)
       # - should there be a contiguous point requirement here?
@@ -371,9 +340,10 @@ storm_pairplay=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
      # Set variables relevant to output
     # - handle failure mode cases
     # - ensure index ranges match up
+      # if (is.na(ref.max) | is.null(ref.max)){browser()}
       ref.max = next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx
-    
+      
       finalreg <- plotrng %>% fillbetween
       corr <- corr[ref.pass %>% which %>% range %>% fillbetween]
       covar <- covar[ref.pass %>% which %>% range %>% fillbetween]

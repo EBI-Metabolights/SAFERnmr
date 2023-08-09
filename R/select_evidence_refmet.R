@@ -74,6 +74,12 @@ select_evidence_refmet <- function(ref = NULL,
           
           if(!any(rfs.selection)){return(no.evidence(ref, ld))}
           
+          # At this point, the match info has been filtered to exclude non-represented refs, 
+          # This would have messed up indexing between it and backfits (therefore rfs.used),
+          # but the match.info was ID'd with backfits list when the latter was created (back
+          # in filter_matches). We know which matches (rfs) were used for the scores in these 
+          # reference-sample pairs (rfs.selection). Now we need to know which unlisted backfits
+          # (spec-features) belong to those. 
           inds <- match.info$id %in% (rfs.used$tot[rfs.selection] %>% unlist) # inds not always = ids 
           match.info <- match.info[inds, ]
           backfits <- backfits[inds ]
@@ -111,9 +117,13 @@ select_evidence_refmet <- function(ref = NULL,
             
           # Filter for fits whose dataset spectrum range is within tolerance of ref spec range: ####
             spec.dist.from.rf <- range_dist(spec.rngs, ref.rngs)
-            close.enough <- spec.dist.from.rf <= ppm.tolerance
-
-            if(!any(close.enough)){return(no.evidence(ref, ld))}
+            # close.enough <- spec.dist.from.rf <= ppm.tolerance
+            close.enough <- TRUE
+            if(!any(close.enough)){
+              message('\n\tOut of ', length(close.enough), ' backfits, none were within ', ppm.tolerance, ' ppm')
+              message('\n\t(the closest is ', min(spec.dist.from.rf, na.rm = T) %>% round(4), ' ppm away)')
+              return(no.evidence(ref, ld))
+              }
             
             rf.specFits <- rf.specFits[close.enough, ]
               ref.rngs <- ref.rngs[, close.enough]
