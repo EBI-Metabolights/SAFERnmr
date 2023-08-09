@@ -52,7 +52,7 @@ filter_matches_shiftDelta <- function(match.info,
             match.info$ppm.difference <- mean.ppm.feat-mean.ppm.ref
             
             
-            # scattermore::scattermoreplot(sort(match.info[,'ppm.difference']), 
+            # scattermore::scattermoreplot(sort(match.info$ppm.difference),
             #                              1:nrow(match.info), xlab = "ppm difference", ylab = "match")
             # 
             # scattermore::scattermoreplot(sort(abs(match.info[,'ppm.difference'])), 
