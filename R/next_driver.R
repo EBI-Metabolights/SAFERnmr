@@ -55,9 +55,9 @@ next_driver <- function(current.driver,
   # Otherwise, do peak-based (only true peaks) driver selection: 
   
     # Extract the peaks from the NA-expanded ref profile:
+      if (any(is.na(ref.idx))){ref.idx <- na.omit(ref.idx)}
       ref.profile.expanded <- ref.idx.expanded <- rep(NA, span(ref.idx))
         # if (any(is.na((ref.idx-min(ref.idx, na.rm = T)+1)))){browser()}
-        if (any(is.na(ref.idx))){ref.idx <- na.omit(ref.idx)}
         ref.profile.expanded[ref.idx-min(ref.idx, na.rm = T)+1] <- ref.profile
         ref.profile <- ref.profile.expanded
         ref.idx.expanded[ref.idx-min(ref.idx, na.rm = T)+1] <- ref.idx
@@ -78,8 +78,7 @@ next_driver <- function(current.driver,
     # Option 3: Keep driver within ref profile peak bounds of previous driver (to keep from walking)
     
       if (behavior == 'samePk'){
-          
-        
+
           # Index from true peak(s) containing driver 
             peak.locs <- ref.pks$pks$peaks[ref.pks$pks$truePeak]
             # store as matrix 
