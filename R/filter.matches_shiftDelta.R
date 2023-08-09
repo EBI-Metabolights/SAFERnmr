@@ -45,8 +45,8 @@ filter_matches_shiftDelta <- function(match.info,
             
           # Simply convert the ref ranges to ppms:
             mean.ppm.ref <- Rfast::rowmeans(
-                                              cbind(ppm[match.info$ref + match.info$ref.start],
-                                                    ppm[match.info$ref + match.info$ref.end])
+                                              cbind(ppm[match.info$ref.start],
+                                                    ppm[match.info$ref.end])
                                               )
           # Take the difference
             match.info$ppm.difference <- mean.ppm.feat-mean.ppm.ref
