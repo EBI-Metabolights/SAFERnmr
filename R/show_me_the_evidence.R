@@ -81,8 +81,8 @@ show_me_the_evidence <- function(results.dir = NULL){
                 lib.info <- lib.info[(lapply(in.ldp, length) %>% unlist) == 1,]
                 lib.info <- lib.info[unlist(in.ldp),]
 
-              if (length(lib.data.processed) != nrow(lib.info)){stop('lib.info could not be mapped to lib.data.processed')}
-              else {message('all mapped successfully!\n')}
+              if (length(lib.data.processed) != nrow(lib.info)){stop('lib.info could not be mapped to lib.data.processed')
+                } else {message('all mapped successfully!\n')}
                 
           # add compound names as column in match.info
             match.info$ref.name <- lib.info$Compound.Name[match.info$ref]
@@ -113,9 +113,9 @@ show_me_the_evidence <- function(results.dir = NULL){
         lib.info <- lib.info[keeprefs %>% as.logical,]
         lib.data.processed <- lib.data.processed[keeprefs %>% as.logical]
         
-        fits.inds <- match.info$ref %in% refs.used
-        match.info <- match.info[fits.inds, ]
-        backfits <- backfits[fits.inds]
+        fits.keep <- match.info$ref %in% refs.used
+        match.info <- match.info[fits.keep, ]
+        backfits <- backfits[fits.keep]
 
 ##########################     Cluster    ####################################      
 
@@ -145,9 +145,9 @@ show_me_the_evidence <- function(results.dir = NULL){
         refs <- refs[ref.order, ]
         refs$row.mat <- 1:nrow(refs)         # this is the row number in mat
 
-      samples <- data.frame(number = 1:ncol(scores.matrix),
-                            id = 1:ncol(scores.matrix),
-                            name = 1:ncol(scores.matrix) %>% as.character)
+      samples <- data.frame(number = seq_along(samples.used),              # number is column number upon sort
+                            id = samples.used %>% as.numeric,              # id is the sample number upon import
+                            name = 1:ncol(scores.matrix) %>% as.character) # just use column number for now
         samples <- samples[sample.order, ]
         samples$col.mat <- 1:nrow(samples)                    
 
