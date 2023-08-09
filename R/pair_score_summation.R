@@ -119,7 +119,7 @@ pair_score_summation <- function(pars, refmat){
         rm(by.ref)
       
       # Look for specific compound in iterations
-      # cmpd <- 'Citrate'
+      # cmpd <- 'R-Lactate'
       # 
       # refnum <- which(cmpd.names %in% cmpd) %>% .[1]
       # lapply(chonks, function(chonk){
@@ -150,7 +150,7 @@ pair_score_summation <- function(pars, refmat){
                   {
                         
                         # For each ref:
-                        # r.list <- chonk[[178]]
+                        # r.list <- chonk[[209]]
                         
                         # Make sure there are actually spectra in the interactions list ####
                           if(nrow(r.list$ref.pairs) < 1){return(emptyScore())}
@@ -191,8 +191,9 @@ pair_score_summation <- function(pars, refmat){
                         # - score objects will be re-copied for each lapply iteration, so 
                         #   no need to reset between samples. 
                         # - only the updated score objects are retained for each ss - ref pair
-                        
-                          # a <- pblapply(1:nrow(comb),
+                        # lapply(a, function(x) x$pair.scores) %>% do.call(rbind,.)
+                        # lapply(a, function(x) x$bfs.used.tot %>% length) %>% unlist
+                          # a <- pblapply(1:nrow(comb), 
                           lapply(1:nrow(comb),
                                  function(i){
                                    

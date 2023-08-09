@@ -763,7 +763,9 @@ server <- function(input, output, session) {
                   message('\tin ', length(values$selectedCols), ' samples...')
                   
               # If all those pieces are in place, go on to selecting evidence: ####
-                      
+                      # selectedRow <- which(refs$name %in% 'R-Lactate')
+                      # selectedCols <- 1:4
+                      # if (all(values$selectedCols %in% 1:4) & values$selectedRow == 96){browser()}
                       metab.evidence <- select_evidence_refmet(ref = values$selectedRow %>% refs[.,], 
                                                                sample = values$selectedCols %>% samples[.,],
                                                                # Big objects to subset using ref.ind:
