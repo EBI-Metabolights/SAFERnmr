@@ -118,19 +118,19 @@ pair_score_summation <- function(pars, refmat){
         
         rm(by.ref)
       
-      # # Look for compound in iterations
-      # cmpd <- 'Nitrosobenzene'
+      # Look for specific compound in iterations
+      # cmpd <- 'Citrate'
       # 
       # refnum <- which(cmpd.names %in% cmpd) %>% .[1]
       # lapply(chonks, function(chonk){
-      #   # chonk <- chonks[[1]] 
+      #   # chonk <- chonks[[1]]
       #   refs <- lapply(chonk, function(r.list){
       #     # r.list <- chonk[[1]]
-      #     r.list$ref.num 
+      #     r.list$ref.num
       #   }) %>% unlist
       #   which(refs %in% refnum)
       # })
-      # 
+
       message('Computing scores...')
 
           
@@ -142,7 +142,7 @@ pair_score_summation <- function(pars, refmat){
             score.list <- mclapply(chonks, mc.cores = pars$par$ncores, 
                                            FUN = function(r.list)                             
             {
-              # chonk <- chonks[[1]]                               
+              # chonk <- chonks[[3]]                               
               # Go through this list of by.refs
                                                                    
               lapply(chonk, function(r.list){
@@ -150,7 +150,7 @@ pair_score_summation <- function(pars, refmat){
                   {
                         
                         # For each ref:
-                        # r.list <- chonk[[31]]
+                        # r.list <- chonk[[178]]
                         
                         # Make sure there are actually spectra in the interactions list ####
                           if(nrow(r.list$ref.pairs) < 1){return(emptyScore())}
@@ -191,7 +191,9 @@ pair_score_summation <- function(pars, refmat){
                         # - score objects will be re-copied for each lapply iteration, so 
                         #   no need to reset between samples. 
                         # - only the updated score objects are retained for each ss - ref pair
-                          a <- pblapply(1:nrow(comb),
+                        
+                          # a <- pblapply(1:nrow(comb),
+                          lapply(1:nrow(comb),
                                  function(i){
                                    
                             ref <- comb$ref[i]
@@ -207,21 +209,24 @@ pair_score_summation <- function(pars, refmat){
                                 # Loop through the matches associated with this ref - ss.spec pair ####
                                 # Update the bff values in v with any higher bff at that point ####
                                         ## Plotting to show in action: ####
-                                          reg <- refspec %>% trim_sides(out = "inds")
-                                          rs <- refspec
-                                          rs[is.na(rs)] <- 0
-                                          # reg <- 19000:27000
-                                          # jpeg(file=paste0("rf.scoring",'ref_',ref,".jpeg"), width=1200, height=700)
-                                          simplePlot(xvect = reg, ymat = rs[reg], linecolor = "blue", xdir = 'normal')
+                                          # reg <- refspec %>% trim_sides(out = "inds")
+                                          # rs <- refspec
+                                          # rs[is.na(rs)] <- 0
+                                          # # reg <- 19000:27000
+                                          # jpeg(file=paste0("rf.scoring",'_ref_',ref,".jpeg"), width=1200, height=700)
+                                          #   simplePlot(xvect = reg, ymat = rs[reg], linecolor = "blue", xdir = 'normal')
                                           # dev.off()
-                                          # jpeg(file=paste0("rf.scoring",'spec_',ss.spec,".jpeg"), width=1200, height=700)
-                                          simplePlot(xvect = reg, ymat = xmat[ss.spec, reg], linecolor = "blue", xdir = 'normal')
+                                          # 
+                                          # jpeg(file=paste0("rf.scoring",'_spec_',ss.spec,".jpeg"), width=1200, height=700)
+                                          #   simplePlot(xvect = reg, ymat = xmat[ss.spec, reg], linecolor = "blue", xdir = 'normal')
                                           # dev.off()
-
-                                          j <- 0
-                                          idx <- 0
+                                          # 
+                                          # j <- 0
+                                          # idx <- 0
+                                          # 
+                                          # # 0th iteration
                                           # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                                          scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                                          #   scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
                                           # dev.off()
                                   # Actual loop ####
                                   for (j in rp.rows){
@@ -232,8 +237,8 @@ pair_score_summation <- function(pars, refmat){
                                     # could be derived from multiple matches as long as they involve the same ref and 
                                     # have backfits to ss.spec. 
                                         ## Turn on for plotting an example: ####
-                                          idx <- idx + 1
-                                          j <- rp.rows[idx]
+                                          # idx <- idx + 1
+                                          # j <- rp.rows[idx]
                                     # Get the ref range for the matched ref-feat ####
                                       # Where is the ref range? It's in the backfit, now. Need this to calculate pct ref accounted,
                                       # but that is done after we decide which ref points will be included. For now we're just keeping
@@ -262,7 +267,7 @@ pair_score_summation <- function(pars, refmat){
                                         ## I just print all of them to jpeg and animate the series in ppt.
                                         # Sys.sleep(.2)
                                         # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                                        scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                                        #   scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
                                         # dev.off()
                                         
                                   }

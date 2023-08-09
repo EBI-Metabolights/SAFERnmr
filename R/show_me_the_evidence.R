@@ -93,6 +93,10 @@ show_me_the_evidence <- function(results.dir = NULL){
           ppm <- fse.result$ppm
           rm(fse.result)
 
+    # Read in the features 
+        # feature <- readRDS(paste0(results.dir, "feature.final.RDS"))
+        #   feature$position <- 
+            
     # Read in scores matrix 
       scores.matrix <- readRDS(paste0(results.dir,"ss.ref.sumScores.RDS")) %>% t
         colnames(scores.matrix) <- 1:ncol(scores.matrix)
