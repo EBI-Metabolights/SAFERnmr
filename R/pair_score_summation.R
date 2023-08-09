@@ -118,7 +118,19 @@ pair_score_summation <- function(pars, refmat){
         
         rm(by.ref)
       
-      
+      # # Look for compound in iterations
+      # cmpd <- 'Nitrosobenzene'
+      # 
+      # refnum <- which(cmpd.names %in% cmpd) %>% .[1]
+      # lapply(chonks, function(chonk){
+      #   # chonk <- chonks[[1]] 
+      #   refs <- lapply(chonk, function(r.list){
+      #     # r.list <- chonk[[1]]
+      #     r.list$ref.num 
+      #   }) %>% unlist
+      #   which(refs %in% refnum)
+      # })
+      # 
       message('Computing scores...')
 
           
@@ -132,174 +144,166 @@ pair_score_summation <- function(pars, refmat){
             {
               # chonk <- chonks[[1]]                               
               # Go through this list of by.refs
-                                                                         
+                                                                   
               lapply(chonk, function(r.list){
-                
-                # For each ref:
-                
-                # r.list <- chonk[[1]]
-                
-                # Make sure there are actually spectra in the interactions list ####
-                  if(nrow(r.list$ref.pairs) < 1){return(NULL)}
-                
-                # Extract the interactions info from the r.list object for this ref ####
-                  r.num <- r.list$ref.num
-                  refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
-                  ref.pairs <- r.list$ref.pairs
-                  feat.models <- cstack_expandRows(r.list$feat.models) %>% is.na %>% "!"()
-                  # how to use feat.num to index feat.models?
-                    ref.pairs$feat <- ref.pairs$feat %>% factor(levels = r.list$feat.nums) %>% as.integer
-                    ref.pairs$rmse.biased <- 1-ref.pairs$rmse.biased
-                    # NOTE: this is only temporary and ref.pairs$feat should ONLY be used 
-                    # to pull from feat.models after this point in this function!!!
-                    # MTJ double-checked this on 28JUL2023
-                    
-                # Compute ss interactions (combinations) for this ref ####
-                  comb <- expand.grid(unique(ref.pairs$ref), unique(ref.pairs$ss.spec))
-                    colnames(comb) <- c("ref", "ss.spec")
-
-                # Set up cumulative score vector objs (will be recycled each sample iteration) ####
-              
-                  bff.tot <- list(score.name = 'bff.tot',
-                                  scores = rep(0, length(refspec)),
-                                  rf.ids = rep(0, length(refspec)))
-                  bff.res <- bff.tot
-                    bff.res$score.name = 'bff.res'
-                  rmseb <- bff.tot
-                    rmseb$score.name = 'rmse.biased'
-                  min.score <- bff.tot
-                    min.score$score.name = 'min.score'
-
-                  ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$bff.res,
-                                                              ref.pairs$bff.tot,
-                                                              ref.pairs$rmse.biased),value = TRUE)
-                  
-                # Loop through ref-ss.spec combinations and calculate scores ####
-                # - score objects will be re-copied for each lapply iteration, so 
-                #   no need to reset between samples. 
-                # - only the 5 score objects are retained 
-                # a<-
-                  lapply(1:nrow(comb),
-                         function(i){
-                           
-                    ref <- comb$ref[i]
-                    ss.spec <- comb$ss.spec[i]   
-                    
-                    # Compute the scores for this combination
-                    tryCatch(
-                      {
-                          # print(i)
-                        # Select the pair ####
-
+                tryCatch(
+                  {
+                        
+                        # For each ref:
+                        # r.list <- chonk[[31]]
+                        
+                        # Make sure there are actually spectra in the interactions list ####
+                          if(nrow(r.list$ref.pairs) < 1){return(emptyScore())}
+                        
+                        # Extract the interactions info from the r.list object for this ref ####
+                          r.num <- r.list$ref.num
+                          refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
+                          ref.pairs <- r.list$ref.pairs
+                          feat.models <- cstack_expandRows(r.list$feat.models) %>% is.na %>% "!"()
+                          # how to use feat.num to index feat.models?
+                            ref.pairs$feat <- ref.pairs$feat %>% factor(levels = r.list$feat.nums) %>% as.integer
+                            ref.pairs$rmse.biased <- 1-ref.pairs$rmse.biased
+                            # NOTE: this is only temporary and ref.pairs$feat should ONLY be used 
+                            # to pull from feat.models after this point in this function!!!
+                            # MTJ double-checked this on 28JUL2023
+                            
+                        # Compute ss interactions (combinations) for this ref ####
+                          comb <- expand.grid(unique(ref.pairs$ref), unique(ref.pairs$ss.spec))
+                            colnames(comb) <- c("ref", "ss.spec")
+        
+                        # Set up cumulative score vector objs (will be recycled each sample iteration) ####
+                      
+                          bff.tot <- list(score.name = 'bff.tot',
+                                          scores = rep(0, length(refspec)),
+                                          rf.ids = rep(0, length(refspec)))
+                          bff.res <- bff.tot
+                            bff.res$score.name = 'bff.res'
+                          rmseb <- bff.tot
+                            rmseb$score.name = 'rmse.biased'
+                          min.score <- bff.tot
+                            min.score$score.name = 'min.score'
+        
+                          ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$bff.res,
+                                                                      ref.pairs$bff.tot,
+                                                                      ref.pairs$rmse.biased),value = TRUE)
                           
-                        # Select relevant backfits and matches ####
-                          rp.rows <- which(ref.pairs$ss.spec == ss.spec)
-    
-                        # Loop through the matches associated with this ref - ss.spec pair ####
-                        # Update the bff values in v with any higher bff at that point ####
-                          ## Plotting to show in action:
-                            # reg <- refspec %>% trim_sides(out = "inds")
-                            # rs <- refspec
-                            # rs[is.na(rs)] <- 0
-                            # # reg <- 19000:27000
-                            # jpeg(file=paste0("rf.scoring",'ref_',ref,".jpeg"), width=1200, height=700)
-                            # simplePlot(xvect = reg, ymat = rs[reg], linecolor = "blue", xdir = 'normal')
-                            # dev.off()
-                            # jpeg(file=paste0("rf.scoring",'spec_',ss.spec,".jpeg"), width=1200, height=700)
-                            # simplePlot(xvect = reg, ymat = xmat[ss.spec, reg], linecolor = "blue", xdir = 'normal')
-                            # dev.off()
-                            # 
-                            # j <- 0
-                            # idx <- 0
-                            # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                            # scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
-                            # dev.off()
-                          for (j in rp.rows){
-                            # j indexes the rows of rp.rows (ss.ref.pairs belonging to this chunk = this ref #)
-                            # that match this dataset spectrum (ss.spec). These could include many matches. A 
-                            # match could also give rise to many rp.rows, because of the different spectra. rp.rows
-                            # could be derived from multiple matches as long as they involve the same ref and 
-                            # have backfits to ss.spec. 
-    # 
-    #                         idx <- idx + 1
-    #                         j <- rp.rows[idx]
-                            # Get the ref range for the matched ref-feat
-                              # Where is the ref range? It's in the backfit, now.
-                
-                              # ref.range <- ref.pairs$ref.start[j] : ref.pairs$ref.end[j]
-                              
-                              feat.model <- feat.models[ref.pairs$feat[j],] %>% .[ref.pairs$feat.start[j] : ref.pairs$feat.end[j]]
-                              ref.pts <- (ref.pairs$ref.start[j] : ref.pairs$ref.end[j]) %>% .[feat.model]
-    
-                            # Calculate the scores
-                              # bff total 
+                        # Loop through ref-ss.spec combinations and calculate scores ####
+                        # - score objects will be re-copied for each lapply iteration, so 
+                        #   no need to reset between samples. 
+                        # - only the updated score objects are retained for each ss - ref pair
+                          a <- pblapply(1:nrow(comb),
+                                 function(i){
+                                   
+                            ref <- comb$ref[i]
+                            ss.spec <- comb$ss.spec[i]   
+                            
+                            # Compute the scores for this combination
+                            tryCatch(
+                              {
+                                  
+                                # Select relevant backfits and matches ####
+                                  rp.rows <- which(ref.pairs$ss.spec == ss.spec)
+            
+                                # Loop through the matches associated with this ref - ss.spec pair ####
+                                # Update the bff values in v with any higher bff at that point ####
+                                        ## Plotting to show in action: ####
+                                          reg <- refspec %>% trim_sides(out = "inds")
+                                          rs <- refspec
+                                          rs[is.na(rs)] <- 0
+                                          # reg <- 19000:27000
+                                          # jpeg(file=paste0("rf.scoring",'ref_',ref,".jpeg"), width=1200, height=700)
+                                          simplePlot(xvect = reg, ymat = rs[reg], linecolor = "blue", xdir = 'normal')
+                                          # dev.off()
+                                          # jpeg(file=paste0("rf.scoring",'spec_',ss.spec,".jpeg"), width=1200, height=700)
+                                          simplePlot(xvect = reg, ymat = xmat[ss.spec, reg], linecolor = "blue", xdir = 'normal')
+                                          # dev.off()
+
+                                          j <- 0
+                                          idx <- 0
+                                          # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
+                                          scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                                          # dev.off()
+                                  # Actual loop ####
+                                  for (j in rp.rows){
+                                    # Description of what this does ####
+                                    # j indexes the rows of rp.rows (ss.ref.pairs belonging to this chunk = this ref #)
+                                    # that match this dataset spectrum (ss.spec). These could include many matches. A 
+                                    # match could also give rise to many rp.rows, because of the different spectra. rp.rows
+                                    # could be derived from multiple matches as long as they involve the same ref and 
+                                    # have backfits to ss.spec. 
+                                        ## Turn on for plotting an example: ####
+                                          idx <- idx + 1
+                                          j <- rp.rows[idx]
+                                    # Get the ref range for the matched ref-feat ####
+                                      # Where is the ref range? It's in the backfit, now. Need this to calculate pct ref accounted,
+                                      # but that is done after we decide which ref points will be included. For now we're just keeping
+                                      # track of which ref points have been accounted for. 
+                                        feat.model <- feat.models[ref.pairs$feat[j],] %>% .[ref.pairs$feat.start[j] : ref.pairs$feat.end[j]]
+                                        ref.pts <- (ref.pairs$ref.start[j] : ref.pairs$ref.end[j]) %>% .[feat.model]
+            
+                                    # Update the scores objs for each type for this ref feature-ss match ####
+                                      # bff total 
+                                        
+                                        bff.tot <- update_scoreObj(ref.pairs[j, ], bff.tot, ref.pts)
+                                        
+                                      # bff (resonance) 
+                                      
+                                        bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+                                        
+                                      # rmse biased
+                                      
+                                        rmseb <- update_scoreObj(ref.pairs[j, ], rmseb, ref.pts)
+                                        
+                                      # Or: pick the worst score from each of them
+                                      
+                                        min.score <- update_scoreObj(ref.pairs[j, ], min.score, ref.pts)
+                                      
+                                        ## More plotting...can set a delay to update each iteration in slowed time if you want. ####
+                                        ## I just print all of them to jpeg and animate the series in ppt.
+                                        # Sys.sleep(.2)
+                                        # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
+                                        scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                                        # dev.off()
+                                        
+                                  }
                                 
-                                bff.tot <- update_scoreObj(ref.pairs[j, ], bff.tot, ref.pts)
+                                # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
                                 
-                              # bff (resonance) 
-                              
-                                bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+                                  bff.tot <- sum_score(bff.tot, refspec)
+                                  bff.res <- sum_score(bff.res, refspec)
+                                  rmseb <- sum_score(rmseb, refspec)
+                                  min.score <- sum_score(min.score, refspec)
+                                  # if(any(c(bff.tot$scores.tot, bff.res$scores.tot, rmseb$scores.tot, min.score$scores.tot) > 0.9)){browser()}
+                                  
+                                # Return a list of score information for this sample-ref pair: ####
                                 
-                              # rmse biased
-                              
-                                rmseb <- update_scoreObj(ref.pairs[j, ], rmseb, ref.pts)
-                                
-                              # Or: pick the worst score from each of them
-                              
-                                min.score <- update_scoreObj(ref.pairs[j, ], min.score, ref.pts)
-                              
-                              # If you want to watch this happen...
-                              # Sys.sleep(.2)
-                              # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                              # scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
-                              # dev.off()
-                              
-                          }
-                        
-                        # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
-                        
-                          bff.tot <- sum_score(bff.tot, refspec)
-                          bff.res <- sum_score(bff.res, refspec)
-                          rmseb <- sum_score(rmseb, refspec)
-                          min.score <- sum_score(min.score, refspec)
-                          # if(any(c(bff.tot$scores.tot, bff.res$scores.tot, rmseb$scores.tot, min.score$scores.tot) > 0.9)){browser()}
-                          
-                        # Return a list of score information for this sample-ref pair: ####
-                        
-                          list(
-                                 bfs.used.tot = bff.tot$rf.ids.tot, # keep these around; they're the best evidence
-                                 bfs.used.res = bff.res$rf.ids.tot, # keep these around; they're the best evidence
-                                 bfs.used.rmseb = rmseb$rf.ids.tot, # keep these around; they're the best evidence
-                                 bfs.used.min.score = min.score$rf.ids.tot, # keep these around; they're the best evidence
-                                 pair.scores = data.frame(ss.spec = ss.spec,
-                                                          ref = r.num,
-                                                          score.tot = bff.tot$scores.tot, 
-                                                          score.res = bff.res$scores.tot,
-                                                          score.rmseb = rmseb$scores.tot,
-                                                          score.min = min.score$scores.tot)
-                          )
-                    
-                      }, 
-                      # Return 0 scores if 
-                      error = function(cond){
-                            list(
-                                 bfs.used.tot = NA, # keep these around; they're the best evidence
-                                 bfs.used.res = NA, # keep these around; they're the best evidence
-                                 bfs.used.rmseb = NA, # keep these around; they're the best evidence
-                                 bfs.used.min.score = NA, # keep these around; they're the best evidence
-                                 pair.scores = data.frame(ss.spec = ss.spec,
-                                                          ref = r.num,
-                                                          score.tot = 0, 
-                                                          score.res = 0,
-                                                          score.rmseb = 0,
-                                                          score.min = 0)
-                          )
-                      }
-                    )
-                    
-                })
-                #   if (lapply(a, function(a) any(a$pair.scores[,3:6] > 0.8)) %>% unlist %>% any){browser()}
-                # a
+                                  list(
+                                         bfs.used.tot = bff.tot$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.res = bff.res$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.rmseb = rmseb$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.min.score = min.score$rf.ids.tot, # keep these around; they're the best evidence
+                                         pair.scores = data.frame(ss.spec = ss.spec,
+                                                                  ref = r.num,
+                                                                  score.tot = bff.tot$scores.tot, 
+                                                                  score.res = bff.res$scores.tot,
+                                                                  score.rmseb = rmseb$scores.tot,
+                                                                  score.min = min.score$scores.tot)
+                                  )
+                            
+                              }, 
+                              # Return 0 scores if failed in any way
+                              error = function(cond){
+                                  emptyScore()
+                              }
+                            )
+                            
+                        })
+                            
+                  }, 
+                  # Return NA inds and 0 scores if failed in any way (single iteration)
+                  error = function(cond){
+                    emptyScore()
+                  })  
               }) %>% unlist(recursive = F)   
               
             }) %>% unlist(recursive = F, use.names = F)
@@ -333,13 +337,13 @@ pair_score_summation <- function(pars, refmat){
         
         
         
-      # Coordinate in scores matrix between the two scores; lists of rfs differ
+      # Get the coordinates for each score in the samples x refs matrix
         rfs.used.score.coord <- score.list %>% lapply(function(x) 
           
             data.frame(ss.spec = x$pair.scores$ss.spec,
                        ref = x$pair.scores$ref)
             
-          ) %>% do.call(rbind,.)
+        ) %>% do.call(rbind,.)
 
            
         # Put in a single list
@@ -410,3 +414,17 @@ sum_score <- function(score.obj, refspec){
   return(score.obj)
 }
    
+emptyScore <- function(){
+  list(
+         bfs.used.tot = NA, # keep these around; they're the best evidence
+         bfs.used.res = NA, # keep these around; they're the best evidence
+         bfs.used.rmseb = NA, # keep these around; they're the best evidence
+         bfs.used.min.score = NA, # keep these around; they're the best evidence
+         pair.scores = data.frame(ss.spec = NA,
+                                  ref = NA,
+                                  score.tot = 0, 
+                                  score.res = 0,
+                                  score.rmseb = 0,
+                                  score.min = 0)
+  )
+}
