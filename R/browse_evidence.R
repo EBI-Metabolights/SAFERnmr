@@ -1,4 +1,4 @@
-#' show_me_the_evidence : results viewer shiny app
+#' browse_evidence : results viewer shiny app
 #' 
 #' Browse reference spectra (PRCSs) and metabolite-sample summed scores, and drill
 #' down to the evidence for their associations at the multiple levels. 
@@ -15,7 +15,7 @@
 #' @import plotly
 #' 
 #' @export
-show_me_the_evidence <- function(results.dir = NULL){
+browse_evidence <- function(results.dir = NULL){
 #######################################################################################
   if (is.null(results.dir)) {
     results.dir <- getwd()
