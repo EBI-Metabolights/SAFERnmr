@@ -39,33 +39,6 @@ Each fit constitutes a potential association between a region in a reference spe
       pipeline('path_to_data_directory')
       ```
 
-# To Run the Results Viewer (R Shiny app): 
-1) Ensure you have R and Rstudio installed - shiny needs these to run.
-2) Clone or download the github repo (most functions won't be needed for this demo)
-3) Download and expand the demo data here: https://drive.google.com/file/d/1cBw8ZyY703Z1S5httWJ_J7OStgMZPOnQ/view?usp=sharing  
-   These are the results files from a recent run on an unaligned dataset, which can be 
-   found here (in case you want that as well):
- 
-   https://www.ebi.ac.uk/metabolights/editor/MTBLS1, with the spectral matrix available here:
-   http://ftp.ebi.ac.uk/pub/databases/metabolights/studies/mariana/spectral_matrices/MTBLS1_nmrML_missing_spectralMatrix.RDS 
-   ^ This is an auto-generated spectral matrix file extracted from processed data from MTBLS1
-
-   Downloading and expanding to your `Downloads` folder is fine. If on a Mac, you can copy the filepath by selecting the expanded file and pressing Cmd-Opt-C. Keep that copied. 
-
-In RStudio, run this to build the package locally (like using a library() call):
-
-   `install.packages('devtools')`
-   `devtools::document('path_you_copied')` # e.g. '/Users/mjudge/Documents/GitHub/icl_nmr_R'
-  
-Run this to start the app (replacing the path to the expanded results directory):
-
-   `browse_evidence('path_you_copied')` # e.g. '/Users/mjudge/Downloads/mtbls1_demo'
-
-Instructions:
-- use the heatmap or the search box to select a compound with high scores (or compound of interest)
-- select a spectral region of the PCRS, as well as some samples (a subset of high-scoring samples is usually best for the stackplot)
-- a stackplot will appear with evidence for the selected peak plotted in blue
-- pan and zoom in the PCRS window to move around the spectrum, or use the vshift slide bar to adjust the spacing in the stackplot
 
 Feel free to suggest improvements and report bugs on this repo!
 
