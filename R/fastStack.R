@@ -120,7 +120,7 @@ fastStack.withFeatures <- function(xmat, ppm,
 
     # Get x data: ####
         
-        x <- xmat[x.rows, cols.x]
+        x <- xmat[x.rows, cols.x, drop = F]
     
     # Apply the vshifts ####
       

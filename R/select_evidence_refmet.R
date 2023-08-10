@@ -29,8 +29,8 @@
 #' 
 #' @export
 select_evidence_refmet <- function(ref = NULL, 
-                                   sample = NULL,
-                                     # Big objects to subset using ref.ind:
+                                   sample = NULL, # Big objects to subset using ref.ind:
+                                       features.c, # compressed features obj.
                                        match.info,          
                                        backfits,
                                        rfs.used,
@@ -97,6 +97,9 @@ select_evidence_refmet <- function(ref = NULL,
             rf.specFits <- lapply(1:length(backfits), function(x) 
             {
               rf <- backfits[[x]]
+              rf$feat <- match.info$feat[x]
+              rf$feat.start <- match.info$feat.start[x]
+              rf$feat.end <- match.info$feat.end[x]
               rf$ref.start <- match.info$ref.start[x]
               rf$ref.end <- match.info$ref.end[x]
               rf$id <- match.info$id[x]
@@ -128,16 +131,33 @@ select_evidence_refmet <- function(ref = NULL,
             rf.specFits <- rf.specFits[close.enough, ]
               ref.rngs <- ref.rngs[, close.enough]
               spec.rngs <- spec.rngs[, close.enough]
-              
+
+            
    ########## Expand the fits ##########
    
+        
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
             # Compute on the fly
               rff <- rf.specFits[x, ]
               
               rf <- rff$ref.start:rff$ref.end %>% ld$mapped$data[.]
+              
+              # NA-fill where feature is NA
+              
+                # Which inds in feature model?
+                
+                  feat <- features.c %>% expand_features(rff$feat)
+                  na.pos <- feat$position %>% .[rff$feat.start:rff$feat.end] %>% is.na
+                             
+                # Replace in rf
+                  
+                  rf[na.pos] <- NA
+                             
               fit.ref <- as.numeric(rff$fit.intercept) + (rf * as.numeric(rff$fit.scale))
+                # simplePlot(fit.ref)
+                # simplePlot(feat$profile[rff$feat.start:rff$feat.end])
+                
               return(fit.ref)
           })
             

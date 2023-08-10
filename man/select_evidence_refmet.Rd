@@ -8,6 +8,7 @@ compound.}
 select_evidence_refmet(
   ref = NULL,
   sample = NULL,
+  features.c,
   match.info,
   backfits,
   rfs.used,

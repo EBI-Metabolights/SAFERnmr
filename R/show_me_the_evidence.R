@@ -94,9 +94,10 @@ show_me_the_evidence <- function(results.dir = NULL){
           rm(fse.result)
 
     # Read in the features 
-        # feature <- readRDS(paste0(results.dir, "feature.final.RDS"))
-        #   feature$position <- 
-            
+        feature <- readRDS(paste0(results.dir, "feature.final.RDS"))
+          features.c <- feature %>% compress_features
+          rm(feature)
+          
     # Read in scores matrix 
       scores.matrix <- readRDS(paste0(results.dir,"ss.ref.sumScores.RDS")) %>% t
         colnames(scores.matrix) <- 1:ncol(scores.matrix)
@@ -769,6 +770,7 @@ server <- function(input, output, session) {
                       metab.evidence <- select_evidence_refmet(ref = values$selectedRow %>% refs[.,], 
                                                                sample = values$selectedCols %>% samples[.,],
                                                                # Big objects to subset using ref.ind:
+                                                                 features.c,
                                                                  match.info,
                                                                  backfits,
                                                                  rfs.used, # new object with inds of rfs which contributed to scores
