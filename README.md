@@ -31,11 +31,13 @@ In more detail:
 Each fit constitutes a potential association between a region in a reference spectrum and a region in a sample spectrum, as well as the fit values that match their intensities. There will typically be millions of these between the average dataset and the current 1300 PCRSs. These can be thought of as individual pieces of evidence for a given annotation for its region of a given sample spectrum. All the best evidence for each reference in each spectrum can be summed up and weighted by its quality to derive a metabolite-sample score, which is then linked back to each independent piece of peak-specific evidence. 
 
 # To use this package (still writing this):
-   1) set up the params file
+   1) set up the params file `params.yaml`
    2) ensure the 4 necessary files are present
    3) Run in R:
+      ```
       devtools::document('replace_with_cloned_github_directory')
       pipeline('path_to_data_directory')
+      ```
 
 # To Run the Results Viewer (R Shiny app): 
 1) Ensure you have R and Rstudio installed - shiny needs these to run.
@@ -48,17 +50,20 @@ Each fit constitutes a potential association between a region in a reference spe
    http://ftp.ebi.ac.uk/pub/databases/metabolights/studies/mariana/spectral_matrices/MTBLS1_nmrML_missing_spectralMatrix.RDS 
    ^ This is an auto-generated spectral matrix file extracted from processed data from MTBLS1
 
+   Downloading and expanding to your `Downloads` folder is fine. If on a Mac, you can copy the filepath by selecting the expanded file and pressing Cmd-Opt-C. Keep that copied. 
+
 In RStudio, run this to build the package locally (like using a library() call):
 
-   devtools::document('replace_with_cloned_github_directory') # e.g. '/Users/mjudge/Documents/GitHub/icl_nmr_R'
+   `install.packages('devtools')`
+   `devtools::document('path_you_copied')` # e.g. '/Users/mjudge/Documents/GitHub/icl_nmr_R'
   
-Run this to start the app (replacing the filepath):
+Run this to start the app (replacing the path to the expanded results directory):
 
-   show_me_the_evidence('replace_with_downloaded_data_directory') # e.g. '/Users/mjudge/Downloads/mtbls1_demo'
+   `browse_evidence('path_you_copied')` # e.g. '/Users/mjudge/Downloads/mtbls1_demo'
 
 Instructions:
 - use the heatmap or the search box to select a compound with high scores (or compound of interest)
-- select a spetral region of the PCRS, as well as some samples (a subset of high-scoring samples is usually best for the stackplot)
+- select a spectral region of the PCRS, as well as some samples (a subset of high-scoring samples is usually best for the stackplot)
 - a stackplot will appear with evidence for the selected peak plotted in blue
 - pan and zoom in the PCRS window to move around the spectrum, or use the vshift slide bar to adjust the spacing in the stackplot
 
