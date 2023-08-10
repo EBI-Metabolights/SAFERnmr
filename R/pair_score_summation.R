@@ -63,6 +63,21 @@
 #' @import pbapply
 #'
 pair_score_summation <- function(pars, refmat){
+  
+emptyScore <- function(){
+  list(
+         bfs.used.tot = NA, # keep these around; they're the best evidence
+         bfs.used.res = NA, # keep these around; they're the best evidence
+         bfs.used.rmseb = NA, # keep these around; they're the best evidence
+         bfs.used.min.score = NA, # keep these around; they're the best evidence
+         pair.scores = data.frame(ss.spec = NA,
+                                  ref = NA,
+                                  score.tot = 0, 
+                                  score.res = 0,
+                                  score.rmseb = 0,
+                                  score.min = 0)
+  )
+}
 
 ## Parallelize the ss.spec - reference pair score summation? ####      
       message('Reading in data for pair score summation...')
@@ -282,7 +297,7 @@ pair_score_summation <- function(pars, refmat){
                                   # if(any(c(bff.tot$scores.tot, bff.res$scores.tot, rmseb$scores.tot, min.score$scores.tot) > 0.9)){browser()}
                                   
                                 # Return a list of score information for this sample-ref pair: ####
-                                
+                                # same format as emptyScore()
                                   list(
                                          bfs.used.tot = bff.tot$rf.ids.tot, # keep these around; they're the best evidence
                                          bfs.used.res = bff.res$rf.ids.tot, # keep these around; they're the best evidence
@@ -319,6 +334,10 @@ pair_score_summation <- function(pars, refmat){
       # Extract out the scores data.frame rows
         message('\nextracting out the scores data.frame rows...')
         ss.ref.pair.scores <- score.list %>% lapply(function(x) {
+          if (is.atomic(x$pair.scores)){
+            warning('atomics in pair.scores in pair.score.summation(). excluding.')
+            return(NULL)
+          }
           x$pair.scores
         }) %>% do.call(rbind,.)
         
@@ -420,17 +439,3 @@ sum_score <- function(score.obj, refspec){
   return(score.obj)
 }
    
-emptyScore <- function(){
-  list(
-         bfs.used.tot = NA, # keep these around; they're the best evidence
-         bfs.used.res = NA, # keep these around; they're the best evidence
-         bfs.used.rmseb = NA, # keep these around; they're the best evidence
-         bfs.used.min.score = NA, # keep these around; they're the best evidence
-         pair.scores = data.frame(ss.spec = NA,
-                                  ref = NA,
-                                  score.tot = 0, 
-                                  score.res = 0,
-                                  score.rmseb = 0,
-                                  score.min = 0)
-  )
-}
