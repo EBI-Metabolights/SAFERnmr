@@ -334,11 +334,15 @@ emptyScore <- function(){
       # Extract out the scores data.frame rows
         message('\nextracting out the scores data.frame rows...')
         ss.ref.pair.scores <- score.list %>% lapply(function(x) {
-          if (is.atomic(x$pair.scores)){
-            warning('atomics in pair.scores in pair.score.summation(). excluding.')
-            return(NULL)
-          }
-          x$pair.scores
+          tryCatch(
+            {
+              x$pair.scores
+            }, 
+            error = function(cond){
+              warning('a pair.score in pair.score.summation() was NULL or atomic. excluding.')
+              return(NULL)
+            })
+          
         }) %>% do.call(rbind,.)
         
       # Each row of ss.ref.pair.scores data frame gets a list of rfs that contributed (to each score, separately).
