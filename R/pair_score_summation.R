@@ -64,7 +64,7 @@
 #'
 pair_score_summation <- function(pars, refmat){
   
-emptyScore <- function(){
+emptyScore <- 
   list(
          bfs.used.tot = NA, # keep these around; they're the best evidence
          bfs.used.res = NA, # keep these around; they're the best evidence
@@ -77,7 +77,7 @@ emptyScore <- function(){
                                   score.rmseb = 0,
                                   score.min = 0)
   )
-}
+
 
 ## Parallelize the ss.spec - reference pair score summation? ####      
       message('Reading in data for pair score summation...')
@@ -314,7 +314,7 @@ emptyScore <- function(){
                               }, 
                               # Return 0 scores if failed in any way
                               error = function(cond){
-                                  emptyScore()
+                                  emptyScore
                               }
                             )
                             
@@ -323,7 +323,7 @@ emptyScore <- function(){
                   }, 
                   # Return NA inds and 0 scores if failed in any way (single iteration)
                   error = function(cond){
-                    emptyScore()
+                    emptyScore
                   })  
               }) %>% unlist(recursive = F)   
               
@@ -333,16 +333,25 @@ emptyScore <- function(){
      
       # Extract out the scores data.frame rows
         message('\nextracting out the scores data.frame rows...')
+          # Debug
+          saveRDS(score.list, paste0(this.run, "/score.list.RDS"))
+        
+        # Screen score.list for any unsuccessful ones
+          has.pair.scores <- score.list %>% lapply(function(x) {
+            tryCatch(
+              {
+                is.data.frame(x$pair.scores) #&
+                # !is_nullish(x)
+              }, 
+              error = function(cond){
+                return(FALSE)
+              })
+          })
+          if (!all(has.pair.scores)){warning('a pair.score in pair.score.summation() was NULL or atomic. excluding.')}
+          score.list <- score.list[has.pair.scores]
+        
         ss.ref.pair.scores <- score.list %>% lapply(function(x) {
-          tryCatch(
-            {
               x$pair.scores
-            }, 
-            error = function(cond){
-              warning('a pair.score in pair.score.summation() was NULL or atomic. excluding.')
-              return(NULL)
-            })
-          
         }) %>% do.call(rbind,.)
         
       # Each row of ss.ref.pair.scores data frame gets a list of rfs that contributed (to each score, separately).
