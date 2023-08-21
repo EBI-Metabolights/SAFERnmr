@@ -155,11 +155,12 @@ emptyScore <-
         
             
             score.list <- mclapply(chonks, mc.cores = pars$par$ncores, 
-                                           FUN = function(r.list)                             
+                                           FUN = function(chonk)                             
             {
               # chonk <- chonks[[3]]                               
               # Go through this list of by.refs
                                                                    
+              # pblapply(chonk[1:10], function(r.list){
               lapply(chonk, function(r.list){
                 tryCatch(
                   {
@@ -208,7 +209,7 @@ emptyScore <-
                         # - only the updated score objects are retained for each ss - ref pair
                         # lapply(a, function(x) x$pair.scores) %>% do.call(rbind,.)
                         # lapply(a, function(x) x$bfs.used.tot %>% length) %>% unlist
-                          # a <- pblapply(1:nrow(comb), 
+                          # a <- pblapply(1:nrow(comb),
                           lapply(1:nrow(comb),
                                  function(i){
                                    
@@ -314,17 +315,19 @@ emptyScore <-
                               }, 
                               # Return 0 scores if failed in any way
                               error = function(cond){
+                                  # print('warning: empty score 1')
                                   emptyScore
                               }
                             )
                             
                         })
                             
-                  }, 
-                  # Return NA inds and 0 scores if failed in any way (single iteration)
+                  }, # Return NA inds and 0 scores if failed in any way (single iteration)
                   error = function(cond){
+                    # print('warning: empty score 2')
                     emptyScore
-                  })  
+                  }
+                )  
               }) %>% unlist(recursive = F)   
               
             }) %>% unlist(recursive = F, use.names = F)
@@ -349,7 +352,8 @@ emptyScore <-
           }) %>% unlist
           
           if (!all(has.pair.scores)){warning('a pair.score in pair.score.summation() was NULL or atomic. excluding.')}
-          score.list <- score.list[has.pair.scores]
+          # Exclude failed score combinations (will default to 0)
+            score.list <- score.list[has.pair.scores]
         
         ss.ref.pair.scores <- score.list %>% lapply(function(x) {
               x$pair.scores
