@@ -346,7 +346,8 @@ emptyScore <-
               error = function(cond){
                 return(FALSE)
               })
-          })
+          }) %>% unlist
+          
           if (!all(has.pair.scores)){warning('a pair.score in pair.score.summation() was NULL or atomic. excluding.')}
           score.list <- score.list[has.pair.scores]
         
