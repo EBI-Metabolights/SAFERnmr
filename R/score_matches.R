@@ -155,14 +155,21 @@ score_matches <- function(pars){
           saveRDS(ss.ref.mat.nd, paste0(this.run, "/ss.ref.sumScores.RDS"))
           
       # Plot the matrix as an HCA'd heatmap
-      
-          pdf(file = paste0(tmpdir,"/match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
-              width = 8, # The width of the plot in inches
-              height = 8) # The height of the plot in inches
-            ss.ref.mat.nd <- ss.ref.mat.nd[, Rfast::colsums(ss.ref.mat.nd) > 0]
-            heatmap(ss.ref.mat.nd, scale = 'none') # Rowv = NA, Colv = NA,
+        tryCatch(
+          {
+            pdf(file = paste0(tmpdir,"/match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
+                width = 8, # The width of the plot in inches
+                height = 8) # The height of the plot in inches
+              ss.ref.mat.nd <- ss.ref.mat.nd[, Rfast::colsums(ss.ref.mat.nd) > 0]
+              heatmap(ss.ref.mat.nd, scale = 'none') # Rowv = NA, Colv = NA,
+              
+            dev.off()
             
-          dev.off()
+          },
+          error = function(cond){
+            message('\n\tScore matrix plotting error..')
+          }
+        )
 
           
           # ss.ref.mat.nd <- readRDS(paste0(this.run, "/ss.ref.sumScores.RDS"))
