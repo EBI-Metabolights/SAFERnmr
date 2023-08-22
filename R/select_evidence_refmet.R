@@ -48,7 +48,8 @@ select_evidence_refmet <- function(ref = NULL,
           no.evidence <- function(ref, ld){
             list(ref.ind = ref$id,
                  ref.info = ld,
-                 rf.fits = NULL)
+                 rf.fits = NULL,
+                 mi.rows = NULL)
           }
           
           
@@ -211,7 +212,8 @@ select_evidence_refmet <- function(ref = NULL,
     # Make a data pack for spectral viewer: ####
       metab_evidence = list(ref.ind = ref$number,
                             ref.info = ld,
-                            rf.fits = bestfits)
+                            rf.fits = bestfits,
+                            match.info.ss = rf.specFits)
     return(metab_evidence)
       
   }

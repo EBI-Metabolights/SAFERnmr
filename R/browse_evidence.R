@@ -360,8 +360,14 @@ ui <-
            
             fluidRow(
               h3(textOutput("stackplotTitle")),
+              
+              radioButtons("plot_switch", "Plot type:",
+               c("Features on Reference" = "features",
+                 "Features on Samples" = "stackplot"), inline = TRUE),
+              
               # verbatimTextOutput("state.description"),
               plotOutput("stack.ref.feats"),
+              
               sliderInput(inputId = 'vshift.slide', label = "vshift", min = 0, max = 5, value = 1, step = .05),
               # sliderInput(inputId = 'hshift.slide', "hshift", -.1, .1, 0.5, step = 0.001),
             )
@@ -409,11 +415,13 @@ ui <-
 # Server ####
 server <- function(input, output, session) {
   
-  values <- reactiveValues(selectedRow = NULL,
-                           selectedCols = NULL,
-                           selectedRange = NULL,
-                           refplot.xlim = NULL,
-                           refplot.xlim.previous = NULL)
+  ####### Initialize values ####
+    values <- reactiveValues(plotType = 'features',
+                             selectedRow = NULL,
+                             selectedCols = NULL,
+                             selectedRange = NULL,
+                             refplot.xlim = NULL,
+                             refplot.xlim.previous = NULL)
 
   ####### Right-side stuff ######
   
@@ -520,8 +528,18 @@ server <- function(input, output, session) {
           
   ####### Left-side stuff  ######
 
-        # Plot selected ref, record region selection in event_register ####
+          # Plot type selection ####
         
+          update_plotType <- reactive({ input$plot_switch })
+          
+        # Update values$plotType if needed  ####
+          observeEvent(update_plotType(), {
+                         values$plotType <- update_plotType()
+
+                       })
+
+        # Plot selected ref, record region selection in event_register ####
+
           # Make the actual plot
           output$ref.plot = renderPlotly({
             
@@ -787,7 +805,7 @@ server <- function(input, output, session) {
                       # Does any evidence exist for that ref in those samples?? ####
                         
                         if(is.null(rf.fits)){message('\tno evidence for this region'); return(NULL)
-                          } #else {message('\tselected ', length(rf.fits$fit.xrow), ' spec-features.')}
+                        } #else {message('\tselected ', length(rf.fits$fit.xrow), ' spec-features.')}
 
                         # Which ref feats ranges intersect selected ppm rng within tolerance? ####
   
@@ -823,24 +841,38 @@ server <- function(input, output, session) {
                                                    xlim = values$refplot.xlim # this should never arrive here as NULL - screen out beforehand
                                                    )
                                   
-                                  return(
+                                # Decide which plot to make
+                                
+                                  if (values$plotType == "features"){
                                     
-                                            fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars)
-                                            
-                                         )
+                                    # EST-style plot showing where features annotate the ref
+                                      
+                                      feature_est_plot(reg = values$refplot.xlim, 
+                                                       metab.evidence, 
+                                                       features.c,
+                                                       ppm,
+                                                       plt.pars)
+                                    
+                                  } else {
+                                    
+                                    if (values$plotType == "stackplot"){
+                                    
+                                      return(
+                                
+                                        # Ref-feature fits to dataset spectra 
+                                        
+                                          fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars)
+                                        
+                                      )
+
+                                    } else {
+                                      
+                                      return(NULL)
+                                      
+                                    }
                                   
-                                  
-                                  # p <- project_features_stackplot(xmat, ppm,
-                                  #                                  label = NULL,
-                                  #                                  bestfits = bfs,
-                                  #                                  exp.by = 0.05, # ppm
-                                  #                                  vshift = vshift, # pass as slide bar?
-                                  #                                  hshift = hshift, # pass as slide bar?
-                                  #                                  sort.rows = F)
-                                  
-  
+                                  }
                             }
-  
                         message("\tnothing in range (+\\- ppm match tolerance; ", ppm.tolerance,')...'); return(NULL)
   
             })
