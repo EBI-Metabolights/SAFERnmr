@@ -945,6 +945,23 @@ shinyApp(ui, server)
 }
 
   
+# Troubleshooting evidence selection ####
+# selectedRow <- which(refs$name %in% 'Citrate')
+# selectedCols <- 1:4
+# metab.evidence <- select_evidence_refmet(ref = selectedRow %>% refs[.,], 
+#                                          sample = selectedCols %>% samples[.,],
+#                                          # Big objects to subset using ref.ind:
+#                                            features.c,
+#                                            match.info,
+#                                            backfits,
+#                                            rfs.used, # new object with inds of rfs which contributed to scores
+#                                            lib.data.processed,
+#                                          # # Spectral data:
+#                                          #   xmat, ppm,
+#                                          # Filtering thresholds:
+#                                            ppm.tolerance = ppm.tolerance,
+#                                            cutoff.residuals.feat = cutoff.residuals.feat,
+#                                            cutoff.residuals.spec = cutoff.residuals.spec)
       
       
       
