@@ -4,10 +4,12 @@
 \alias{compress_stack}
 \title{Sparse (NA-gapped) matrix compression}
 \usage{
-compress_stack(stack)
+compress_stack(stack, sparse.val = NA)
 }
 \arguments{
-\item{stack}{NA-laden matrix with real values you want to retain}
+\item{stack}{sparse matrix with real values you want to retain}
+
+\item{sparse.val}{(optional) value taking up too much space (i.e. NA default, or 0, or other)}
 }
 \value{
 compressed matrix (list format)

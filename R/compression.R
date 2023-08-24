@@ -10,7 +10,9 @@
 #' 
 #' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
 #'
-#' @param stack NA-laden matrix with real values you want to retain
+#' @param stack sparse matrix with real values you want to retain
+#' @param sparse.val (optional) value taking up too much space (i.e. NA default, or 0, or other)
+#' 
 #' @return compressed matrix (list format)
 #'          - pos : linear index within stack
 #'          - vals: non-NA vals within stack
@@ -21,15 +23,25 @@
 #' @importFrom magrittr %>%
 #'
 #' @export
-compress_stack <- function(stack){
+compress_stack <- function(stack, sparse.val = NA){
+  
+  # Handle single row cases
+    if (is.vector(stack)){stack <- matrix(stack, nrow = 1)}
+  
+  # If using some other value, convert to NA
+    if (!is.na(sparse.val)){
+      stack[stack == sparse.val] <- NA
+    }
   
   # stack <- ref.mat
   keep <- which(!is.na(stack))
+  
   # return cstack
   return(list(pos = keep,
               vals = stack[keep],
               m = nrow(stack),
-              n = ncol(stack))
+              n = ncol(stack),
+              sparse.val = sparse.val)
          )
 }
 
@@ -277,4 +289,54 @@ expand_features <- function(compressed.feature, row.nums=NULL){
   return(feature)
 }
 
+# co_compress #####################################################################################################
+#' Sparse (NA-gapped) matrix compression from one matrix applied to others
+#'
+#' Generalized case of stack.lists matrix 
+#' 
+#' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
+#'
+#' @param stack.list stack.list object with 
+#'          - stack (profiles on rows)
+#'          - position (cols in xmat on rows), same size as stack
+#'          - driver.relative and sfe optional
+#'          
+#' @return compressed matrix (list format)
+#'          - pos : linear index within stack
+#'          - vals: non-NA vals within stack
+#'          - m : number of rows in stack
+#'          - n : number of columns in stack
+#' 
+#'          
+#' @importFrom magrittr %>%
+#'
+#' @export
+co_compress <- function(stack.list, sparse.val = 0, key = 1, apply.to = NULL){
+  # stack.list <- spec %>% lapply(as.numeric)
+  # key <- 2
+  
+  if (is.character(key)){
+    # Assume field name provided
+      key <- which(names(stack.list) %in% key)
+      
+  }
+  
+  if (is.null(apply.to)){apply.to <- 1:length(stack.list[-key])}
+  
+  key.stack <- stack.list[[key]]
+    
+  # How to store the stack
+    c.stack <- compress_stack(key.stack, sparse.val = sparse.val)
+    stack.list[[key]] <- c.stack$vals
+    
+  # Loop through each stack in the list and apply the same positions
+    
+    stack.list[apply.to] <- lapply(stack.list[apply.to], function(x) x[c.stack$pos])
+               
+  # Replace vals with list of vals
+    c.stack$vals <- stack.list
+    
+                             
+  return(c.stack)
+}
 
