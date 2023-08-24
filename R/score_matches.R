@@ -124,35 +124,31 @@ score_matches <- function(pars){
   
       # Compute scores in function
         
-        pair_score_summation(pars, refmat) #  refs on rows
+        scores <- pair_score_summation(pars, refmat) #  refs on rows
         
-        ss.ref.pair.scores <- readRDS(paste0(this.run, "/ss.ref.pair.scores.RDS"))
-        rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))
+        ss.ref.pair.scores <- scores$ss.ref.pair.scores
+        rfs.used <- scores$rfs.used
         
-      
-      # Put into matrix
-        
-          # scores <- ss.ref.pair.scores$score.rmseb
-          scores <- ss.ref.pair.scores$score.tot
-          # scattermore::scattermoreplot(seq_along(scores), sort(scores))
-          # hist(scores, breaks = 1000)
-          
-          ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
-          linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
-                            cols = ss.ref.pair.scores$ref, 
-                            m = nrow(xmat))
-          
-          ss.ref.mat.nd[linds] <- scores
-          
-      # Update the rfs.used list to reflect these matrix positions (naming them)
-          # rfs.used$score.mat.coords$mat.pos <- linds # not needed anymore
-      
-          
-      # Add colnames (compounds) to scores matrix 
-          
-          colnames(ss.ref.mat.nd) <- cmpd.names[1:nrow(refmat)]
+          # Put into matrix
+            
+              # scores <- ss.ref.pair.scores$score.rmseb
+              vals <- ss.ref.pair.scores$score.tot
+              # scattermore::scattermoreplot(seq_along(scores), sort(scores))
+              # hist(scores, breaks = 1000)
+              
+              ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
+              linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
+                                cols = ss.ref.pair.scores$ref, 
+                                m = nrow(xmat))
+              
+              ss.ref.mat.nd[linds] <- vals
+    
+          # Add colnames (compounds) to scores matrix 
+              
+              colnames(ss.ref.mat.nd) <- cmpd.names[1:nrow(refmat)]
  
-          saveRDS(ss.ref.mat.nd, paste0(this.run, "/ss.ref.sumScores.RDS"))
+        scores$ss.ref.mat <- ss.ref.mat.nd
+        saveRDS(scores, paste0(this.run, "/scores.RDS"))
           
       # Plot the matrix as an HCA'd heatmap
         tryCatch(
@@ -172,8 +168,9 @@ score_matches <- function(pars){
         )
 
           
-          # ss.ref.mat.nd <- readRDS(paste0(this.run, "/ss.ref.sumScores.RDS"))
-          # rfs.used <- readRDS(paste0(this.run, "/rfs.used.RDS"))
+          # scores <- readRDS(paste0(this.run, "/scores.RDS"))
+          # rfs.used <- scores$rfs.used
+          # ss.ref.mat.nd <- scores$ss.ref.mat
         
 ######################################################################################################
   # Given scores matrix, do any compounds match known annotations? ####

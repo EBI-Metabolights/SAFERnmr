@@ -112,10 +112,11 @@ cluster_features <- function(pars, feature, min.features = 1000, do.clustering =
         
         message('\n\tcheckClusters complete. Saving...\n')     
         
-      saveRDS(clusters, paste0(this.run, "/clusters.RDS"))
-      # clusters <- readRDS(paste0(this.run, "/clusters.RDS"))
-      saveRDS(clust.info, paste0(pars$dirs$temp, "/clust.info.RDS"))
-      # clust.info <- readRDS(paste0(tmpdir, "/clust.info.RDS"))
+      clusters %>% debug_write("clusters.RDS", pars)
+      # clusters <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/clusters.RDS"))
+
+      clust.info %>% debug_write("clust.info.RDS", pars)
+      # clust.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/clust.info.RDS"))
       
   ############ Plot the cleaned clusters ####
   tryCatch(expr = {

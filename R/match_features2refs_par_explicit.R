@@ -25,14 +25,19 @@ match_features2refs_par_explicit <- function(pars){
   message('Reading data...\n')
   tmpdir <- pars$dirs$temp
   this.run <- paste0(tmpdir)
+  
   pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
+  
   f.stack.split <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
     f.stack.split %>% test_nullish('f.stack.split')
     message('Matching ', lapply(f.stack.split, ncol) %>% unlist %>% sum, ' features...\n')
+    
   split.scheme <- readRDS(paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
     split.scheme %>% test_nullish('split.scheme')
+    
   ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) 
     ref.mat %>% test_nullish('ref.mat')
+    
   r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
     r.mat %>% test_nullish('r.mat')
     

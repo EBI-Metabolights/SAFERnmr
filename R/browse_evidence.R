@@ -47,8 +47,8 @@ browse_evidence <- function(results.dir = NULL){
 
     # Read in match data
         backfit.results <- readRDS(paste0(results.dir,"backfit.results.RDS"))
-        backfits <- backfit.results$backfits
-        match.info <- backfit.results$match.info
+          backfits <- backfit.results$backfits
+          match.info <- backfit.results$match.info
 
     # Read in library data
         lib.info <- readRDS(paste0(results.dir, "lib.info.RDS"))

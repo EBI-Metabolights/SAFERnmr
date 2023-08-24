@@ -147,8 +147,9 @@ fse <- function(pars){
       pocketPairs <- corrPocketPairs_al(xmat, ppm, ws = half.window, plotHeatmap = FALSE,
                                         wdlimit = noise.percentile, # **** **** **** #
                                         rcutoff = cpp.rcutoff)
-      saveRDS(pocketPairs, paste0(this.run, "/pp.RDS"))
-      # pocketPairs <- readRDS(paste0(this.run, "/pp.RDS"))
+    
+      pocketPairs %>% debug_write("pocketPairs.RDS", pars)
+      # pocketPairs <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/pocketPairs.RDS"))
     
     # Report number of pairs
       

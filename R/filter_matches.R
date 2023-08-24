@@ -70,8 +70,10 @@ filter_matches <- function(pars){
         
       match.info <- rbindlist(matches.split$matches)
         rownames(match.info) <- NULL
-        # saveRDS(match.info, paste0(this.run, "/match.info.RDS"))
         
+        match.info %>% debug_write("match.info.initial.RDS", pars)
+        # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.initial.RDS"))
+
       # peak.qualities aligns with match.info now, but feat number does not index it (there are missing features)!
         pq.featureNumbers <- unique(match.info$feat) # this does not sort (just for good measure)
         
@@ -106,12 +108,11 @@ filter_matches <- function(pars){
           } else {
             match.info <- propagate_matches(match.info, cluster, feature$stack, 
                                             ref.mat, pars$par$ncores, pars$matching$r.thresh, pars$matching$p.thresh, pad.size, this.run)
-            saveRDS(match.info, paste0(tmpdir, "/match.info.propagated.RDS"))
+            
+            match.info %>% debug_write("match.info.propagated.RDS", pars)
+            # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.propagated.RDS"))
+
           }
-        
-        
-        # match.info <- readRDS(paste0(tmpdir, "/match.info.propagated.RDS"))
-        
         
 ######################### Calculate deltappm distance (specppm - featureppm) #############################
 
@@ -127,10 +128,9 @@ filter_matches <- function(pars){
 
         match.info <- res
         
-        # Savepoint
-          saveRDS(match.info, paste0(this.run, "/match.info.shiftFiltered.RDS"))
-          # match.info <- readRDS(paste0(this.run, "/match.info.propagated.filtered.RDS"))
-          
+        match.info %>% debug_write("match.info.shiftFiltered.RDS", pars)
+        # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.shiftFiltered.RDS"))
+
 ######################### Remove singlets ############################################
     printTime()
       # Do the filtering (functionalized)
@@ -139,8 +139,8 @@ filter_matches <- function(pars){
                                                pars$matching$filtering$res.area.threshold,
                                                pars$par$ncores)
         
-        saveRDS(match.info, paste0(tmpdir, "/match.info.filtered.RDS"))
-        # match.info <- readRDS(paste0(tmpdir, "/match.info.filtered.RDS"))
+        match.info %>% debug_write("match.info.filtered.RDS", pars)
+        # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.filtered.RDS"))
 
 #########################################################################################################
     # At this point, match.info is set. Assign IDs

@@ -337,8 +337,11 @@ emptyScore <-
       # Extract out the scores data.frame rows
         message('\nextracting out the scores data.frame rows...')
           # Debug
-          saveRDS(score.list, paste0(this.run, "/score.list.RDS"))
-        
+          
+          score.list %>% debug_write("score.list.RDS", pars)
+          # score.list <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/score.list.RDS"))
+
+
         # Screen score.list for any unsuccessful ones
           has.pair.scores <- score.list %>% lapply(function(x) {
             tryCatch(
@@ -397,12 +400,18 @@ emptyScore <-
                            min = rfs.used.min.rfs,
                            score.mat.coords = rfs.used.score.coord)
         
-      message('\nwriting scores to file...')
-      saveRDS(ss.ref.pair.scores, paste0(this.run, "/ss.ref.pair.scores.RDS"))
-      saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
+      # message('\nwriting scores to file...')
+      
+      pair.scores <- list(ss.ref.pair.scores = ss.ref.pair.scores,
+                          rfs.used = rfs.used)
+      
+      # saveRDS(pair.scores, paste0(this.run, "/pair.scores.RDS"))
+      # saveRDS(ss.ref.pair.scores, paste0(this.run, "/ss.ref.pair.scores.RDS"))
+      # saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
       
       message('Pair score summation complete.')
       # return(ss.ref.pair.scores, bfs.used)
+      return(pair.scores)
 }
 
 

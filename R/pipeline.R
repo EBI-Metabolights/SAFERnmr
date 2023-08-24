@@ -55,11 +55,7 @@ pipeline <- function(params_loc, params_obj) {
                   file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'))
                 }
               
-                # if (run_params$galaxy$enabled == FALSE) {
-                #   setup(run_params)
-                # }
-                
-                pars <- run_params
+               pars <- run_params
                 
                 if (is.null(pars$dirs$temp)){
                   pars$dirs$temp <- '.'

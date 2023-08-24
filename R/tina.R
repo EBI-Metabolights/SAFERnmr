@@ -55,11 +55,10 @@ tina <- function(pars){
 ################ Read parameters file ##################
   
   tmpdir <- pars$dirs$temp
-  this.run <- paste0(tmpdir)
 
 # Params ####
 
-    fse.result <- readRDS(paste0(this.run,"/fse.result.RDS"))
+    fse.result <- readRDS(paste0(tmpdir,"/fse.result.RDS"))
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
       
@@ -94,8 +93,8 @@ tina <- function(pars){
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
                                     max.features = nrow(feature$stack))
 
-          saveRDS(filts, paste0(tmpdir, "/filts.RDS"))
-          # filts <- readRDS(paste0(tmpdir, "/filts.RDS"))
+          filts %>% debug_write("filts.RDS", pars)
+          # filts <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/filts.RDS"))
           
     # Re-run tina_setup on the filtered features
 
@@ -111,8 +110,9 @@ tina <- function(pars){
         feature <- tina_setup(fse.result$storm_features[filt], xmat)
           feature %>% test_nullish('feature')
         message('\n\tFeature filtering complete. Saving results...')
-        saveRDS(feature, paste0(tmpdir, "/feature.RDS"))
-        # feature <- readRDS(paste0(tmpdir, "/feature.RDS"))
+        
+        feature %>% debug_write("feature.RDS", pars)
+        # feature <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.RDS"))
         
 ################ Plotting Filtered features #######################
   tryCatch(expr = { 
@@ -199,8 +199,8 @@ tina <- function(pars){
         # Nullish is not acceptable
         features.specd %>% test_nullish('features.specd')
         
-        saveRDS(features.specd, paste0(tmpdir, "/features.specd.RDS"))
-        # features.specd <- readRDS(paste0(tmpdir, "/features.specd.RDS"))
+        features.specd %>% debug_write("features.specd.RDS", pars)
+        # features.specd <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/features.specd.RDS"))
 
         
 ########### Adjust feature object with sfe results  ############################################################
@@ -248,14 +248,15 @@ tina <- function(pars){
            features.specd <- features.specd[feature.ma$alignment.success]
            feature.ma %>% test_nullish('feature.ma')
           
-        saveRDS(feature.ma, paste0(tmpdir, "/feature.ma.RDS"))
-        # feature.ma <- readRDS(paste0(tmpdir, "/feature.ma.RDS"))
+        feature.ma %>% debug_write("feature.ma.RDS", pars)
+        # feature.ma <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.ma.RDS"))
+
         rm(feature)
 
 ##################################################################################################################                
     # Plot all feature ranges ####
   tryCatch(expr = { 
-          pdf(file = paste0(this.run,'/','feature.ranges.pdf'),   # The directory you want to save the file in
+          pdf(file = paste0(tmpdir,'/','feature.ranges.pdf'),   # The directory you want to save the file in
               width = dim, # The width of the plot in inches
               height = dim)
         

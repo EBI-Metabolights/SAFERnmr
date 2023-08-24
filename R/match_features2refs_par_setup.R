@@ -21,8 +21,7 @@ match_features2refs_par_setup <- function(pars) {
     # Parse file paths ####
 
     tmpdir <- pars$dirs$temp
-    this.run <- paste0(tmpdir)
-    dir.create(paste0(this.run, "/temp_data_matching"), showWarnings = F)
+    dir.create(paste0(tmpdir, "/temp_data_matching"), showWarnings = F)
 
     ##################################################################################################################
     # Read data and set up ####
@@ -31,7 +30,7 @@ match_features2refs_par_setup <- function(pars) {
     message("")
     message("Loading data from files...\n\n\n")
 
-    fse.result <- readRDS(paste0(this.run, "/fse.result.RDS"))
+    fse.result <- readRDS(paste0(tmpdir, "/fse.result.RDS"))
       fse.result %>% test_nullish('fse.result did not pass nullish check. Cannot proceed with matching setup.')
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
@@ -39,7 +38,7 @@ match_features2refs_par_setup <- function(pars) {
        
       
     # This runs even if there was no clustering (clusters of 1 feature each):
-    cluster.final <- readRDS(paste0(this.run, "/cluster.final.RDS"))
+    cluster.final <- readRDS(paste0(tmpdir, "/cluster.final.RDS"))
         cluster.final %>% test_nullish('cluster.final did not pass nullish check. Cannot proceed with matching setup.')
     
       c.labs <- cluster.final$labels
@@ -48,7 +47,7 @@ match_features2refs_par_setup <- function(pars) {
     
       message('Building feature matrix...')
       
-          feature.final <- readRDS(paste0(this.run, "/feature.final.RDS")) 
+          feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS")) 
             feature.final %>% test_nullish('feature.final')
           
           featureStack <- feature.final$stack
@@ -101,45 +100,105 @@ match_features2refs_par_setup <- function(pars) {
     ##################################################################################################################
     ## Ref data import ####
     message("Loading and processing reference spectrum data...\n")
-
+    browser()
+    lib.data <- lib.data.processed <- NULL
+  
     # Import and process the spectra for this dataset ####
-      if (pars$galaxy$enabled) {
-        lib.data <- readRDS(pars$galaxy$gissmo_location)
+        if (pars$galaxy$enabled) {
           
-      } else {
-          if (file.exists(pars$files$lib.data)){
-            
-            # If there is a lib.data.RDS file, derive the lib.data.processed:
-              lib.data <- readRDS(pars$files$lib.data)
-              lib.data %>% test_nullish
+          message('Detected Galaxy usage. Looking in galaxy$gissmo_location (',pars$galaxy$gissmo_location,') for lib.data...')
+          
+          # Try to get lib.data from galaxy$gissmo_location. If that fails, try files$lib.data. If that fails, return NULL
+          lib.data <- tryCatch(
+            {          
+                message('\tReading lib.data from ',galaxy$gissmo_location,'...')
+                
+                lib.data <- readRDS(pars$galaxy$gissmo_location)
+                  lib.data %>% test_nullish
+                  
+                return(lib.data)
+            },
+            error = function(cond){
               
+              warning('In match...par_setup: galaxy$gissmo_location ',pars$galaxy$gissmo_location,' does not exist...')
+              
+              tryCatch(
+                {
+                  message('Looking in files$lib.data (',pars$files$lib.data,') for lib.data...')
+              
+                  # Try to get lib.data from files$lib.data:
+                    
+                    lib.data <- readRDS(pars$files$lib.data)
+                    lib.data %>% test_nullish
+                    
+                    return(lib.data)
+                }, 
+                error = function(cond){NULL}
+              )
+  
+            }
+          )
+            
+        } else {
+          
+          # If not using Galaxy, just 
+          
+          tryCatch(
+            {
+              message('Looking in files$lib.data (',pars$files$lib.data,') for lib.data...')
+          
+              # Try to get lib.data from files$lib.data:
+                
+                lib.data <- readRDS(pars$files$lib.data)
+                lib.data %>% test_nullish
+                
+                return(lib.data)
+            }, 
+            error = function(cond){NULL}
+          )
+          
+        }
+    
+      # If lib.data was read, process it. Default is always reprocess: ####
+        if (!is.null(lib.data)){
+          
+            # Process the data for the dataset: ####
               message(" - interpolating ref data to study ppm axis...\n\n")
               lib.data.processed <- prepRefs_for_dataset(lib.data,
-                  ppm.dataset = ppm,
-                  ref.sig.SD.cutoff = pars$matching$ref.sig.SD.cutoff,
-                  n.cores = pars$par$ncores
+                                                         ppm.dataset = ppm,
+                                                         ref.sig.SD.cutoff = pars$matching$ref.sig.SD.cutoff,
+                                                         n.cores = pars$par$ncores
               )
-              
-              message('\nsaving processed ref library to file...')
-              saveRDS(lib.data.processed, paste0(this.run, "/lib.data.processed.RDS"))
+            
+            message('\nsaving processed ref library to file...')
+            saveRDS(lib.data.processed, paste0(tmpdir, "/lib.data.processed.RDS"))
         
-              rm(lib.data)
-            
-          } else {
-            
-            # If lib.data.RDS doesn't exist, check for/read in lib.data.processed (e.g. if re-running from results file):
-            if (file.exists(paste0(this.run, "/lib.data.processed.RDS"))){
+            rm(lib.data)
+        
+        } else {
+          
+      # If lib.data.RDS was NOT read, check for/read in lib.data.processed directly (e.g. if re-running from results file):
+      
+         lib.data.processed <- tryCatch(
+            {
                message('\nReading processed ref library data...')
-               lib.data.processed <- readRDS(paste0(this.run, "/lib.data.processed.RDS"))
-            } else {
-              stop('No "lib.data.RDS" or "lib.data.processed.RDS" file in pars$dirs$temp: "', pars$dirs$temp,'". Check params.yaml.')
+               readRDS(paste0(tmpdir, "/lib.data.processed.RDS"))
+            },
+            error = function(cond){
+               stop('No "lib.data.RDS" or "lib.data.processed.RDS" file found. ',
+                    '\nCheck the following settings in params.yaml: ',
+                    '\n\t- files$lib.data   or ',
+                    '\n\t- galaxy$gissmo_location (for Galaxy runs) ',
+                    '\n"lib.data.RDS" should exist in galaxy$gissmo_location (for Galaxy runs) or files$lib.data (for local/HPC runs)')
             }
-          }
-      }
+          )
+  
+        }
         
-      null.data <- lapply(lib.data.processed, function(x) x %>% is_nullish %>% which) %>% 
-          unlist %>% names %>% unique
-      if (length(null.data) > 0){warning('lib.data.processed field: ', paste(null.data, collapse = ', '), ' is nullish.')}
+      
+        null.data <- lapply(lib.data.processed, function(x) x %>% is_nullish %>% which) %>% 
+            unlist %>% names %>% unique
+        if (length(null.data) > 0){warning('lib.data.processed field: ', paste(null.data, collapse = ', '), ' is nullish.')}
       
     ##################################################################################################################
 
@@ -174,7 +233,7 @@ match_features2refs_par_setup <- function(pars) {
             ref.mat <- t(ref.mat)
               ref.mat %>% test_nullish
             message('\nWriting ref matrix to file...')
-            saveRDS(ref.mat, paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
+            saveRDS(ref.mat, paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
           
           
           r.mat[is.na(r.mat)] <- 0
@@ -193,7 +252,7 @@ match_features2refs_par_setup <- function(pars) {
       
       r.mat %>% test_nullish('r.mat')
       message('\nWriting transformed ref data to file...')
-      saveRDS(r.mat, paste0(this.run, "/temp_data_matching/rmat.RDS"))
+      saveRDS(r.mat, paste0(tmpdir, "/temp_data_matching/rmat.RDS"))
       
         
         rm(r.mat)
@@ -219,12 +278,12 @@ match_features2refs_par_setup <- function(pars) {
 
   # Save feature data
     message('\nWriting split feature data to file...')
-    saveRDS(f.stack.split, paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
+    saveRDS(f.stack.split, paste0(tmpdir, "/temp_data_matching/f.stack.split.RDS"))
 
     rm(f.stack.split)
     
-    saveRDS(pad.size, paste0(this.run, "/temp_data_matching/pad.size.RDS"))
-    saveRDS(split.scheme, paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
+    saveRDS(pad.size, paste0(tmpdir, "/temp_data_matching/pad.size.RDS"))
+    saveRDS(split.scheme, paste0(tmpdir, "/temp_data_matching/split.scheme.RDS"))
 
   message('\n--------------------------------------------------------------------------')
   message('-------------------  Parallel Matching Setup complete. -------------------')
