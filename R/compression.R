@@ -111,6 +111,7 @@ cstack_expandRows <- function(cstack){
   # Build and fill a matrix with the selected rows expanded
   # * cstack$vals are what was compressed
   # * stack.pos is cstack$pos -> coordinates -> renamed rows to 1:length(unique)
+  
     rows.expanded <- matrix(NA, max(stack.pos$rows), cstack$n)
     rows.expanded[sub2indR(stack.pos$rows,
                            stack.pos$cols,
@@ -418,7 +419,7 @@ expand_pos <- function(ranges){
 #'
 #' @export
 expand_stacklist <- function(c.stack, which.stacks = NULL){
-  c.stack <- x$mapped$data.compressed
+  # c.stack <- x$mapped$data.compressed
 
   if (!is.list(c.stack$vals)){warning('c.stack$vals is not a list'); return(NULL)}
   if (is.null(which.stacks)){which.stacks <- 1:length(c.stack$vals)}
