@@ -100,7 +100,7 @@ match_features2refs_par_setup <- function(pars) {
     ##################################################################################################################
     ## Ref data import ####
     message("Loading and processing reference spectrum data...\n")
-    browser()
+    
     lib.data <- lib.data.processed <- NULL
   
     # Import and process the spectra for this dataset ####
@@ -161,7 +161,8 @@ match_features2refs_par_setup <- function(pars) {
     
       # If lib.data was read, process it. Default is always reprocess: ####
         if (!is.null(lib.data)){
-          
+             # pars$files$lib.data <- '/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS'
+             # lib.data <- readRDS(pars$files$lib.data)
             # Process the data for the dataset: ####
               message(" - interpolating ref data to study ppm axis...\n\n")
               lib.data.processed <- prepRefs_for_dataset(lib.data,
@@ -196,9 +197,9 @@ match_features2refs_par_setup <- function(pars) {
         }
         
       
-        null.data <- lapply(lib.data.processed, function(x) x %>% is_nullish %>% which) %>% 
-            unlist %>% names %>% unique
-        if (length(null.data) > 0){warning('lib.data.processed field: ', paste(null.data, collapse = ', '), ' is nullish.')}
+        # null.data <- lapply(lib.data.processed, function(x) x %>% is_nullish %>% which) %>% 
+        #     unlist %>% names %>% unique
+        # if (length(null.data) > 0){warning('lib.data.processed field: ', paste(null.data, collapse = ', '), ' is nullish.')}
       
     ##################################################################################################################
 
@@ -209,9 +210,10 @@ match_features2refs_par_setup <- function(pars) {
 
     # Put ref spectra in a matrix ####
       message('Building and scaling reference matrix...')
-      ref.mat <- lapply(
-          lib.data.processed,
-          function(x) x$mapped$data %>% scale_between(0,1)
+      ref.mat <- lapply(lib.data.processed, function(x) 
+        {
+          x$mapped$data.compressed %>% expand_stacklist('data') %>% .[[1]] %>% scale_between(0,1)
+        }
       ) %>% do.call(rbind, .)
   
         rm(lib.data.processed)
@@ -232,6 +234,7 @@ match_features2refs_par_setup <- function(pars) {
             message("\nTransposing reference matrix (takes a few seconds)...\n\n")
             ref.mat <- t(ref.mat)
               ref.mat %>% test_nullish
+            ref.mat <- ref.mat %>% compress_stack(sparse.val = NA)
             message('\nWriting ref matrix to file...')
             saveRDS(ref.mat, paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
           
