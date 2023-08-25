@@ -36,17 +36,20 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
     # For each ref, process for this matching ####
       ppm <- ppm.dataset
       ref.sig.SD.cutoff <- 0.01
-
+      
       data.list.processed <- 
-          mclapply(data.list, function(ref.spec) 
+          # pblapply(data.list, function(ref.spec)
+            # ref.spec <- data.list[[2]]
+          mclapply(data.list, function(ref.spec)
             {
               
               # Linear interpolation to dataset ppm axis ####
                 # ref.spec <- data.list[[1]]
                 #  simplePlot(ref.spec$data, xvect = ref.spec$ppm)
+
                 ref.int <- approx(ref.spec$ppm, ref.spec$data, 
                                    ppm, # get values for these ppms (can be selective, or if goes oob, then NA)
-                                   method="linear",rule=1, f=0)
+                                   method="linear", rule=1, f=0)
                 ref.ppm <- ref.int$x
                 ref.data <- ref.int$y - min(ref.int$y, na.rm = TRUE)
                 # simplePlot(ref.data, xvect = ref.ppm)
@@ -60,19 +63,32 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
                 ncutoff <- median(ref.data, na.rm = TRUE) + sd(ref.data, na.rm = TRUE) * ref.sig.SD.cutoff
                 ref.data[ref.data < ncutoff] <- NA
                 ref.data <- ref.data - min(ref.data, na.rm = TRUE)
+                data.compressed <- tryCatch(
+                  {
+                    co_compress(list(data = ref.data, ppm = ref.ppm), 
+                                     sparse.val = NA, key = 'data')
+                  }, 
+                  error = function(cond){
+                    NA
+                  }
+                )
                 
-                # print(ncutoff)
+                if (length(data.compressed) == 1){stop('compression failed for ', ref.spec$tag)}
+                
+                
               # Return a copy of the list element with mapped data added ####
                 return( list(tag = ref.spec$tag,
                              ref.name = ref.spec$ref.name,
                              compound.name = ref.spec$compound.name,
                              id = ref.spec$id,
-                             ppm = ref.spec$ppm,
-                             data = ref.spec$data,
-                             mapped = list(ppm = ref.ppm,
-                                           data = ref.data,
+                             # ppm = ref.spec$ppm,
+                             # data = ref.spec$data,
+                             mapped = list(ppm = NULL,
+                                           data = NULL,
+                                           data.compressed = data.compressed,
                                            sig.cutoff = ncutoff,
-                                           sd.cutoff = ref.sig.SD.cutoff)
+                                           sd.cutoff = ref.sig.SD.cutoff),
+                             info = ref.spec$info
                             )
                        )
             }, mc.cores = n.cores
@@ -80,7 +96,7 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
       
       # ref.mat <- lapply(data.list.processed, function(x) x$mapped$data) %>% do.call(rbind, .)
         # simplePlot(ref.mat)
-
+      # lapply(data.list.processed, function(x) length(x$mapped$data.compressed) == 1) %>% unlist %>% any
   
   return(data.list.processed)
   
