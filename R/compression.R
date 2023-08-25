@@ -25,6 +25,9 @@
 #' @export
 compress_stack <- function(stack, sparse.val = NA){
   
+  # Check if there's anything in there. 
+    if (is.null(stack)){stop('compress_stack() does not work on NULL')}
+  
   # Handle single row cases
     if (is.vector(stack)){stack <- matrix(stack, nrow = 1)}
   
@@ -33,11 +36,19 @@ compress_stack <- function(stack, sparse.val = NA){
       stack[stack == sparse.val] <- NA
     }
   
-  # stack <- ref.mat
-  keep <- which(!is.na(stack))
+  is.val <- !is.na(stack)
+  if (!any(is.val)){stop('undefined when all values in stack == sparse.val')}
   
+  # stack <- ref.mat
+  keep <- which(is.val)
+  
+  # compress positions using range expansion
+    
+    ranges <- compress_pos(keep)
+    if (!all.equal(expand_pos(ranges), keep)){stop('Error in compress_stack(): compress_pos/expand_pos failed')}
+    
   # return cstack
-  return(list(pos = keep,
+  return(list(pos = ranges,
               vals = stack[keep],
               m = nrow(stack),
               n = ncol(stack),
@@ -63,12 +74,13 @@ compress_stack <- function(stack, sparse.val = NA){
 #'
 #' @export
 cstack_selectRows <- function(c.stack, row.nums){
-  
-  stack.coords <- ind2subR(c.stack$pos, c.stack$m)
-  keep <- which(stack.coords$rows %in% row.nums)
-  c.stack$pos <- c.stack$pos[keep]
+  pos <- expand_pos(c.stack$pos)
+  stack.coords <- ind2subR(pos, c.stack$m)
+  keep <- which(stack.coords$rows %in% row.nums) 
+  c.stack$pos <- pos[keep] %>% compress_pos # subset the vector and range-compress
   c.stack$vals <- c.stack$vals[keep]
-  # c.stack$m <- length(unique(stack.coords$rows[keep])) # reset m for subset matrixrows? NO: pos is in terms of m
+  # reset m for subset matrixrows? NO: pos is in terms of m, and must remain that way
+  # lest we need to recompute them all. 
   
   return(c.stack)
 }
@@ -92,7 +104,8 @@ cstack_selectRows <- function(c.stack, row.nums){
 
 cstack_expandRows <- function(cstack){
   # Convert the stack positions for the selection back to stack coords
-    stack.pos <- ind2subR(cstack$pos, cstack$m)
+    pos <- expand_pos(cstack$pos)
+    stack.pos <- ind2subR(pos, cstack$m)
     stack.pos$rows <- stack.pos$rows %>% dplyr::dense_rank()
     
   # Build and fill a matrix with the selected rows expanded
@@ -130,9 +143,12 @@ cstack_expandRows <- function(cstack){
 #' @export
 compress_features <- function(feature){
   # How to store the stack
+    
     c.stack <- compress_stack(feature$stack)
     
-  # Position stack only requires the first element if profiles are NA-gapped
+  # Feature positions are a special case;
+  # they only require the first element of each row, since the corresponding
+  # profiles are NA-gapped and retain the gap information:
     min.col.pos <- Rfast::rowMins(feature$position)
     min.col.x <- feature$position[sub2indR(rows = 1:nrow(feature$position),
                                            cols = min.col.pos, 
@@ -296,11 +312,11 @@ expand_features <- function(compressed.feature, row.nums=NULL){
 #' 
 #' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
 #'
-#' @param stack.list stack.list object with 
-#'          - stack (profiles on rows)
-#'          - position (cols in xmat on rows), same size as stack
-#'          - driver.relative and sfe optional
-#'          
+#' @param stack.list list of matrices with matching positions (same sizes)
+#' @param sparse.val passthrough to compress_stack()
+#' @param key which matrix (name or list index) to use as the compression model (default = 1). If name, will be converted to list index.
+#' @param apply.to which matrices (other than key) to apply compression scheme to
+#' 
 #' @return compressed matrix (list format)
 #'          - pos : linear index within stack
 #'          - vals: non-NA vals within stack
@@ -311,8 +327,8 @@ expand_features <- function(compressed.feature, row.nums=NULL){
 #' @importFrom magrittr %>%
 #'
 #' @export
-co_compress <- function(stack.list, sparse.val = 0, key = 1, apply.to = NULL){
-  # stack.list <- spec %>% lapply(as.numeric)
+co_compress <- function(stack.list, sparse.val = NA, key = 1, apply.to = NULL, stack.names = NULL){
+  # stack.list <- list(ref.data = ref.data, ref.ppm = ref.ppm)
   # key <- 2
   
   if (is.character(key)){
@@ -321,7 +337,7 @@ co_compress <- function(stack.list, sparse.val = 0, key = 1, apply.to = NULL){
       
   }
   
-  if (is.null(apply.to)){apply.to <- 1:length(stack.list[-key])}
+  if (is.null(apply.to)){apply.to <- 1:length(stack.list) %>% .[-key]}
   
   key.stack <- stack.list[[key]]
     
@@ -331,12 +347,102 @@ co_compress <- function(stack.list, sparse.val = 0, key = 1, apply.to = NULL){
     
   # Loop through each stack in the list and apply the same positions
     
-    stack.list[apply.to] <- lapply(stack.list[apply.to], function(x) x[c.stack$pos])
+    pos <- expand_pos(c.stack$pos) # decompress position filter
+    # loop through stacks and apply pos filter:
+    # (names actually get preserved in the assignment)
+    stack.list[apply.to] <- lapply(stack.list[apply.to], function(x) x[pos])
                
   # Replace vals with list of vals
     c.stack$vals <- stack.list
-    
-                             
+
   return(c.stack)
 }
 
+# compress_pos #####################################################################################################
+#' Since positions (e.g. "keep" in compress_stack()) are just runs of increasing inds,
+#' there isn't really a need to keep all of them. Rather, just store the start and end
+#' points of the runs. 
+#' 
+#' Example: all.equal(expand_pos(compress_pos(keep)), keep)
+#'
+#' @param keep vector of non-sparse position inds
+#' @return ranges of the incremental runs in keep (can be directly expanded to whatever was in keep)
+#' 
+#'          
+#' @importFrom magrittr %>%
+#'
+#' @export
+compress_pos <- function(keep){
+    # compress positions ("keep" in compress_stack()) using range expansion
+    # Position will increase by 1 in a range, but > 1 between ranges.
+    # Get the range starts and ends (within pos). A single point will
+    # be both start and end. 
+    
+      jumps <- which(diff(keep) > 1)
+      rng.end <- c(jumps, length(keep)) # the last index is always an end
+      rng.start <- c(1, jumps+1) # the first index is always a start
+      ranges <- data.frame(start = rng.start %>% keep[.],
+                           end = rng.end %>% keep[.])
+      return(ranges)
+}
+
+# expand_pos #####################################################################################################
+#' Expand ranges to a vector
+#'
+#' @param keep vector of non-sparse position inds
+#' @return ranges of the incremental runs in keep
+#' 
+#' Example: all.equal(expand_pos(compress_pos(keep)), keep)
+#'          
+#' @importFrom magrittr %>%
+#'
+#' @export
+expand_pos <- function(ranges){
+    
+  # expand each range, then concatenate
+  pos <- apply(ranges, 1, fillbetween) %>% unlist %>% c
+  
+  return(pos)
+}
+
+# expand_stacklist #####################################################################################################
+#' Get each stack(s) from co-compressed stacklist
+#'
+#' @param c.stack compressed stack where vals is a list of co-compressed stacks
+#' @param which.stacks inds or names of stacks to return from vals 
+#' @return ranges of the incremental runs in keep
+#' 
+#' Example: all.equal(expand_pos(compress_pos(keep)), keep)
+#'          
+#' @importFrom magrittr %>%
+#'
+#' @export
+expand_stacklist <- function(c.stack, which.stacks = NULL){
+  c.stack <- x$mapped$data.compressed
+
+  if (!is.list(c.stack$vals)){warning('c.stack$vals is not a list'); return(NULL)}
+  if (is.null(which.stacks)){which.stacks <- 1:length(c.stack$vals)}
+  
+  # Convert the stack positions for the selection back to stack coords
+    pos <- expand_pos(c.stack$pos)
+    stack.pos <- ind2subR(pos, c.stack$m)
+    stack.pos$rows <- stack.pos$rows %>% dplyr::dense_rank()
+    
+  # Build and fill a matrix with the selected rows expanded
+  # * cstack$vals are what was compressed
+  # * stack.pos is cstack$pos -> coordinates -> renamed rows to 1:length(unique)
+    rows.expanded <- matrix(NA, max(stack.pos$rows), c.stack$n)
+    inds <- sub2indR(stack.pos$rows,
+                             stack.pos$cols,
+                             nrow(rows.expanded))
+    
+    # Loop through and put expanded stacks back in place (to preserve names)
+    c.stack$vals[which.stacks] <- lapply(c.stack$vals[which.stacks], function(stack.vals){
+      rows.expanded[inds] <- stack.vals
+      return(rows.expanded)
+    })
+    
+  # Return the requested matrices 
+    return(c.stack$vals[which.stacks])
+    
+}
