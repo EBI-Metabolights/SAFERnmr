@@ -113,10 +113,7 @@ match_features2refs_par_setup <- function(pars) {
             {          
                 message('\tReading lib.data from ',galaxy$gissmo_location,'...')
                 
-                lib.data <- readRDS(pars$galaxy$gissmo_location)
-                  lib.data %>% test_nullish
-                  
-                return(lib.data)
+                readRDS(pars$galaxy$gissmo_location)
             },
             error = function(cond){
               
@@ -142,27 +139,25 @@ match_features2refs_par_setup <- function(pars) {
         } else {
           
           # If not using Galaxy, just 
-          
-          tryCatch(
+          lib.data <- tryCatch(
             {
               message('Looking in files$lib.data (',pars$files$lib.data,') for lib.data...')
           
               # Try to get lib.data from files$lib.data:
                 
-                lib.data <- readRDS(pars$files$lib.data)
-                lib.data %>% test_nullish
+                readRDS(pars$files$lib.data)
                 
-                return(lib.data)
             }, 
             error = function(cond){NULL}
           )
           
         }
     
+        lib.data %>% test_nullish
+    
       # If lib.data was read, process it. Default is always reprocess: ####
         if (!is.null(lib.data)){
-             # pars$files$lib.data <- '/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS'
-             # lib.data <- readRDS(pars$files$lib.data)
+             
             # Process the data for the dataset: ####
               message(" - interpolating ref data to study ppm axis...\n\n")
               lib.data.processed <- prepRefs_for_dataset(lib.data,
@@ -178,7 +173,7 @@ match_features2refs_par_setup <- function(pars) {
         
         } else {
           
-      # If lib.data.RDS was NOT read, check for/read in lib.data.processed directly (e.g. if re-running from results file):
+      # If lib.data.RDS was NOT read, check for/read in lib.data.processed directly (e.g. if re-running from results file): ####
       
          lib.data.processed <- tryCatch(
             {
@@ -210,7 +205,8 @@ match_features2refs_par_setup <- function(pars) {
 
     # Put ref spectra in a matrix ####
       message('Building and scaling reference matrix...')
-      ref.mat <- lapply(lib.data.processed, function(x) 
+      
+      ref.mat <- lapply(lib.data.processed, function(x)
         {
           x$mapped$data.compressed %>% expand_stacklist('data') %>% .[[1]] %>% scale_between(0,1)
         }
@@ -231,11 +227,13 @@ match_features2refs_par_setup <- function(pars) {
           r.mat <- ref.mat %>% padmat(use = 0, col.by = pad.size)
           
           # Transpose original matrix so columns are spectra, save and remove it to clear memory ####
-            message("\nTransposing reference matrix (takes a few seconds)...\n\n")
-            ref.mat <- t(ref.mat)
+            # message("\nTransposing reference matrix (takes a few seconds)...\n\n")
+            # ref.mat <- t(ref.mat)
               ref.mat %>% test_nullish
+          
             ref.mat <- ref.mat %>% compress_stack(sparse.val = NA)
-            message('\nWriting ref matrix to file...')
+            
+            message('\nWriting compressed ref matrix to file...')
             saveRDS(ref.mat, paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
           
           

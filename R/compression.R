@@ -8,6 +8,11 @@
 #' In the case of feature objects, the profile and position mats can be 
 #' compressed together. 
 #' 
+#' Note: for spectral matrices, it is rare that all columns have values. As such,
+#' spectral matrices MUST not be transposed; i.e. each column should be
+#' a ppm value and each row is a spectrum. Otherwise ppms will be lost upon 
+#' reconstruction!
+#' 
 #' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
 #'
 #' @param stack sparse matrix with real values you want to retain

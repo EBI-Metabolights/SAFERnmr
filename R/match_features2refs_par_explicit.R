@@ -24,21 +24,24 @@ match_features2refs_par_explicit <- function(pars){
 ################ Read parameters file ##################
   message('Reading data...\n')
   tmpdir <- pars$dirs$temp
-  this.run <- paste0(tmpdir)
+
+  pad.size <- readRDS(paste0(tmpdir, "/temp_data_matching/pad.size.RDS"))
   
-  pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
-  
-  f.stack.split <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.split.RDS"))
+  f.stack.split <- readRDS(paste0(tmpdir, "/temp_data_matching/f.stack.split.RDS"))
     f.stack.split %>% test_nullish('f.stack.split')
     message('Matching ', lapply(f.stack.split, ncol) %>% unlist %>% sum, ' features...\n')
     
-  split.scheme <- readRDS(paste0(this.run, "/temp_data_matching/split.scheme.RDS"))
+  split.scheme <- readRDS(paste0(tmpdir, "/temp_data_matching/split.scheme.RDS"))
     split.scheme %>% test_nullish('split.scheme')
     
-  ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) 
+  ref.mat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows %>% t
+    # At some point, we should probably compress these and compute the FTs on the fly...
+    # or, better, condense the ref mats and their fts by thresholding and chunking into padded 
+    # regions
+    # apply(ref.mat, 2, function())
     ref.mat %>% test_nullish('ref.mat')
     
-  r.mat <- readRDS(paste0(this.run, "/temp_data_matching/rmat.RDS"))
+  r.mat <- readRDS(paste0(tmpdir, "/temp_data_matching/rmat.RDS"))
     r.mat %>% test_nullish('r.mat')
     
   # mem_snapshot(paste0(tmpdir, '/', Sys.time(), '.txt'))
@@ -74,8 +77,8 @@ match_features2refs_par_explicit <- function(pars){
             
              # Set up ####
               
-              # f.stack <- readRDS(paste0(this.run, "/temp_data_matching/f.stack.",chunk,".RDS"))
-              # f.mat <- readRDS(paste0(this.run, "/temp_data_matching/f.mat.",chunk,".RDS"))
+              # f.stack <- readRDS(paste0(tmpdir, "/temp_data_matching/f.stack.",chunk,".RDS"))
+              # f.mat <- readRDS(paste0(tmpdir, "/temp_data_matching/f.mat.",chunk,".RDS"))
               
               # chunk <- 3
               # split.grp <- split.scheme[[chunk]]
@@ -234,8 +237,8 @@ match_features2refs_par_explicit <- function(pars){
 ############ Format results and save ########################################################################################
     # Compile and save match results ####
         message('Saving match results...\n\n\n')
-        saveRDS(matches.all, paste0(this.run, "/matches.RDS"))
-        # matches <- readRDS(paste0(this.run, "/matches.RDS"))
+        saveRDS(matches.all, paste0(tmpdir, "/matches.RDS"))
+        # matches <- readRDS(paste0(tmpdir, "/matches.RDS"))
         # ####
   message('\n-----------------------------------------------------------------')
   message('-------------------  Parallel Matching Complete -------------------')
