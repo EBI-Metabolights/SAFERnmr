@@ -61,7 +61,7 @@ select_evidence_refmet <- function(ref = NULL,
     # Subset the evidence for annotation of the given ref in all samples: ####
 
       # Pull data for our selected ref ####
-          
+          browser()
           ld <- lib.data.processed[[ref$number]]
           
       # Find all backfits which involve this ref ####
@@ -136,7 +136,8 @@ select_evidence_refmet <- function(ref = NULL,
             
    ########## Expand the fits ##########
    
-        
+        feat <- features.c %>% expand_features(rf.specFits$feat)
+              
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
             # Compute on the fly
