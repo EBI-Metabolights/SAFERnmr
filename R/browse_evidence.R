@@ -421,7 +421,9 @@ server <- function(input, output, session) {
                              selectedCols = NULL,
                              selectedRange = NULL,
                              refplot.xlim = NULL,
-                             refplot.xlim.previous = NULL)
+                             refplot.xlim.previous = NULL,
+                             metab.evidence = NULL,
+                             bfs = NULL)
 
   ####### Right-side stuff ######
   
@@ -710,14 +712,8 @@ server <- function(input, output, session) {
           
             output$stackplotTitle <- renderText({
               
-  
-              # req(values$selectedRow)
-              # req(values$selectedRange)
-              # req(values$selectedCols)
-              
               # "PCRS features fit to individual spectra"
               
-                
               # Can't do anything without a row selection:
 
                 if (is.null( values$selectedRow )) {
@@ -834,7 +830,7 @@ server <- function(input, output, session) {
                                 # Compute the feature stackplots ####
   
                                   plt.pars <- list(vshift = values$slider.vshift, 
-                                                   pixels = c(512, 512), 
+                                                   pixels = c(512, 512), # inc.res
                                                    pointsize = 0, 
                                                    interpolate = T, 
                                                    # exp.by = 0.05,
@@ -846,7 +842,7 @@ server <- function(input, output, session) {
                                   if (values$plotType == "features"){
                                     
                                     # EST-style plot showing where features annotate the ref
-                                      
+                                      browser()
                                       feature_est_plot(reg = values$refplot.xlim, 
                                                        metab.evidence, 
                                                        features.c,
