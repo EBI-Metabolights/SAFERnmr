@@ -4,7 +4,7 @@
 #'
 #' @param rows The row subscripts.
 #' @param cols The column subscripts.
-#' @param m The number of rows in the matrix.
+#' @param m The number of rows in the matrix. NOTE: if transpose = TRUE, row number should count the transposed rows
 #'
 #' @return The linear indices corresponding to the input subscripts.
 #'
@@ -13,6 +13,12 @@
 #' # [1] 1 4 7 2 5 8 3 6 9
 #'
 #' @export
-sub2indR <- function(rows,cols,m){
-  return((as.vector(cols)-1)*m + as.vector(rows))
+sub2indR <- function(rows,cols,m, transpose = FALSE){
+
+  if (transpose){
+  	return((as.vector(rows)-1)*m + as.vector(cols))
+  } else {
+  	return((as.vector(cols)-1)*m + as.vector(rows))
+  }
+  
 }

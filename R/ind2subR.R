@@ -12,13 +12,17 @@
 #' # Returns: list(rows = c(1, 2, 3, 4, 1, 2, 3, 4, 1), cols = c(1, 1, 1, 1, 2, 2, 2, 2, 3))
 #' @return list with row and column indices matching the linear indices given in inds
 #' @export
-ind2subR <- function(inds,m){   
+ind2subR <- function(inds,m, transpose = FALSE){   
   
   inds <- as.vector(inds)
   row.inds <- ((inds-1) %% m) + 1
   col.inds <- floor((inds-1) / m) + 1
   
-  return(list(rows = row.inds, cols = col.inds))
+  if (transpose){
+  	return(data.frame(rows = col.inds, cols = row.inds))
+  } else {
+  	return(data.frame(rows = row.inds, cols = col.inds))
+  }
 }
   
   
