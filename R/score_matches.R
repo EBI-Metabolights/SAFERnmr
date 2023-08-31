@@ -23,19 +23,18 @@ score_matches <- function(pars){
     # pars <- yaml::yaml.load_file("../data/params.yaml", eval.expr=TRUE)
     
         tmpdir <- pars$dirs$temp
-        this.run <- paste0(tmpdir)
 
     message("Loading data from files...")
 
-    fse.result <- readRDS(paste0(this.run,"/fse.result.RDS"))
+    fse.result <- readRDS(paste0(tmpdir,"/fse.result.RDS"))
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
-    feature <- readRDS(paste0(this.run,"/feature.final.RDS"))
+    feature <- readRDS(paste0(tmpdir,"/feature.final.RDS"))
 
-    # match.info <- readRDS(paste0(this.run,"/match.info.RDS"))
+    # match.info <- readRDS(paste0(tmpdir,"/match.info.RDS"))
 
-    lib.data.processed <- readRDS(paste0(this.run, "/lib.data.processed.RDS"))
-    backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
+    lib.data.processed <- readRDS(paste0(tmpdir, "/lib.data.processed.RDS"))
+    backfit.results <- readRDS(paste0(tmpdir, "/backfit.results.RDS"))
       match.info <- backfit.results$match.info
       backfits <- backfit.results$backfits
     
@@ -61,9 +60,12 @@ score_matches <- function(pars){
     ######################### Build match matrix  #############################    
     # Get the processed library data:
       
-      refmat <- lapply(lib.data.processed, function(x) x$mapped$data / sum(x$mapped$data, na.rm = T)) %>% do.call(rbind,.)
+      # refmat <- lapply(lib.data.processed, 
+      #                  function(x) x$mapped$data / sum(x$mapped$data, na.rm = T)
+      #                  ) %>% do.call(rbind,.)
 
-      # refmat <- readRDS(paste0(this.run,"/temp_data_matching/ref.mat.RDS")) %>% t
+      refmat <- readRDS(paste0(tmpdir,"/temp_data_matching/ref.mat.RDS"))
+
       cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind,.)
       # write(cmpd.names,"/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo.cmpd.names.txt", sep = '\t')
       
@@ -116,8 +118,8 @@ score_matches <- function(pars){
         }) %>% do.call(rbind,.)
 
       message('Exporting match pair data for scoring ...')
-      saveRDS(ss.ref.pairs, paste0(this.run, "/ss.ref.pairs.RDS"))
-      # ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
+      saveRDS(ss.ref.pairs, paste0(tmpdir, "/ss.ref.pairs.RDS"))
+      # ss.ref.pairs <- readRDS(paste0(tmpdir, "/ss.ref.pairs.RDS"))
       
   # Turn this into a nonduplicate ss-ref matrix  ####
   
@@ -147,7 +149,7 @@ score_matches <- function(pars){
               colnames(ss.ref.mat.nd) <- cmpd.names[1:nrow(refmat)]
  
         scores$ss.ref.mat <- ss.ref.mat.nd
-        saveRDS(scores, paste0(this.run, "/scores.RDS"))
+        saveRDS(scores, paste0(tmpdir, "/scores.RDS"))
           
       # Plot the matrix as an HCA'd heatmap
         tryCatch(
@@ -167,7 +169,7 @@ score_matches <- function(pars){
         )
 
           
-          # scores <- readRDS(paste0(this.run, "/scores.RDS"))
+          # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
           # rfs.used <- scores$rfs.used
           # ss.ref.mat.nd <- scores$ss.ref.mat
         
@@ -188,8 +190,8 @@ score_matches <- function(pars){
                   #                       best.refscore = rep.ref)
                   # matches <- matches[order(matches$best.refscore, decreasing = T),]
                   # 
-            # saveRDS(matches, paste0(this.run, "/matches_scored_named.RDS"))
-            # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
+            # saveRDS(matches, paste0(tmpdir, "/matches_scored_named.RDS"))
+            # matches <- readRDS(paste0(tmpdir, "/matches_scored_named.RDS"))
   # ####       
   message('----------------------------------------------------------------')
   message('-------------------  Match Scoring Completed -------------------')
