@@ -4,14 +4,14 @@
 \alias{sub2indR}
 \title{Convert Subscripts to Linear Indices in Column-Major Order}
 \usage{
-sub2indR(rows, cols, m)
+sub2indR(rows, cols, m, transpose = FALSE)
 }
 \arguments{
 \item{rows}{The row subscripts.}
 
 \item{cols}{The column subscripts.}
 
-\item{m}{The number of rows in the matrix.}
+\item{m}{The number of rows in the matrix. NOTE: if transpose = TRUE, row number should count the transposed rows}
 }
 \value{
 The linear indices corresponding to the input subscripts.
