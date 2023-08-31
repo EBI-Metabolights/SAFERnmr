@@ -4,7 +4,7 @@
 \alias{ind2subR}
 \title{Convert linear indices to row and column subscripts}
 \usage{
-ind2subR(inds, m)
+ind2subR(inds, m, transpose = FALSE)
 }
 \arguments{
 \item{inds}{A numeric vector of linear indices from a matrix}

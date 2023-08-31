@@ -14,7 +14,7 @@ expand_stacklist(c.stack, which.stacks = NULL)
 \value{
 ranges of the incremental runs in keep
 
-Example: all.equal(expand_pos(compress_pos(keep)), keep)
+Example: all.equal(expand_runs(runs2ranges(keep)), keep)
 }
 \description{
 Get each stack(s) from co-compressed stacklist
