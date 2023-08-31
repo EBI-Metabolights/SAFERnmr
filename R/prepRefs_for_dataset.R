@@ -63,6 +63,7 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
                 ncutoff <- median(ref.data, na.rm = TRUE) + sd(ref.data, na.rm = TRUE) * ref.sig.SD.cutoff
                 ref.data[ref.data < ncutoff] <- NA
                 ref.data <- ref.data - min(ref.data, na.rm = TRUE)
+                ref.data <- ref.data / sum(ref.data, na.rm = T)
                 data.compressed <- tryCatch(
                   {
                     co_compress(list(data = ref.data, ppm = ref.ppm), 
