@@ -37,12 +37,7 @@ fit_batman <- function(feat, spec,
                        ppm = NULL,# in practice I see convergence about here
                        plots = FALSE){
    # v1 * ratio = v1 fit to v2
-   # 
-   # feat <- featureStack[2002,]
-   # spec <- featureStack[2000,] / 2
-   # feat <- featureStack[comb[1],]
-   # spec <- featureStack[comb[2],]
-  
+
   use <- which(!is.na(feat + spec))
   
   sub.v1 <- min(feat[use])
@@ -51,10 +46,10 @@ fit_batman <- function(feat, spec,
   v1 <- feat[use] - sub.v1
   v2 <- spec[use] - sub.v2
   
-  v2.use.sortorder <- order(v2)
+  v1.use.sortorder <- order(v1)
   
   if (!is.null(exclude.lowest)){
-    exclude.pts <- v2.use.sortorder[1:floor(exclude.lowest * length(use))]
+    exclude.pts <- v1.use.sortorder[1:floor(exclude.lowest * length(use))]
     pairedRatios <- v2[-exclude.pts] / v1[-exclude.pts];
   } else {
     pairedRatios <- v2 / v1;
@@ -62,6 +57,8 @@ fit_batman <- function(feat, spec,
   
   # plot(v2)
   # points(exclude.pts, v2[exclude.pts], col = 'red')
+  # plot(v1)
+  # points(exclude.pts, v1[exclude.pts], col = 'red')
 
   # simplePlot(rbind(v1,v2) %>% trim_sides)
   
@@ -72,25 +69,26 @@ fit_batman <- function(feat, spec,
   v1.fit = (feat - sub.v1)*ratio + sub.v2
   v2.fit = spec #- sub.v2
   
-  # fraction.v2.unaccounted <- sum(v2.fit[use]  -  v1.fit[use], na.rm = TRUE) / sum(v2.fit[use], na.rm = TRUE)
+  fraction.v2.accounted <- sum(v1.fit[use]) / sum(v2.fit[use])
+  
   g <- NULL
   # simplePlot(rbind(v1 * ratio,v2) %>% trim_sides)
+  # simplePlot(rbind(v1.fit,v2.fit) %>% trim_sides)
   if (plots){
     
-    if (is.null(ppm)){ppm <- 1:length(v1.fit %>% t %>% trim_sides)}
+    if (is.null(ppm)){ppm <- 1:length(v1.fit)}
     
-      v2.inds <- v2 %>% t %>% trim_sides(out = "inds")
-      g <- simplePlot(v2[v2.inds],
-                      xvect = ppm[v2.inds],
+      g <- simplePlot(v2.fit,
+                      xvect = ppm,
                       linecolor = "gray",
                       opacity = .9, 
                       linewidth = 1)
 
-      v1.inds <- v1 %>% t %>% trim_sides(out = "inds")
       g <- g + new_scale_color() +
-              geom_line(data = data.frame(vals = v1.fit[v1.inds],
-                                          ppm = ppm[v1.inds],
-                                          corr = rep(-1, length(v1.inds))), 
+              geom_line(data = data.frame(vals = v1.fit,
+                                          ppm = ppm,
+                                          corr = rep(-1, length(v1.fit))),
+                        na.rm = TRUE,
                         mapping = aes(x = ppm, y = vals, colour = corr),
                         linewidth = .5) +
               scale_colour_gradientn(colours = matlab.like2(10),
@@ -106,7 +104,7 @@ fit_batman <- function(feat, spec,
               residuals = v2.fit - v1.fit,
               # mean.feat.fit = mean(v1.fit, na.rm = TRUE),
               # mean.spec.fit = mean(v2.fit, na.rm = TRUE),
-              # fraction.spec.unaccounted = fraction.v2.unaccounted,
+              fraction.spec.accounted = fraction.v2.accounted,
               plot = g))
 }
 
@@ -127,7 +125,6 @@ fit_batman <- function(feat, spec,
 #' @export
 fit_leastSquares <- function(v1 = NA, v2 = NA, ppm = NULL, plots = FALSE, scale.v2 = TRUE){
   
-  require(Metrics)
   fit <- 
         tryCatch(expr = {
           
