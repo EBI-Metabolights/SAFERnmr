@@ -82,7 +82,7 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
                   opt.vals <- fit.vals$fsa
                 }
               }
-              browser()
+              
               opt.lag <- climb(start.pt = max.lag + 1, v = opt.vals) %>% lags[.]
               # opt.lag <- pct.acct %>% which.max %>% lags[.]
           
@@ -90,7 +90,7 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
             lil.spec <- spec.segment[window.pos - opt.lag] 
             lil.ref <- feat
             
-            fit <- fit_batman(feat = lil.ref, spec = lil.spec, exclude.lowest = 0.5, plots = TRUE)
+            fit <- fit_batman(feat = lil.ref, spec = lil.spec, exclude.lowest = 0.5)
             fit$rval <- cor(fit$feat.fit, fit$spec.fit, use = "pairwise.complete.obs")
             
             #   plot_fit(fit, type = 'auc')
