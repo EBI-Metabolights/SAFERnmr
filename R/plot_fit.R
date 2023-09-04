@@ -21,7 +21,10 @@ plot_fit <- function(fit, type = "simple",
   
   # Note: need to pass a continuous ppm vector/xaxis. If there are NAs, this function
   # will make strange plots (later, interpolate a linear scale between the provided points).
-  
+              
+  bottom <- min((c(fit$spec.fit, fit$feat.fit)), na.rm = 0)
+    fit$spec.fit <- fit$spec.fit - bottom
+    fit$feat.fit <- fit$feat.fit - bottom
   not.na <- which(!is.na(fit$spec.fit))
   if (is.null(ppm)){ppm <- not.na}
   # if (any(is.na(ppm))){complete_indsVect(ppm)}
