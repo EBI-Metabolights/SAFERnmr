@@ -119,7 +119,7 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         
         # Recalculate the fits
           sfs <- mclapply(1:nrow(specfits), function(x){
-              x <- 34916
+              # x <- 34916
               # print(x)
                 tryCatch(
                   {
