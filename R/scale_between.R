@@ -19,3 +19,28 @@ scale_between <- function(data, lower = 0, upper = 1){
           * (upper-lower)                         # stretch to fit abs(new range)
           + lower)                                # slide down to lower bound
 }
+# upper = 1
+# lower = 0
+# data = vector
+# bottom <- min(data, na.rm = TRUE)
+# top <- max(data, na.rm = TRUE)
+# data.range <- top-bottom
+# new.range <- upper - lower
+# data <- (data + lower) / (new.range/data.range) + bottom  
+# # Scaling, broken down
+#   plot(data)
+#   
+#   data <- data - bottom
+#     plot(data)
+#   
+#   # Scale data to new range size
+#   data <- data * (new.range/data.range) # combine range sizes, then multiply to vector
+#     plot(data)
+#     
+#   # Put bottom of data @ bottom of new range
+#   data <- data - lower
+#     plot(data)
+
+# # Undo scaling for data to show it works
+#   data <- (data + lower) / (new.range/data.range) + bottom
+#   all(data == vector)
