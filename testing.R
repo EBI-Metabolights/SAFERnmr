@@ -8,10 +8,10 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
 
   # Choose study
 
-    # study <- 'MTBLS1'
-    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
-    study <- 'MTBLS424'
-    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS'
+    study <- 'MTBLS1'
+    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
+    # study <- 'MTBLS424'
+    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS'
     # study <- 'MTBLS430'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS430_1r_noesygppr1d.comp_spectralMatrix.RDS'
     # study <- 'MTBLS395'
@@ -63,7 +63,9 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
 
   # Pull a random set of backfits for a given range of scores  ####
   
-    # Which scores? BFF
+    # Which scores? For each match, pick the best rf-ss fit for each score. This 
+    # will allow us to examine each match in its best context while vastly reducing
+    # numbers.
       
       # List out the backfit index with the match index and the score
       
@@ -75,7 +77,18 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
               
                 mi <- match.info[x, ]
                 scores <- backfit.results$backfits[[x]]
-                scores <- scores[scores$bffs.tot > 0.75,]
+                # scores <- scores[scores$bffs.tot > 0.75,]
+                # scores <- scores[scores$rmse < 0.1,]
+                # scores <- scores[scores$rmse.biased > 0.1,]
+                best.scores <- c(which.max(scores$bffs.tot),
+                                 which.max(scores$bffs.res),
+                                 which.min(scores$rmse),
+                                 which.min(scores$rmse.biased)) %>% unique
+                scores <- scores[best.scores, ]
+                
+                # how is it possible to get a match whose best score is 0?
+                
+                if (nrow(scores) == 0){ return(NULL)}
               
                 # Add any vals from match info we may want for plotting
                 
@@ -94,9 +107,6 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
             }
           ) %>% rbindlist
   
-        # Does the quality of the matches correlate with quality of specfits?
-        # scattermoreplot(x = specfits$match.rmse, y = specfits$bffs.tot)
-        
   # Plotting ####
   
       # Compute combined score (exploration): ####
@@ -104,9 +114,39 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         specfits <- as.data.frame(specfits)
         specfits$score <- specfits[,scoreType]
         specfits$score <- specfits[,"bffs.tot"] * (1 - specfits[,"rmse"])
+        devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+        sfs <- specfits
         
-        scattermoreplot(x = 1:nrow(specfits), 
-                        y = (specfits$score) %>% sort)
+        # Recalculate the fits
+          sfs <- mclapply(1:nrow(specfits), function(x){
+              x <- 34916
+              # print(x)
+                tryCatch(
+                  {
+                    res <- opt_specFit(sfs[x, ], feature, xmat, refmat)
+                    res$sf
+                  }, error = function(cond){
+                    sf <- sfs[x, ]
+                    sf$score <- Inf
+                    sf$fit.intercept <- Inf
+                    sf$fit.scale <- Inf
+                    sf$spec.start <- Inf
+                    sf$spec.end <- Inf
+                  }
+                )
+                
+              # plot_fit(list(feat.fit = res$feat, 
+              #               spec.fit = res$spec), type = 'auc')
+          
+          }, mc.cores = 4
+          ) %>% do.call(rbind,.)
+
+          
+        sfs.copy <- sfs
+        sfs <- sfs[sfs$score > 0, ]
+        sfs <- sfs[!(sfs$score %>% is.character())]
+        scattermoreplot(x = 1:nrow(sfs), 
+                        y = (sfs$score) %>% sort)
       
       # Bin the data by score ####
       
@@ -115,17 +155,20 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         specfits.sliced <- specfits %>% 
           mutate(bin = cut(score, breaks= bins)) %>%
           group_by(bin) %>%
-          slice_sample(n = 50, replace = FALSE) %>% 
+          slice_sample(n = 10, replace = FALSE) %>% 
           arrange(score) %>%
           as.data.frame
           # group_split()
       
-    message('--- Plotting numbers only for ', study,' ---')
-    grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
-                       filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number')
-    
-    message('--- Plotting number and scores for ', study,' ---')
-    grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
-                       filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number_score')
+      # Plot ####
+        message('--- Plotting numbers only for ', study,' ---')
+        
+        devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+        grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
+                           filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number')
+        
+        message('--- Plotting number and scores for ', study,' ---')
+        grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
+                           filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number_score')
 
       
