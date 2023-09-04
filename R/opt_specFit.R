@@ -24,7 +24,7 @@
 opt_specFit <- function(sf, feature, xmat, refmat){
   
   # sf <- sfs[x, ]
-      browser()
+     
   # Get feature (the profile being fit) ####
   
       # Get the feature model
