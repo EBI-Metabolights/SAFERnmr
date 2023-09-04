@@ -30,7 +30,52 @@ a list with the following elements:
 }
 }
 \description{
-Fit a two-component model to a feature and a reference spectrum
+Batman fit seeks to stretch the feature signal up from the spectral minimum
+(or zero) until peaks start exceeding spectral signal. Ebbels' BATMAN uses a 
+more nuanced optimization strategy that penalizes overshoots; I'm just seeking 
+a rough optimum. The algorithm is:
+}
+\details{
+- assume the positions of the vectors are matched
+- divide the spectral signal by the spectral signal by the feature signal. 
+  - perfectly matched signals will have a ratio of 1 at each point
+  - if feature is too low in a spot (could be raised before exceeding spectral
+    signal), that point will have a high (>1) ratio
+  - if feature is too high (the extreme case to be prevented), the ratio there 
+    will be low (<1).
+  - *** if the feature is zero, no information is retained. currently excluded.
+- the point with the lowest ratio is the key point, i.e. the point which needs 
+  will cross the spectral signal first if scaling up from zero; the point which
+  should determine the scaling of the feature profile. Thus, a heuristic for 
+  good fit is to make sure this point is perfectly matched. 
+  - multiplying feature by a point's ratio will match the signals at that point
+- multiply feature by that ratio
+
+This algorithm makes some assumptions:
+
+- no negative values in either vector (these will always be chosen as the min)
+- where is zero? since scaling is linear, it shouldn't actually matter how far
+  away the feature/spectra are from zero. However, unlike least squares fitting,
+  the intercept is not optimized here. 
+- for our purposes (fitting spectral signal), negative values make no sense. 
+  We must assume that values are positive. Large negative spectral values will
+  disrupt the shape of the fit if zero-bottoming (the features will be stretched
+  and appear long and thin), but this would be 
+- what to do with zero vals? exclude?
+
+The idea behind excluding the lowest n% of points is to minimize the effect 
+of noise on the fit. It doesn't matter if noise gets exceeded from time to time,
+but we're most concerned about the highest feature points exceeding the spectral
+signal being fit to. Thus we ignore a fraction of the lower feature points for
+fitting purposes. However, once we have the ratio, we still apply it to all 
+points in v1, and our fit quality is assessed using all non-NA points. 
+
+Notes:
+- exclude.lowest around 50% seems to work well, and after a certain point (~0.2)
+  raising this param doesn't appear to have much practical effect
+- zero-bottoming the vectors helps to avoid having negative fits (e.g. from negative
+  baseline effects in one of the vectors)
+- v1 * ratio = v1 fit to v2
 }
 \examples{
 # Example usage:
