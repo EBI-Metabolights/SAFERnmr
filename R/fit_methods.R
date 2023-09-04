@@ -1,5 +1,50 @@
 #' Fit a two-component model to a feature and a reference spectrum
 #'
+#' Batman fit seeks to stretch the feature signal up from the spectral minimum
+#' (or zero) until peaks start exceeding spectral signal. Ebbels' BATMAN uses a 
+#' more nuanced optimization strategy that penalizes overshoots; I'm just seeking 
+#' a rough optimum. The algorithm is:
+#' 
+#' - assume the positions of the vectors are matched
+#' - divide the spectral signal by the spectral signal by the feature signal. 
+#'   - perfectly matched signals will have a ratio of 1 at each point
+#'   - if feature is too low in a spot (could be raised before exceeding spectral
+#'     signal), that point will have a high (>1) ratio
+#'   - if feature is too high (the extreme case to be prevented), the ratio there 
+#'     will be low (<1).
+#'   - *** if the feature is zero, no information is retained. currently excluded.
+#' - the point with the lowest ratio is the key point, i.e. the point which needs 
+#'   will cross the spectral signal first if scaling up from zero; the point which
+#'   should determine the scaling of the feature profile. Thus, a heuristic for 
+#'   good fit is to make sure this point is perfectly matched. 
+#'   - multiplying feature by a point's ratio will match the signals at that point
+#' - multiply feature by that ratio
+#' 
+#' This algorithm makes some assumptions:
+#' 
+#' - no negative values in either vector (these will always be chosen as the min)
+#' - where is zero? since scaling is linear, it shouldn't actually matter how far
+#'   away the feature/spectra are from zero. However, unlike least squares fitting,
+#'   the intercept is not optimized here. 
+#' - for our purposes (fitting spectral signal), negative values make no sense. 
+#'   We must assume that values are positive. Large negative spectral values will
+#'   disrupt the shape of the fit if zero-bottoming (the features will be stretched
+#'   and appear long and thin), but this would be 
+#' - what to do with zero vals? exclude?
+#' 
+#' The idea behind excluding the lowest n% of points is to minimize the effect 
+#' of noise on the fit. It doesn't matter if noise gets exceeded from time to time,
+#' but we're most concerned about the highest feature points exceeding the spectral
+#' signal being fit to. Thus we ignore a fraction of the lower feature points for
+#' fitting purposes. However, once we have the ratio, we still apply it to all 
+#' points in v1, and our fit quality is assessed using all non-NA points. 
+#'
+#' Notes:
+#' - exclude.lowest around 50% seems to work well, and after a certain point (~0.2)
+#'   raising this param doesn't appear to have much practical effect
+#' - zero-bottoming the vectors helps to avoid having negative fits (e.g. from negative
+#'   baseline effects in one of the vectors)
+#' - v1 * ratio = v1 fit to v2
 #'
 #' @param feat a numeric vector of the feature spectrum
 #' @param spec a numeric vector of the reference spectrum
@@ -33,79 +78,136 @@
 #'
 #' @export
 fit_batman <- function(feat, spec, 
-                       exclude.lowest = .5,
-                       ppm = NULL,# in practice I see convergence about here
+                       exclude.lowest = .5, # in practice I see convergence about here
+                       ppm = NULL,
                        plots = FALSE){
-   # v1 * ratio = v1 fit to v2
 
-  use <- which(!is.na(feat + spec))
-  
-  sub.v1 <- min(feat[use])
-  sub.v2 <- min(spec[use])          
-                
-  v1 <- feat[use] - sub.v1
-  v2 <- spec[use] - sub.v2
-  
-  v1.use.sortorder <- order(v1)
-  
-  if (!is.null(exclude.lowest)){
-    exclude.pts <- v1.use.sortorder[1:floor(exclude.lowest * length(use))]
-    pairedRatios <- v2[-exclude.pts] / v1[-exclude.pts];
-  } else {
-    pairedRatios <- v2 / v1;
-  }
-  
-  # plot(v2)
-  # points(exclude.pts, v2[exclude.pts], col = 'red')
-  # plot(v1)
-  # points(exclude.pts, v1[exclude.pts], col = 'red')
+  # Get the overlap between the two vects ####
+    # can't compute where one is NAs
+    
+    use <- !is.na(feat + spec)
 
-  # simplePlot(rbind(v1,v2) %>% trim_sides)
+  # Zero-bottom the vects ####
+    # negative values do bad things. Start both @ zero for scaling purposes
+    # since we're fitting to v2, we'll want to add sub.v2 back to the fit after scaling
+    
+    sub.v1 <- min(feat[use])
+    v1 <- feat[use] - sub.v1
+    
+    sub.v2 <- min(spec[use])
+    v2 <- spec[use] - sub.v2
+    
+  # Exclude low intensity points ####
+    v1.use.sortorder <- order(v1)
+    use.exclude <- use # for keeping track of non-excluded, used points
+    
+    if (!is.null(exclude.lowest)){
+      
+      # Further subset the points 
+      
+      too.low <- v1.use.sortorder[1:floor(exclude.lowest * sum(use))]
+      pairedRatios <- (v2[-too.low]) / (v1[-too.low]);
+      
+      use.exclude[too.low] <- FALSE # make sure we note which ones in 'use' were too low
+      
+    } else {
+      
+      too.low <- FALSE
+      pairedRatios <- v2 / v1
+
+    }
+      # Plot ####
+                  # plot(v2)
+                  # points(too.low, v2[too.low], col = 'red')
+                  # plot(v1)
+                  # points(too.low, v1[too.low], col = 'red')
+                  # plot(x = c(1:length(v1), 1:length(v2)), y = c(v1, v2))
+                  # points(1:length(v1), v1, col = 'red')
+                  # 
+                  # simplePlot(rbind(v1,v2) %>% trim_sides)
   
+  # Identify key point and ratio ####
   
-  keypoint <- which.min(pairedRatios)
-  ratio <- pairedRatios[keypoint]
+    # Watch out for calculations involving values <= 0 - these can't offer much help
+    
+      pairedRatios[pairedRatios <= 0 | is.infinite(pairedRatios)] <- Inf 
+      # never choose these points, but preserve indices in use
+      
+    keypoint <- which.min(pairedRatios)
+      # use the index as-is to pull the ratio; currently indexes across TRUE vals in use.exclude
+    ratio <- pairedRatios[keypoint]
+    
+    # now that the ratio is pulled, correct the keypoint index for the full vector
+      keypoint <- which(use.exclude) %>% .[keypoint]
+    
+  # Calculate fit ####
+    # v1.fit = (feat - sub.v1)*ratio + sub.v2 # zero-bottomed feature, scaled, then slid up to match v2.
+      # = (feat * ratio) - (sub.v1 * ratio) + sub.v2
+      # = (feat * ratio) + sub.v2 - (sub.v1*ratio)
+      # = (feat * ratio) + sub.v2 - (sub.v1*ratio)
+      # = (  m  *   x  ) + (           b         )
+      
+    v1.fit = (feat * ratio) + (sub.v2 - sub.v1*ratio) # zero-bottomed feature, scaled, then slid up to match v2.
+    v2.fit = spec # subtracting both to zero causes high-scoring zero fits! 
+    
   
-  v1.fit = (feat - sub.v1)*ratio + sub.v2
-  v2.fit = spec #- sub.v2
+  # Score fit ####
+    
+    fraction.v2.accounted <- sum(v1.fit[use]-sub.v2, na.rm = TRUE) / sum(v2.fit[use]-sub.v2, na.rm = TRUE)
   
-  fraction.v2.accounted <- sum(v1.fit[use]) / sum(v2.fit[use])
+                  
+  # Plot ####
+    g <- NULL
   
-  g <- NULL
-  # simplePlot(rbind(v1 * ratio,v2) %>% trim_sides)
-  # simplePlot(rbind(v1.fit,v2.fit) %>% trim_sides)
+                  # simplePlot(rbind(v1 * ratio,v2) %>% trim_sides)
+                  # simplePlot(rbind(v1.fit,v2.fit) %>% trim_sides)
+  
   if (plots){
     
     if (is.null(ppm)){ppm <- 1:length(v1.fit)}
-    
-      g <- simplePlot(v2.fit,
-                      xvect = ppm,
-                      linecolor = "gray",
-                      opacity = .9, 
-                      linewidth = 1)
-
-      g <- g + new_scale_color() +
-              geom_line(data = data.frame(vals = v1.fit,
-                                          ppm = ppm,
-                                          corr = rep(-1, length(v1.fit))),
-                        na.rm = TRUE,
-                        mapping = aes(x = ppm, y = vals, colour = corr),
-                        linewidth = .5) +
-              scale_colour_gradientn(colours = matlab.like2(10),
-                                     limits = c(-1, 1))
+    # Plot ####
+      plot.new()
+        plot(v2.fit, type = 'l',
+             # ylim = c(0, max(v2.fit)*1.2),
+             col = 'black')
+        points(which(use), v2.fit[use], col = 'black', cex = .2)
+        lines(v1.fit, type = 'l', col = 'blue')
+        points(which(use), v1.fit[use], col = 'blue', cex = .2)
+          inds <- which(use) %>% .[too.low]
+        points(c(inds, inds), c(v1.fit[inds], v2.fit[inds]), col = 'red')
+        points(keypoint, v1.fit[keypoint], col = 'purple', pch = 10, cex = 5)
+        g <- recordPlot()
+      
+      
+      # g <- simplePlot(v2.fit,
+      #                 xvect = ppm,
+      #                 linecolor = "gray",
+      #                 opacity = .9, 
+      #                 linewidth = 1)
+      # 
+      # g <- g + new_scale_color() +
+      #         geom_line(data = data.frame(vals = v1.fit,
+      #                                     ppm = ppm,
+      #                                     corr = rep(-1, length(v1.fit))),
+      #                   na.rm = TRUE,
+      #                   mapping = aes(x = ppm, y = vals, colour = corr),
+      #                   linewidth = .5) +
+      #         scale_colour_gradientn(colours = matlab.like2(10),
+      #                                limits = c(-1, 1))
   }
-  # 
+    
+  # return fit obj ####
   
-  return(list(feat.fit = v1.fit,
-              spec.fit = v2.fit,
-              keypoint = use[keypoint],
-              ratio = ratio,
-              intercept = sub.v2,
-              residuals = v2.fit - v1.fit,
-              # mean.feat.fit = mean(v1.fit, na.rm = TRUE),
-              # mean.spec.fit = mean(v2.fit, na.rm = TRUE),
-              fraction.spec.accounted = fraction.v2.accounted,
-              plot = g))
+    return(list(feat.fit = v1.fit,
+                spec.fit = v2.fit,
+                keypoint = keypoint,
+                ratio = ratio,
+                intercept = sub.v2 - sub.v1*ratio, # see above
+                residuals = v2.fit - v1.fit,
+                fraction.spec.accounted = fraction.v2.accounted,
+                plot = g))
+  
+    
 }
 
 #' Fit least squares model between two signals and calculate statistics
