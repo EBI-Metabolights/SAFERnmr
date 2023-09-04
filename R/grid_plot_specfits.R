@@ -29,43 +29,21 @@ grid_plot_specfits <- function(sfs, feature, xmat, refmat,
                                ){
 
   message('Generating plots...')
-  plots <- pblapply(1:nrow(sfs), function(x){
-      # sf <- as.data.frame(sfs[1,])
-      sf <- sfs[x, ]
-      # print(x)
-      # Get the feature model
+  sfs <- arrange(sfs, score)
+  
+  plots <- pblapply(1:nrow(sfs), 
+                    function(x){
+        # x <- 27
+        # res <- opt_specFit(sfs[x, ], feature, xmat, refmat)
+        # plot_fit(list(feat.fit = res$feat,
+        #               spec.fit = res$spec), type = 'auc')
         
-        f.matched.pts <- sf$feat.start:sf$feat.end
-        feat.gaps <- feature$position[sf$feat, f.matched.pts] %>% is.na
-    
-      # Get the ref segment (rf)
-      
-        rf <- sf$ref.start:sf$ref.end %>% refmat[sf$ref,.]
-        
-        # NA-fill the feature gaps
-            
-          rf[feat.gaps] <- NA
-          
-      # Get the spectrum data
-          
-          spec.reg <- c(sf$spec.start,sf$spec.end) %>% fillbetween()#%>% expand_window(within = c(1,ncol(xmat)))
-            lag <- sf$spec.start - min(spec.reg) # store this for now
-          
-          spec.segment <- xmat[sf$ss.spec, spec.reg]
+        # fit <- res$sf %>% rebuild_specFit(feature, xmat, refmat)
+        # browser()
+        fit <- rebuild_specFit(sfs[x, ], feature, xmat, refmat)
 
-      # Put the rf into a vector the size of spec.segment    
-      
-          ref.segment <- rep(NA, length(spec.segment))
-          ref.segment[1:length(rf) + lag] <- rf
-                         
-      # Fit to spec using recorded backfit params
-        
-        ref.segment <- as.numeric(sf$fit.intercept) + (ref.segment * as.numeric(sf$fit.scale))
-
-      # Plot
-    
-        plot_fit(list(feat.fit = ref.segment, 
-                      spec.fit = spec.segment))
+        plot_fit(list(feat.fit = fit$feat,
+                      spec.fit = fit$spec), type = 'auc')
     
     })
   
