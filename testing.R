@@ -8,14 +8,14 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
 
   # Choose study
 
-    study <- 'MTBLS1'
-    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
+    # study <- 'MTBLS1'
+    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
     # study <- 'MTBLS424'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS'
     # study <- 'MTBLS430'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS430_1r_noesygppr1d.comp_spectralMatrix.RDS'
-    # study <- 'MTBLS395'
-    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS395_1r_cpmgpr1d.comp_spectralMatrix.RDS'
+    study <- 'MTBLS395'
+    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS395_1r_cpmgpr1d.comp_spectralMatrix.RDS'
 
   # Import the study results ####
   
@@ -30,7 +30,7 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
 
     # Read in library data
     
-        lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
+        # lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
         refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) 
           # refmat <- refmat %>% apply(2, function(x) x/sum(x, na.rm = T))
           refmat <- refmat %>% t
@@ -61,7 +61,7 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
       # List out the backfit index with the match index and the score
       
         specfits <-
-          pblapply(1:length(backfit.results$backfits), function(x)
+          mclapply(1:length(backfit.results$backfits), function(x)
             {
             
               # Combine the match info and backfit info into one (merged) table
@@ -95,9 +95,16 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
 
               scores
               
-            }
+            }, mc.cores = 4
           ) %>% rbindlist
   
+  # Take a random subset of those (to keep compute down; will be sampling anyways) ####
+    
+      sf.copy <- specfits
+      # specfits <- sf.copy
+      specfits <- specfits %>% slice_sample(n = 5000, replace = FALSE)
+
+       
   # Plotting ####
   
       # Compute combined score (exploration): ####
@@ -106,6 +113,7 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         sfs <- specfits
         
         # Recalculate the fits
+          
           sfs <- mclapply(1:nrow(specfits), function(x){
           
               # x <- 10832
@@ -157,8 +165,7 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
           arrange(score) %>% 
           as.data.frame
           
-          # group_split()
-          
+                  
       # Plot ####
         message('--- Plotting numbers only for ', study,' ---')
         grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
@@ -168,6 +175,11 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
                            filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number_score')
         
-        rm(lib.data.processed)
+        rm(backfit.results)
+        rm(backfits)
+        rm(rfs.used)
+        
         save.image(file = paste0('/Users/mjudge/Desktop/',study, '_specfits_', scoreType, '.RData'))
       
+        
+        
