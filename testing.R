@@ -17,15 +17,6 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
     # study <- 'MTBLS395'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS395_1r_cpmgpr1d.comp_spectralMatrix.RDS'
 
-  # Choose score type 
-    
-    # scoreType <- 'bffs.tot'
-    # scoreType <- 'rmse.biased'
-    # scoreType <- 'rmse'
-    # scoreType <- 'bffs.res'
-    # scattermoreplot(x = 1:nrow(specfits),
-    #                 y = (1-specfits[,scoreType]) %>% sort)
-    
   # Import the study results ####
   
     results.dir <- paste0(tmpdir,'/')
@@ -112,22 +103,23 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
       # Compute combined score (exploration): ####
       
         specfits <- as.data.frame(specfits)
-        specfits$score <- specfits[,scoreType]
-        specfits$score <- specfits[,"bffs.tot"] * (1 - specfits[,"rmse"])
-        devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         sfs <- specfits
         
         # Recalculate the fits
           sfs <- mclapply(1:nrow(specfits), function(x){
-              # x <- 34916
+          
+              # x <- 10832
               # print(x)
                 tryCatch(
                   {
                     res <- opt_specFit(sfs[x, ], feature, xmat, refmat)
                     res$sf
-                  }, error = function(cond){
+                  }, 
+                  error = function(cond)
+                  {
                     sf <- sfs[x, ]
-                    sf$score <- Inf
+                    sf$fraction.spec.accounted <- Inf
+                    sf$fit.rval <- Inf
                     sf$fit.intercept <- Inf
                     sf$fit.scale <- Inf
                     sf$spec.start <- Inf
@@ -135,40 +127,47 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
                   }
                 )
                 
-              # plot_fit(list(feat.fit = res$feat, 
+              # plot_fit(list(feat.fit = res$feat,
               #               spec.fit = res$spec), type = 'auc')
           
           }, mc.cores = 4
           ) %>% do.call(rbind,.)
 
-          
+        # scoreType = 'frac.accounted.spec'
+        scoreType = 'rval_x_frac.accounted.spec'
+        # sfs$score <- sfs$fraction.spec.accounted
+        sfs$score <- sfs$fit.rval * sfs$fraction.spec.accounted
         sfs.copy <- sfs
-        sfs <- sfs[sfs$score > 0, ]
-        sfs <- sfs[!(sfs$score %>% is.character())]
+        sfs <- sfs[!is.infinite(sfs$score), ]
+        
         scattermoreplot(x = 1:nrow(sfs), 
                         y = (sfs$score) %>% sort)
-      
+          abline(h = 0, col = 'red')
+        
+        sfs <- sfs[sfs$score > 0, ]
+        
       # Bin the data by score ####
       
         bins <- c(0, .2, .4, .6, .8, 1)
         
-        specfits.sliced <- specfits %>% 
+        specfits.sliced <- sfs %>% 
           mutate(bin = cut(score, breaks= bins)) %>%
           group_by(bin) %>%
-          slice_sample(n = 10, replace = FALSE) %>% 
-          arrange(score) %>%
+          slice_sample(n = 25, replace = FALSE) %>% 
+          arrange(score) %>% 
           as.data.frame
+          
           # group_split()
-      
+          
       # Plot ####
         message('--- Plotting numbers only for ', study,' ---')
-        
-        devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
                            filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number')
         
         message('--- Plotting number and scores for ', study,' ---')
         grid_plot_specfits(specfits.sliced, feature, xmat, refmat, plotLoc = '/Users/mjudge/Desktop', 
                            filename = paste0(study, '_grid_specfits_', scoreType), titles = 'number_score')
-
+        
+        rm(lib.data.processed)
+        save.image(file = paste0('/Users/mjudge/Desktop/',study, '_specfits_', scoreType, '.RData'))
       
