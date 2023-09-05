@@ -39,12 +39,20 @@ grid_plot_specfits <- function(sfs, feature, xmat, refmat,
         #               spec.fit = res$spec), type = 'auc')
         
         # fit <- res$sf %>% rebuild_specFit(feature, xmat, refmat)
-        # browser()
+        
         fit <- rebuild_specFit(sfs[x, ], feature, xmat, refmat)
-
+          
+        # # Zoom to feature
+        #   
+        #   bottom <- min((c(fit$spec, fit$feat)), na.rm = TRUE)
+        #   ys <- range(fit$feat - bottom, na.rm = TRUE)
+        #   adj <- c(-0.1, 0.1)
+        #   new.lims <- ys + ys*adj
+        
         plot_fit(list(feat.fit = fit$feat,
-                      spec.fit = fit$spec), type = 'auc')
-    
+                      spec.fit = fit$spec), 
+                 type = 'auc')
+        
     })
   
   # Add titles and bffs to the individual plots, do formatting ####
