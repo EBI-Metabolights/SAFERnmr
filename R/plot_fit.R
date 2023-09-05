@@ -25,8 +25,22 @@ plot_fit <- function(fit, type = "simple",
   bottom <- min((c(fit$spec.fit, fit$feat.fit)), na.rm = TRUE)
     fit$spec.fit <- fit$spec.fit - bottom
     fit$feat.fit <- fit$feat.fit - bottom
+    
+  # Zoom to feature
+  
+    ys <- range(fit$feat.fit, na.rm = TRUE)
+    adj <- c(-0.1, 0.1)
+    new.lims <- ys + ys*adj
+
+    # Adjust spec region with NAs if outside the zoom
+    
+      # fit$spec.fit[ fit$spec.fit < new.lims[1] | 
+      #                 fit$spec.fit > new.lims[2] ] <- NA
+  
   not.na <- which(!is.na(fit$spec.fit))
+  
   if (is.null(ppm)){ppm <- not.na}
+  
   # if (any(is.na(ppm))){complete_indsVect(ppm)}
   
   if (type == "simple"){
@@ -35,7 +49,7 @@ plot_fit <- function(fit, type = "simple",
                       xvect = ppm,
                       linecolor = "gray",
                       opacity = .9, 
-                      linewidth = 1) # ,-res$residuals
+                      linewidth = 1)
 
       g <- g + new_scale_color() +
               ggplot2::geom_line(data = data.frame(vals = fit$feat.fit,
@@ -55,7 +69,7 @@ plot_fit <- function(fit, type = "simple",
                       xvect = ppm,
                       linecolor = "black",
                       opacity = 1, 
-                      linewidth = .75) # ,-res$residuals
+                      linewidth = .75)
       
       feature.chunks <- run.labels(!is.na(ff))
       
@@ -80,7 +94,7 @@ plot_fit <- function(fit, type = "simple",
                       xvect = ppm,
                       linecolor = "gray",
                       opacity = .9, 
-                      linewidth = 1.5) # ,-res$residuals
+                      linewidth = 1.5)
       
       # g <- g + geom_path(data = data.frame(vals = fit$spec.fit,
       #                                      ppms = ppm),
