@@ -94,7 +94,7 @@ fit_batman <- function(feat, spec,
     sub.v1 <- min(feat[use])
     v1 <- feat[use] - sub.v1
     
-    sub.v2 <- min(spec[use])
+    sub.v2 <- min(spec, na.rm = TRUE)
     v2 <- spec[use] - sub.v2
     
   # Exclude low intensity points ####
@@ -153,14 +153,19 @@ fit_batman <- function(feat, spec,
   
   # Score fit ####
     
-    fraction.v2.accounted <- sum(v1.fit[use]-sub.v2, na.rm = TRUE) / sum(v2.fit[use]-sub.v2, na.rm = TRUE)
-  
-                  
+    # Want to count the overaccounted as negative..
+    
+    v1.f.s <- v1.fit-sub.v2
+    v2.f.s <- v2.fit-sub.v2
+    
+    overshoot <- v1.f.s - v2.f.s
+     pos <- overshoot>0
+     pos.overshoot <- overshoot[pos]
+     
+    fraction.v2.accounted <- (sum(v1.f.s, na.rm = TRUE) - sum(pos.overshoot, na.rm = TRUE)) / sum(v2.f.s, na.rm = TRUE)
+
   # Plot ####
     g <- NULL
-  
-                  # simplePlot(rbind(v1 * ratio,v2) %>% trim_sides)
-                  # simplePlot(rbind(v1.fit,v2.fit) %>% trim_sides)
   
   if (plots){
     
@@ -168,7 +173,7 @@ fit_batman <- function(feat, spec,
     # Plot ####
       plot.new()
         plot(v2.fit, type = 'l',
-             # ylim = c(0, max(v2.fit)*1.2),
+             ylim = c(0, max(v2.fit)*1.2),
              col = 'black')
         points(which(use), v2.fit[use], col = 'black', cex = .2)
         lines(v1.fit, type = 'l', col = 'blue')
