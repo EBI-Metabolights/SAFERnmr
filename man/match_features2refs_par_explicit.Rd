@@ -14,7 +14,11 @@ matches.RDS file containing match.info, fits, and peak quality data.
 }
 \description{
 This function matches features to reference spectra using a parallelized loop. 
-Feature chunking strategy.
+Feature chunking strategy. 
+Do you match features to refs, or refs to feature? If using batman-style fit, 
+since refs are more pure, perhaps the latter makes more sense. In other words,
+fit the cleaner signals to the dirtier ones if using batman. For less biased,
+use least squares.
 }
 \author{
 MTJ

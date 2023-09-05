@@ -14,6 +14,12 @@ A list of filtered and processed matched peak information, including back-fits t
 }
 \description{
 Filter and process matched peaks based on user-specified criteria, such as singlet removal and ppm distance filtering.
-Also calculate backfits of ref-feats (reference subsignatures fished out by feature matches to reference spectra) to each individual dataset spectrum.
-Note: ref-feat fit is obtained using the original feature, then backfit feasibility scores are calculated. BFF scores indicate the extent to which ref-feat resonances do not exceed actual spectral signal. Specifically, each single ref-feat resonance positive residual is evaluated as a fraction of the total ref-feat height. Because the absence of a feasible fit for any single reference resonance invalidates a match, the worst-violating resonance gives the score for the whole ref-feat in a particular spectrum. Note that a ref-feat receives a BFF score for each spectrum it is fit to.
+Also calculate backfits of ref-feats (reference subsignatures fished out by feature matches to reference spectra) to each individual dataset spectrum. 
+Note: backfits are now calculated directly from ref features and position in 
+ss.spec is optimized using updated batman-style fitting. This strategy has proven
+to be much more accurate and produces meaningful scores.
+Note: BFF (backfit feasibility) scores are no longer used. Instead, updated batman fits
+yield a fraction.spec.accounted score which quantifies the fraction of relevant spectral
+signal accounted for by the ref feature. positive overshoot is penalized by 
+subtracting from the score. This is much more simple and intuitive.
 }

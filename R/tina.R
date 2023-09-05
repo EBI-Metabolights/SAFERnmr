@@ -180,7 +180,7 @@ tina <- function(pars){
                 tryCatch(
                     expr = {
                             res <- 
-                             sfe(feature, i,
+                             sfe2(feature, i,
                                  xmat,
                                  ppm,
                                  r.thresh = pars$storm$correlation.r.cutoff)

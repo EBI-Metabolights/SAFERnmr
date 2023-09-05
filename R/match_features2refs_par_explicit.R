@@ -2,6 +2,10 @@
 #'
 #' This function matches features to reference spectra using a parallelized loop. 
 #' Feature chunking strategy. 
+#' Do you match features to refs, or refs to feature? If using batman-style fit, 
+#' since refs are more pure, perhaps the latter makes more sense. In other words,
+#' fit the cleaner signals to the dirtier ones if using batman. For less biased,
+#' use least squares.
 #'
 #' @param pars A list of parameters containing directories, parallel settings, and matching settings.
 #' @return matches.RDS file containing match.info, fits, and peak quality data.
@@ -168,9 +172,10 @@ match_features2refs_par_explicit <- function(pars){
                             ref <- ref.mat[,r,drop = F] #%>% scale_between
                             # ref.sum <- sum(ref, )
                           # Fit
+                            
                             fit <- fit_leastSquares(feat[feat.pos], ref[ref.pos], plots = F, scale.v2 = T)
                               # fit$plot
-                            fit$wasserstein.score <- score_wasserstein(fit$feat.fit, fit$spec.fit)
+                            # fit$wasserstein.score <- score_wasserstein(fit$feat.fit, fit$spec.fit)
                             
                             return(fit)
                         })
@@ -183,8 +188,8 @@ match_features2refs_par_explicit <- function(pars){
           
                         # Add some different scores from the fits ####
                           message("    - calculating additional scores...")
-                          allmatches.feat[,'wasserstein.score'] <-
-                            lapply(allmatches.fits, function(x) x$wasserstein.score) %>% unlist
+                          # allmatches.feat[,'wasserstein.score'] <-
+                          #   lapply(allmatches.fits, function(x) x$wasserstein.score) %>% unlist
                           allmatches.feat[,'sum.residuals'] <-
                             lapply(allmatches.fits, function(x) x$sum.residuals) %>% unlist
                           allmatches.feat[,'rmse'] <-
