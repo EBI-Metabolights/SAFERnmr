@@ -49,10 +49,10 @@ compress_stack <- function(stack, sparse.val = NA){
   
   # compress positions using range expansion
     
+    # Transpose inds to (cols, rows)
     coords <- ind2subR(keep, nrow(stack), transpose = TRUE)
   
     ranges <- runs2ranges(
-      
       sub2indR(coords$rows, 
                coords$cols, 
                m = ncol(stack)
@@ -93,26 +93,28 @@ cstack_selectRows <- function(c.stack, row.nums){
                                   # these will be row-wise linear indices, though!
                                   # make sure you use the columns for m when converting
                                   # back to subscripts
+                        
+  # Read into row-col form for transposed stack:          
+    stack.coords <- ind2subR(pos, c.stack$n)
   
-  stack.coords <- ind2subR(pos, c.stack$n, transpose = TRUE) # split into row + column inds
-
-  # normal (column-wise) linear indices for selected positions in original matrix
-  # keep identifies a subset of the linear inds
+  # Convert to original stack
+    stack.coords <- sub2indR(stack.coords$rows,
+                             stack.coords$cols,
+                             m = c.stack$m, 
+                             transpose = TRUE) %>%    # transpose and put in orignal matrix positions
+      sort %>%                                        # line up with vals (which are stored in original matrix position order)
+      ind2subR(c.stack$m)                             # NOW get the row numbers 
   
-  keep <- which(stack.coords$rows %in% row.nums)
+  keep <- which(stack.coords$rows %in% row.nums) # filter for rows we want
   stack.coords <- stack.coords[keep, ] # subset the vectors
+           
   c.stack$vals <- c.stack$vals[keep]
-  
-  # transpose positions before compression (to row-wise linear inds, since most of the time runs occur on ROWS): 
-  
-    pos <- sub2indR(stack.coords$rows, 
-                    stack.coords$cols, 
-                    m = c.stack$n, 
-                    transpose = TRUE) 
   
   # Further compress the positions
   
-    c.stack$pos <- pos %>% sort %>% runs2ranges # sort, then range-compress
+    c.stack$pos <- sub2indR(stack.coords$rows,
+                            stack.coords$cols,
+                            m = c.stack$n, transpose = TRUE) %>% sort %>% runs2ranges # sort, then range-compress
   
   # reset m for subset matrixrows? NO: pos is in terms of m, and must remain that way
   # lest we need to recompute them all. 
@@ -143,6 +145,7 @@ cstack_expandRows <- function(cstack){
     pos <- expand_runs(cstack$pos) # these will be row-wise
     stack.pos <- ind2subR(pos, cstack$n, transpose = TRUE) # convert back to column-wise
     stack.pos$rows <- stack.pos$rows %>% dplyr::dense_rank()
+    # still out of order, though
     
   # Build and fill a matrix with the selected rows expanded
   # * cstack$vals are what was compressed
@@ -151,7 +154,7 @@ cstack_expandRows <- function(cstack){
     rows.expanded <- matrix(NA, max(stack.pos$rows), cstack$n)
     rows.expanded[sub2indR(stack.pos$rows,
                            stack.pos$cols,
-                           nrow(rows.expanded))] <- cstack$vals
+                           nrow(rows.expanded)) %>% sort] <- cstack$vals
 
   return(rows.expanded)
 }
