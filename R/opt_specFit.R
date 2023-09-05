@@ -67,8 +67,8 @@ opt_specFit <- function(sf, feature, xmat, refmat){
       
   # Update match information using lag ####
   
-    sf$score <- res$fit$fraction.spec.accounted * res$fit$rval
-      if (sf$score > 1){warning('somehow in opt_specFit, score exceeded 1!')}
+    sf$fraction.spec.accounted <- res$fit$fraction.spec.accounted
+    sf$fit.rval <- res$fit$rval
     sf$fit.intercept <- res$fit$intercept
     sf$fit.scale <- res$fit$ratio
     sf$spec.start <- sf$spec.start - res$lag
