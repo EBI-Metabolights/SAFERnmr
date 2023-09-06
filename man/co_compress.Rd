@@ -32,5 +32,7 @@ compressed matrix (list format)
 Generalized case of stack.lists matrix
 }
 \details{
-Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
+Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
+         stack.list <- list(a = stack, b = stack-1)
+         c.stack <- co_compress(stack.list, sparse.val = NA, key = 'a')
 }

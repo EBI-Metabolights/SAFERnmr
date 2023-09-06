@@ -67,8 +67,8 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
                 browser()
                 data.compressed <- tryCatch(
                   {
-                    co_compress(list(data = ref.data, ppm = ref.ppm), 
-                                     sparse.val = NA, key = 'data')
+                    co_compress(stack.list = list(data = ref.data, ppm = ref.ppm), 
+                                sparse.val = NA, key = 'data')
                   }, 
                   error = function(cond){
                     NA

@@ -2,9 +2,9 @@
 % Please edit documentation in R/compression.R
 \name{expand_stacklist}
 \alias{expand_stacklist}
-\title{Get each stack(s) from co-compressed stacklist}
+\title{Get each stack(s) from co-compressed stacklist. Currently doesn't allow row selection.}
 \usage{
-expand_stacklist(c.stack, which.stacks = NULL)
+expand_stacklist(c.stack, which.stacks = NULL, row.nums = NULL)
 }
 \arguments{
 \item{c.stack}{compressed stack where vals is a list of co-compressed stacks}
@@ -14,8 +14,10 @@ expand_stacklist(c.stack, which.stacks = NULL)
 \value{
 ranges of the incremental runs in keep
 
-Example: all.equal(expand_runs(runs2ranges(keep)), keep)
+Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
+         c.stack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')
+         stack.list <- expand_stacklist(c.stack)
 }
 \description{
-Get each stack(s) from co-compressed stacklist
+Get each stack(s) from co-compressed stacklist. Currently doesn't allow row selection.
 }
