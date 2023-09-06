@@ -243,6 +243,7 @@ match_features2refs_par_explicit <- function(pars){
     # Compile and save match results ####
         message('Saving match results...\n\n\n')
         saveRDS(matches.all, paste0(tmpdir, "/matches.RDS"))
+        unlist(paste0(tmpdir, "/temp_data_matching/rmat.RDS"))
         # matches <- readRDS(paste0(tmpdir, "/matches.RDS"))
         # ####
   message('\n-----------------------------------------------------------------')
