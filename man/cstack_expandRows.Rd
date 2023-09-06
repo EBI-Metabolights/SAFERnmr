@@ -2,13 +2,13 @@
 % Please edit documentation in R/compression.R
 \name{cstack_expandRows}
 \alias{cstack_expandRows}
-\title{Decompress c.stack object. Works on full stack and selection. Will return a 
-matrix with the number of rows in the c.stack obj, in their original order.}
+\title{Decompress cstack object. Works on full stack and selection. Will return a 
+matrix with the number of rows in the cstack obj, in their original order.}
 \usage{
 cstack_expandRows(cstack)
 }
 \arguments{
-\item{c.stack}{compressed matrix object}
+\item{cstack}{compressed matrix object}
 }
 \value{
 compressed matrix with only the selected row data
@@ -18,11 +18,11 @@ compressed matrix with only the selected row data
          - n : number of columns in stack
 }
 \description{
-Decompress c.stack object. Works on full stack and selection. Will return a 
-matrix with the number of rows in the c.stack obj, in their original order.
+Decompress cstack object. Works on full stack and selection. Will return a 
+matrix with the number of rows in the cstack obj, in their original order.
 }
 \examples{
-rows.expanded <- cstack_expandRows(c.stack)
+rows.expanded <- cstack_expandRows(cstack)
           rows.expanded <- cstack_expandRows(selection)
 
 }

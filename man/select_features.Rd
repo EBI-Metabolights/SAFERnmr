@@ -23,7 +23,7 @@ Pull selected features from compressed obj.
 }
 \details{
 just.rows can be used to extract a subset of features or all, just in a different order.
-c.stack <- compress_stack()
+cstack <- compress_stack()
 Example: 
 # Make example feature obj
  feature <- list(profile = rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))

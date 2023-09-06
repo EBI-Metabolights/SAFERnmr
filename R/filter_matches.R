@@ -43,8 +43,8 @@ filter_matches <- function(pars){
       ppm <- fse.result$ppm
       rm(fse.result)
 
-    feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
-    ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
+    feature <- readRDS(paste0(this.run, "/feature.final.RDS")) %>% expand_features()
+    ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows()
     pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
     # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
     

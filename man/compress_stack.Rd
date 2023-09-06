@@ -32,5 +32,5 @@ spectral matrices MUST not be transposed; i.e. each column should be
 a ppm value and each row is a spectrum. Otherwise ppms will be lost upon 
 reconstruction!
 
-Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
+Example: cstack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
 }

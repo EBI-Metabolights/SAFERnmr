@@ -2,18 +2,18 @@
 % Please edit documentation in R/compression.R
 \name{extract_pos}
 \alias{extract_pos}
-\title{From a compressed position (in c.stack), extract the original position. 
+\title{From a compressed position (in cstack), extract the original position. 
 (Utility for hiding annoying sub2ind and ind2sub operations).}
 \usage{
-extract_pos(c.stack)
+extract_pos(cstack)
 }
 \arguments{
-\item{c.stack}{compressed stack (or compressed stack.list) containing compressed positions}
+\item{cstack}{compressed stack (or compressed stack.list) containing compressed positions}
 }
 \value{
 positions in original stack, as linear indices
 }
 \description{
-From a compressed position (in c.stack), extract the original position. 
+From a compressed position (in cstack), extract the original position. 
 (Utility for hiding annoying sub2ind and ind2sub operations).
 }

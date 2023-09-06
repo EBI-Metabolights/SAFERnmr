@@ -44,7 +44,8 @@ match_features2refs_par_setup <- function(pars) {
       c.labs <- cluster.final$labels
 
     # Put features in a matrix ####
-    
+      
+      
       message('Building feature matrix...')
       
           feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS")) %>% expand_features
@@ -64,8 +65,10 @@ match_features2refs_par_setup <- function(pars) {
     
         max.features <- length(cluster.final$keys)
         
-        if ( pars$debug$enabled == TRUE &
-             nrow(featureStack) > pars$debug$throttle_features) 
+        if ( 
+             pars$debug$enabled == TRUE &
+             nrow(featureStack) > pars$debug$throttle_features
+           ) 
         {
 
             max.features <- pars$debug$throttle_features
@@ -153,8 +156,6 @@ match_features2refs_par_setup <- function(pars) {
           
         }
     
-        # lib.data %>% test_nullish
-    
       # If lib.data was read, process it. Default is always reprocess: ####
         if (!is.null(lib.data)){
              
@@ -192,14 +193,10 @@ match_features2refs_par_setup <- function(pars) {
         }
         
       
-        # null.data <- lapply(lib.data.processed, function(x) x %>% is_nullish %>% which) %>% 
-        #     unlist %>% names %>% unique
-        # if (length(null.data) > 0){warning('lib.data.processed field: ', paste(null.data, collapse = ', '), ' is nullish.')}
-      
     ##################################################################################################################
 
       
-    # Scale the feature matrix rows
+    # Scale the feature matrix rows ####
       message('\tscaling feature matrix...\n') 
       f.stack <- f.stack %>% apply(1, scale_between) # this will also transpose it, so no need to do later
 
@@ -208,7 +205,7 @@ match_features2refs_par_setup <- function(pars) {
       
       ref.mat <- lapply(lib.data.processed, function(x)
         {
-          x$mapped$data.compressed %>% expand_stacklist('data') %>% .[[1]] %>% scale_between(0,1)
+          x$mapped$data.compressed %>% expand_stacklist(which.stacks = 'data') %>% .[[1]] %>% scale_between(0,1)
         }
       ) %>% do.call(rbind, .)
   
@@ -220,8 +217,8 @@ match_features2refs_par_setup <- function(pars) {
         message("Pre-computing fts for refs (will take a minute)...\n")
         # Pad size for ref needs to be max.length(features)
     
-        message('\tpadding ref matrix...')
-        pad.size <- ncol(f.stack) - 1
+        message('\tpadding ref matrix using feature size - 1...')
+        pad.size <- nrow(f.stack) - 1
     
         # Make the padded ref mat matrix
           r.mat <- ref.mat %>% padmat(use = 0, col.by = pad.size)

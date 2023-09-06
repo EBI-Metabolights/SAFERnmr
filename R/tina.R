@@ -75,6 +75,8 @@ tina <- function(pars){
 
         feature <- tina_setup(fse.result$storm_features, xmat)
           feature %>% test_nullish
+        feature %>% compress_features %>% debug_write("feature.RDS", pars)
+        # feature <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.RDS")) %>% expand_features
           
         message('\n\t---- Feature Filtering ----')
         
@@ -110,8 +112,8 @@ tina <- function(pars){
           feature %>% test_nullish('feature')
         message('\n\tFeature filtering complete. Saving results...')
         
-        feature %>% compress_features %>% debug_write("feature.RDS", pars)
-        # feature <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.RDS")) %>% expand_features
+        feature %>% compress_features %>% debug_write("feature.filtered.RDS", pars)
+        # feature <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.filtered.RDS")) %>% expand_features
         
 ################ Plotting Filtered features #######################
   tryCatch(expr = { 
@@ -343,8 +345,9 @@ tina <- function(pars){
         
       tryCatch(
         {
-          cluster_features(pars, feature.final, min.features = 1000, do.clustering)
-          
+          # This doesn't return clusters - just writes the data to file
+            cluster_features(pars, feature.final, min.features = 1000, do.clustering)
+            # cluster.final <- readRDS('/Users/mjudge/Documents/current_run/cluster.final.RDS')
         },
         error = function(cond)
           {
@@ -362,10 +365,3 @@ tina <- function(pars){
 }
 
 
-dummyClusters <- function(clust.numbers){
-      clusters <- list(method = 'none',
-                       results = NA,
-                       cluster.labs = clust.numbers,
-                       groups = as.list(clust.numbers))
-      return(clusters)
-}

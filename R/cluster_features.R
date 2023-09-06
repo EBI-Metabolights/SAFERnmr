@@ -17,7 +17,15 @@
 #' 
 #' @export
 cluster_features <- function(pars, feature, min.features = 1000, do.clustering = F){
-  
+
+  dummyClusters <- function(clust.numbers){
+        clusters <- list(method = 'none',
+                         results = NA,
+                         cluster.labs = clust.numbers,
+                         groups = as.list(clust.numbers))
+        return(clusters)
+  }
+
     this.run <- pars$dirs$temp
     feature$sfe <- NULL
       

@@ -38,9 +38,9 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
       ref.sig.SD.cutoff <- 0.01
       
       data.list.processed <- 
-          pblapply(data.list, function(ref.spec)
+          # pblapply(data.list, function(ref.spec)
             # ref.spec <- data.list[[2]]
-          # mclapply(data.list, function(ref.spec)
+          mclapply(data.list, function(ref.spec)
             {
               
               # Linear interpolation to dataset ppm axis ####
@@ -64,7 +64,7 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
                 ref.data[ref.data < ncutoff] <- NA
                 ref.data <- ref.data - min(ref.data, na.rm = TRUE)
                 ref.data <- ref.data / sum(ref.data, na.rm = T)
-                browser()
+                
                 data.compressed <- tryCatch(
                   {
                     co_compress(stack.list = list(data = ref.data, ppm = ref.ppm), 
@@ -93,7 +93,7 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
                              info = ref.spec$info
                             )
                        )
-            }#, mc.cores = n.cores
+            }, mc.cores = n.cores
           )
       
       # ref.mat <- lapply(data.list.processed, function(x) x$mapped$data) %>% do.call(rbind, .)

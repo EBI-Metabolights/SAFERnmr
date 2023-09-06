@@ -13,7 +13,7 @@
 #' a ppm value and each row is a spectrum. Otherwise ppms will be lost upon 
 #' reconstruction!
 #' 
-#' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
+#' Example: cstack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
 #'
 #' @param stack sparse matrix with real values you want to retain
 #' @param sparse.val (optional) value taking up too much space (i.e. NA default, or 0, or other)
@@ -61,28 +61,28 @@ compress_stack <- function(stack, sparse.val = NA){
 }
 
 # cstack_selectRows #########################################################################################################################
-#' Select rows from compressed matrix (c.stack)
+#' Select rows from compressed matrix (cstack)
 #' selection contains the necessary information to reconstruct selected rows,
-#' but nothing else. Returns c.stack object. NOTE: positions are still with 
+#' but nothing else. Returns cstack object. NOTE: positions are still with 
 #' regard to the FULL stack; however, decompressing with cstack_expandRows will
 #' only return the selection (row order preserved).
 #'
 #' 
-#' @param c.stack compressed matrix object
+#' @param cstack compressed matrix object
 #' @return compressed matrix with only the selected row data
 #'          - pos : linear index within FULL stack
 #'          - vals: non-NA vals from FULL stack 
 #'          - m : number of rows in stack
 #'          - n : number of columns in stack
-#' Example selection <-  cstack_selectRows(c.stack, row.nums = c(1,2))
+#' Example selection <-  cstack_selectRows(cstack, row.nums = c(1,2))
 #'
 #' @export
-cstack_selectRows <- function(c.stack, row.nums){
+cstack_selectRows <- function(cstack, row.nums){
   
   # Get the original pos vector and convert to coords
   
-    pos <- extract_pos(c.stack) # hold onto this till the end
-    stack.coords <- pos %>% ind2subR(c.stack$m) # work with this for now
+    pos <- extract_pos(cstack) # hold onto this till the end
+    stack.coords <- pos %>% ind2subR(cstack$m) # work with this for now
   
   # Select the points corresponding to the desired rows
   
@@ -91,32 +91,32 @@ cstack_selectRows <- function(c.stack, row.nums){
          
   # Subset the values for those points  
   
-    c.stack$vals <- c.stack$vals[selected.points]
+    cstack$vals <- cstack$vals[selected.points]
   
   # Re-compress the positions
   
-    c.stack$pos <- pos[keep] %>% compress_pos(m = c.stack$m, 
-                                              n = c.stack$n)
+    cstack$pos <- pos[keep] %>% compress_pos(m = cstack$m, 
+                                              n = cstack$n)
   
   # reset m for subset matrixrows? NO: pos is in terms of m, and must remain that way
   # lest we need to recompute them all. 
   
-  return(c.stack)
+  return(cstack)
 }
 
 
 # cstack_expandRows #########################################################################################################################
 
-#' Decompress c.stack object. Works on full stack and selection. Will return a 
-#' matrix with the number of rows in the c.stack obj, in their original order.
+#' Decompress cstack object. Works on full stack and selection. Will return a 
+#' matrix with the number of rows in the cstack obj, in their original order.
 #'
-#' @param c.stack compressed matrix object
+#' @param cstack compressed matrix object
 #' @return compressed matrix with only the selected row data
 #'          - pos : linear index within stack
 #'          - vals: non-NA vals within stack
 #'          - m : number of rows in stack
 #'          - n : number of columns in stack
-#' @examples rows.expanded <- cstack_expandRows(c.stack)
+#' @examples rows.expanded <- cstack_expandRows(cstack)
 #'           rows.expanded <- cstack_expandRows(selection)
 #'
 #' @export
@@ -134,7 +134,7 @@ cstack_expandRows <- function(cstack){
   # Build and fill a matrix with the selected rows expanded
   # * cstack$vals are what was compressed
   # * stack.pos is cstack$pos -> coordinates -> renamed rows to 1:length(unique)
-  
+    
     rows.expanded <- matrix(NA, max(stack.pos$rows), cstack$n)
     rows.expanded[sub2indR(stack.pos$rows,
                            stack.pos$cols,
@@ -149,7 +149,7 @@ cstack_expandRows <- function(cstack){
 #' compressed together. 
 #' 
 #' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
-#'          c.stack <- compress_stack(stack)
+#'          cstack <- compress_stack(stack)
 #'
 #' @param feature feature object with 
 #'          - stack (profiles on rows)
@@ -169,7 +169,7 @@ cstack_expandRows <- function(cstack){
 compress_features <- function(feature){
   # How to store the stack
     
-    c.stack <- compress_stack(feature$stack)
+    cstack <- compress_stack(feature$stack)
     
   # Feature positions are a special case;
   # they only require the first element of each row, since the corresponding
@@ -191,7 +191,7 @@ compress_features <- function(feature){
     # if (is.null(feature$sfe)){feature$sfe <- NA}
     
   compressed.feature <- feature
-  compressed.feature$stack <- c.stack
+  compressed.feature$stack <- cstack
   compressed.feature$position <- data.frame(xcol = first.col.in.x,
                                             row = 1:nrow(feature$stack))
                              
@@ -204,7 +204,7 @@ compress_features <- function(feature){
 #' Pull selected features from compressed obj.
 #' 
 #' just.rows can be used to extract a subset of features or all, just in a different order.
-#' c.stack <- compress_stack()
+#' cstack <- compress_stack()
 #' Example: 
 #' # Make example feature obj
 #'  feature <- list(profile = rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
@@ -238,7 +238,7 @@ select_features <- function(compressed.feature, row.nums=NULL){
   # Do different things if selecting rows
   
     # Select rows from stack 
-      cstack.selection <- cstack_selectRows(c.stack = compressed.feature$stack, 
+      cstack.selection <- cstack_selectRows(cstack = compressed.feature$stack, 
                                             row.nums = row.nums)
       
       compressed.feature$stack <- cstack.selection
@@ -264,7 +264,7 @@ select_features <- function(compressed.feature, row.nums=NULL){
 #' compressed together to get further compression gains.
 #' 
 #' just.rows can be used to extract a subset of features or all, just in a different order.
-#' c.stack <- compress_stack()
+#' cstack <- compress_stack()
 #' Example: 
 #' # Make example feature obj
 #'  feature <- list(profile = rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
@@ -382,7 +382,7 @@ expand_runs <- function(ranges){
 #' 
 #' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
 #'          stack.list <- list(a = stack, b = stack-1)
-#'          c.stack <- co_compress(stack.list, sparse.val = NA, key = 'a')
+#'          cstack <- co_compress(stack.list, sparse.val = NA, key = 'a')
 #'
 #' @param stack.list list of matrices with matching positions (same sizes)
 #' @param sparse.val passthrough to compress_stack()
@@ -421,49 +421,49 @@ co_compress <- function(stack.list, sparse.val = NA,
     
   # How to store the stack
   
-    c.stack <- compress_stack(key.stack, sparse.val = sparse.val)
-    stack.list[[key]] <- c.stack$vals
+    cstack <- compress_stack(key.stack, sparse.val = sparse.val)
+    stack.list[[key]] <- cstack$vals
     
   # Loop through each stack in the list and apply the same positions
     
-    pos <- extract_pos(c.stack)
+    pos <- extract_pos(cstack)
     
     # loop through stacks and apply pos filter:
     # (names actually get preserved in the assignment)
     stack.list[apply.to] <- lapply(stack.list[apply.to], function(x) x[pos])
                
   # Replace vals with list of vals
-    c.stack$vals <- stack.list
+    cstack$vals <- stack.list
 
-  return(c.stack)
+  return(cstack)
 }
 # expand_stacklist #####################################################################################################
 #' Get each stack(s) from co-compressed stacklist. Currently doesn't allow row selection. 
 #'
-#' @param c.stack compressed stack where vals is a list of co-compressed stacks
+#' @param cstack compressed stack where vals is a list of co-compressed stacks
 #' @param which.stacks inds or names of stacks to return from vals 
 #' @return ranges of the incremental runs in keep
 #' 
 #' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
-#'          c.stack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')
-#'          identical(stack.list, expand_stacklist(c.stack))
-#'          expand_stacklist(c.stack, row.nums = c(1,3))
-#'          expand_stacklist(c.stack, which.stacks = 'a', row.nums = c(1,3))
-#'          expand_stacklist(c.stack, which.stacks = 1, row.nums = c(1,3))
+#'          cstack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')
+#'          identical(stack.list, expand_stacklist(cstack))
+#'          expand_stacklist(cstack, row.nums = c(1,3))
+#'          expand_stacklist(cstack, which.stacks = 'a', row.nums = c(1,3))
+#'          expand_stacklist(cstack, which.stacks = 1, row.nums = c(1,3))
 #'          
 #' @importFrom magrittr %>%
 #'
 #' @export
-expand_stacklist <- function(c.stack, which.stacks = NULL, row.nums = NULL){
+expand_stacklist <- function(cstack, which.stacks = NULL, row.nums = NULL){
   
   # Check params
     
-    if (!is.list(c.stack$vals)){warning('c.stack$vals is not a list'); return(NULL)}
-    if (is.null(which.stacks)){which.stacks <- 1:length(c.stack$vals)}
+    if (!is.list(cstack$vals)){warning('cstack$vals is not a list'); return(NULL)}
+    if (is.null(which.stacks)){which.stacks <- 1:length(cstack$vals)}
 
   # Extract the positions from the stack
   
-    stack.coords <- extract_pos(c.stack) %>% ind2subR(c.stack$m) # these are in original matrix linear indexing order
+    stack.coords <- extract_pos(cstack) %>% ind2subR(cstack$m) # these are in original matrix linear indexing order
   
     if (is.null(row.nums)){
       # Ignore row.nums
@@ -480,33 +480,33 @@ expand_stacklist <- function(c.stack, which.stacks = NULL, row.nums = NULL){
     
   # Build and fill a matrix with the selected rows expanded
   
-    rows.expanded <- matrix(NA, max(stack.coords$rows), c.stack$n) # build a default NA-filled matrix
+    rows.expanded <- matrix(NA, max(stack.coords$rows), cstack$n) # build a default NA-filled matrix
     
     inds <- sub2indR(stack.coords$rows,
                      stack.coords$cols,
                      nrow(rows.expanded))
     
     # Loop through and put expanded stacks back in place (to preserve names)
-    c.stack$vals[which.stacks] <- lapply(c.stack$vals[which.stacks], function(stack.vals){
+    cstack$vals[which.stacks] <- lapply(cstack$vals[which.stacks], function(stack.vals){
       rows.expanded[inds] <- stack.vals[selected.points]
       return(rows.expanded)
     })
     
   # Return the requested matrices 
-    return(c.stack$vals[which.stacks])
+    return(cstack$vals[which.stacks])
     
 }
 
 # extract_pos ##############################################################################
 #' 
-#' From a compressed position (in c.stack), extract the original position. 
+#' From a compressed position (in cstack), extract the original position. 
 #' (Utility for hiding annoying sub2ind and ind2sub operations).
 #' 
-#' @param c.stack compressed stack (or compressed stack.list) containing compressed positions
+#' @param cstack compressed stack (or compressed stack.list) containing compressed positions
 #' @return positions in original stack, as linear indices
 #' 
 #' @export
-extract_pos <- function(c.stack){
+extract_pos <- function(cstack){
   
     stack.pos <- expand_runs(cstack$pos) %>% 
                   ind2subR(cstack$n, transpose = TRUE) # convert back to column-wise
@@ -516,7 +516,7 @@ extract_pos <- function(c.stack){
     # convert back to linear inds for the original matrix
     pos <- sub2indR(stack.pos$rows,
              stack.pos$cols,
-             c.stack$m) %>% 
+             cstack$m) %>% 
       sort # and sort so they correspond to cstack$vals (original matrix linear inds ordering)
     
     return(pos)

@@ -2,16 +2,16 @@
 % Please edit documentation in R/compression.R
 \name{cstack_selectRows}
 \alias{cstack_selectRows}
-\title{Select rows from compressed matrix (c.stack)
+\title{Select rows from compressed matrix (cstack)
 selection contains the necessary information to reconstruct selected rows,
-but nothing else. Returns c.stack object. NOTE: positions are still with 
+but nothing else. Returns cstack object. NOTE: positions are still with 
 regard to the FULL stack; however, decompressing with cstack_expandRows will
 only return the selection (row order preserved).}
 \usage{
-cstack_selectRows(c.stack, row.nums)
+cstack_selectRows(cstack, row.nums)
 }
 \arguments{
-\item{c.stack}{compressed matrix object}
+\item{cstack}{compressed matrix object}
 }
 \value{
 compressed matrix with only the selected row data
@@ -19,12 +19,12 @@ compressed matrix with only the selected row data
          - vals: non-NA vals from FULL stack 
          - m : number of rows in stack
          - n : number of columns in stack
-Example selection <-  cstack_selectRows(c.stack, row.nums = c(1,2))
+Example selection <-  cstack_selectRows(cstack, row.nums = c(1,2))
 }
 \description{
-Select rows from compressed matrix (c.stack)
+Select rows from compressed matrix (cstack)
 selection contains the necessary information to reconstruct selected rows,
-but nothing else. Returns c.stack object. NOTE: positions are still with 
+but nothing else. Returns cstack object. NOTE: positions are still with 
 regard to the FULL stack; however, decompressing with cstack_expandRows will
 only return the selection (row order preserved).
 }

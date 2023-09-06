@@ -71,7 +71,7 @@ match_features2refs_par_explicit <- function(pars){
                              f.stack = f.stack.split,
                              .combine='c', .multicombine=TRUE,
                              .packages = c('fftw', 'foreach'),
-                             .errorhandling="pass") %dopar%
+                             .errorhandling="pass") %do%
 
       {
         
