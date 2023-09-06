@@ -147,6 +147,8 @@ align_spec2feat <- function(feat, xmat, r.thresh = 0.8){
           feat$corr <- cor(valsmat[, feat$driver.relative], valsmat)
           feat$profile <- cov(valsmat[, feat$driver.relative], valsmat)
             feat$profile[feat$corr < r.thresh] <- NA
+          feat$position[is.na(feat$profile)] <- NA
+          
         } else {
           # feat$corr <- rep(NA, length(feat$profile))
           return(NULL)

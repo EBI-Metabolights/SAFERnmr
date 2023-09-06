@@ -55,7 +55,7 @@ grid_plot_specfits <- function(sfs, feature, xmat, refmat,
         
     })
   
-  # Add titles and bffs to the individual plots, do formatting ####
+  # Add titles and scores to the individual plots, do formatting ####
   
       if (titles == 'number'){
         plots <- lapply(1:length(plots), function(x){
@@ -74,7 +74,7 @@ grid_plot_specfits <- function(sfs, feature, xmat, refmat,
         plots <- lapply(1:length(plots), function(x){
           
           plots[[x]] +
-            ggtitle(paste0(", bff.tot = ",round(sfs$score[x],2)
+            ggtitle(paste0(", score = ",round(sfs$score[x],2)
                            )) +
             theme(axis.title.x=element_blank(),
                   axis.text.x=element_blank(),

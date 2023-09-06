@@ -20,11 +20,10 @@ debug_write <- function(obj, f.name, pars){
             saveRDS(obj, paste0(pars$dirs$temp, "/debug_extra.outputs/", f.name))
           }
         }
-      return(NULL)
+      return(paste0('wrote "', f.name, '" to debug_extra.outputs...'))
     },
     error = function(cond){
-      message('warning: debug_write(): "/debug_extra.outputs/', f.name, '" not saved.')
-      return(NULL)
+      return(paste0('warning: debug_write(): "', f.name, '" could not be saved.'))
     }
   )
 }

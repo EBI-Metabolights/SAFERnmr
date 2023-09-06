@@ -71,7 +71,6 @@ tina <- function(pars){
 
 ########### Setup ###################################################################################
 
-
     # Run tina_setup to set up successful features
 
         feature <- tina_setup(fse.result$storm_features, xmat)
@@ -111,8 +110,8 @@ tina <- function(pars){
           feature %>% test_nullish('feature')
         message('\n\tFeature filtering complete. Saving results...')
         
-        feature %>% debug_write("feature.RDS", pars)
-        # feature <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.RDS"))
+        feature %>% compress_features %>% debug_write("feature.RDS", pars)
+        # feature <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.RDS")) %>% expand_features
         
 ################ Plotting Filtered features #######################
   tryCatch(expr = { 
@@ -125,7 +124,7 @@ tina <- function(pars){
 
         plot_stormRefRegions_grid(xmat = NULL, ppm,
                                   fse.result$storm_features %>% .[filt] %>% .[everyNth], # if not doing a small region
-                                  plotLoc = paste0(tmpdir,'/'),
+                                  plotLoc = paste0(tmpdir,'/plots/'),
                                   filename = 'filtered.features.pdf',
                                   calcStocsy = FALSE, n_xticks = 4)
     }
@@ -147,7 +146,7 @@ tina <- function(pars){
               message('Plotting every ', sum(everyNth), ' / ', length(everyNth), ' features...')
               plot_stormRefRegions_grid(xmat = NULL, ppm,
                                         fse.result$storm_features %>% .[bad.ones] %>% .[everyNth], # if not doing a small region
-                                        plotLoc = paste0(tmpdir,'/'),
+                                        plotLoc = paste0(tmpdir,'/plots/'),
                                         filename = paste0('failed_filter_', filt.name, '.pdf'),
                                         calcStocsy = FALSE, n_xticks = 4)
         }
@@ -200,7 +199,9 @@ tina <- function(pars){
         features.specd %>% test_nullish('features.specd')
         
         features.specd %>% debug_write("features.specd.RDS", pars)
-        # features.specd <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/features.specd.RDS"))
+        # features.specd <- readRDS(paste0(pars$dirs$temp, 
+        #                                  "/debug_extra.outputs", 
+        #                                  "/features.specd.RDS"))
 
         
 ########### Adjust feature object with sfe results  ############################################################
@@ -228,14 +229,33 @@ tina <- function(pars){
           n.cols <- lapply(features.specd, function(res){
             res$feat$profile %>% length
           }) %>% unlist %>% max(na.rm = T)
+            
+          # Positions match stack
 
-        # Make new feature mat using sfe-derived profile ####
+        # Make new feature mat using sfe-derived profile (left-justified) ####
           feature$stack <- lapply(features.specd, function(res){
             
             needed <- n.cols - length(res$feat$profile)
             
             return(  c(res$feat$profile, rep(NA, needed))  )
             
+          }) %>% do.call(rbind, .)
+            
+          # *** note: at this point, positions do NOT match stack ***
+          
+          feature$position <- lapply(features.specd, function(res){
+
+            needed <- n.cols - length(res$feat$position)
+
+            return(  c(res$feat$position, rep(NA, needed))  )
+
+          }) %>% do.call(rbind, .)
+          
+          feature$driver.relative <- lapply(features.specd, function(res){
+            # driver.relative was somewhere in feature matrix columns. Now that features
+            # are all left-justified, this will change. 
+            return(  res$feat$driver.relative  )
+
           }) %>% do.call(rbind, .)
             
             feature %>% test_nullish('feature')
@@ -247,18 +267,18 @@ tina <- function(pars){
            # if max align fails on a feature, remove it
            features.specd <- features.specd[feature.ma$alignment.success]
            feature.ma %>% test_nullish('feature.ma')
-          
-        feature.ma %>% debug_write("feature.ma.RDS", pars)
-        # feature.ma <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/feature.ma.RDS"))
-
+        
+        feature.ma %>% compress_features %>% debug_write("feature.ma.RDS", pars)
+        # feature.ma <- readRDS(paste0(pars$dirs$temp,
+        #                              "/debug_extra.outputs",
+        #                              "/feature.ma.RDS")) %>% expand_features
+        
         rm(feature)
 
 ##################################################################################################################                
     # Plot all feature ranges ####
   tryCatch(expr = { 
-          pdf(file = paste0(tmpdir,'/','feature.ranges.pdf'),   # The directory you want to save the file in
-              width = dim, # The width of the plot in inches
-              height = dim)
+          pdf(file = paste0(tmpdir,'/plots/','feature.ranges.pdf'))
         
               feature.shift_range <- feature.ma$position %>% apply(., 1, function(x) range(ppm[x],na.rm = T))
               subs <- ind2subR(1:length(feature.shift_range), m = nrow(feature.shift_range))
@@ -308,15 +328,18 @@ tina <- function(pars){
         
         feature.final %>% test_nullish('feature.final')
          
-        saveRDS(feature.final, paste0(tmpdir, "/feature.final.RDS"))
-        # feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
+        saveRDS(feature.final %>% compress_features, paste0(tmpdir, "/feature.final.RDS"))
+        # feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS")) %>% expand_features
         
         rm(features.specd)
         gc()
         
 ###############################################################################################################           
-      do.clustering <- tryCatch({if(pars$tina$do.clustering){pars$tina$do.clustering}},
-                                error = function(cond){FALSE})
+      do.clustering <- tryCatch(
+        {
+          pars$tina$do.clustering
+        }, error = function(cond){FALSE}
+      )
         
       tryCatch(
         {

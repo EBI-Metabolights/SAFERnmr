@@ -47,7 +47,7 @@ match_features2refs_par_setup <- function(pars) {
     
       message('Building feature matrix...')
       
-          feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS")) 
+          feature.final <- readRDS(paste0(tmpdir, "/feature.final.RDS")) %>% expand_features
             feature.final %>% test_nullish('feature.final')
           
           featureStack <- feature.final$stack
@@ -153,7 +153,7 @@ match_features2refs_par_setup <- function(pars) {
           
         }
     
-        lib.data %>% test_nullish
+        # lib.data %>% test_nullish
     
       # If lib.data was read, process it. Default is always reprocess: ####
         if (!is.null(lib.data)){

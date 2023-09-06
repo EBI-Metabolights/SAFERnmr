@@ -9,7 +9,7 @@
 #' Note: this is meant to be run during backfitting. Using after that will not 
 #' update some fields calculated there, e.g.:
 #' 
-#'    "bffs.res" "bffs.tot" "rmse" "rmse.biased" "pct.ref"
+#'    "rmse" "rmse.biased" "pct.ref"
 #'
 #' @param sf spec feature information (includes backfit information)
 #' @param feature features object for study

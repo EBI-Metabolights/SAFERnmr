@@ -27,5 +27,5 @@ Note: this is meant to be run during backfitting. Using after that will not
 update some fields calculated there, e.g.:
 }
 \details{
-"bffs.res" "bffs.tot" "rmse" "rmse.biased" "pct.ref"
+"rmse" "rmse.biased" "pct.ref"
 }

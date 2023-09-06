@@ -37,25 +37,6 @@ score_matches <- function(pars){
     backfit.results <- readRDS(paste0(tmpdir, "/backfit.results.RDS"))
       match.info <- backfit.results$match.info
       backfits <- backfit.results$backfits
-    
-    # # Remove backfits that don't pass the deltappm distance threshold (rf vs. sf)
-    #   lapply(1:length(backfits), function(b) 
-    #     {
-    #       bf <- backfits[[b]]
-    #       mi <- match.info[b, ]
-    #       spec.rngs <- rbind(ppm[bf$spec.start], ppm[bf$spec.end])
-    #       ref.rngs <- spec.rngs
-    #       ref.rngs[1:length(ref.rngs)] <- ppm[c(mi$ref.start, mi$ref.end)]
-    #       
-    #       # Filter for fits whose dataset spectrum range is within tolerance of ref spec range: ####
-    #         spec.dist.from.rf <- range_dist(spec.rngs, ref.rngs)
-    #         close.enough <- spec.dist.from.rf <= pars$matching$filtering$ppm.tol
-    #         
-    #       feature$position[mi$feat,] %>% range(na.rm = TRUE) %>% ppm[.] %>% mean
-    #       c(mi$ref.start, mi$ref.end) %>% ppm[.] %>% mean
-    #       mi$feat.start
-    #       mi$feat.end
-    #     })
       
     ######################### Build match matrix  #############################    
     # Get the processed library data:
@@ -89,8 +70,8 @@ score_matches <- function(pars){
             mi <- match.info[m,]
           
           # relevant backfit fields are ref.feature-specific - not spectrum specific
-          # all fits in a backfit obj share the same ref.region, but differ in bff scores and ss
-          # so just use the first one to get that info, and luckily we already extracted bffs. 
+          # all fits in a backfit obj share the same ref.region, but differ in feature scores and ss
+          # so just use the first one to get that info, and luckily we already extracted feature scores 
           # We do need to loop out the ss.specs.
           
             # Fast way (should be fine) ####
@@ -109,10 +90,10 @@ score_matches <- function(pars){
                          ref.start = mi$ref.start,
                          ref.end = mi$ref.end,
                          ss.spec = bf$ss.spec,
-                         bff.res = bf$bffs.res,
-                         bff.tot = bf$bffs.tot,
-                         rmse = bf$rmse,
-                         rmse.biased = bf$rmse.biased,
+                         fit.fsa = NA,
+                         fit.rval = NA,
+                         # rmse = bf$rmse,
+                         # rmse.biased = bf$rmse.biased,
                          pct.ref = bf$pct.ref)
               
         }) %>% do.call(rbind,.)

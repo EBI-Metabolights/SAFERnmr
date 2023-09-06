@@ -49,7 +49,7 @@
 #'
 #' @author MTJ
 
-sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
+sfe2 <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
   # Example inputs ####
     # feature <- feature.ma
     # f.ind <- 500
@@ -100,19 +100,20 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
                           plots = FALSE)
         
         # fit <-  fit_leastSquares(v1 = aligned$feat$profile,
-        #                          v2 = aligned$valsmat[m,], 
+        #                          v2 = aligned$valsmat[m,],
         #                          ppm = ppm[aligned$feat$position],
         #                          plots = F,
         #                          scale.v2 = F)
 
-        return(list(fit = fit$fit))
-    })
+        return(list(ratio = fit$ratio,
+                    intercept = fit$intercept))
+    }) 
     
     # Note: this will fail if plots are null. Just returning vals.
     fits %>% test_nullish
     # Cannot get a null value out of this
     
-    failed.specs <- lapply(fits, function(fit) is.na(fit$rmse)) %>% unlist
+    failed.specs <- lapply(fits, function(fit) is.na(fit$ratio)) %>% unlist
     succeeded <- !failed.specs
       if (any(succeeded)){
         fits <- fits[succeeded]
@@ -120,7 +121,7 @@ sfe <- function(feature, f.ind, xmat, ppm, r.thresh = 0.8){
         aligned$rvals <- aligned$rvals[succeeded]
       }
     
-    fits <- lapply(fits, function(fit) fit$fit)
+    # fits <- lapply(fits, function(fit) fit$fit)
     
   
   # Return updated feature info ####

@@ -49,15 +49,7 @@ compress_stack <- function(stack, sparse.val = NA){
   
   # compress positions using range expansion
     
-    # Transpose inds to (cols, rows)
-    coords <- ind2subR(keep, nrow(stack), transpose = TRUE)
-  
-    ranges <- runs2ranges(
-      sub2indR(coords$rows, 
-               coords$cols, 
-               m = ncol(stack)
-               ) %>% sort
-    )
+    ranges <- compress_pos(keep, m = nrow(stack), n = ncol(stack))
     
     # if (!all((expand_runs(ranges)==keep))){stop('Error in compress_stack(): runs2ranges/expand_runs failed')}
     
@@ -164,7 +156,8 @@ cstack_expandRows <- function(cstack){
 #' In the case of feature objects, the profile and position mats can be 
 #' compressed together. 
 #' 
-#' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
+#' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
+#'          c.stack <- compress_stack(stack)
 #'
 #' @param feature feature object with 
 #'          - stack (profiles on rows)
@@ -205,12 +198,11 @@ compress_features <- function(feature){
     # if (is.null(feature$driver.relative)){feature$driver.relative <- NA}
     # if (is.null(feature$sfe)){feature$sfe <- NA}
     
-  compressed.feature <- list(stack = c.stack,
-                             position = data.frame(xcol = first.col.in.x,
-                                                   row = 1:nrow(feature$stack))
-                             # driver.relative = feature$driver.relative,
-                             # sfe = feature$sfe
-                             )
+  compressed.feature <- feature
+  compressed.feature$stack <- c.stack
+  compressed.feature$position <- data.frame(xcol = first.col.in.x,
+                                            row = 1:nrow(feature$stack))
+                             
   return(compressed.feature)
 }
 
@@ -337,71 +329,11 @@ expand_features <- function(compressed.feature, row.nums=NULL){
   
 
   # Build output 
-    feature <- list(profile = stack,
-                    position = pos.stack
-                    # driver.relative = compressed.feature$driver.relative,
-                    # sfe = compressed.feature$sfe
-                    )
+    feature <- compressed.feature
+    feature$position <- pos.stack
+    feature$stack <- stack
+    
   return(feature)
-}
-
-# co_compress #####################################################################################################
-#' Sparse (NA-gapped) matrix compression from one matrix applied to others
-#'
-#' Generalized case of stack.lists matrix 
-#' 
-#' Example: c.stack <- compress_stack(rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3)))
-#'
-#' @param stack.list list of matrices with matching positions (same sizes)
-#' @param sparse.val passthrough to compress_stack()
-#' @param key which matrix (name or list index) to use as the compression model (default = 1). If name, will be converted to list index.
-#' @param apply.to which matrices (other than key) to apply compression scheme to
-#' 
-#' @return compressed matrix (list format)
-#'          - pos : linear index within stack
-#'          - vals: non-NA vals within stack
-#'          - m : number of rows in stack
-#'          - n : number of columns in stack
-#' 
-#'          
-#' @importFrom magrittr %>%
-#'
-#' @export
-co_compress <- function(stack.list, sparse.val = NA, key = 1, apply.to = NULL, stack.names = NULL){
-  # stack.list <- list(ref.data = ref.data, ref.ppm = ref.ppm)
-  # key <- 2
-  
-  if (is.character(key)){
-    # Assume field name provided
-      key <- which(names(stack.list) %in% key)
-      
-  }
-  
-  if (is.null(apply.to)){apply.to <- 1:length(stack.list) %>% .[-key]}
-  
-  key.stack <- stack.list[[key]]
-    
-  # How to store the stack
-    c.stack <- compress_stack(key.stack, sparse.val = sparse.val)
-    stack.list[[key]] <- c.stack$vals
-    
-  # Loop through each stack in the list and apply the same positions
-    
-    pos <- expand_runs(c.stack$pos) # decompress position filter
-    
-    # This will be in row-wise format. Convert back to column-wise:
-      
-      coords <- pos %>% ind2subR(m = c.stack$n, transpose = TRUE) 
-      pos <- sub2indR(coords$rows, coords$cols, c.stack$m)
-    
-    # loop through stacks and apply pos filter:
-    # (names actually get preserved in the assignment)
-    stack.list[apply.to] <- lapply(stack.list[apply.to], function(x) x[pos])
-               
-  # Replace vals with list of vals
-    c.stack$vals <- stack.list
-
-  return(c.stack)
 }
 
 # runs2ranges #####################################################################################################
@@ -451,40 +383,107 @@ expand_runs <- function(ranges){
   return(pos)
 }
 
+# co_compress #####################################################################################################
+#' Sparse (NA-gapped) matrix compression from one matrix applied to others
+#'
+#' Generalized case of stack.lists matrix 
+#' 
+#' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
+#'          c.stack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')
+#'
+#' @param stack.list list of matrices with matching positions (same sizes)
+#' @param sparse.val passthrough to compress_stack()
+#' @param key which matrix (name or list index) to use as the compression model (default = 1). If name, will be converted to list index.
+#' @param apply.to which matrices (other than key) to apply compression scheme to
+#' 
+#' @return compressed matrix (list format)
+#'          - pos : linear index within stack
+#'          - vals: non-NA vals within stack
+#'          - m : number of rows in stack
+#'          - n : number of columns in stack
+#' 
+#'          
+#' @importFrom magrittr %>%
+#'
+#' @export
+co_compress <- function(stack.list, sparse.val = NA, key = 1, apply.to = NULL, stack.names = NULL){
+  # stack.list <- list(ref.data = ref.data, ref.ppm = ref.ppm)
+  # key <- 2
+  
+  if (is.character(key)){
+    # Assume field name provided
+      key <- which(names(stack.list) %in% key)
+      if (length(key) != 1){stop('co_compress: key "', key, '" is not in stack.list names')}
+      
+  }
+  
+  # If no specified "apply.to", then assume all (except the key, which is already assumed)
+  if (is.null(apply.to)){apply.to <- 1:length(stack.list) %>% .[-key]}
+  
+  key.stack <- stack.list[[key]]
+    
+  # How to store the stack
+    c.stack <- compress_stack(key.stack, sparse.val = sparse.val)
+    stack.list[[key]] <- c.stack$vals
+    
+  # Loop through each stack in the list and apply the same positions
+    
+    pos <- expand_runs(c.stack$pos) # decompress position filter ()
+    stack.pos <- ind2subR(pos, cstack$n, transpose = TRUE) # convert back to column-wise
+    
+    # Convert to linear inds in stack (remember to re-sort!):
+      
+      pos <- sub2indR(stack.pos$rows, stack.pos$cols, c.stack$m) %>% sort
+    
+    # loop through stacks and apply pos filter:
+    # (names actually get preserved in the assignment)
+    stack.list[apply.to] <- lapply(stack.list[apply.to], function(x) x[pos])
+               
+  # Replace vals with list of vals
+    c.stack$vals <- stack.list
+
+  return(c.stack)
+}
 # expand_stacklist #####################################################################################################
-#' Get each stack(s) from co-compressed stacklist
+#' Get each stack(s) from co-compressed stacklist. Currently doesn't allow row selection. 
 #'
 #' @param c.stack compressed stack where vals is a list of co-compressed stacks
 #' @param which.stacks inds or names of stacks to return from vals 
 #' @return ranges of the incremental runs in keep
 #' 
-#' Example: all.equal(expand_runs(runs2ranges(keep)), keep)
+#' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
+#'          c.stack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')
 #'          
 #' @importFrom magrittr %>%
 #'
 #' @export
-expand_stacklist <- function(c.stack, which.stacks = NULL){
+expand_stacklist <- function(c.stack, which.stacks = NULL, row.nums = NULL){
   # c.stack <- x$mapped$data.compressed
 
   if (!is.list(c.stack$vals)){warning('c.stack$vals is not a list'); return(NULL)}
   if (is.null(which.stacks)){which.stacks <- 1:length(c.stack$vals)}
+
+  # Extract the positions from the stack
   
-  # Convert the stack positions for the selection back to stack coords
-    pos <- expand_runs(c.stack$pos)
-    stack.pos <- ind2subR(pos, c.stack$n, transpose = TRUE)
-    stack.pos$rows <- stack.pos$rows %>% dplyr::dense_rank()
-    
+    stack.coords <- extract_pos(c.stack) %>% ind2subR(c.stack$m)
+  
+  # Filter for selected rows
+  
+    keep <- which(stack.coords$rows %in% row.nums) # filter for rows we want
+    stack.coords <- stack.coords[keep, ] # subset the vectors
+    stack.coords$rows <- stack.coords$rows %>% dplyr::dense_rank() # convert rows in original stack to rows in subsetted stack         
+  
   # Build and fill a matrix with the selected rows expanded
   # * cstack$vals are what was compressed
   # * stack.pos is cstack$pos -> coordinates -> renamed rows to 1:length(unique)
-    rows.expanded <- matrix(NA, max(stack.pos$rows), c.stack$n)
-    inds <- sub2indR(stack.pos$rows,
-                             stack.pos$cols,
-                             nrow(rows.expanded))
+    rows.expanded <- matrix(NA, max(stack.coords$rows), c.stack$n)
+    inds <- sub2indR(stack.coords$rows,
+                     stack.coords$cols,
+                     nrow(rows.expanded))
     
     # Loop through and put expanded stacks back in place (to preserve names)
     c.stack$vals[which.stacks] <- lapply(c.stack$vals[which.stacks], function(stack.vals){
-      rows.expanded[inds] <- stack.vals
+      rows.expanded[inds] <- stack.vals[keep]
       return(rows.expanded)
     })
     
@@ -493,3 +492,56 @@ expand_stacklist <- function(c.stack, which.stacks = NULL){
     
 }
 
+#' extract_pos ##############################################################################
+#' 
+#' From a compressed position (in c.stack), extract the original position. 
+#' (Utility for hiding annoying sub2ind and ind2sub operations).
+#' 
+#' @param c.stack compressed stack (or compressed stack.list) containing compressed positions
+#' @return positions in original stack, as linear indices
+#' 
+#' @export
+extract_pos <- function(c.stack){
+  
+    stack.pos <- expand_runs(cstack$pos) %>% 
+                  ind2subR(cstack$n, transpose = TRUE) # convert back to column-wise
+    
+    # * remember, these are still in order of the transposed linear inds
+  
+    # convert back to linear inds for the original matrix
+    pos <- sub2indR(stack.pos$rows,
+             stack.pos$cols,
+             c.stack$m) %>% 
+      sort # and sort so they correspond to cstack$vals (original matrix linear inds ordering)
+    
+    return(pos)
+}
+#' compress_pos ##############################################################################
+#' 
+#' Compress positions vector:
+#'  - transpose (assuming rows have runs)
+#'  - compress sequential inds to ranges
+#'  - return as data.frame
+#' 
+#' @param pos linear inds of vals in original stack (column-wise)
+#' @param m nrow(stack)
+#' @param n ncol(stack)
+#' 
+#' @return positions in original stack, as linear indices
+#' 
+#' @export
+compress_pos <- function(pos, m, n){
+  
+    # Transpose inds to (cols, rows)
+    coords <- ind2subR(pos, m, transpose = TRUE)
+  
+    ranges <- runs2ranges(
+      sub2indR(coords$rows, 
+               coords$cols, 
+               m = n
+               ) %>% sort
+    )
+
+  return(ranges)
+    
+}

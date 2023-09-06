@@ -66,15 +66,15 @@ pair_score_summation <- function(pars, refmat){
   
 emptyScore <- 
   list(
-         bfs.used.tot = NA, # keep these around; they're the best evidence
-         bfs.used.res = NA, # keep these around; they're the best evidence
-         bfs.used.rmseb = NA, # keep these around; they're the best evidence
+         bfs.used.fsa = NA, # keep these around; they're the best evidence
+         bfs.used.rval = NA, # keep these around; they're the best evidence
+         bfs.used.fsaxrval = NA, # keep these around; they're the best evidence
          bfs.used.min.score = NA, # keep these around; they're the best evidence
          pair.scores = data.frame(ss.spec = NA,
                                   ref = NA,
-                                  score.tot = 0, 
-                                  score.res = 0,
-                                  score.rmseb = 0,
+                                  score.fsa = 0, 
+                                  score.rval = 0,
+                                  score.fsaxrval = 0,
                                   score.min = 0)
   )
 
@@ -176,9 +176,10 @@ emptyScore <-
                           refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
                           ref.pairs <- r.list$ref.pairs
                           feat.models <- cstack_expandRows(r.list$feat.models) %>% is.na %>% "!"()
+                          
                           # how to use feat.num to index feat.models?
                             ref.pairs$feat <- ref.pairs$feat %>% factor(levels = r.list$feat.nums) %>% as.integer
-                            ref.pairs$rmse.biased <- 1-ref.pairs$rmse.biased
+                            
                             # NOTE: this is only temporary and ref.pairs$feat should ONLY be used 
                             # to pull from feat.models after this point in this function!!!
                             # MTJ double-checked this on 28JUL2023
@@ -189,19 +190,19 @@ emptyScore <-
         
                         # Set up cumulative score vector objs (will be recycled each sample iteration) ####
                       
-                          bff.tot <- list(score.name = 'bff.tot',
+                          fsa <- list(score.name = 'fsa',
                                           scores = rep(0, length(refspec)),
                                           rf.ids = rep(0, length(refspec)))
-                          bff.res <- bff.tot
-                            bff.res$score.name = 'bff.res'
-                          rmseb <- bff.tot
-                            rmseb$score.name = 'rmse.biased'
-                          min.score <- bff.tot
+                          rval <- fsa
+                            rval$score.name = 'rval'
+                          fsaxrval <- fsa
+                            fsaxrval$score.name = 'fsaxrval'
+                          min.score <- fsa
                             min.score$score.name = 'min.score'
         
-                          ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$bff.res,
-                                                                      ref.pairs$bff.tot,
-                                                                      ref.pairs$rmse.biased),value = TRUE)
+                          ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fsa,
+                                                                      ref.pairs$rval,
+                                                                      ref.pairs$fsaxrval),value = TRUE)
                           
                         # Loop through ref-ss.spec combinations and calculate scores ####
                         # - score objects will be re-copied for each lapply iteration, so 
@@ -264,17 +265,17 @@ emptyScore <-
                                         ref.pts <- (ref.pairs$ref.start[j] : ref.pairs$ref.end[j]) %>% .[feat.model]
             
                                     # Update the scores objs for each type for this ref feature-ss match ####
-                                      # bff total 
+                                      # fsa
                                         
-                                        bff.tot <- update_scoreObj(ref.pairs[j, ], bff.tot, ref.pts)
+                                        fsa <- update_scoreObj(ref.pairs[j, ], fsa, ref.pts)
                                         
-                                      # bff (resonance) 
+                                      # rval
                                       
-                                        bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+                                        rval <- update_scoreObj(ref.pairs[j, ], rval, ref.pts)
                                         
-                                      # rmse biased
+                                      # both
                                       
-                                        rmseb <- update_scoreObj(ref.pairs[j, ], rmseb, ref.pts)
+                                        fsaxrval <- update_scoreObj(ref.pairs[j, ], fsaxrval, ref.pts)
                                         
                                       # Or: pick the worst score from each of them
                                       
@@ -291,9 +292,9 @@ emptyScore <-
                                 
                                 # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
                                 
-                                  bff.tot <- sum_score(bff.tot, refspec)
-                                  bff.res <- sum_score(bff.res, refspec)
-                                  rmseb <- sum_score(rmseb, refspec)
+                                  fsa <- sum_score(fsa, refspec)
+                                  rval <- sum_score(rval, refspec)
+                                  fsaxrval <- sum_score(fsaxrval, refspec)
                                   min.score <- sum_score(min.score, refspec)
                                   # if(any(c(bff.tot$scores.tot, bff.res$scores.tot, rmseb$scores.tot, min.score$scores.tot) > 0.9)){browser()}
                                   
@@ -306,9 +307,9 @@ emptyScore <-
                                          bfs.used.min.score = min.score$rf.ids.tot, # keep these around; they're the best evidence
                                          pair.scores = data.frame(ss.spec = ss.spec,
                                                                   ref = r.num,
-                                                                  score.tot = bff.tot$scores.tot, 
-                                                                  score.res = bff.res$scores.tot,
-                                                                  score.rmseb = rmseb$scores.tot,
+                                                                  score.tot = fsa$scores.tot, 
+                                                                  score.res = rval$scores.tot,
+                                                                  score.rmseb = fsaxrval$scores.tot,
                                                                   score.min = min.score$scores.tot)
                                   )
                             
@@ -364,20 +365,20 @@ emptyScore <-
         
       # Each row of ss.ref.pair.scores data frame gets a list of rfs that contributed (to each score, separately).
       # Only included the ss.ref pairs which actually had rfs to add up
+        
+        rfs.used.fsa <- score.list %>% lapply(function(x) {
+          x$bfs.used.fsa
+        })
      
-        rfs.used.tot.rfs <- score.list %>% lapply(function(x) {
-          x$bfs.used.tot
+        rfs.used.rval <- score.list %>% lapply(function(x) {
+          x$bfs.used.rval
         })
         
-        rfs.used.res.rfs <- score.list %>% lapply(function(x) {
-          x$bfs.used.res
+        rfs.used.fsaxrval <- score.list %>% lapply(function(x) {
+          x$bfs.used.fsaxrval
         })
         
-        rfs.used.rmseb.rfs <- score.list %>% lapply(function(x) {
-          x$bfs.used.rmseb
-        })
-        
-        rfs.used.min.rfs <- score.list %>% lapply(function(x) {
+        rfs.used.min <- score.list %>% lapply(function(x) {
           x$bfs.used.min.score
         })
         
@@ -394,10 +395,10 @@ emptyScore <-
            
         # Put in a single list
         
-          rfs.used <- list(tot = rfs.used.tot.rfs,
-                           res = rfs.used.res.rfs,
-                           rmseb = rfs.used.rmseb.rfs,
-                           min = rfs.used.min.rfs,
+          rfs.used <- list(tot = rfs.used.fsa,
+                           res = rfs.used.rval,
+                           rmseb = rfs.used.fsaxrval,
+                           min = rfs.used.min,
                            score.mat.coords = rfs.used.score.coord)
         
       # message('\nwriting scores to file...')

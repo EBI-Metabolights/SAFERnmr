@@ -69,10 +69,12 @@ backfit_rfs3 <- function(match.info,
                                         fit.scale = NA,
                                         spec.start = NA,
                                         spec.end = NA,
-                                        bffs.res = NA, # tmp "bff"
-                                        bffs.tot = NA,
-                                        rmse = NA,
-                                        rmse.biased = NA)}
+                                        fit.fsa = NA,
+                                        fit.rval = NA,
+                                        # rmse = NA,
+                                        # rmse.biased = NA
+                                    )
+    }
   
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
@@ -198,7 +200,7 @@ backfit_rfs3 <- function(match.info,
                           
                             # optimize for single spectrum, single feature, single refspec
                               
-                              #   sf <- match.info[x, ] %>% [propagated to ss.specs]
+                              # sf <- match.info[x, ] %>% [propagated to ss.specs]
                               # alternatively, can just use the sf$lag
                               res <- opt_specFit_slim(sf, 
                                                       feat.model = feature$position[sf$feat, ], 
@@ -245,9 +247,11 @@ backfit_rfs3 <- function(match.info,
                                               spec.start = spec.cols[1],
                                               spec.end = tail(spec.cols,1),
                                               fit.fsa = fit$fraction.spec.accounted,
-                                              fit.rval = fit$rval,
-                                              rmse = rmse,
-                                              rmse.biased = rmse.biased)) 
+                                              fit.rval = fit$rval#,
+                                              # rmse = rmse,
+                                              # rmse.biased = rmse.biased
+                                              )
+                                   ) 
                   }, 
                   error = function(cond){
                     emptyRow()

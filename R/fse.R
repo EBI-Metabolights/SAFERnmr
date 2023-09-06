@@ -76,12 +76,11 @@ fse <- function(pars){
 ################ Read parameters file ##################
   
   tmpdir <- pars$dirs$temp
-  this.run <- paste0(tmpdir)
-  
+
 ################ Get MTBLS1 data from RDS ##################
 
     X_raw <- readRDS(pars$files$spectral.matrix)
-    # X_raw <- readRDS(paste0(this.run, "/spectral.matrix.RDS"))
+    # X_raw <- readRDS(paste0(tmpdir, "/spectral.matrix.RDS"))
       xmat <- X_raw[-1,]          # spectral matrix (each row is a spectrum; 
                                   # doesn't require alignment. normalization ok
                                   # but not necessary. scaling, no.)
@@ -131,14 +130,9 @@ fse <- function(pars){
     number.of.plots <- pars$storm$number.of.plots             # pdf of all extracted features will be plotted. Choose
                                                               # only 150 of these (evenly spaced) or suffer the
                                                               # consequences...
-    plot.location <- paste0(this.run,"/")                     # where to put the plot (just dump into run folder)
-    
-    plot.filename <- paste0('features_',
-      pars$study$id,
-      "_np_",noise.percentile,
-      "_r_",correlation.r.cutoff,
-      "_b_",b,".pdf")     # what to name the plot file
-
+                                                    
+    plot.location <- paste0(tmpdir,"/plots/")                     # where to put the plot (just dump into run folder)
+    dir.create(plot.location, showWarnings = FALSE)
     
 ################ Use corrPocketPairs to extract likely j-pairs ##################
  
@@ -276,11 +270,19 @@ fse <- function(pars){
     fse.result %>% test_nullish    
     message("Saving results...")
 
-    saveRDS(fse.result, paste0(this.run, "/fse.result.RDS"))
-    # fse.result <- readRDS(paste0(this.run, "/fse.result.RDS"))
+    saveRDS(fse.result, paste0(tmpdir, "/fse.result.RDS"))
+    # fse.result <- readRDS(paste0(tmpdir, "/fse.result.RDS"))
     
 ################ Plotting Results #######################
- 
+
+  # THIS DOESN'T WORK WHEN XDATA ARE TOO BIG
+  
+    # plot.filename <- paste0('features_',
+    #                         pars$study$id,
+    #                         "_np_",noise.percentile,
+    #                         "_r_",correlation.r.cutoff,
+    #                         "_b_",b,".pdf")     # what to name the plot file
+
         # # Plot all the storm results in grid (postage stamp) format
         # 
           
@@ -300,7 +302,7 @@ fse <- function(pars){
             #                           filename = str_c(plot.filename,".citrate.pdf"),
             #                           calcStocsy = FALSE,n_xticks = 4)
     
-    message("\nData written to ", this.run, "/fse.result.RDS")
+    message("\nData written to ", tmpdir, "/fse.result.RDS")
     message("\nFeature Shape Extraction completed.\n\n\n")
     message('-------------------------------------------------------')
     message('-------------------       FSE       -------------------')
