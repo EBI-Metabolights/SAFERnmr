@@ -19,7 +19,7 @@
 #' data in any places). Perfectly feasible is 1, not feasible is 0.
 #'
 #' A good weighted rmse and rval therefore indicates a good shape match between the
-#' feature and the ref-feat. A high bff score for a ref-feat and a given dataset
+#' feature and the ref-feat. A high score for a ref-feat and a given dataset
 #' spectrum indicates that reference spectrum region has a feasible fit to the data.
 #' These two pieces of information provide a basis for a believable association
 #' between the reference spectrum and the dataset spectrum.
@@ -28,11 +28,11 @@
 #' associating a given reference spectrum with a particular dataset spectrum. In
 #' fact, the ideal situation is numerous, highly feasible ref-feats associating the
 #' two and accounting for 100% of a reference spectrum signature. Thus, for every
-#' point along the reference spectrum, we take the highest bff score associated with
+#' point along the reference spectrum, we take the highest score associated with
 #' that point (from any ref-feat that covers a region including that point), with
 #' the default being 0. We could sum all these values for a given reference spectrum
 #' (again, focusing specifically on a single dataset spectrum). However, small peaks
-#' are downweighted by multiplying this composite "point-wise best bff score" vector
+#' are downweighted by multiplying this composite "point-wise best score" vector
 #' by the % total reference spectrum intensity of each point. Thus we account for
 #' the best-case feasibility of association of each ref spectral point, scaled by
 #' that point's overall relevance to the spectral signature. Summing these values
@@ -225,7 +225,7 @@ emptyScore <-
                                   rp.rows <- which(ref.pairs$ss.spec == ss.spec)
             
                                 # Loop through the matches associated with this ref - ss.spec pair ####
-                                # Update the bff values in v with any higher bff at that point ####
+                                # Update the score values in v with any higher score at that point ####
                                         ## Plotting to show in action: ####
                                           # reg <- refspec %>% trim_sides(out = "inds")
                                           # rs <- refspec
@@ -244,7 +244,7 @@ emptyScore <-
                                           # 
                                           # # 0th iteration
                                           # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                                          #   scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                                          #   scattermore::scattermoreplot(x = reg, y = fsa$scores[reg], ylim=c(0,1), cex = 1)
                                           # dev.off()
                                   # Actual loop ####
                                   for (j in rp.rows){
@@ -285,7 +285,7 @@ emptyScore <-
                                         ## I just print all of them to jpeg and animate the series in ppt.
                                         # Sys.sleep(.2)
                                         # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                                        #   scattermore::scattermoreplot(x = reg, y = bff.tot$scores[reg], ylim=c(0,1), cex = 1)
+                                        #   scattermore::scattermoreplot(x = reg, y = fsa$scores[reg], ylim=c(0,1), cex = 1)
                                         # dev.off()
                                         
                                   }
@@ -296,20 +296,20 @@ emptyScore <-
                                   rval <- sum_score(rval, refspec)
                                   fsaxrval <- sum_score(fsaxrval, refspec)
                                   min.score <- sum_score(min.score, refspec)
-                                  # if(any(c(bff.tot$scores.tot, bff.res$scores.tot, rmseb$scores.tot, min.score$scores.tot) > 0.9)){browser()}
+                                  # if(any(c(fsa$scores.tot, rval$scores.tot, fsaxrval$scores.tot, min.score$scores.tot) > 0.9)){browser()}
                                   
                                 # Return a list of score information for this sample-ref pair: ####
                                 # same format as emptyScore()
                                   list(
-                                         bfs.used.tot = bff.tot$rf.ids.tot, # keep these around; they're the best evidence
-                                         bfs.used.res = bff.res$rf.ids.tot, # keep these around; they're the best evidence
-                                         bfs.used.rmseb = rmseb$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.fsat = fsa$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.rval = rval$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.fsaxrval = fsaxrval$rf.ids.tot, # keep these around; they're the best evidence
                                          bfs.used.min.score = min.score$rf.ids.tot, # keep these around; they're the best evidence
                                          pair.scores = data.frame(ss.spec = ss.spec,
                                                                   ref = r.num,
-                                                                  score.tot = fsa$scores.tot, 
-                                                                  score.res = rval$scores.tot,
-                                                                  score.rmseb = fsaxrval$scores.tot,
+                                                                  score.fsa = fsa$scores.tot, 
+                                                                  score.rval = rval$scores.tot,
+                                                                  score.fsaxrval = fsaxrval$scores.tot,
                                                                   score.min = min.score$scores.tot)
                                   )
                             
@@ -395,9 +395,9 @@ emptyScore <-
            
         # Put in a single list
         
-          rfs.used <- list(tot = rfs.used.fsa,
-                           res = rfs.used.rval,
-                           rmseb = rfs.used.fsaxrval,
+          rfs.used <- list(fsa = rfs.used.fsa,
+                           rval = rfs.used.rval,
+                           fsaxrval = rfs.used.fsaxrval,
                            min = rfs.used.min,
                            score.mat.coords = rfs.used.score.coord)
         
@@ -426,7 +426,7 @@ emptyScore <-
 #' @param ref.pts indices of score.vect and rf.vect corresponding to this rf; those we are currently updating
 #'
 #' @return score object with relevant points updated in both vectors  
-#' Example: bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+#' Example: fsa <- update_scoreObj(ref.pairs[j, ], fsa, ref.pts)
 #'
 #' @export
 update_scoreObj <- function(rp, score.obj, ref.pts){
@@ -455,7 +455,7 @@ update_scoreObj <- function(rp, score.obj, ref.pts){
 #' @param ref.pts indices of score.vect and rf.vect corresponding to this rf; those we are currently updating
 #'
 #' @return score object with relevant points updated in both vectors  
-#' Example: bff.res <- update_scoreObj(ref.pair[j, ], bff.res, ref.pts)
+#' Example: fsa <- update_scoreObj(ref.pair[j, ], fsa, ref.pts)
 #'
 #' @export
 sum_score <- function(score.obj, refspec){

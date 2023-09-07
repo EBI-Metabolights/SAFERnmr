@@ -29,7 +29,7 @@ score_matches <- function(pars){
     fse.result <- readRDS(paste0(tmpdir,"/fse.result.RDS"))
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
-    feature <- readRDS(paste0(tmpdir,"/feature.final.RDS"))
+    feature <- readRDS(paste0(tmpdir,"/feature.final.RDS")) %>% expand_features()
 
     # match.info <- readRDS(paste0(tmpdir,"/match.info.RDS"))
 
@@ -45,7 +45,7 @@ score_matches <- function(pars){
       #                  function(x) x$mapped$data / sum(x$mapped$data, na.rm = T)
       #                  ) %>% do.call(rbind,.)
 
-      refmat <- readRDS(paste0(tmpdir,"/temp_data_matching/ref.mat.RDS"))
+      refmat <- readRDS(paste0(tmpdir,"/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows()
 
       cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind,.)
       # write(cmpd.names,"/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo.cmpd.names.txt", sep = '\t')
