@@ -86,13 +86,8 @@ backfit_rfs3 <- function(match.info,
       
       chunk.size <- max(1, nrow(match.info) / ncores)
       m.grp <- ceiling((1:nrow(match.info)) / chunk.size)
-      refsums <- Rfast::colsums(ref.mat, na.rm = T)
+      refsums <- Rfast::colsums(ref.mat, na.rm = T) # needed for normalizing ref features by total spectral signal
         
-    # Compress the features and ref stack ####
-      
-      # feature.c <- compress_features(feature)
-      # refmat.c <- compress_stack(ref.mat %>% t)
-      
     # Assign feature, ref.mat, and match.info subsets to each chunk ####
       chunks <- lapply(unique(m.grp), function(x) 
       {
@@ -112,6 +107,7 @@ backfit_rfs3 <- function(match.info,
              feat.numbers = feat.numbers,
              feature = feature.c %>% select_features(feat.numbers) %>% .[[c('stack','position')]],
              sfe = feature.c$sfe[feat.numbers])
+             # Could keep feature object together and just subset, but for now just split sfe and stack info
              # feature = list(stack = feature$stack[feat.numbers, , drop=F],
              #                position = feature$position[feat.numbers, , drop=F],
              #                sfe = feature$sfe[feat.numbers]
@@ -201,15 +197,15 @@ backfit_rfs3 <- function(match.info,
                               # sf <- match.info[x, ] %>% [propagated to ss.specs]
                               # alternatively, can just use the sf$lag
                               res <- opt_specFit_slim(sf, 
-                                                      feat.model = feature$position[sf$feat, ], 
+                                                      feat.model = feature$position[ sf$feat, ], 
                                                       refspec = refmat[ sf$ref, ], 
                                                       spec = xmat[ sf$ss.spec, ])
                               
-                            
+                              # fit.ref2spec <- res$fit
                               # fit.ref2spec <- fit_batman(fit$spec.fit, spec.region, 
                               #                       exclude.lowest = .5)
                             
-                              fit.ref <- fit.ref2spec$feat.fit
+                              fit.ref <- res$feat
                               # plot_fit(fit.ref2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
                               # plot_fit(fit.ref2spec, type = "simple") %>% plot
                               
