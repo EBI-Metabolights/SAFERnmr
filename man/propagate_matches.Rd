@@ -7,8 +7,8 @@
 propagate_matches(
   match.info,
   cluster,
-  feature.stack,
-  ref.mat,
+  feature.stack.c,
+  refmat.c,
   ncores,
   r.thresh,
   p.thresh,
@@ -21,10 +21,6 @@ propagate_matches(
 
 \item{cluster}{object (list) with cluster information, as provided by tina}
 
-\item{feature.stack}{feature profiles on rows}
-
-\item{ref.mat}{refs}
-
 \item{ncores}{pars}
 
 \item{r.thresh}{pars}
@@ -34,6 +30,10 @@ propagate_matches(
 \item{pad.size}{from matching}
 
 \item{this.run}{pars}
+
+\item{feature.stack}{feature profiles on rows}
+
+\item{ref.mat}{refs}
 }
 \value{
 updated and expanded match.info object. * Note: weighted.rmse and peak-specific fields may be duplicated/missing, as they cannot be computed here (or don't matter going forward)

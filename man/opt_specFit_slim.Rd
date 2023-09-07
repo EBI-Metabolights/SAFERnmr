@@ -2,11 +2,8 @@
 % Please edit documentation in R/opt_specFit_slim.R
 \name{opt_specFit_slim}
 \alias{opt_specFit_slim}
-\title{Given a specFit row (match info plus ss.spec information), expand the matched
-spec region to span-1 on each side of the specfit. For each internal lag, do 
-batman-style fitting and assess based on climbing to the first local maximum 
-spec signal accounted for (starting from current fit position). Return the 
-updated specFit row.}
+\title{Same as opt_specFit, but returns feature-specific region instead of expanded 
+segments.}
 \usage{
 opt_specFit_slim(sf, feat.model, refspec, spec)
 }
@@ -23,9 +20,15 @@ opt_specFit_slim(sf, feat.model, refspec, spec)
 updated specFit row (sf), with optimized fit coefficients and spec start/end
 }
 \description{
-Note: this is meant to be run during backfitting. Using after that will not 
-update some fields calculated there, e.g.:
+Given a specFit row (match info plus ss.spec information), expand the matched
+spec region to span-1 on each side of the specfit. For each internal lag, do 
+batman-style fitting and assess based on climbing to the first local maximum 
+spec signal accounted for (starting from current fit position). Return the 
+updated specFit row.
 }
 \details{
-"rmse" "rmse.biased" "pct.ref"
+Note: this is meant to be run during backfitting. Using after that will not 
+update some fields calculated there, e.g.:
+
+   "rmse" "rmse.biased" "pct.ref"
 }

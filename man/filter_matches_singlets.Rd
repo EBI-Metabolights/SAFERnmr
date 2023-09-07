@@ -6,8 +6,8 @@
 \usage{
 filter_matches_singlets(
   match.info,
-  feature.stack,
-  ref.mat,
+  f.cstack,
+  r.cstack,
   peak.qualities,
   pq.featureNumbers,
   res.area.threshold,
@@ -17,13 +17,13 @@ filter_matches_singlets(
 \arguments{
 \item{match.info}{The match information data.frame obtained within filter.matches.}
 
-\item{feature.stack}{e.g. feature$stack}
-
-\item{ref.mat}{spectral matrix for reference compounds}
-
 \item{peak.qualities}{A list of peak quality vectors (~ feature points' relevance in the reference database)}
 
 \item{pq.featureNumbers}{A vector of feature numbers to index the peak.qualities list. This is necessary when only a subset of features are matched and feature fits are filtered.}
+
+\item{feature.stack}{e.g. feature$stack}
+
+\item{ref.mat}{spectral matrix for reference compounds}
 
 \item{res.area.thresh}{The minimum reference spectrum resonance area that must be accounted for by the fit feature in order to consider it matched.}
 }
