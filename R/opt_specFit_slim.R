@@ -1,5 +1,8 @@
 # opt_specFit_slim ############################################################################
 #' 
+#' Same as opt_specFit, but returns feature-specific region instead of expanded 
+#' segments.
+#' 
 #' Given a specFit row (match info plus ss.spec information), expand the matched
 #' spec region to span-1 on each side of the specfit. For each internal lag, do 
 #' batman-style fitting and assess based on climbing to the first local maximum 
@@ -78,6 +81,6 @@ opt_specFit_slim <- function(sf, feat.model, refspec, spec){
     sf$spec.end <- sf$spec.end - res$lag
     
     return(list(sf = sf,
-                feat = res$fit.ref,
-                spec = res$fit.spec))
+                feat = res$fit$feat.fit,
+                spec = res$fit$spec.fit))
 }
