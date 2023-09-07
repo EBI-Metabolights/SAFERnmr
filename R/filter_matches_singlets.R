@@ -17,7 +17,7 @@
 #'
 #' @export
 filter_matches_singlets <- function(match.info, 
-                                    feature.stack, ref.mat, 
+                                    f.cstack, r.cstack, 
                                     peak.qualities, pq.featureNumbers, 
                                     res.area.threshold, ncores){
     
@@ -51,11 +51,11 @@ filter_matches_singlets <- function(match.info,
                ' of their area explained by the matching feature...')
         
         
-        f.cstack <- compress_stack(feature.stack)
-        r.cstack <- compress_stack(t(ref.mat)) # refs on rows
+        # f.cstack <- compress_stack(feature.stack)
+        # r.cstack <- compress_stack(t(ref.mat)) # refs on rows
         
-        rm(feature.stack)
-        rm(ref.mat)
+        # rm(feature.stack)
+        # rm(ref.mat)
         
         gc()
         

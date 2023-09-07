@@ -58,10 +58,10 @@
 #'
 #' @export
 backfit_rfs3 <- function(match.info, 
-                        feature, 
-                        xmat,
-                        ref.mat,
-                        ncores){
+                         feature.c, 
+                         xmat,
+                         refmat.c,
+                         ncores){
   
   success = TRUE
   emptyRow <- function(){data.frame(ss.spec = NA,
@@ -90,8 +90,8 @@ backfit_rfs3 <- function(match.info,
         
     # Compress the features and ref stack ####
       
-      feature.c <- compress_features(feature)
-      refmat.c <- compress_stack(ref.mat %>% t)
+      # feature.c <- compress_features(feature)
+      # refmat.c <- compress_stack(ref.mat %>% t)
       
     # Assign feature, ref.mat, and match.info subsets to each chunk ####
       chunks <- lapply(unique(m.grp), function(x) 
@@ -110,8 +110,8 @@ backfit_rfs3 <- function(match.info,
              refs = refmat.c %>% cstack_selectRows(ref.numbers),
              ref.sums = refsums[ref.numbers],
              feat.numbers = feat.numbers,
-             feature = feature.c %>% select_features(feat.numbers),
-             sfe = feature$sfe[feat.numbers])
+             feature = feature.c %>% select_features(feat.numbers) %>% .[[c('stack','position')]],
+             sfe = feature.c$sfe[feat.numbers])
              # feature = list(stack = feature$stack[feat.numbers, , drop=F],
              #                position = feature$position[feat.numbers, , drop=F],
              #                sfe = feature$sfe[feat.numbers]
@@ -121,8 +121,6 @@ backfit_rfs3 <- function(match.info,
       
     # Clean up big objects ####
       rm(match.info)
-      rm(feature)
-      rm(ref.mat)
       rm(feature.c)
       rm(refmat.c)
       
@@ -356,13 +354,10 @@ backfit_rfs3 <- function(match.info,
           #              ref.start = fit$ref.region[1],
           #              ref.end = fit$ref.region[2],
           #              ref = fit$ref,
-          #              # ref.start = fit$ref.region$ref.start,
-          #              # ref.end = fit$ref.region$ref.end,
           #              feat = fit$feat,
           #              ss.spec = lapply(bf$fits, function(f) f$ss.spec) %>% unlist,
-          #              bff.res = bf$bffs.res,
-          #              bff.tot = bf$bffs.tot,
-          #              pct.ref = pct.ref)
+          #              pct.ref = pct.ref,
+          #              + fit scores)
   
   # 1: select ref
   #   - this narrows down matches without ref

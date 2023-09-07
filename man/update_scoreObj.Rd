@@ -18,7 +18,7 @@ update_scoreObj(rp, score.obj, ref.pts)
 }
 \value{
 score object with relevant points updated in both vectors  
-Example: bff.res <- update_scoreObj(ref.pairs[j, ], bff.res, ref.pts)
+Example: fsa <- update_scoreObj(ref.pairs[j, ], fsa, ref.pts)
 }
 \description{
 Update ref-sample scoring vectors (accessory function for pair_score_summation())

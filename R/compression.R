@@ -95,7 +95,7 @@ cstack_selectRows <- function(cstack, row.nums){
   
   # Re-compress the positions
   
-    cstack$pos <- pos[keep] %>% compress_pos(m = cstack$m, 
+    cstack$pos <- pos[selected.points] %>% compress_pos(m = cstack$m, 
                                               n = cstack$n)
   
   # reset m for subset matrixrows? NO: pos is in terms of m, and must remain that way
@@ -359,8 +359,8 @@ runs2ranges <- function(keep){
 # expand_runs #####################################################################################################
 #' Expand ranges to a vector
 #'
-#' @param keep vector of non-sparse position inds
-#' @return ranges of the incremental runs in keep
+#' @param ranges position ranges (for row-wise linear inds)
+#' @return expanded position vector (row-wise linear inds)
 #' 
 #' Example: all.equal(expand_runs(runs2ranges(keep)), keep)
 #'          
@@ -442,7 +442,7 @@ co_compress <- function(stack.list, sparse.val = NA,
 #'
 #' @param cstack compressed stack where vals is a list of co-compressed stacks
 #' @param which.stacks inds or names of stacks to return from vals 
-#' @return ranges of the incremental runs in keep
+#' @return expanded stack.list
 #' 
 #' Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
 #'          cstack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')

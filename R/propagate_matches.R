@@ -32,7 +32,7 @@
 #' @importFrom data.table rbindlist
 #' 
 #' @export
-propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncores, r.thresh, p.thresh, pad.size, this.run){
+propagate_matches <- function(match.info, cluster, feature.stack.c, refmat.c, ncores, r.thresh, p.thresh, pad.size, this.run){
     
   
         # Set up default empty row:
@@ -129,15 +129,17 @@ propagate_matches <- function(match.info, cluster, feature.stack, ref.mat, ncore
                       # Get the lags and fits for the new matches to rfs ####
                       
                         # Extract out the feature
-                          feat <- feature.stack[cluster.member, ] %>% scale_between
+                          feat <- feature.stack.c %>% cstack_selectRows(cluster.member) %>% cstack_expandRows %>% scale_between
+                          # feat <- feature.stack[cluster.member, ] %>% scale_between
                           # feat <- feature.stack[508, ] %>% scale_between
                             # simplePlot(feat)
                             
                         # Update the feature bounds to match THIS feature, not the key feature ####
                           # First, expand to use the whole feature (so we know how to ss the ref region):
                           # Make the ref feat (full length)
-                            ref.inds <- rf$lag - pad.size + (0:(ncol(feature.stack)-1))
-                            ref.feat <- ref.mat[ref.inds, rf$ref]
+                            ref.inds <- rf$lag - pad.size + (0:(length(feat)-1))
+                            ref.feat <- refmat.c %>% cstack_selectRows(rf$ref) %>% cstack_expandRows %>% .[ref.inds]
+                            # ref.feat <- ref.mat[ref.inds, rf$ref]
                               # simplePlot(ref.feat)
                               
                           # Then, re-subset the feature and ref inds to match new feature:

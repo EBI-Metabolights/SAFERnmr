@@ -43,8 +43,8 @@ filter_matches <- function(pars){
       ppm <- fse.result$ppm
       rm(fse.result)
 
-    feature <- readRDS(paste0(this.run, "/feature.final.RDS")) %>% expand_features()
-    ref.mat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows()
+    feature.c <- readRDS(paste0(this.run, "/feature.final.RDS"))
+    refmat.c <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
     pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
     # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
     
@@ -109,8 +109,9 @@ filter_matches <- function(pars){
           if (cluster$method == 'none'){
             # do nothing
           } else {
-            match.info <- propagate_matches(match.info, cluster, feature$stack, 
-                                            ref.mat, pars$par$ncores, pars$matching$r.thresh, pars$matching$p.thresh, pad.size, this.run)
+            match.info <- propagate_matches(match.info, cluster, feature.c$stack, 
+                                            refmat.c, pars$par$ncores, pars$matching$r.thresh, 
+                                            pars$matching$p.thresh, pad.size, this.run)
             
             match.info %>% debug_write("match.info.propagated.RDS", pars)
             # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.propagated.RDS"))
@@ -123,8 +124,8 @@ filter_matches <- function(pars){
         # source('./../filter.matches_shiftDelta.R')
   printTime()
         message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
-        res <- filter_matches_shiftDelta(match.info, feature$position, ppm = ppm,
-                                         ppm.tol = pars$matching$filtering$ppm.tol)
+        res <- filter_matches_shiftDelta(match.info, feature.c %>% expand_features %>% .[['position']], 
+                                         ppm = ppm, ppm.tol = pars$matching$filtering$ppm.tol)
         # scattermore::scattermoreplot(x = 1:nrow(res), y = res$ppm.difference %>% sort)
 
         message('\n\t', nrow(res),' / ', nrow(match.info), ' matches survived (', round(nrow(res)/nrow(match.info)*100), ' %).')
@@ -137,7 +138,7 @@ filter_matches <- function(pars){
 ######################### Remove singlets ############################################
     printTime()
       # Do the filtering (functionalized)
-        match.info <- filter_matches_singlets(match.info, feature$stack, ref.mat,
+        match.info <- filter_matches_singlets(match.info, feature.c$stack, refmat.c,
                                                peak.qualities, pq.featureNumbers, 
                                                pars$matching$filtering$res.area.threshold,
                                                pars$par$ncores)
@@ -159,9 +160,9 @@ filter_matches <- function(pars){
       # adjusted to account for sfe
 
         backfit.results <- backfit_rfs3(match.info, 
-                                       feature, # has sfe data 
+                                       feature.c, # has sfe data 
                                        xmat,
-                                       ref.mat, 
+                                       refmat.c, 
                                        pars$par$ncores)
         
         message('Saving backfits...\n\n\n')

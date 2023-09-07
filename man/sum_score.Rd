@@ -18,7 +18,7 @@ sum_score(score.obj, refspec)
 }
 \value{
 score object with relevant points updated in both vectors  
-Example: bff.res <- update_scoreObj(ref.pair[j, ], bff.res, ref.pts)
+Example: fsa <- update_scoreObj(ref.pair[j, ], fsa, ref.pts)
 }
 \description{
 Sum the score in the scoresObj

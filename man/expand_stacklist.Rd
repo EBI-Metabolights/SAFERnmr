@@ -12,7 +12,7 @@ expand_stacklist(cstack, which.stacks = NULL, row.nums = NULL)
 \item{which.stacks}{inds or names of stacks to return from vals}
 }
 \value{
-ranges of the incremental runs in keep
+expanded stack.list
 
 Example: stack <- rbind(c(NA, NA, 1, 3, 5, 3, NA, 1, NA), c(NA, 1, 3, 5, NA, 3, NA, 1, 3), c(3, 5, NA, NA, 1, NA, NA, 1, 3))
          cstack <- co_compress(stack.list = list(a = stack, b = stack-1), sparse.val = NA, key = 'a')

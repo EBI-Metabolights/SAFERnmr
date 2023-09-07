@@ -4,14 +4,14 @@
 \alias{backfit_rfs3}
 \title{Back-fit reference features to a subset of spectra}
 \usage{
-backfit_rfs3(match.info, feature, xmat, ref.mat, ncores)
+backfit_rfs3(match.info, feature.c, xmat, refmat.c, ncores)
 }
 \arguments{
 \item{match.info}{A data frame containing information about the matches between features and reference spectra}
 
-\item{feature}{List containing feature intensities and positions}
-
 \item{xmat}{Full spectral matrix from which the features were derived}
+
+\item{feature}{List containing feature intensities and positions}
 }
 \value{
 A list containing the back-fits and back-fit feasibility scores for each spectrum in the subset,

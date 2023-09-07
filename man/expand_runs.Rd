@@ -7,10 +7,10 @@
 expand_runs(ranges)
 }
 \arguments{
-\item{keep}{vector of non-sparse position inds}
+\item{ranges}{position ranges (for row-wise linear inds)}
 }
 \value{
-ranges of the incremental runs in keep
+expanded position vector (row-wise linear inds)
 
 Example: all.equal(expand_runs(runs2ranges(keep)), keep)
 }
