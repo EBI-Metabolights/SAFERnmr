@@ -75,6 +75,7 @@ backfit_rfs3 <- function(match.info,
     )
   }
   
+
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
     # Sort by ref, so we can group chunks by ref
@@ -284,7 +285,7 @@ backfit_rfs3 <- function(match.info,
     # saveRDS(backfits.by.chunk, paste0(pars$dirs$temp, '/backfits.init.RDS'))
       # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
     backfits <- backfits.by.chunk %>% unlist(recursive = F)
-
+  
   # Undo mi.order for both objects ####
     message('\tunsorting the match.info and backfits...\n')
     match.info <- match.info[order(mi.order),]
@@ -292,11 +293,17 @@ backfit_rfs3 <- function(match.info,
 
   # Remove NA rows
     # backfits
-      backfits <- lapply(backfits, function(x) x %>% is.na %>% rowSums %>% "=="(0) %>% x[.,])
-      bad <- lapply(backfits, function(x) x %>% is.null) %>% unlist
-      backfits <- backfits[!bad]
+      # Make sure these are dfs
+        is.df <- lapply(backfits, function(x) is.data.frame(x)) %>% unlist
+      # Check each df for rows with nas, and eliminate those rows
+        backfits <- lapply(backfits, function(x) x %>% is.na %>% rowSums %>% "=="(0) %>% x[., ])
+      # Check each df to make sure it still has data
+        has.rows <- lapply(backfits, function(x) nrow(x) > 0) %>% unlist
+      
+      good.bfs <- is.df & has.rows
+      backfits <- backfits[good.bfs]
     # matches
-      match.info <- match.info[!bad]
+      match.info <- match.info[good.bfs]
       
     message('\tbackfitting completed on ', length(backfits), ' ref-features.')
     # message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
