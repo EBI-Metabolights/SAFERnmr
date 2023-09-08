@@ -114,8 +114,8 @@ score_matches <- function(pars){
           # Put into matrix
             
               # scores <- ss.ref.pair.scores$score.rmseb
-              vals <- ss.ref.pair.scores$score.tot
-              # scattermore::scattermoreplot(seq_along(scores), sort(scores))
+              vals <- ss.ref.pair.scores$score.fsaxrval
+              # scattermore::scattermoreplot(seq_along(vals), sort(vals))
               # hist(scores, breaks = 1000)
               
               ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
