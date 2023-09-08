@@ -40,7 +40,10 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
             max.lag <- tryCatch(
               {
                 pks <- extractPeaks_corr(spec.segment)
-                pks$bounds %>% unlist %>% matrix(nrow=2) %>% diff %>% max
+                min(
+                  pks$bounds %>% unlist %>% matrix(nrow=2) %>% diff %>% max,
+                  length(feat)-1
+                )
               },
               error = function(cond)
               {
@@ -53,16 +56,21 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
             # Run the loop 
               
               fit.vals <- lapply(lags, function(lag){
+                
                 tryCatch(
                   {
                     lil.spec <- spec.segment[window.pos - lag]
                     lil.ref <- feat
-                    
+                    # if (length(lil.spec) != length(lil.ref)){browser()}
                     fit <- fit_batman(feat = lil.ref, spec = lil.spec, exclude.lowest = 0.5)
                       data.frame(fsa = fit$fraction.spec.accounted,
                                  ratio = fit$ratio) # if optimization is constrained to peak, use ratio to opt
 
                   },
+                  # warning = function(cond){
+                  #     data.frame(fsa = 0,
+                  #                ratio = 0)
+                  # },
                   error = function(cond){
                       data.frame(fsa = 0,
                                  ratio = 0)
@@ -91,6 +99,7 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
             lil.ref <- feat
             
             fit <- fit_batman(feat = lil.ref, spec = lil.spec, exclude.lowest = 0.5)
+
             fit$rval <- cor(fit$feat.fit, fit$spec.fit, use = "pairwise.complete.obs")
             
             #   plot_fit(fit, type = 'auc')
@@ -99,8 +108,8 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
           
             ref.segment <- rep(NA, length(spec.segment))
             ref.segment[window.pos - opt.lag] <- fit$feat.fit
-              # plot_fit(list(feat.fit = ref.segment,
-              #               spec.fit = spec.segment), type = 'auc')
+              plot_fit(list(feat.fit = ref.segment,
+                            spec.fit = spec.segment), type = 'auc')
               # simplePlot(ref.segment)
               # simplePlot(spec.segment)
             
