@@ -18,7 +18,6 @@
 #' @export
 filter_matches_singlets <- function(match.info, 
                                     f.cstack, r.cstack, 
-                                    peak.qualities, pq.featureNumbers, 
                                     res.area.threshold, ncores){
     
       
@@ -62,7 +61,7 @@ filter_matches_singlets <- function(match.info,
         
       # Apply singlet filters to each mi row, and add the results as fields. 
         match.info <- mclapply(1:nrow(match.info),
-        # minf <- lapply(1:nrow(match.info),
+        # minf <- pblapply(1:nrow(match.info),
                                function(m){
           # m <- 100000                       
           # print(m)
