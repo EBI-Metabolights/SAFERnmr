@@ -28,9 +28,9 @@ plot_fit <- function(fit, type = "simple",
     
   # Zoom to feature
   
-    ys <- range(fit$feat.fit, na.rm = TRUE)
-    adj <- c(-0.1, 0.1)
-    new.lims <- ys + ys*adj
+    # ys <- range(fit$feat.fit, na.rm = TRUE)
+    # adj <- c(-0.1, 0.1)
+    # new.lims <- ys + ys*adj
 
     # Adjust spec region with NAs if outside the zoom
     
@@ -39,13 +39,13 @@ plot_fit <- function(fit, type = "simple",
   
   not.na <- which(!is.na(fit$spec.fit))
   
-  if (is.null(ppm)){ppm <- not.na}
+  if (is.null(ppm)){ppm <- not.na %>% range %>% fillbetween}
   
   # if (any(is.na(ppm))){complete_indsVect(ppm)}
   
   if (type == "simple"){
     
-      g <- simplePlot(fit$spec.fit[not.na],
+      g <- simplePlot(fit$spec.fit,
                       xvect = ppm,
                       linecolor = "gray",
                       opacity = .9, 
