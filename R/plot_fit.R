@@ -74,8 +74,9 @@ plot_fit <- function(fit, type = "simple",
       feature.chunks <- run.labels(!is.na(ff))
       
       for (i in unique(feature.chunks[feature.chunks>0])){
-        # i <- feature.chunks[2]
+        # i <- 1
         this.chunk <- feature.chunks == i
+        if (sum(this.chunk) < 2){next}
         g <- g + new_scale_color() +
               ggplot2::geom_area(data = data.frame(vals = ff[this.chunk],
                                                    ppms = ppm[this.chunk]),
