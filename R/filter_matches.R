@@ -138,10 +138,15 @@ filter_matches <- function(pars){
 ######################### Remove singlets ############################################
     printTime()
       # Do the filtering (functionalized)
-        match.info <- filter_matches_singlets(match.info, feature.c$stack, refmat.c,
-                                               peak.qualities, pq.featureNumbers, 
-                                               pars$matching$filtering$res.area.threshold,
-                                               pars$par$ncores)
+          
+        # For each match, how many peaks are contained in the ref and feature match regions
+        # (not including NA gaps)
+        message('Filtering out singlet matches (either ref or feature)...')
+          match.info <- filter_matches_singlets2(match.info, feature.c, refmat.c, pars$par$ncores)
+          
+        # match.info <- filter_matches_singlets(match.info, feature.c$stack, refmat.c,
+        #                                        pars$matching$filtering$res.area.threshold,
+        #                                        pars$par$ncores)
         
         match.info %>% debug_write("match.info.filtered.RDS", pars)
         # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.filtered.RDS"))
@@ -159,11 +164,11 @@ filter_matches <- function(pars){
     # Back-fit each matched reference region to the subset spectra
       # adjusted to account for sfe
 
-        backfit.results <- backfit_rfs3(match.info, 
-                                       feature.c, # has sfe data 
-                                       xmat,
-                                       refmat.c, 
-                                       pars$par$ncores)
+        backfit.results <- backfit_rfs3(match.info = match.info,
+                                        feature.c = feature.c, # has sfe data 
+                                        xmat = xmat,
+                                        refmat.c = refmat.c, 
+                                        ncores = pars$par$ncores)
         
         message('Saving backfits...\n\n\n')
         saveRDS(backfit.results, paste0(this.run,"/backfit.results.RDS"))

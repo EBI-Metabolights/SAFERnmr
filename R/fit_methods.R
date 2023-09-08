@@ -82,11 +82,13 @@ fit_batman <- function(feat, spec,
                        ppm = NULL,
                        plots = FALSE){
 
+
   # Get the overlap between the two vects ####
     # can't compute where one is NAs
     
     use <- !is.na(feat + spec)
-
+    # if(!any(use)){return(batman_nullfit)}
+    
   # Zero-bottom the vects ####
     # negative values do bad things. Start both @ zero for scaling purposes
     # since we're fitting to v2, we'll want to add sub.v2 back to the fit after scaling
@@ -399,3 +401,13 @@ fit_obj <- function(){
   )
 }
   
+# batman_nullfit <- function(){
+#     return(list(feat.fit = NA,
+#                 spec.fit = NA,
+#                 keypoint = NA,
+#                 ratio = NA,
+#                 intercept = NA, # see above
+#                 residuals = NA,
+#                 fraction.spec.accounted = NA,
+#                 plot = NA))
+# }

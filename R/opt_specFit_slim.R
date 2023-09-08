@@ -26,12 +26,6 @@
 #' @export
 opt_specFit_slim <- function(sf, feat.model, refspec, spec){
   
-  # sf <- sfs[x, ]
-  #   sf <- match.info[x, ] %>% [propagated to ss.specs]
-  # feat.model <- feature$position[sf$feat, ]
-  # refspec <- refmat[ sf$ref, ]
-  # spec <- xmat[ sf$ss.spec, ]
-     
   # Get feature (the profile being fit) ####
   
       # Get the feature model
@@ -65,7 +59,8 @@ opt_specFit_slim <- function(sf, feat.model, refspec, spec){
       
   # Optimize location by batmat fitting ####
       
-      res <- batman_local_opt(feat = rf, spec.segment, 
+      res <- batman_local_opt(feat = rf, 
+                              spec.segment, 
                               window.pos,
                               exclude.lowest = 0.5, 
                               opt.on = 'fraction.spec.accounted')
@@ -81,6 +76,7 @@ opt_specFit_slim <- function(sf, feat.model, refspec, spec){
     sf$spec.end <- sf$spec.end - res$lag
     
     return(list(sf = sf,
+                fit = res$fit,
                 feat = res$fit$feat.fit,
                 spec = res$fit$spec.fit))
 }
