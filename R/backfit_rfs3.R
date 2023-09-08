@@ -125,7 +125,7 @@ backfit_rfs3 <- function(match.info,
       # gc()
       
   # Compute over each chunk in parallel ####
-    browser()
+    
     t1 <- Sys.time()
       
       # Each core gets:
@@ -140,13 +140,13 @@ backfit_rfs3 <- function(match.info,
       ############# For each chunk (in parallel): ###############
         # chunk <- chunks[[2]]
         
-        backfits.chunk <- pblapply(1:100,#nrow(chunk$match.info),
+        backfits.chunk <- pblapply(1:1000, nrow(chunk$match.info),
                            function(m) {
           tryCatch({
             
           #############        For each match:         ###############
               # m <- 98
-              print(m)
+              
             # Get data, expand fit ####
               
               mi <- chunk$match.info[m, ]
@@ -163,7 +163,7 @@ backfit_rfs3 <- function(match.info,
                 # Apply feature fit to ref region (just using this to extract profiles, really)
                 # the ref is the thing getting fit to, but it is scaled
                 
-                  fit <- apply_fit2(mi, v1 = lil.feat$stack, v2 = lil.ref) #%>% plot_fit()
+                  fit <- apply_fit2(mi, v1 = lil.feat$stack, v2 = lil.ref) #%>% plot_fit(fit)
                     
                   # Calculate % of ref signature covered by this ref feat:
                     ref.reg <- lil.ref[mi$ref.start:mi$ref.end]
@@ -177,19 +177,19 @@ backfit_rfs3 <- function(match.info,
                 
                 sfs$spec.start <- lil.feat$position[mi$feat.start] + sfs$lag
                 sfs$spec.end <- lil.feat$position[mi$feat.end] + sfs$lag
-                
+                sfs$feat.start <- mi$feat.start
+                sfs$feat.end <- mi$feat.end
+                sfs$ref.start <- mi$ref.start
+                sfs$ref.end <- mi$ref.end
+                      
             # Calculate rf fit for each spec-feature: ####
                 
               fits <- lapply(1:nrow(sfs), function(s){
                 tryCatch(
                   {
                     # Get the ref region and spec data: ####
-                      # s <- 1
+                      # s <- 17
                       sf <- sfs[s,]
-                      sf$feat.start <- mi$feat.start
-                      sf$feat.end <- mi$feat.end
-                      sf$ref.start <- mi$ref.start
-                      sf$ref.end <- mi$ref.end
                           
                     # Back-fit the ref region to the filled spec data using the feature ####
                     
@@ -221,10 +221,16 @@ backfit_rfs3 <- function(match.info,
                                               fit.rval = fit$rval
                                               )
                                    ) 
-                  }, 
-                  error = function(cond){
+                  }, warning = function(cond){
+                    print(m)
                     print(x)
-                    emptyRow()
+                    browser()
+                    # emptyRow()
+                  }, error = function(cond){
+                    print(m)
+                    print(x)
+                    browser()
+                    # emptyRow()
                   }
                 )
                 
