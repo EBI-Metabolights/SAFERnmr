@@ -64,17 +64,16 @@ backfit_rfs3 <- function(match.info,
                          ncores){
   
   success = TRUE
-  emptyRow <- function(){data.frame(ss.spec = NA,
-                                        fit.intercept = NA, 
-                                        fit.scale = NA,
-                                        spec.start = NA,
-                                        spec.end = NA,
-                                        fit.fsa = NA,
-                                        fit.rval = NA,
-                                        # rmse = NA,
-                                        # rmse.biased = NA
-                                    )
-    }
+  emptyRow <- function(){
+    data.frame(ss.spec = NA,
+              fit.intercept = NA, 
+              fit.scale = NA,
+              spec.start = NA,
+              spec.end = NA,
+              fit.fsa = NA,
+              fit.rval = NA
+    )
+  }
   
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
@@ -86,7 +85,7 @@ backfit_rfs3 <- function(match.info,
       
       chunk.size <- max(1, nrow(match.info) / ncores)
       m.grp <- ceiling((1:nrow(match.info)) / chunk.size)
-      refsums <- Rfast::colsums(ref.mat, na.rm = T) # needed for normalizing ref features by total spectral signal
+      refsums <- Rfast::rowsums(refmat.c %>% cstack_expandRows, na.rm = TRUE) # needed for normalizing ref features by total spectral signal
         
     # Assign feature, ref.mat, and match.info subsets to each chunk ####
       chunks <- lapply(unique(m.grp), function(x) 
@@ -100,12 +99,15 @@ backfit_rfs3 <- function(match.info,
           mi$feat <- lapply(mi$feat, function(x) which(feat.numbers == x)) %>% unlist
           mi$ref <- lapply(mi$ref, function(x) which(ref.numbers == x)) %>% unlist
         
+          fcss <- feature.c %>% select_features(feat.numbers) #%>% .[['stack']]
+          
+          
         list(match.info = mi,
              ref.numbers = ref.numbers,
              refs = refmat.c %>% cstack_selectRows(ref.numbers),
              ref.sums = refsums[ref.numbers],
              feat.numbers = feat.numbers,
-             feature = feature.c %>% select_features(feat.numbers) %>% .[[c('stack','position')]],
+             feature = list(stack = fcss$stack, position = fcss$position),
              sfe = feature.c$sfe[feat.numbers])
              # Could keep feature object together and just subset, but for now just split sfe and stack info
              # feature = list(stack = feature$stack[feat.numbers, , drop=F],
@@ -116,14 +118,14 @@ backfit_rfs3 <- function(match.info,
       })
       
     # Clean up big objects ####
-      rm(match.info)
-      rm(feature.c)
-      rm(refmat.c)
-      
-      gc()
+      # rm(match.info)
+      # rm(feature.c)
+      # rm(refmat.c)
+      # 
+      # gc()
       
   # Compute over each chunk in parallel ####
-    
+    browser()
     t1 <- Sys.time()
       
       # Each core gets:
@@ -138,32 +140,30 @@ backfit_rfs3 <- function(match.info,
       ############# For each chunk (in parallel): ###############
         # chunk <- chunks[[2]]
         
-        backfits.chunk <- lapply(1:nrow(chunk$match.info),
+        backfits.chunk <- pblapply(1:100,#nrow(chunk$match.info),
                            function(m) {
           tryCatch({
             
           #############        For each match:         ###############
-              # m <- 1
-              # print(m)
+              # m <- 98
+              print(m)
             # Get data, expand fit ####
               
               mi <- chunk$match.info[m, ]
               
               # Rebuild the feature fit to ref region
                 
-                # Get the positions out
-                  # use apply_fit2 as version with stacks passed instead of cstacks
-                  # compressed.feature <- chunk$feature
-                  # row.nums <- mi$feat
-                lil.feat <- chunk$feature %>% expand_features(row.nums = chunk$feat.numbers[mi$feat])
-                lil.ref <- chunk$refs %>% cstack_selectRows(chunk$ref.numbers[mi$ref]) %>% cstack_expandRows
+                # Get the feature and ref out
+                  
+                  lil.feat <- chunk$feature %>% expand_features(row.nums = chunk$feat.numbers[mi$feat])
+                  lil.ref <- chunk$refs %>% cstack_selectRows(chunk$ref.numbers[mi$ref]) %>% cstack_expandRows
               
-                feat.cols <- lil.feat$position[mi$feat.start:mi$feat.end]
+                  feat.cols <- lil.feat$position[mi$feat.start:mi$feat.end]
 
                 # Apply feature fit to ref region (just using this to extract profiles, really)
                 # the ref is the thing getting fit to, but it is scaled
                 
-                  fit <- apply_fit2(mi, v1 = lil.feat$profile, v2 = lil.ref) #%>% plot_fit()
+                  fit <- apply_fit2(mi, v1 = lil.feat$stack, v2 = lil.ref) #%>% plot_fit()
                     
                   # Calculate % of ref signature covered by this ref feat:
                     ref.reg <- lil.ref[mi$ref.start:mi$ref.end]
@@ -173,20 +173,23 @@ backfit_rfs3 <- function(match.info,
               # get info for the individual spec-features
               
                 sfs <- data.frame(lag = chunk$sfe[[mi$feat]]$lags,
-                                  spec.number = chunk$sfe[[mi$feat]]$feat$ss)
-    
+                                  ss.spec = chunk$sfe[[mi$feat]]$feat$ss)
+                
+                sfs$spec.start <- lil.feat$position[mi$feat.start] + sfs$lag
+                sfs$spec.end <- lil.feat$position[mi$feat.end] + sfs$lag
+                
             # Calculate rf fit for each spec-feature: ####
-            
+                
               fits <- lapply(1:nrow(sfs), function(s){
                 tryCatch(
                   {
                     # Get the ref region and spec data: ####
                       # s <- 1
                       sf <- sfs[s,]
-                      sf$ss.spec <- sf$spec.number
-                      spec.cols <- (feat.cols + sf$lag) %>% range(na.rm = T)
-                        sf$spec.start <- spec.cols[1]
-                        sf$spec.end <- spec.cols[2]
+                      sf$feat.start <- mi$feat.start
+                      sf$feat.end <- mi$feat.end
+                      sf$ref.start <- mi$ref.start
+                      sf$ref.end <- mi$ref.end
                           
                     # Back-fit the ref region to the filled spec data using the feature ####
                     
@@ -196,58 +199,31 @@ backfit_rfs3 <- function(match.info,
                               
                               # sf <- match.info[x, ] %>% [propagated to ss.specs]
                               # alternatively, can just use the sf$lag
+                              
                               res <- opt_specFit_slim(sf, 
-                                                      feat.model = feature$position[ sf$feat, ], 
-                                                      refspec = refmat[ sf$ref, ], 
+                                                      feat.model = lil.feat$position, 
+                                                      refspec = lil.ref, 
                                                       spec = xmat[ sf$ss.spec, ])
                               
-                              # fit.ref2spec <- res$fit
-                              # fit.ref2spec <- fit_batman(fit$spec.fit, spec.region, 
-                              #                       exclude.lowest = .5)
-                            
-                              fit.ref <- res$feat
-                              # plot_fit(fit.ref2spec, type = "simple", ppm = ppm[spec.cols]) %>% plot
-                              # plot_fit(fit.ref2spec, type = "simple") %>% plot
+                              fit <- res$fit
                               
-                          # Calculate additional scores ####
-                            
-                            # srf <- rbind(fit.ref, spec.region) %>% scale_between()
-                            # 
-                            # residuals <- srf[1,] - srf[2,]
-                            # use <- !is.na(fit.ref - spec.region)
-                            # if (any(use)){
-                            #   
-                            #   rmse <- Metrics::rmse(srf[1,use], srf[2,use]) # this would penalize underfits equally
-                            #   
-                            #   not.neg <- residuals >= 0  &  use
-                            #   if(sum(not.neg) == 0){
-                            #     # This will catch NULL and empty vectors. NA, NaNs could get through. 
-                            #     rmse.biased <- 0
-                            #   }else{
-                            #     # sqrt(sum(residuals[not.neg]^2)/length(residuals))
-                            #     # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
-                            #     # rmse.pos <- Metrics::rmse(srf[1,not.neg], srf[2,not.neg]) # this is too generous
-                            #     # rmse.biased <- sqrt(sum(resid.biased[not.neg])/length(residuals)) # too generous
-                            #     resid.sq.biased <- residuals[not.neg]*srf[1,not.neg]
-                            #     rmse.biased <- sqrt(sum(resid.sq.biased)/sum(not.neg))
-                            #   }
-                            # }
-                            
+                              # plot_fit(list(feat.fit = res$feat,
+                              #               spec.fit = res$spec), type = 'auc')
+                              
                         # Return results ####
 
-                            return(data.frame(ss.spec = ss.spec,
-                                              fit.intercept = fit.ref2spec$intercept, 
-                                              fit.scale = fit.ref2spec$ratio,
+                            return(data.frame(ss.spec = sf$ss.spec,
+                                              fit.intercept = fit$intercept, 
+                                              fit.scale = fit$ratio,
                                               spec.start = spec.cols[1],
-                                              spec.end = tail(spec.cols,1),
+                                              spec.end = spec.cols[2],
                                               fit.fsa = fit$fraction.spec.accounted,
-                                              fit.rval = fit$rval#,
-                                              # rmse = rmse,
-                                              # rmse.biased = rmse.biased
+                                              fit.rval = fit$rval
                                               )
                                    ) 
                   }, 
                   error = function(cond){
+                    print(x)
                     emptyRow()
                   }
                 )
