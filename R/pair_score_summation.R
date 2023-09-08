@@ -95,7 +95,7 @@ emptyScore <-
         refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
         
       # Read in feature data and compress
-        feature <- readRDS(paste0(this.run, "/feature.final.RDS"))
+        feature <- readRDS(paste0(this.run, "/feature.final.RDS")) %>% expand_features
         features.compressed <- feature$position %>% compress_stack
         rm(feature)
         
@@ -161,15 +161,15 @@ emptyScore <-
               # Go through this list of by.refs
                                                                    
               # pblapply(chonk[1:10], function(r.list){
-              lapply(chonk, function(r.list){
+              pblapply(chonk, function(r.list){
                 tryCatch(
                   {
                         
                         # For each ref:
-                        # r.list <- chonk[[209]]
+                        # r.list <- chonk[[1]]
                         
                         # Make sure there are actually spectra in the interactions list ####
-                          if(nrow(r.list$ref.pairs) < 1){return(emptyScore())}
+                          if(nrow(r.list$ref.pairs) < 1){return(emptyScore)}
                         
                         # Extract the interactions info from the r.list object for this ref ####
                           r.num <- r.list$ref.num
@@ -190,18 +190,19 @@ emptyScore <-
         
                         # Set up cumulative score vector objs (will be recycled each sample iteration) ####
                       
-                          fsa <- list(score.name = 'fsa',
+                          fsa <- list(score.name = 'fit.fsa',
                                           scores = rep(0, length(refspec)),
                                           rf.ids = rep(0, length(refspec)))
                           rval <- fsa
-                            rval$score.name = 'rval'
+                            rval$score.name = 'fit.rval'
                           fsaxrval <- fsa
                             fsaxrval$score.name = 'fsaxrval'
                           min.score <- fsa
                             min.score$score.name = 'min.score'
         
-                          ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fsa,
-                                                                      ref.pairs$rval,
+                          ref.pairs$fsaxrval <- ref.pairs$fit.fsa * ref.pairs$fit.rval
+                          ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fit.fsa,
+                                                                      ref.pairs$fit.rval,
                                                                       ref.pairs$fsaxrval),value = TRUE)
                           
                         # Loop through ref-ss.spec combinations and calculate scores ####
@@ -244,7 +245,7 @@ emptyScore <-
                                           # 
                                           # # 0th iteration
                                           # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                                          #   scattermore::scattermoreplot(x = reg, y = fsa$scores[reg], ylim=c(0,1), cex = 1)
+                                          #   scattermore::scattermoreplot(x = reg, y = fsaxrval$scores[reg], ylim=c(0,1), cex = 1)
                                           # dev.off()
                                   # Actual loop ####
                                   for (j in rp.rows){
@@ -257,6 +258,7 @@ emptyScore <-
                                         ## Turn on for plotting an example: ####
                                           # idx <- idx + 1
                                           # j <- rp.rows[idx]
+                                          
                                     # Get the ref range for the matched ref-feat ####
                                       # Where is the ref range? It's in the backfit, now. Need this to calculate pct ref accounted,
                                       # but that is done after we decide which ref points will be included. For now we're just keeping
@@ -284,8 +286,9 @@ emptyScore <-
                                         ## More plotting...can set a delay to update each iteration in slowed time if you want. ####
                                         ## I just print all of them to jpeg and animate the series in ppt.
                                         # Sys.sleep(.2)
+                                        # print(j)
                                         # jpeg(file=paste0("rf.scoring",j,".jpeg"), width=1200, height=700)
-                                        #   scattermore::scattermoreplot(x = reg, y = fsa$scores[reg], ylim=c(0,1), cex = 1)
+                                        #   scattermore::scattermoreplot(x = reg, y = fsaxrval$scores[reg], ylim=c(0,1), cex = 1)
                                         # dev.off()
                                         
                                   }
@@ -301,7 +304,7 @@ emptyScore <-
                                 # Return a list of score information for this sample-ref pair: ####
                                 # same format as emptyScore()
                                   list(
-                                         bfs.used.fsat = fsa$rf.ids.tot, # keep these around; they're the best evidence
+                                         bfs.used.fsa = fsa$rf.ids.tot, # keep these around; they're the best evidence
                                          bfs.used.rval = rval$rf.ids.tot, # keep these around; they're the best evidence
                                          bfs.used.fsaxrval = fsaxrval$rf.ids.tot, # keep these around; they're the best evidence
                                          bfs.used.min.score = min.score$rf.ids.tot, # keep these around; they're the best evidence
@@ -317,6 +320,7 @@ emptyScore <-
                               # Return 0 scores if failed in any way
                               error = function(cond){
                                   # print('warning: empty score 1')
+                                  
                                   emptyScore
                               }
                             )

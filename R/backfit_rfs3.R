@@ -91,6 +91,7 @@ backfit_rfs3 <- function(match.info,
     # Assign feature, ref.mat, and match.info subsets to each chunk ####
       chunks <- lapply(unique(m.grp), function(x) 
       {
+        message('building chunk ', x)
         mi <- match.info[m.grp == x, ]
         ref.numbers <- unique(mi$ref)
         feat.numbers <- unique(mi$feat)
@@ -100,7 +101,7 @@ backfit_rfs3 <- function(match.info,
           mi$feat <- lapply(mi$feat, function(x) which(feat.numbers == x)) %>% unlist
           mi$ref <- lapply(mi$ref, function(x) which(ref.numbers == x)) %>% unlist
         
-          fcss <- feature.c %>% select_features(feat.numbers) #%>% .[['stack']]
+          fcss <- feature.c %>% select_features(feat.numbers)
           
           
         list(match.info = mi,
