@@ -39,10 +39,12 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
               
             max.lag <- tryCatch(
               {
-                pks <- extractPeaks_corr(spec.segment)
+                
                 min(
-                  pks$bounds %>% unlist %>% matrix(nrow=2) %>% diff %>% max,
-                  length(feat)-1
+                  c(pk_bounds(spec.segment) %>% unlist %>% matrix(nrow = 2) %>% diff %>% max,
+                  pk_bounds(feat) %>% unlist %>% matrix(nrow = 2) %>% diff %>% max,
+                  length(feat)-1),
+                  na.rm = TRUE
                 )
               },
               error = function(cond)
@@ -108,8 +110,8 @@ batman_local_opt <- function(feat, spec.segment, window.pos, exclude.lowest = 0.
           
             ref.segment <- rep(NA, length(spec.segment))
             ref.segment[window.pos - opt.lag] <- fit$feat.fit
-              plot_fit(list(feat.fit = ref.segment,
-                            spec.fit = spec.segment), type = 'auc')
+              # plot_fit(list(feat.fit = ref.segment,
+              #               spec.fit = spec.segment), type = 'auc')
               # simplePlot(ref.segment)
               # simplePlot(spec.segment)
             
