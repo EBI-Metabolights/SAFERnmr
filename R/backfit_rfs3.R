@@ -140,7 +140,7 @@ backfit_rfs3 <- function(match.info,
       ############# For each chunk (in parallel): ###############
         # chunk <- chunks[[2]]
         
-        backfits.chunk <- pblapply(1:1000, nrow(chunk$match.info),
+        backfits.chunk <- lapply(1:nrow(chunk$match.info),
                            function(m) {
           tryCatch({
             
@@ -215,22 +215,26 @@ backfit_rfs3 <- function(match.info,
                             return(data.frame(ss.spec = sf$ss.spec,
                                               fit.intercept = fit$intercept, 
                                               fit.scale = fit$ratio,
-                                              spec.start = spec.cols[1],
-                                              spec.end = spec.cols[2],
+                                              spec.start = sf$spec.start,
+                                              spec.end = sf$spec.end,
                                               fit.fsa = fit$fraction.spec.accounted,
                                               fit.rval = fit$rval
                                               )
                                    ) 
-                  }, warning = function(cond){
-                    print(m)
-                    print(x)
-                    browser()
-                    # emptyRow()
-                  }, error = function(cond){
-                    print(m)
-                    print(x)
-                    browser()
-                    # emptyRow()
+                  }, 
+                  warning = function(cond){
+                    stop('backfit_rfs3: warning in 
+                            chunk$match.info row ', m,', ',
+                            'sfs row ', s)
+                    emptyRow()
+                  }, 
+                  error = function(cond){
+                    
+                    stop('backfit_rfs3: error in 
+                            chunk$match.info row ', m,', ',
+                            'sfs row ', s
+                            )
+                    emptyRow()
                   }
                 )
                 
@@ -244,8 +248,10 @@ backfit_rfs3 <- function(match.info,
               return(fits)
               
           }, error = function(cond){
+            
+            stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
             # If the whole match fails, return an NA fits df row
-              return(emptyRow())
+            return(emptyRow())
           })
         })
         
