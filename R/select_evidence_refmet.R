@@ -34,7 +34,8 @@ select_evidence_refmet <- function(ref = NULL,
                                        match.info,          
                                        backfits,
                                        rfs.used,
-                                       lib.data.processed,  
+                                       lib.data.processed, 
+                                       score.name = 'fsaxrval',
                                      # # Spectral data:
                                      #   xmat, ppm,           
                                      # Filtering thresholds:
@@ -61,8 +62,8 @@ select_evidence_refmet <- function(ref = NULL,
     # Subset the evidence for annotation of the given ref in all samples: ####
 
       # Pull data for our selected ref ####
-          browser()
-          ld <- lib.data.processed[[ref$number]] %>% 
+          
+          ld <- lib.data.processed[[ref$number]] %>% expand_ref(ppm)
           
       # Find all backfits which involve this ref ####
           
@@ -81,7 +82,7 @@ select_evidence_refmet <- function(ref = NULL,
           # in filter_matches). We know which matches (rfs) were used for the scores in these 
           # reference-sample pairs (rfs.selection). Now we need to know which unlisted backfits
           # (spec-features) belong to those. 
-          inds <- match.info$id %in% (rfs.used$tot[rfs.selection] %>% unlist) # inds not always = ids 
+          inds <- match.info$id %in% (rfs.used$fsaxrval[rfs.selection] %>% unlist) # inds not always = ids 
           match.info <- match.info[inds, ]
           backfits <- backfits[inds ]
           
@@ -135,12 +136,16 @@ select_evidence_refmet <- function(ref = NULL,
 
             
    ########## Expand the fits ##########
-   
-        feat <- features.c %>% expand_features(rf.specFits$feat)
-              
+        
+        f.nums <- rf.specFits$feat %>% unique
+        feats <- features.c %>% expand_features(f.nums) %>% .[["position"]]
+        
+        
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
+            
             # Compute on the fly
+            
               rff <- rf.specFits[x, ]
               
               rf <- rff$ref.start:rff$ref.end %>% ld$mapped$data[.]
@@ -149,14 +154,14 @@ select_evidence_refmet <- function(ref = NULL,
               
                 # Which inds in feature model?
                 
-                  feat <- features.c %>% expand_features(rff$feat)
-                  na.pos <- feat$position %>% .[rff$feat.start:rff$feat.end] %>% is.na
+                  na.pos <- feats[which(rff$feat==f.nums),] %>% .[rff$feat.start:rff$feat.end] %>% is.na
                              
                 # Replace in rf
                   
                   rf[na.pos] <- NA
                              
               fit.ref <- as.numeric(rff$fit.intercept) + (rf * as.numeric(rff$fit.scale))
+                
                 # simplePlot(fit.ref)
                 # simplePlot(feat$profile[rff$feat.start:rff$feat.end])
                 
