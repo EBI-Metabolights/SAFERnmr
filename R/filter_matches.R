@@ -154,7 +154,7 @@ filter_matches <- function(pars){
 #########################################################################################################
     # At this point, match.info is set. Assign IDs
                           
-                            match.info$id <- 1:nrow(match.info)
+       match.info$id <- 1:nrow(match.info)
 
 ######################### Back-fit reference to spectra  #############################    
     
