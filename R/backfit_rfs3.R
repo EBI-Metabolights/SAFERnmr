@@ -201,6 +201,7 @@ backfit_rfs3 <- function(match.info,
                               
                               # sf <- match.info[x, ] %>% [propagated to ss.specs]
                               # alternatively, can just use the sf$lag
+                              # but opt_... perfects the lag
                               
                               res <- opt_specFit_slim(sf, 
                                                       feat.model = lil.feat$position, 
@@ -217,7 +218,7 @@ backfit_rfs3 <- function(match.info,
                             return(data.frame(ss.spec = sf$ss.spec,
                                               fit.intercept = fit$intercept, 
                                               fit.scale = fit$ratio,
-                                              spec.start = sf$spec.start,
+                                              spec.start = sf$spec.start, # was changed by opt_specFit_slim()
                                               spec.end = sf$spec.end,
                                               fit.fsa = fit$fraction.spec.accounted,
                                               fit.rval = fit$rval
