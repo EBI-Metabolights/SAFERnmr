@@ -2,39 +2,33 @@
 % Please edit documentation in R/storm_mtj.R
 \name{storm_mtj}
 \alias{storm_mtj}
-\title{My attempt at a pure STORM as described in the manuscript.}
+\title{My attempt at a pure STORM as described in the manuscript's SI.}
 \usage{
 storm_mtj(
-  xmat = NULL,
+  X = NULL,
   ppm = NULL,
   b = 30,
-  corrthresh = 0.8,
   q = 0.05,
-  refSpec = NULL,
-  ref.idx = NULL,
+  ref.index = NULL,
   driver = NULL
 )
 }
 \arguments{
-\item{xmat}{A matrix of spectral data (rows are spectra, columns are spectral points)}
+\item{X}{A matrix of spectral data (rows are spectra, columns are spectral points)}
 
-\item{ppm}{A vector of the spectral points in ppm (optional, default is all columns of xmat)}
+\item{ppm}{A vector of the spectral points in ppm (optional, default is all columns of X)}
 
 \item{b}{An integer giving the expansion parameter for the reference peak}
 
-\item{corrthresh}{A numeric giving the minimum correlation value to be considered for inclusion (for both subset AND reference optimization)}
-
 \item{q}{A numeric giving the p-value threshold for correlation significance (both subset AND reference optimization)}
 
-\item{refSpec}{A vector of spectral data to use as the initial reference}
+\item{ref.index}{A vector of the spectral points (columns of X) to use as the initial reference}
 
-\item{ref.idx}{A vector of the spectral points (columns of xmat) to use as the initial reference}
+\item{ref}{integer (if providing best spectrum) or vector (if providing feature shape)}
 }
 \value{
-A list with components "reconstructed" and "status". "reconstructed" is a matrix
-containing the reconstructed metabolite concentrations (rows are samples, columns are metabolites).
-"status" is a character string indicating whether the method converged successfully or failed.
+A list
 }
 \description{
-My attempt at a pure STORM as described in the manuscript.
+My attempt at a pure STORM as described in the manuscript's SI.
 }
