@@ -21,8 +21,8 @@ plot_spec <- function(spec, ppm, aucs = NULL, title = '', source.name = 'refspec
 # (cluster labels for each umap.obj$layout row)
 # MTJ2022
 
-      df <- data.frame(ppm = ppm,
-                       intensity = spec)
+      df <- data.frame(ppm = ppm %>% c,
+                       intensity = spec %>% c)
       df$intensity[is.na(df$intensity)] <- 0
 
   
