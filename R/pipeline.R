@@ -145,9 +145,18 @@ pipeline <- function(params_loc, params_obj) {
   #   
   # if (!is.null(status)){return(status)}
   
-
-  # matches <- readRDS(paste0(this.run, "/matches_scored_named.RDS"))
-  # write.table(matches, sep = '\t', file = 'matches_scored_named.txt', row.names = F, col.names = T)
+  zip(files = paste0(pars$dirs$temp, '/debug_extra.outputs'), 
+      zipfile = paste0(pars$dirs$temp, '/debug_extra.outputs.zip'))
+  unlink(paste0(pars$dirs$temp, '/debug_extra.outputs'), recursive = TRUE)
+  
+  zip(files = paste0(pars$dirs$temp, '/plots'), 
+      zipfile = paste0(pars$dirs$temp, '/plots.zip'))
+  unlink(paste0(pars$dirs$temp, '/plots'),recursive = TRUE)
+  
+  zip(files = paste0(pars$dirs$temp, '/temp_data_matching'), 
+      zipfile = paste0(pars$dirs$temp, '/temp_data_matching.zip'))
+  unlink(paste0(pars$dirs$temp, '/temp_data_matching'), recursive = TRUE)
+  
   message('Saving session info...')
   saveRDS(sessionInfo(), paste0(pars$dirs$temp, "/session.info.RDS"))
   status <- 'success'

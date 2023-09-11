@@ -38,21 +38,17 @@ browse_evidence <- function(results.dir = NULL){
   
   study <- pars$study$id
   ppm.tolerance = pars$matching$filtering$ppm.tol
-  cutoff.residuals.feat = .5 # currently unused
-  cutoff.residuals.spec = .5 # currently unused
   hshift = 0
   
 
 ##########################     Setup/Read Data    ####################################
 
     # Read in match data
-        backfit.results <- readRDS(paste0(results.dir,"backfit.results.RDS"))
+        backfit.results <- readRDS(paste0(results.dir,"smrf.RDS"))
           backfits <- backfit.results$backfits
           match.info <- backfit.results$match.info
 
     # Read in library data
-        lib.info <- readRDS(paste0(results.dir, "lib.info.RDS"))
-          lib.info <- lib.info$ref.list
         lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
         
           # ppm isn't needed anymore; using spectral matrix ppm.
@@ -61,31 +57,10 @@ browse_evidence <- function(results.dir = NULL){
             message('*** running patch to map lib.info to lib.data.processed ***')
             # Library file may not match lib.info (may be smaller, as it is field-specific).
             # Map them.
-            
-              # make ids for ldp (like li, but shorter)
-                ldp.ids <- lapply(lib.data.processed, function(ldp) {
-                  paste0(ldp$tag,'_',ldp$ref.name)
-                })
-              
-              # there are fewer of these
-                ldp.ids <- ldp.ids %>% stringr::str_replace_all("/", "_")
-
-              # there are more of these
-                li.ids <- lib.info$id %>% stringr::str_replace_all("/", "_")
-              
-              # ldp.id is longer, so grep in that for li.id. li strings are part of ldp strings
-                in.ldp <- lapply(li.ids, function(li.id) {
-                  grepl(pattern = li.id, ldp.ids) %>% which
-                })
-                
-                lib.info <- lib.info[(lapply(in.ldp, length) %>% unlist) == 1,]
-                lib.info <- lib.info[unlist(in.ldp),]
-
-              if (length(lib.data.processed) != nrow(lib.info)){stop('lib.info could not be mapped to lib.data.processed')
-                } else {message('all mapped successfully!\n')}
-                
+          
           # add compound names as column in match.info
-            match.info$ref.name <- lib.info$Compound.Name[match.info$ref]
+            compound.names.refmat <- lapply(lib.data.processed, function(x) x$compound.name) %>% unlist
+            match.info$ref.name <- match.info$ref %>% compound.names.refmat[.]
           
     # Read in spectral matrix data
         fse.result <- readRDS(paste0(results.dir, "fse.result.RDS"))
@@ -94,15 +69,15 @@ browse_evidence <- function(results.dir = NULL){
           rm(fse.result)
 
     # Read in the features 
-        feature <- readRDS(paste0(results.dir, "feature.final.RDS"))
-          features.c <- feature %>% compress_features
-          rm(feature)
-          
+    
+        features.c <- readRDS(paste0(results.dir, "feature.final.RDS"))
+
     # Read in scores matrix 
-      scores.matrix <- readRDS(paste0(results.dir,"ss.ref.sumScores.RDS")) %>% t
+      scores <- readRDS(paste0(results.dir,"scores.RDS"))
+        scores.matrix <- scores$ss.ref.mat
         colnames(scores.matrix) <- 1:ncol(scores.matrix)
         
-      rfs.used <- readRDS(paste0(results.dir,"rfs.used.RDS"))
+      rfs.used <- scores$rfs.used
       
 ##########################     Filter    ####################################          
           
@@ -111,11 +86,11 @@ browse_evidence <- function(results.dir = NULL){
         keeprefs <-  apply(scores.matrix, 1, max) > 0
         keepsamples <-  apply(scores.matrix, 2, max) > 0
         refs.used <- which(keeprefs)
+        compound.names.refmat <- compound.names.refmat[refs.used]
         samples.used <- which(keepsamples)
         
         scores.matrix <- scores.matrix[keeprefs %>% as.logical,,drop=F]
         scores.matrix <- scores.matrix[,keepsamples %>% as.logical,drop=F]
-        lib.info <- lib.info[keeprefs %>% as.logical,]
         lib.data.processed <- lib.data.processed[keeprefs %>% as.logical]
         
         fits.keep <- match.info$ref %in% refs.used
@@ -146,7 +121,7 @@ browse_evidence <- function(results.dir = NULL){
       
       refs <- data.frame(number = seq_along(refs.used), # this is the initial row number (before sort). lib info matches this. 
                          id = refs.used %>% as.numeric, # this is the ref number in the full library (also match.info$ref)
-                         name = lib.info$Compound.Name) # name
+                         name = compound.names.refmat) # name
         refs <- refs[ref.order, ]
         refs$row.mat <- 1:nrow(refs)         # this is the row number in mat
 
@@ -552,7 +527,10 @@ server <- function(input, output, session) {
                 # The lib.data.processed is filtered, but not ordered. Use inds.
                 
                 ref <- lib.data.processed[[ values$selectedRow %>% refs$number[.] ]]
-
+                dat <- ref$mapped$data.compressed %>% expand_stacklist
+                ref$mapped$data <- dat$data
+                ref$mapped$ppm <- ppm
+                
               # Plot all the features with their cluster assignments
 
                 plot_spec(ref$mapped$data, ref$mapped$ppm, aucs = NULL, title = ref$compound.name, source.name = 'refspec') %>%

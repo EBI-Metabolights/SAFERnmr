@@ -163,7 +163,7 @@ filter_matches <- function(pars){
     
     # Back-fit each matched reference region to the subset spectra
       # adjusted to account for sfe
-        match.info <- match.info[1:10000,]
+        # match.info <- match.info[1:10000,]
         backfit.results <- backfit_rfs3(match.info = match.info,
                                         feature.c = feature.c, # has sfe data 
                                         xmat = xmat,
@@ -171,8 +171,9 @@ filter_matches <- function(pars){
                                         ncores = pars$par$ncores)
         
         message('Saving backfits...\n\n\n')
-        saveRDS(backfit.results, paste0(this.run,"/backfit.results.RDS"))
-        # backfit.results <- readRDS(paste0(this.run, "/backfit.results.RDS"))
+        saveRDS(backfit.results, paste0(this.run,"/smrf.RDS"))
+        # backfit.results <- readRDS(paste0(this.run, "/smrf.RDS"))
+        unlink(paste0(tmpdir, "/matches.RDS")) # 
 
       printTime()
       

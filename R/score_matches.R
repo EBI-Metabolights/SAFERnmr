@@ -34,7 +34,7 @@ score_matches <- function(pars){
     # match.info <- readRDS(paste0(tmpdir,"/match.info.RDS"))
 
     lib.data.processed <- readRDS(paste0(tmpdir, "/lib.data.processed.RDS"))
-    backfit.results <- readRDS(paste0(tmpdir, "/backfit.results.RDS"))
+    backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
       match.info <- backfit.results$match.info
       backfits <- backfit.results$backfits
       
@@ -98,7 +98,6 @@ score_matches <- function(pars){
               
         }) %>% do.call(rbind,.)
 
-      message('Exporting match pair data for scoring ...')
       saveRDS(ss.ref.pairs, paste0(tmpdir, "/ss.ref.pairs.RDS"))
       # ss.ref.pairs <- readRDS(paste0(tmpdir, "/ss.ref.pairs.RDS"))
       
@@ -127,11 +126,12 @@ score_matches <- function(pars){
     
           # Add colnames (compounds) to scores matrix 
               
-              colnames(ss.ref.mat.nd) <- cmpd.names[1:nrow(refmat)]
+              colnames(ss.ref.mat.nd) <- cmpd.names
  
-        scores$ss.ref.mat <- ss.ref.mat.nd
+        scores$ss.ref.mat <- ss.ref.mat.nd %>% t
         saveRDS(scores, paste0(tmpdir, "/scores.RDS"))
-          
+        unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
+        
       # Plot the matrix as an HCA'd heatmap
         tryCatch(
           {

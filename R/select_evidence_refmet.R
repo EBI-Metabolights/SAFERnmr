@@ -62,7 +62,7 @@ select_evidence_refmet <- function(ref = NULL,
 
       # Pull data for our selected ref ####
           browser()
-          ld <- lib.data.processed[[ref$number]]
+          ld <- lib.data.processed[[ref$number]] %>% 
           
       # Find all backfits which involve this ref ####
           
