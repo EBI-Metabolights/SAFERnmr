@@ -16,6 +16,7 @@ storm_mtj <- function( X=NULL,
                        ppm=NULL, 
                        b=30, 
                        q=0.05, 
+                       ref=NULL,
                        ref.index=NULL, 
                        driver = NULL ){
 
@@ -37,6 +38,9 @@ storm_mtj <- function( X=NULL,
     # How is the region selected?
     # - ref index is supplied as xcols (can be discontinuous)
     # 
+    # driver:
+    # - x column used to drive the STOCSY; default is max
+    
   
 ############ Initialize for the loop ########################################
 
@@ -48,6 +52,11 @@ storm_mtj <- function( X=NULL,
  
     itlimit = 25
     
+    if (length(ref) == 1){
+      # Assume spectrum number
+      ref <- X[ref, ref.index]
+    }
+    
 ############ Run storm loop ###################################################################
     
     i=1       
@@ -58,7 +67,7 @@ storm_mtj <- function( X=NULL,
     while( (subset %>% not_seen_yet) & (i < itlimit)){ 
       
   ## Update the subset ########################################################################
-        
+      print(i)
       subset.i <- subset[[1]]
       
       Xr=X[subset.i, ref.index]
@@ -76,8 +85,9 @@ storm_mtj <- function( X=NULL,
         
         subset.i <- subset.i[index]
         subset.i <- subset.i[1:ns]
-        subset[[i]] <- subset.i
-
+        subset.i <- subset.i[!is.na(subset.i)]
+        
+        
   ## Update the reference ########################################################################
        
     # update driver
@@ -94,8 +104,8 @@ storm_mtj <- function( X=NULL,
         
         Xprime <- X[subset.i, ref.index.expanded]
         
-        covar <- cov(Xprime, X[,driver])
-        r <- cor(Xprime, X[,driver])
+        covar <- cov(Xprime, X[subset.i,driver])
+        r <- cor(Xprime, X[subset.i,driver])
         pval <- two_t_cdf(r)
 
         ref.pass <- r > 0 & pval < q
@@ -106,6 +116,13 @@ storm_mtj <- function( X=NULL,
       # Finish the loop by updating the counter
         subset[[i]] <- subset.i
         i <- i+1
+        
+        # Plot 
+          # ppm.region <- ref.index %>% range %>% fillbetween
+          # stackplot(X[ref, ppm.region])
+          simplePlot(ref, xvect = ref.index) + geom_vline(xintercept = driver)
+
+        Sys.sleep(1)
     }
   
 ############ Finish up and return results ########################################################
@@ -126,6 +143,7 @@ storm_mtj <- function( X=NULL,
 
 not_seen_yet  <- function(subset){
   
+  if (length(subset) < 2){return(TRUE)}
   i <- length(subset)
   subset.i <- subset[[i]]
   
