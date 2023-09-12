@@ -56,7 +56,7 @@ match_features2refs_par_setup <- function(pars) {
         # Check that cluster labels actually correspond to rows of feature matrix. If not, redo clustering as trivial clustering
           if(!all(c.labs %in% 1:nrow(featureStack))){
             message('Cluster labels do not correspond with feature rows. Reverting to comprehensive feature matching...')
-            cluster_features(pars, feature.final, min.features = 1000, do.clustering = FALSE)
+            cluster_features(pars, feature.final, do.clustering = FALSE)
           }
           
           rm(feature.final)
@@ -201,11 +201,11 @@ match_features2refs_par_setup <- function(pars) {
       f.stack <- f.stack %>% apply(1, scale_between) # this will also transpose it, so no need to do later
 
     # Put ref spectra in a matrix ####
-      message('Building and scaling reference matrix...')
+      message('Building reference matrix...')
       
       ref.mat <- lapply(lib.data.processed, function(x)
         {
-          x$mapped$data.compressed %>% expand_stacklist(which.stacks = 'data') %>% .[[1]] %>% scale_between(0,1)
+          x$mapped$data.compressed %>% expand_stacklist(which.stacks = 'data') %>% .[[1]]
         }
       ) %>% do.call(rbind, .)
   

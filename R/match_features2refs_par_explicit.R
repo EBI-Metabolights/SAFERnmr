@@ -169,8 +169,8 @@ match_features2refs_par_explicit <- function(pars){
                             ref.pos <- allmatches.feat[m, c('ref.start','ref.end')] %>% as.numeric %>% fillbetween
           
                           # Get spectral signatures which matched
-                            ref <- ref.mat[,r,drop = F] #%>% scale_between
-                            # ref.sum <- sum(ref, )
+                            ref <- ref.mat[,r,drop = F]
+                            
                           # Fit
                             
                             fit <- fit_leastSquares(feat[feat.pos], ref[ref.pos], plots = F, scale.v2 = T)

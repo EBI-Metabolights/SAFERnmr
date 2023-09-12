@@ -156,7 +156,8 @@ select_evidence_refmet <- function(ref = NULL,
             
               # Starting from refmat and match info and feature model:
               
-                rf <- ld$mapped$data %>% scale_between(0,1) %>% .[ sf$ref.start:sf$ref.end ]
+                # rf <- ld$mapped$data %>% scale_between(0,1) %>% .[ sf$ref.start:sf$ref.end ]
+                rf <- ld$mapped$data %>% .[ sf$ref.start:sf$ref.end ]
               
               # NA-fill the feature gaps
                   
