@@ -139,12 +139,14 @@ select_evidence_refmet <- function(ref = NULL,
         
         f.nums <- rf.specFits$feat %>% unique
         f.models <- features.c %>% expand_features(f.nums) %>% .[["position"]]
-
+        
+        
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
 
             # Get the feature model
               sf <- rf.specFits[x, ]
+              
               # Starting from feature and match info:
                 feat.model <- f.models[which(sf$feat==f.nums),]
                 f.matched.pts <- sf$feat.start:sf$feat.end
@@ -154,16 +156,16 @@ select_evidence_refmet <- function(ref = NULL,
             
               # Starting from refmat and match info and feature model:
               
-                rf <- ld$mapped$data[ sf$ref.start:sf$ref.end ]
+                rf <- ld$mapped$data %>% scale_between(0,1) %>% .[ sf$ref.start:sf$ref.end ]
               
               # NA-fill the feature gaps
                   
                 rf[feat.gaps] <- NA
-            
-                      
+
             # Calculate the fit feature profile 
+              
                 # plot_fit(list(feat.fit = rf * sf$fit.scale + sf$fit.intercept,
-                #               spec.fit = xmat[sf$ss.spec, sf$spec.start:sf$spec.end]), 
+                #               spec.fit = xmat[sf$ss.spec, sf$spec.start:sf$spec.end]),
                 #               type = 'auc')
               
                 feat.fit <- rf * sf$fit.scale + sf$fit.intercept
