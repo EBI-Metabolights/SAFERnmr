@@ -138,34 +138,37 @@ select_evidence_refmet <- function(ref = NULL,
    ########## Expand the fits ##########
         
         f.nums <- rf.specFits$feat %>% unique
-        feats <- features.c %>% expand_features(f.nums) %>% .[["position"]]
-        
-        
+        f.models <- features.c %>% expand_features(f.nums) %>% .[["position"]]
+
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
+
+            # Get the feature model
+              sf <- rf.specFits[x, ]
+              # Starting from feature and match info:
+                feat.model <- f.models[which(sf$feat==f.nums),]
+                f.matched.pts <- sf$feat.start:sf$feat.end
+                feat.gaps <- feat.model[ f.matched.pts ] %>% is.na
+          
+            # Get the ref segment (rf)
             
-            # Compute on the fly
-            
-              rff <- rf.specFits[x, ]
+              # Starting from refmat and match info and feature model:
               
-              rf <- rff$ref.start:rff$ref.end %>% ld$mapped$data[.]
+                rf <- ld$mapped$data[ sf$ref.start:sf$ref.end ]
               
-              # NA-fill where feature is NA
-              
-                # Which inds in feature model?
-                
-                  na.pos <- feats[which(rff$feat==f.nums),] %>% .[rff$feat.start:rff$feat.end] %>% is.na
-                             
-                # Replace in rf
+              # NA-fill the feature gaps
                   
-                  rf[na.pos] <- NA
-                             
-              fit.ref <- as.numeric(rff$fit.intercept) + (rf * as.numeric(rff$fit.scale))
+                rf[feat.gaps] <- NA
+            
+                      
+            # Calculate the fit feature profile 
+                # plot_fit(list(feat.fit = rf * sf$fit.scale + sf$fit.intercept,
+                #               spec.fit = xmat[sf$ss.spec, sf$spec.start:sf$spec.end]), 
+                #               type = 'auc')
+              
+                feat.fit <- rf * sf$fit.scale + sf$fit.intercept
                 
-                # simplePlot(fit.ref)
-                # simplePlot(feat$profile[rff$feat.start:rff$feat.end])
-                
-              return(fit.ref)
+                return(feat.fit)
           })
             
           
@@ -177,24 +180,27 @@ select_evidence_refmet <- function(ref = NULL,
                 pos[is.na(fit.feats[[x]])] <- NA
                 return(pos)
             }) 
-        
-        # Get only the best-scoring evidence, to help limit the amount plotted
-          # fit.positions <- lapply(rf.specFits, function(rff) 
-          #   {
-          #     rff$
-          #   })
             
         # Make matrices from those lists, add to bestfits list object ####
           
           maxlen.ff <- lapply(fit.feats, length) %>% unlist %>% max
           
           ffint <- lapply(1:length(fit.feats), function(i){
-                      c(fit.feats[[i]], rep(NA, maxlen.ff-length(fit.feats[[i]])))
+            
+                      c( 
+                         fit.feats[[i]], 
+                         rep(NA, maxlen.ff-length( fit.feats[[i]] ) )
+                        )
+            
                     }) %>% do.call(rbind,.)
           
           ffpos <- lapply(1:length(fit.positions), function(i){
             
-                      c(fit.positions[[i]], rep(NA, maxlen.ff-length(fit.positions[[i]])))
+                      c( 
+                         fit.positions[[i]], 
+                         rep(NA, maxlen.ff-length( fit.positions[[i]] ) )
+                        )
+            
                     }) %>% do.call(rbind,.)
           
           fit.xrow <- rf.specFits$ss.spec
@@ -216,11 +222,11 @@ select_evidence_refmet <- function(ref = NULL,
 
       
     # Make a data pack for spectral viewer: ####
-      metab_evidence = list(ref.ind = ref$number,
+      metab.evidence = list(ref.ind = ref$number,
                             ref.info = ld,
                             rf.fits = bestfits,
                             match.info.ss = rf.specFits)
-    return(metab_evidence)
+    return(metab.evidence)
       
   }
   
