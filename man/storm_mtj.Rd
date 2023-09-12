@@ -9,6 +9,7 @@ storm_mtj(
   ppm = NULL,
   b = 30,
   q = 0.05,
+  ref = NULL,
   ref.index = NULL,
   driver = NULL
 )
@@ -22,9 +23,9 @@ storm_mtj(
 
 \item{q}{A numeric giving the p-value threshold for correlation significance (both subset AND reference optimization)}
 
-\item{ref.index}{A vector of the spectral points (columns of X) to use as the initial reference}
-
 \item{ref}{integer (if providing best spectrum) or vector (if providing feature shape)}
+
+\item{ref.index}{A vector of the spectral points (columns of X) to use as the initial reference}
 }
 \value{
 A list

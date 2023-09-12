@@ -13,6 +13,7 @@ select_evidence_refmet(
   backfits,
   rfs.used,
   lib.data.processed,
+  score.name = "fsaxrval",
   ppm.tolerance = pars$matching$filtering$ppm.tol,
   cutoff.residuals.feat = 0.5,
   cutoff.residuals.spec = 0.5
