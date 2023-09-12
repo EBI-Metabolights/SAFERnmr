@@ -820,7 +820,7 @@ server <- function(input, output, session) {
                                   if (values$plotType == "features"){
                                     
                                     # EST-style plot showing where features annotate the ref
-                                      browser()
+                                      
                                       feature_est_plot(reg = values$refplot.xlim, 
                                                        metab.evidence, 
                                                        features.c,
