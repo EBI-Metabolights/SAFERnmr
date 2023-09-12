@@ -29,27 +29,25 @@ filter_matches <- function(pars){
   
 ################ Read parameters file ##################
   
-  
   tmpdir <- pars$dirs$temp
-  this.run <- paste0(tmpdir)
 
 ##################################################################################################################
  # Read data and set up ####
 
     message("Loading data from files...\n\n\n")
     
-    fse.result <- readRDS(paste0(this.run, "/fse.result.RDS"))
+    fse.result <- readRDS(paste0(tmpdir, "/fse.result.RDS"))
       xmat <- fse.result$xmat
       ppm <- fse.result$ppm
       rm(fse.result)
 
-    feature.c <- readRDS(paste0(this.run, "/feature.final.RDS"))
-    refmat.c <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS"))
-    pad.size <- readRDS(paste0(this.run, "/temp_data_matching/pad.size.RDS"))
-    # matches <- readRDS(paste0(this.run, "/matches.initial.RDS"))
+    feature.c <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
+    refmat.c <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
+    pad.size <- readRDS(paste0(tmpdir, "/temp_data_matching/pad.size.RDS"))
+    # matches <- readRDS(paste0(tmpdir, "/matches.initial.RDS"))
     
     # Weed out empty matches or those which failed
-    matches <- readRDS(paste0(this.run, "/matches.RDS"))
+    matches <- readRDS(paste0(tmpdir, "/matches.RDS"))
       # if any invalid matches for the feature
         matches <- matches[!is_nullish(matches)]
       # per feature, was NA returned, or was ('matches', 'peak.quality')?
@@ -64,7 +62,7 @@ filter_matches <- function(pars){
 
 ###########################################################################################        
       
-    cluster <- readRDS(paste0(this.run, "/cluster.final.RDS"))
+    cluster <- readRDS(paste0(tmpdir, "/cluster.final.RDS"))
 
     # Format matches ####
       # At this point, matches have been thoroughly validated and can be rbinded.
@@ -111,7 +109,7 @@ filter_matches <- function(pars){
           } else {
             match.info <- propagate_matches(match.info, cluster, feature.c$stack, 
                                             refmat.c, pars$par$ncores, pars$matching$r.thresh, 
-                                            pars$matching$p.thresh, pad.size, this.run)
+                                            pars$matching$p.thresh, pad.size, tmpdir)
             
             match.info %>% debug_write("match.info.propagated.RDS", pars)
             # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.propagated.RDS"))
@@ -171,8 +169,8 @@ filter_matches <- function(pars){
                                         ncores = pars$par$ncores)
         
         message('Saving backfits...\n\n\n')
-        saveRDS(backfit.results, paste0(this.run,"/smrf.RDS"))
-        # backfit.results <- readRDS(paste0(this.run, "/smrf.RDS"))
+        saveRDS(backfit.results, paste0(tmpdir,"/smrf.RDS"))
+        # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
         unlink(paste0(tmpdir, "/matches.RDS")) # 
 
       printTime()
