@@ -8,14 +8,15 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
 
   # Choose study
 
-    # study <- 'MTBLS1'
+    study <- 'MTBLS1'
+    tmpdir <- '/Users/mjudge/Downloads/nfs 3/production/odonovan/nmr_staging/pipeline_tests/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
     # study <- 'MTBLS424'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS'
     # study <- 'MTBLS430'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS430_1r_noesygppr1d.comp_spectralMatrix.RDS'
-    study <- 'MTBLS395'
-    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS395_1r_cpmgpr1d.comp_spectralMatrix.RDS'
+    # study <- 'MTBLS395'
+    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS395_1r_cpmgpr1d.comp_spectralMatrix.RDS'
 
   # Import the study results ####
   
@@ -24,33 +25,34 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
     
     # Read in match data
     
-        backfit.results <- readRDS(paste0(results.dir,"backfit.results.RDS"))
+        backfit.results <- readRDS(paste0(results.dir,"smrf.RDS"))
           backfits <- backfit.results$backfits
           match.info <- backfit.results$match.info
 
     # Read in library data
     
         # lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
-        refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) 
+        refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows
           # refmat <- refmat %>% apply(2, function(x) x/sum(x, na.rm = T))
-          refmat <- refmat %>% t
+          # refmat <- refmat %>% t
           # refmat.c <- refmat.c %>% compress_stack
         
     # Read in spectral matrix data
     
-        fse.result <- readRDS(paste0(results.dir, "fse.result.RDS"))
+        fse.result <- readRDS(paste0(results.dir, "fse.result.RDS")) 
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
           rm(fse.result)
 
     # Read in the features 
-        feature <- readRDS(paste0(results.dir, "feature.final.RDS"))
+        feature <- readRDS(paste0(results.dir, "feature.final.RDS")) %>% expand_features
           # features.c <- feature %>% compress_features
 
     # Read in scores matrix 
-      scores.matrix <- readRDS(paste0(results.dir,"ss.ref.sumScores.RDS")) %>% t
+      scores <- readRDS(paste0(results.dir,"scores.RDS"))
+        scores.mat <- scores$ss.ref.mat 
 
-      rfs.used <- readRDS(paste0(results.dir,"rfs.used.RDS"))
+      rfs.used <- scores$rfs.used
 
   # Pull a random set of backfits for a given range of scores  ####
   
@@ -71,10 +73,8 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
                 # scores <- scores[scores$bffs.tot > 0.75,]
                 # scores <- scores[scores$rmse < 0.1,]
                 # scores <- scores[scores$rmse.biased > 0.1,]
-                best.scores <- c(which.max(scores$bffs.tot),
-                                 which.max(scores$bffs.res),
-                                 which.min(scores$rmse),
-                                 which.min(scores$rmse.biased)) %>% unique
+                best.scores <- c(which.max(scores$fit.fsa),
+                                 which.max(scores$fit.rval)) %>% unique
                 scores <- scores[best.scores, ]
                 
                 # how is it possible to get a match whose best score is 0?
@@ -111,22 +111,27 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
       
         specfits <- as.data.frame(specfits)
         sfs <- specfits
-        
+        f.models <- feature$position
+
         # Recalculate the fits
           
           sfs <- mclapply(1:nrow(specfits), function(x){
           
-              # x <- 10832
+              # x <- 10
               # print(x)
                 tryCatch(
                   {
-                    res <- opt_specFit(sfs[x, ], feature, xmat, refmat)
+                    sf <- sfs[x, ]
+                    
+                    res <- opt_specFit(sf, feature, xmat, refmat)
+                    
                     res$sf
+                    # res$fit %>% plot_fit(type = 'auc')
                   }, 
                   error = function(cond)
                   {
                     sf <- sfs[x, ]
-                    sf$fraction.spec.accounted <- Inf
+                    sf$fit.fsa <- Inf
                     sf$fit.rval <- Inf
                     sf$fit.intercept <- Inf
                     sf$fit.scale <- Inf
