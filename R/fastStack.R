@@ -64,8 +64,56 @@ fastStack <- function(x, ppm,
 # 
 fastStack.withFeatures <- function(xmat, ppm,
                                    raster = T, 
-                                   bfs, plt.pars, res.increase = 1){
+                                   bfs, plt.pars, 
+                                   res.ratio = 1){
   
+addpoints_as_needed <- function(mat, xvals, plt.pars, target.ratio = 1)
+{
+  # Note: xvals must be increasing 
+  mat.list <- lapply(1:nrow(mat), function(r){
+              mat[r,]
+  })
+  
+  denser.mat <- lapply(mat.list, function(v) {
+    
+    #v %>% plot(cex = 0.1)
+
+    y.per.pixel <- diff(range(v, na.rm=TRUE)) / plt.pars$pixels[2]
+    x.per.pixel <- length(v) / plt.pars$pixels[1]
+    
+    rise.in.pixels <- abs(diff(v)) / y.per.pixel
+    run.in.pixels <- 1 / x.per.pixel
+    
+    points.needed.per.segment <- 
+      round( sqrt(run.in.pixels^2 + rise.in.pixels^2) ) / target.ratio
+    
+      # plot(points.needed.per.segment, cex = 0.1, col = 'blue')
+    
+    # Re-generate xvals so they are evenly (euclidean-) spaced along the line 
+    
+      point.segments <- which(!is.na(points.needed.per.segment))
+                              
+      new.xvals <- lapply(point.segments, function(x){
+        seq(from = xvals[x],   # from point on segment left
+            to = xvals[x+1],   # to point on segment right
+            length.out = max(points.needed.per.segment[x], 2) # keep at least the 2 points
+            # length.out = max(points.needed.per.segment[x], 0) # if no points were necessary here, delete
+            ) 
+      }) %>% unlist %>% sort %>% unique
+    
+      new.vals <- pracma::interp1(x = xvals, 
+                                  y = v, 
+                                  xi = new.xvals) #%>% plot(x = new.xvals, y = ., cex = 0.1)
+      
+      list(new.xvals = new.xvals,
+           new.vals = new.vals)
+      
+    }#, mc.cores = pars$par$ncores
+  
+  ) 
+  
+  return(denser.mat)
+}
    
 addpoints_evenly <- function(mat, xvals, res.increase = 5)
 {
@@ -106,7 +154,7 @@ addpoints_evenly <- function(mat, xvals, res.increase = 5)
                                           y = v, 
                                           xi = new.cols) #%>% plot(x = new.cols, y = ., cex = 0.1)
               
-              list(new.cols = new.cols,
+              list(new.xvals = new.cols,
                    new.vals = new.vals)
               
             }#, mc.cores = pars$par$ncores
@@ -117,7 +165,7 @@ addpoints_evenly <- function(mat, xvals, res.increase = 5)
 }
  
 denser_mat_to_df <- function(denser.mat){
-  data.frame(ppm = lapply(denser.mat, function(x) x$new.cols) %>% unlist, 
+  data.frame(ppm = lapply(denser.mat, function(x) x$new.xvals) %>% unlist, 
              int = lapply(denser.mat, function(x) x$new.vals) %>% unlist)
 }
   
@@ -215,13 +263,22 @@ denser_mat_to_df <- function(denser.mat){
         
         # Interpolate more x points in for spectra as needed
           
-            df.lines <- addpoints_evenly(
-                                          mat = xs[, ncol(xs):1],   # must be increasing xvals
-                                          xvals = rev(ppm[cols.x]), # must be increasing xvals
-                                          res.increase = res.increase
-                                          
-                                        ) %>% denser_mat_to_df
+            # df.lines <- addpoints_evenly(
+            #                               mat = xs[, ncol(xs):1],   # must be increasing xvals
+            #                               xvals = rev(ppm[cols.x]), # must be increasing xvals
+            #                               res.increase = res.increase
+            #                               
+            #                             ) %>% denser_mat_to_df
             
+            df.lines <- 
+              addpoints_as_needed(
+                                    mat = xs[, ncol(xs):1],   # must be increasing xvals
+                                    xvals = rev(ppm[cols.x]), # must be increasing xvals
+                                    plt.pars = plt.pars,
+                                    target.ratio = 1
+                                    
+                                  ) %>% denser_mat_to_df
+        
             df.lines$color = alpha('black', alpha = 1)
             df.lines <- df.lines %>% na.omit
             
@@ -235,12 +292,21 @@ denser_mat_to_df <- function(denser.mat){
 
          # Calculate feature fills
           # Interpolate more x points in
-            df.feats <- addpoints_evenly(
-                                         mat = f.stack[, ncol(f.stack):1], # must be increasing xvals
-                                         xvals = rev(ppm[cols.x]),         # must be increasing xvals
-                                         res.increase = res.increase
-                                        
-                                        ) %>% denser_mat_to_df
+            browser()
+            # df.feats <- addpoints_evenly(
+            #                              mat = f.stack[, ncol(f.stack):1], # must be increasing xvals
+            #                              xvals = rev(ppm[cols.x]),         # must be increasing xvals
+            #                              res.increase = res.increase
+            #                             
+            #                             ) %>% denser_mat_to_df
+            df.feats <- 
+              addpoints_as_needed(
+                                    mat = f.stack[, ncol(f.stack):1],   # must be increasing xvals
+                                    xvals = rev(ppm[cols.x]), # must be increasing xvals
+                                    plt.pars = plt.pars,
+                                    target.ratio = 1
+                                    
+                                  ) %>% denser_mat_to_df
             
             df.feats$color = alpha('blue', alpha = 5)
             df.feats <- df.feats %>% na.omit

@@ -830,17 +830,11 @@ server <- function(input, output, session) {
                                   } else {
                                     
                                     if (values$plotType == "stackplot"){
-                                      browser()
+                                      # browser()
                                       return(
                                 
-                                        # Ref-feature fits to dataset spectra 
-                                          # data.pack <- list(xmat = xmat,
-                                          #                   ppm=ppm, 
-                                          #                   raster = T, 
-                                          #                   bfs = bfs, 
-                                          #                   plt.pars = plt.pars)
-                                          # saveRDS(data.pack, file = paste0(results.dir, '/test.data.RDS'))
-                                          fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars)
+                                          fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, 
+                                                                 res.ratio = 1)
                                         
                                       )
 
