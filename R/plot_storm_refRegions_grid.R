@@ -31,7 +31,7 @@ plot_stormRefRegions_grid <- function(xmat, ppm, stormResults,
   if (is.null(xmat)){
     
     myplots <- pblapply(1:length(stormResults), function(x) {  
-      plot_storm_refRegions_onlyFeat(ppm, stormResults[[x]], n_xticks = n_xticks)
+      plot_storm_refRegions_onlyFeat(ppm, stormResults[[x]], n_xticks = n_xticks, plot.title = x)
     
 
     })
@@ -42,7 +42,7 @@ plot_stormRefRegions_grid <- function(xmat, ppm, stormResults,
     # Otherwise, plot all the ref and spec data for each ####
       myplots <- pblapply(1:length(stormResults), function(x) {
         # print(str_c(x , " / ", length(stormResults)))
-        plot_storm_refRegions(xmat, ppm, stormResults[[x]], calcStocsy = calcStocsy, n_xticks = n_xticks)
+        plot_storm_refRegions(xmat, ppm, stormResults[[x]], calcStocsy = calcStocsy, n_xticks = n_xticks, plot.title = x)
         
       })
       gentime <- tictoc::toc()
