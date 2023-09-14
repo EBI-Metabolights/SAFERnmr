@@ -4,7 +4,7 @@
 \alias{plot_storm_refRegions_onlyFeat}
 \title{Plot storm Results for reference regions in grid format - only plot feature profile (not subsets) to reduce weight.}
 \usage{
-plot_storm_refRegions_onlyFeat(ppm, s, n_xticks = 4)
+plot_storm_refRegions_onlyFeat(ppm, s, n_xticks = 4, plot.title = "")
 }
 \arguments{
 \item{ppm}{a numeric vector of ppm values corresponding to the NMR spectra.}
