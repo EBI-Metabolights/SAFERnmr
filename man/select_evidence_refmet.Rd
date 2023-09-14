@@ -14,6 +14,7 @@ select_evidence_refmet(
   rfs.used,
   lib.data.processed,
   score.name = "fsaxrval",
+  ppm,
   ppm.tolerance = pars$matching$filtering$ppm.tol,
   cutoff.residuals.feat = 0.5,
   cutoff.residuals.spec = 0.5

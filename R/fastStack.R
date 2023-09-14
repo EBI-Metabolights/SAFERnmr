@@ -292,7 +292,7 @@ denser_mat_to_df <- function(denser.mat){
 
          # Calculate feature fills
           # Interpolate more x points in
-            browser()
+            
             # df.feats <- addpoints_evenly(
             #                              mat = f.stack[, ncol(f.stack):1], # must be increasing xvals
             #                              xvals = rev(ppm[cols.x]),         # must be increasing xvals

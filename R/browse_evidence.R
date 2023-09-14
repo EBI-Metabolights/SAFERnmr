@@ -54,10 +54,6 @@ browse_evidence <- function(results.dir = NULL){
           # ppm isn't needed anymore; using spectral matrix ppm.
             lib.data.processed <- lib.data.processed %>% lapply(function(x) {x$data <- NULL; x$ppm <- NULL; return(x)})
             
-            message('*** running patch to map lib.info to lib.data.processed ***')
-            # Library file may not match lib.info (may be smaller, as it is field-specific).
-            # Map them.
-          
           # add compound names as column in match.info
             compound.names.refmat <- lapply(lib.data.processed, function(x) x$compound.name) %>% unlist
             match.info$ref.name <- match.info$ref %>% compound.names.refmat[.]
@@ -767,8 +763,10 @@ server <- function(input, output, session) {
                                                                  backfits,
                                                                  rfs.used, # new object with inds of rfs which contributed to scores
                                                                  lib.data.processed,
+                                                                 score.name = 'fsaxrval',
                                                                # # Spectral data:
-                                                               #   xmat, ppm,
+                                                               #   xmat, 
+                                                                 ppm,
                                                                # Filtering thresholds:
                                                                  ppm.tolerance = ppm.tolerance,
                                                                  cutoff.residuals.feat = cutoff.residuals.feat,

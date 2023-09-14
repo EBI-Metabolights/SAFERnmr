@@ -37,7 +37,8 @@ select_evidence_refmet <- function(ref = NULL,
                                        lib.data.processed, 
                                        score.name = 'fsaxrval',
                                      # # Spectral data:
-                                     #   xmat, ppm,           
+                                     #   xmat,
+                                       ppm,        
                                      # Filtering thresholds:
                                        ppm.tolerance = pars$matching$filtering$ppm.tol, 
                                        cutoff.residuals.feat = .5,
