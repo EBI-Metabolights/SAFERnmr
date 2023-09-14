@@ -33,7 +33,7 @@
 #' plot_storm_refRegions(xmat = xmat, ppm = ppm, s = stormResults[[1]])
 #'
 #' @seealso \code{\link{plot_stormRefRegions_grid}}, \code{\link{plot_stormRefRegions_summarize}}
-plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshift = 1, hshift = 0.0, calcStocsy = TRUE, n_xticks = 4){
+plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshift = 1, hshift = 0.0, calcStocsy = TRUE, n_xticks = 4, plot.title= ''){
   # Plot the storm results (s) from storm_play, etc. 
   # Plot light gray ref region for optimal subset. 
   # use in lapply().
@@ -189,7 +189,9 @@ plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshif
         #              linetype = 1, col = "grey")
     
       # Make the x axis pretty?
-
+  
+      # add title
+        g + ggplot2::ggtitle(plot.title)
         
     return(g)
   
