@@ -12,7 +12,8 @@ plot_storm_refRegions(
   vshift = 1,
   hshift = 0,
   calcStocsy = TRUE,
-  n_xticks = 4
+  n_xticks = 4,
+  plot.title = ""
 )
 }
 \arguments{
