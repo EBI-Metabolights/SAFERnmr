@@ -1,10 +1,10 @@
 Package: SAFER
 Type: Package
-Title: Spectral annotation by Feature Extraction and Reference matching
-Description: Automated feature extraction and metabolite annotation of 1H 1D NMR spectroscopy. 
+Title: Spectral Annotation by Feature Extraction and Recovery
+Description: Automated feature extraction and metabolite annotation for 1H1D NMR spectra. 
     To read more visit the github repository at github.com/EBI-Metabolights/SAFER
-Version: 0.1.1
-Date: 2023-07-07
+Version: v2.1.1
+Date: 2023-11-14
 Authors@R: c(
     person("Michael T. Judge", "PostDoc / Developer", role = c("aut")),
     person("Goncalo G. Graca", "PostDoc / Developer", role = c("aut")),
