@@ -89,7 +89,7 @@ tina <- function(pars){
 
     # Build feature filter
           printTime()
-          filts  <- filterFeatures(feature, ppm = ppm,
+          filts  <- filterFeatures(feature = feature, ppm = ppm,
                                     ppm.range = bounds, min.runlength = fse.result$noisewidth*2,
                                     min.subset = min.subset, prom.ratio = prom.ratio, give = "filter",
                                     max.features = nrow(feature$stack))
@@ -123,12 +123,16 @@ tina <- function(pars){
 
         everyNth <- every_nth(select = pars$storm$number.of.plots,
                               from = sum(filt))
-
+        # storms.filt <- fse.result$storm_features %>% .[filt] %>% .[everyNth]
+        
+        f.w.n <- filt %>% which %>% .[everyNth]
+        
         plot_stormRefRegions_grid(xmat = NULL, ppm,
                                   fse.result$storm_features %>% .[filt] %>% .[everyNth], # if not doing a small region
                                   plotLoc = paste0(tmpdir,'/plots/'),
                                   filename = 'filtered.features.pdf',
                                   calcStocsy = FALSE, n_xticks = 4)
+        f.num <- f.w.n[104] 
     }
         
   # Plot some of each filter type, if any, to get an idea of what we removed: ####

@@ -4,6 +4,8 @@
 \alias{detect_baseline_effect}
 \title{Detect baseline effect in feature profile (also indicates monotonic features, which are easy to get with STORM)
 Goes through a couple of checks:
+-> linearly interpolate across NA gaps
+- is the feature a singlet?
 - is the peak prominence (max vs. lower bound) of at least one peak > prom.ratio x the entire feature intensity range
 - do the valleys and peaks in the feature profile correlate strongly (r > cutoff.corr)? If so, likely a baseline effect.}
 \usage{
@@ -26,6 +28,8 @@ A list containing two logical values. The first indicates whether
 \description{
 Detect baseline effect in feature profile (also indicates monotonic features, which are easy to get with STORM)
 Goes through a couple of checks:
+-> linearly interpolate across NA gaps
+- is the feature a singlet?
 - is the peak prominence (max vs. lower bound) of at least one peak > prom.ratio x the entire feature intensity range
 - do the valleys and peaks in the feature profile correlate strongly (r > cutoff.corr)? If so, likely a baseline effect.
 }

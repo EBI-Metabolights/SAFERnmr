@@ -1,5 +1,7 @@
 #' Detect baseline effect in feature profile (also indicates monotonic features, which are easy to get with STORM)
 #' Goes through a couple of checks:
+#' -> linearly interpolate across NA gaps
+#' - is the feature a singlet?
 #' - is the peak prominence (max vs. lower bound) of at least one peak > prom.ratio x the entire feature intensity range
 #' - do the valleys and peaks in the feature profile correlate strongly (r > cutoff.corr)? If so, likely a baseline effect.
 #'
@@ -17,33 +19,29 @@
 #'
 #' @export
 detect_baseline_effect <- function(feat, cutoff.corr = 0.99, prom.ratio = 0.3){
-      # Connect with linear interp
+  
+      # Get (simple) peaks, check if singlet
+        # Connect noncontiguous feature bits with linear interp
       
         # feat <- feature$stack[1, , drop = FALSE] %>% trim_sides
         # Extract peaks from feature
           
           feat <- pracma::interp1(x = 1:length(feat), y = c(feat))
           pks <- extractPeaks_corr(feat)
-          # pks <- extractPeaks_corr(feat %>% trim_sides, plots = TRUE)
-          
+
             # True peaks have 2 bounds < peak max
               truepks <- pks$truePeak %>% which
               
-              # # Also ensure that neither of the adjacent peak maxima are greater
-              #     lmax <- feat[pks$peaks] %>% localMaxima
-              #     true.lmax <- truepks %in% lmax
+              res <- erode2(feat)
+              # plot_spec(spec = df$r2, ppm = df$iteration)
+
+              not.singlet = length(truepks)>1
               
-            # Chuck it if singlet or no peaks
-              # if (sum(truepks)<=1){return(list(pass.prom = FALSE,
-              #                                  pass.fit = FALSE,
-              #                                  not.singlet = FALSE))}
-            not.singlet = length(truepks)>1
-              
-            if (is_nullish(not.singlet)){not.singlet <- F}
+              if (is_nullish(not.singlet)){not.singlet <- FALSE}
              
         # Extract local prominences from feature ####
           
-          if (length(truepks > 0)){ # can't calculate prominences of nonexistent peaks
+          if (length(truepks) > 0){ # can't calculate prominences of nonexistent peaks
             
             proms <- lapply(1:length(truepks), function(x){
               
@@ -63,9 +61,9 @@ detect_baseline_effect <- function(feat, cutoff.corr = 0.99, prom.ratio = 0.3){
                 ratios <-  proms / irange
                 pass.prom <- any(ratios > prom.ratio)
               
-          } else {pass.prom <- F}
+          } else {pass.prom <- FALSE}
 
-          if (is_nullish(pass.prom)){pass.prom <- F}
+          if (is_nullish(pass.prom)){pass.prom <- FALSE}
             
         # See if bounds track peaks (requires > 1 peak) ####
             if (sum(truepks)>1){ # need > 1 peaks to do this
