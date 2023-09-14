@@ -14,7 +14,7 @@
 #' @importFrom dplyr tibble
 #' @importFrom magrittr %>%
 #' @export
-plot_storm_refRegions_onlyFeat <- function(ppm,s, n_xticks = 4){
+plot_storm_refRegions_onlyFeat <- function(ppm,s, n_xticks = 4, plot.title = ''){
   # Plot the storm results (s) from storm_play, etc. 
   # just the profiles, no xmat data
   # 
@@ -43,8 +43,10 @@ plot_storm_refRegions_onlyFeat <- function(ppm,s, n_xticks = 4){
         #   geom_vline(xintercept = ppm[s$finalRegion[bounds]],
         #              linetype = 1, col = "grey")
     
-      # Make the x axis pretty?
+      # Add title
 
+      g <- g + ggplot2::ggtitle(plot.title)
+      
     return(g)
   
 }
