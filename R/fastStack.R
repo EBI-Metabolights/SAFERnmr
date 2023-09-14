@@ -1,3 +1,4 @@
+#### fastStack ####################################################################################################
 #' Fast alternative to stackplot(), geom_area-based plots, or the like.
 #' Uses scattermore or ggplot2, but pre-computes points covered by lower spectra
 #' (i.e. lower row #; foreground) and fills with NA to give the appearance of 
@@ -55,7 +56,7 @@ fastStack <- function(x, ppm,
 }
 
 
-# ####
+#### fastStack.withFeatures ###############################################################################
 
 # This is a much, much faster version of project_features_stackplot() that offers scattermore-driven
 # rastered plotting, as well as vectorized vector-graphic ggplots. Still working on plotting AUC for 
@@ -63,10 +64,63 @@ fastStack <- function(x, ppm,
 # 
 fastStack.withFeatures <- function(xmat, ppm,
                                    raster = T, 
-                                   bfs, plt.pars){
+                                   bfs, plt.pars, res.increase = 1){
   
    
-   
+addpoints_evenly <- function(mat, xvals, res.increase = 5)
+{
+  # Note: xvals must be increasing 
+  mat.list <- lapply(1:nrow(mat), function(r){
+              mat[r,]
+  })
+  
+  new.cols <- seq(from = xvals[1], 
+                  to = xvals[length(xvals)],
+                  length.out = length(xvals)*res.increase)
+  
+  denser.mat <- lapply(mat.list, function(v) {
+  # denser.mat <- lapply(1:length(mat.list), function(n) {
+  #   print(n)
+  #   v <- mat.list[[n]]
+              # v <- mat.list[[1]] 
+                #v %>% plot(cex = 0.1)
+              na.gaps <- which(is.na(v))
+              
+              if (length(na.gaps) > 0){
+                
+                na.gaps <- na.gaps %>% runs2ranges %>% as.matrix %>% xvals[.] %>% matrix(ncol = 2)
+                                  
+                not.gap <- lapply(1:nrow(na.gaps), function(g){
+                  
+                   na.gaps[g,1] > new.cols | new.cols > na.gaps[g,2]
+                   
+                }) %>% do.call(rbind, .) %>% Rfast::colAll(.)
+                
+                
+              } else {not.gap <- TRUE}
+              
+              new.cols <- new.cols[not.gap]
+              # new.cols[not.gap] <- NA
+              
+              new.vals <- pracma::interp1(x = xvals, 
+                                          y = v, 
+                                          xi = new.cols) #%>% plot(x = new.cols, y = ., cex = 0.1)
+              
+              list(new.cols = new.cols,
+                   new.vals = new.vals)
+              
+            }#, mc.cores = pars$par$ncores
+  
+  ) 
+  
+  return(denser.mat)
+}
+ 
+denser_mat_to_df <- function(denser.mat){
+  data.frame(ppm = lapply(denser.mat, function(x) x$new.cols) %>% unlist, 
+             int = lapply(denser.mat, function(x) x$new.vals) %>% unlist)
+}
+  
 # Put features in an x-sized matrix:
   # For each spectrum, put the features in:
     
@@ -138,13 +192,6 @@ fastStack.withFeatures <- function(xmat, ppm,
         f.rows.in.x <- lapply(ss.rows, function(ssr) which(x.rows %in% ssr)) %>% unlist
         f.stack <- f.stack + vshifts[f.rows.in.x]
         
-        # f.stack <- lapply(1:nrow(f.stack), function(r) {
-        #   
-        #   f.stack[r, ] + vshifts[x.rows == ss.rows[r]]#-0.5*vshift
-        #   
-        # }) %>% do.call(rbind,.)
-        # simplePlot(f.stack)
-
     # Apply h shifts
     # ppm.mat = outer(ppm[cols.x], hshifts, "+")
         
@@ -158,54 +205,27 @@ fastStack.withFeatures <- function(xmat, ppm,
         # f.stack <- rm_covered_points(xs, f.stack, f.rows.in.x)
           # simplePlot(f.stack)
           # use this for features?
-  
-    # # Interleave xs and f.stack ####
-    #   
-    #   # Pad with row of zeros so the first row has something to subtract
-    #     xs <- rbind(rep(0, ncol(xs)), xs)
-    #   
-    #   # For each xs, put xs, then all feats from that f.rows.in.x
-    #   # - for the ribbons, compute the ymin as the row beneath it
-    #     fullstack <- lapply(2:nrow(xs), function(row.xs) {
-    #       
-    #       
-    #       same.spec <- f.rows.in.x == row.xs
-    #       
-    #       # If any features for this row of xs, return with labels. If not, return xs.row with label. 
-    #       if (any(same.spec)){
-    #         
-    #         list(data = rbind(f.stack[same.spec, ], xs[row.xs, ]), # want features on top
-    #              label = c(rep("feature", sum(same.spec)), "spec"),
-    #              mins = repmat(xs[row.xs-1, ], sum(same.spec)+1, 1))
-    #         
-    #       } else {
-    #         
-    #         list(data = xs[row.xs, ],
-    #              label = "spec",
-    #              mins = xs[row.xs-1, ])
-    #       }
-    #       
-    #     }) %>% unlist(recursive = F) %>% split(., names(.))        
-    #   
-    #   xs <- xs[-1, ]
-    #   
-    #   stack <- fullstack$data %>% do.call(rbind,. )
-    #   mins <- fullstack$mins %>% do.call(rbind,. )
-    #     # simplePlot(mins)
-    #     # simplePlot(stack)
-    #   labels <- fullstack$label %>% unlist(use.names = F)
-    #   rownames(stack) <- make.names(labels, unique = TRUE)
-    #   rownames(mins) <- rownames(stack)
-      
+        
+        
+        
   # Plotting ####
       if (raster){ 
         
+        # browser()
+        
+        # Interpolate more x points in for spectra as needed
           
-        df.lines <- data.frame(ppm = ppm[cols.x],
-                               int = xs %>% t %>% c,
-                               color = alpha('black', alpha = 1)) %>% na.omit
-        
-        
+            df.lines <- addpoints_evenly(
+                                          mat = xs[, ncol(xs):1],   # must be increasing xvals
+                                          xvals = rev(ppm[cols.x]), # must be increasing xvals
+                                          res.increase = res.increase
+                                          
+                                        ) %>% denser_mat_to_df
+            
+            df.lines$color = alpha('black', alpha = 1)
+            df.lines <- df.lines %>% na.omit
+            
+          
         # g <- ggplot() +
         #   scattermore::geom_scattermost(xy = df.lines,
         #                                 interpolate = plt.pars$interpolate,
@@ -214,11 +234,19 @@ fastStack.withFeatures <- function(xmat, ppm,
         #   theme_clean_nmr()
 
          # Calculate feature fills
+          # Interpolate more x points in
+            df.feats <- addpoints_evenly(
+                                         mat = f.stack[, ncol(f.stack):1], # must be increasing xvals
+                                         xvals = rev(ppm[cols.x]),         # must be increasing xvals
+                                         res.increase = res.increase
+                                        
+                                        ) %>% denser_mat_to_df
+            
+            df.feats$color = alpha('blue', alpha = 5)
+            df.feats <- df.feats %>% na.omit
           
+            
           # outlines
-          df.feats <- data.frame(ppm = ppm[cols.x], 
-                                 int = f.stack %>% t %>% c,
-                                 color = alpha('blue', alpha = 5)) %>% na.omit
           # df.feats <- data.frame(ppm = df.feats$ppm, 
           #                            int = outer(df.feats$int, vshift*(seq(-10,10,by = 2))/10, '-') %>% c,
           #                            df.feats$color)
@@ -367,7 +395,7 @@ fastStack.withFeatures <- function(xmat, ppm,
       }
 
         # return(g)
-
+        
         
 }
   
@@ -375,7 +403,7 @@ fastStack.withFeatures <- function(xmat, ppm,
 
 
           
-        # # Overlay the fit feature AUC ####
+# # Overlay the fit feature AUC ####
         # 
         #   g <- g + geom_ribbon(data = data.frame(ymax = f.rev[s, ],
         #                                          ymin = min(x.rev[s, ], na.rm = T),
