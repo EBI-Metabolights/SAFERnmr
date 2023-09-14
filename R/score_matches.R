@@ -92,6 +92,7 @@ score_matches <- function(pars){
                          ss.spec = bf$ss.spec,
                          fit.fsa = bf$fit.fsa,
                          fit.rval = bf$fit.rval,
+                         match.rval = mi$rval,
                          # rmse = bf$rmse,
                          # rmse.biased = bf$rmse.biased,
                          pct.ref = bf$pct.ref)

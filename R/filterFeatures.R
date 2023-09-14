@@ -65,7 +65,7 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
       bl.effect <- pblapply(1:nrow(feature$stack), function(f)
       {
          # print(f)
-         # f <- f.num
+         # f <- f.num[]
          tryCatch(
            expr = {
                      feature$stack[f, , drop = FALSE] %>% 

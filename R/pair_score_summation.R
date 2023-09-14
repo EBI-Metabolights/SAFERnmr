@@ -83,19 +83,18 @@ emptyScore <-
       message('Reading in data for pair score summation...')
 
         tmpdir <- pars$dirs$temp
-        this.run <- paste0(tmpdir)
 
       # split backfits and combinations by reference spectra used
       # report as pairs with coords in matrix
       
-        ss.ref.pairs <- readRDS(paste0(this.run, "/ss.ref.pairs.RDS"))
-        # refmat <- readRDS(paste0(this.run, "/temp_data_matching/ref.mat.RDS")) %>% t
+        ss.ref.pairs <- readRDS(paste0(tmpdir, "/ss.ref.pairs.RDS"))
+        # refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) %>% t
       
       # # Normalize refs 
         refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
         
       # Read in feature data and compress
-        feature <- readRDS(paste0(this.run, "/feature.final.RDS")) %>% expand_features
+        feature <- readRDS(paste0(tmpdir, "/feature.final.RDS")) %>% expand_features
         features.compressed <- feature$position %>% compress_stack
         rm(feature)
         
@@ -410,9 +409,9 @@ emptyScore <-
       pair.scores <- list(ss.ref.pair.scores = ss.ref.pair.scores,
                           rfs.used = rfs.used)
       
-      # saveRDS(pair.scores, paste0(this.run, "/pair.scores.RDS"))
-      # saveRDS(ss.ref.pair.scores, paste0(this.run, "/ss.ref.pair.scores.RDS"))
-      # saveRDS(rfs.used, paste0(this.run, "/rfs.used.RDS"))
+      # saveRDS(pair.scores, paste0(tmpdir, "/pair.scores.RDS"))
+      # saveRDS(ss.ref.pair.scores, paste0(tmpdir, "/ss.ref.pair.scores.RDS"))
+      # saveRDS(rfs.used, paste0(tmpdir, "/rfs.used.RDS"))
       
       message('Pair score summation complete.')
       # return(ss.ref.pair.scores, bfs.used)
