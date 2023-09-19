@@ -132,7 +132,22 @@ addpoints_evenly <- function(mat, xvals, res.increase = 5)
   #   v <- mat.list[[n]]
               # v <- mat.list[[1]] 
                 #v %>% plot(cex = 0.1)
-              na.gaps <- which(is.na(v))
+              na.gaps <- is.na(v)
+              ############################ Make sure there are > 2 non-NA values ####
+              if (sum(!na.gaps) < 2){
+                # if there are not enough values to interpolate, just return nothing
+                return(
+                  list(new.xvals = NA,
+                       new.vals = NA)
+                )
+                
+              } else {
+                
+                # If there are, then convert na.gaps to inds
+                
+                na.gaps <- which(na.gaps)
+                
+              }
               
               if (length(na.gaps) > 0){
                 
