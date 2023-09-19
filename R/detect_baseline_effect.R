@@ -43,7 +43,7 @@ detect_baseline_effect <- function(feat, cutoff.corr = 0.99, prom.ratio = 0.3){
              
         # Extract local prominences from feature ####
           
-          if (length(truepks > 0)){ # can't calculate prominences of nonexistent peaks
+          if (length(truepks) > 0){ # can't calculate prominences of nonexistent peaks
             
             proms <- lapply(1:length(truepks), function(x){
               
