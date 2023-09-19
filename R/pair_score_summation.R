@@ -193,15 +193,15 @@ emptyScore <-
                                           scores = rep(0, length(refspec)),
                                           rf.ids = rep(0, length(refspec)))
                           rval <- fsa
-                            rval$score.name = 'fit.rval'
+                            rval$score.name = 'match.rval'
                           fsaxrval <- fsa
                             fsaxrval$score.name = 'fsaxrval'
                           min.score <- fsa
                             min.score$score.name = 'min.score'
         
-                          ref.pairs$fsaxrval <- ref.pairs$fit.fsa * ref.pairs$fit.rval
+                          ref.pairs$fsaxrval <- ref.pairs$fit.fsa * ref.pairs$match.rval
                           ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fit.fsa,
-                                                                      ref.pairs$fit.rval,
+                                                                      ref.pairs$match.rval,
                                                                       ref.pairs$fsaxrval),value = TRUE)
                           
                         # Loop through ref-ss.spec combinations and calculate scores ####
@@ -292,6 +292,13 @@ emptyScore <-
                                         
                                   }
                                 
+                                # If correlating to refspec and prs, now is the time
+                                  
+                                
+                                  fsaxrval <- fsaxrval
+                                  score.rf.ids <- fsaxrval$rf.ids
+                                  
+                                  
                                 # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
                                 
                                   fsa <- sum_score(fsa, refspec)
