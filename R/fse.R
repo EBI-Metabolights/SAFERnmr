@@ -200,7 +200,7 @@ fse <- function(pars){
                               # Do storm_pairplay
                     
                                 # Set params
-                                  pw <- length(peakPos)/2 %>% ceiling
+                                  pw <- span(peakPos)/2 %>% ceiling
                                   wind <- pair.region
                                   shift <- range(ppm[pair.region])
                                   
