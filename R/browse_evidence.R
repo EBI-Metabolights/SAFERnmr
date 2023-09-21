@@ -334,7 +334,7 @@ ui <-
               
               radioButtons("plot_switch", "Plot type:",
                c("Features on Reference" = "features",
-                 "Features on Samples" = "stackplot"), inline = TRUE),
+                 "Ref-Features on Samples" = "stackplot"), inline = TRUE),
               
               # verbatimTextOutput("state.description"),
               plotOutput("stack.ref.feats"),
