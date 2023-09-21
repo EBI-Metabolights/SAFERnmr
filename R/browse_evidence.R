@@ -168,8 +168,8 @@ drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 
         
         fig <- 
               plot_ly(source = source.name, # x = colnames(mat),
-                      z = mat, zmin = 0, zmax = 1,
-                      zauto = T,
+                      z = mat, #zmin = min(mat, na.rm = T), zmax = max(mat, na.rm = T),
+                      zauto = TRUE,
                       type = 'heatmap',
                       hovertemplate = paste('<b>Compound</b>: %{y}',
                                             '<br><b>Sample</b>: %{x}',
@@ -214,7 +214,7 @@ drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 
                 type = 'heatmap',
                 y = rownames(mat),
                 z = mat, 
-                zauto = F, zmin = 0, zmax = 1, # color scale
+                zauto = TRUE, #zmin = 0, zmax = 1, # color scale
                 hovertemplate = paste('<b>Compound</b>: %{y}',
                                       '<br><b>Sample</b>: %{x}',
                                       '<br><b>Score</b>: %{z:.2f}',
