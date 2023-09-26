@@ -187,4 +187,139 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
         save.image(file = paste0('/Users/mjudge/Desktop/',study, '_specfits_', scoreType, '.RData'))
       
         
+########### parameter sensitivity testing #########
+
+tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/tight/MTBLS1_nmrML_pulProg_missing_spectralMatrix_tight"
+# tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/sloppy/MTBLS1_nmrML_pulProg_missing_spectralMatrix_sloppy"
+# tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/std/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS"
+# tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/tight/MTBLS1_nmrML_pulProg_missing_spectralMatrix_tight"
+        
+# Get the number of features
+  test.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/'
+  parsets <- c("sloppy", "std", "tight")
+  
+    lapply(parsets, function(parset){
+      
+      files <- dir(paste0(test.dir, parset), full.names = TRUE)
+      runs <- files %>% stringr::str_detect(".zip") %>% "!"(.) %>% files[.]
+      
+      lapply(runs, function(run){
+        
+        study.name <- stringr::str_extract(run, pattern = "(?<=/)MTBLS\\d+")
+        
+        message(parset, ' - ', study.name)
+        
+        feature <- readRDS(paste0(run, '/feature.final.RDS'))
+          n.features <- feature$sfe %>% length
+          rm(feature)
+          
+        match.info <- tryCatch({
+            matches <- readRDS(paste0(run, '/matches.RDS'))
+
+            # if any invalid matches for the feature
+              matches <- matches[!is_nullish(matches)]
+            # per feature, was NA returned, or was ('matches', 'peak.quality')?
+              nomatch <- (lapply(matches, length) %>% unlist) == 1 
+              matches <- matches[!nomatch]
+            
+            # For each feature: 
+              # Check if there was an error message
+                errors <- matches[names(matches) %in% c('call', 'message')]
+              # Check if both of the expected fields are present
+                matches <- matches[names(matches) %in% c('matches', 'peak.quality')]
+      
+              matches.split <- split(matches, names(matches))
+              rm(matches)
+              
+            match.info <- rbindlist(matches.split$matches)
+            
+              list(
+                n.matches = nrow(match.info),
+                backfits = NA
+              )
+            
+            
+        }, warning = function(cond){
+          
+          match.info <- readRDS(paste0(run, '/smrf.RDS'))
+          return(
+              list(
+                n.matches = nrow(match.info$match.info),
+                backfits = lapply(match.info$backfits, nrow) %>% unlist %>% sum
+              )
+          )
+            
+        }, error = function(cond){
+          
+          match.info <- readRDS(paste0(run, '/smrf.RDS'))
+          return(
+              list(
+                n.matches = nrow(match.info$match.info),
+                backfits = lapply(match.info$backfits, nrow) %>% unlist %>% sum
+              )
+          )
+          
+        })
+        
+        scores <- tryCatch({
+            scores <- readRDS(paste0(run, '/scores.RDS'))
+            mat <- scores$ss.ref.mat
+              n.compounds <- mat %>% Rfast::rowMaxs(., value = TRUE) %>% ">"(.,.5) %>% sum
+              n.compound.spec <- mat %>% ">"(.,.5) %>% sum
+              max.score <- max(mat)
+                
+              list(
+                compounds = n.compounds,
+                comp.specs = n.compound.spec,
+                max.score = max.score
+              )
+            
+              
+          }, warning = function(cond){
+            
+              list(
+                compounds = NA,
+                comp.specs = NA,
+                max.score = NA
+              )
+
+          }, error = function(cond){
+            
+              list(
+                compounds = NA,
+                comp.specs = NA,
+                max.score = NA
+              )
+
+          })
+        
+          df <- data.frame(study = study.name,
+                           pars = parset,
+                           features = n.features,
+                           matches = match.info$n.matches,
+                           backfits = match.info$backfits,
+                           compounds = scores$compounds,
+                           max.score = scores$max.score,
+                           ms.pairs = scores$comp.specs)
+          print(df)
+          return(df)
+          
+      }) %>% do.call(rbind,.)
+      
+    }) %>% do.call(rbind,.)
+   
+# Get the number of matches (~ rval)
+
+    # same ones, just filtered?
+    
+# smrfs (backfits)
+       
+    # same ones, just filtered? 
+    
+# compound-spectra by score
+        
+    # same ones, just filtered?
+        
+        
+# For each std run, randomly select n scores 
         
