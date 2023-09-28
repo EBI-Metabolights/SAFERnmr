@@ -171,7 +171,7 @@ filter_matches <- function(pars){
         message('Saving backfits...\n\n\n')
         saveRDS(backfit.results, paste0(tmpdir,"/smrf.RDS"))
         # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
-        unlink(paste0(tmpdir, "/matches.RDS")) # 
+        # unlink(paste0(tmpdir, "/matches.RDS")) # 
 
       printTime()
       
