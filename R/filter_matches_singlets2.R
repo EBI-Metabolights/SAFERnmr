@@ -53,7 +53,7 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
     mi.list <- lapply(1:nrow(match.info), function(x) match.info[x,])
 
   # Loop over each mi.list element (match.info row) and find how many peaks were matched
-  
+  browser()
     npeaks <- mclapply(mi.list, function(mi){
   
       # How many f.pks (after filtering for matched region and na-gaps) were included?
@@ -84,7 +84,7 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
     }, mc.cores = ncores) %>% rbindlist
     
   match.info$numpeaks.feat <- npeaks$feat
-  match.info$numpeaks.ref <- npeaks$feat
+  match.info$numpeaks.ref <- npeaks$ref
   
   filt <- match.info$numpeaks.feat > 1 & match.info$numpeaks.ref > 1
     
