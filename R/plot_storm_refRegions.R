@@ -33,7 +33,7 @@
 #' plot_storm_refRegions(xmat = xmat, ppm = ppm, s = stormResults[[1]])
 #'
 #' @seealso \code{\link{plot_stormRefRegions_grid}}, \code{\link{plot_stormRefRegions_summarize}}
-plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshift = 1, hshift = 0.0, calcStocsy = TRUE, n_xticks = 4, plot.title= ''){
+plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshift = 1, hshift = 0.0, calcStocsy = TRUE, n_xticks = 4, plot.title= '', xlim = NULL){
   # Plot the storm results (s) from storm_play, etc. 
   # Plot light gray ref region for optimal subset. 
   # use in lapply().
@@ -51,14 +51,19 @@ plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshif
                       s$finalRegion]
     ppmRegion = ppm[s$finalRegion]
     
+    if (is.null(xlim)){
+      xlim <- range(ppmRegion) %>% rev
+    }
+    
     if (bgplot == "overlayed"){
-      g <- simplePlot(specRegion, ppmRegion, n_xticks = n_xticks)
+      g <- simplePlot(specRegion, ppmRegion, n_xticks = n_xticks, linecolor = 'black', opacity = .8)
     }
     
     if (bgplot == "stack"){
       g <- stackplot(specRegion, ppmRegion, vshift = vshift, hshift = hshift)
     }
     
+    g <- g + ggplot2::xlim(xlim[1], xlim[2])
     
 ##############
     # Plot the reference in black, bold, floating in middle of spectra
@@ -84,13 +89,13 @@ plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshif
         
         
       # Make the plot
-        g <- g + geom_path(data = data.frame(refvals = stretchedRef,
-                                             refppms = ppm[s$finalRegion]),
-                           mapping = aes(x = refppms, y = refvals),
-                           colour = "black", linewidth = .5,
-                           lineend = "round",
-                           linejoin = "round",
-                           linemitre = "5")
+        # g <- g + geom_path(data = data.frame(refvals = stretchedRef,
+        #                                      refppms = ppm[s$finalRegion]),
+        #                    mapping = aes(x = refppms, y = refvals),
+        #                    colour = "black", linewidth = .5,
+        #                    lineend = "round",
+        #                    linejoin = "round",
+        #                    linemitre = "5")
       
       
 ##############   
@@ -184,7 +189,7 @@ plot_storm_refRegions <- function(xmat = NULL,ppm,s, bgplot = "overlayed", vshif
           
       # Plot corr boundaries as vert lines  
         g <- g +
-          geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "grey")
+          geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "black")
         #   geom_vline(xintercept = ppm[s$finalRegion[bounds]],
         #              linetype = 1, col = "grey")
     
