@@ -69,7 +69,7 @@ stackplot <- function(ymat = NULL, xvect = NULL,
     
     
     d$group <- 'normal'
-    group.colors <- c(normal = alpha("gray", 0.6), selected = alpha("red", 0.6))
+    group.colors <- c(normal = alpha("gray", 1), selected = alpha("red", 1))
     
     if (is.integer(highlight.spec)){
       d$group[d$specNumber %in% highlight.spec] <- 'selected'
