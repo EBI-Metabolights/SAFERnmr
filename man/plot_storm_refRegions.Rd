@@ -13,7 +13,8 @@ plot_storm_refRegions(
   hshift = 0,
   calcStocsy = TRUE,
   n_xticks = 4,
-  plot.title = ""
+  plot.title = "",
+  xlim = NULL
 )
 }
 \arguments{
