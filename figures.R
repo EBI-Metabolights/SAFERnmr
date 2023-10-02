@@ -57,7 +57,8 @@ which(reg %in% s$peak)
       # Stackplot
       
         g <- specRegion %>%
-          stackplot(ppm[reg], vshift = .3, hshift = 0)
+          stackplot(ppm[reg], vshift = .3, hshift = 0)+
+          geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "black")
         
         pdf(file = '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/citrate_peak_stackplot.pdf', width = 12, height = 6)
             g
@@ -66,11 +67,14 @@ which(reg %in% s$peak)
             
       # Sorted stackplot with highlighted subset
       
-        sortorder <- specRegion %>% rowSums(na.rm = TRUE) %>% order
-        ss.sorted <- order(sortorder) %>% .[s$subset]
-          
-        g <- specRegion[sortorder,] %>%
-          stackplot(ppm[reg], vshift = .3, hshift = 0, highlight.spec = ss.sorted)
+        sortorder.ss <- specRegion[s$subset, ] %>% rowSums(na.rm = TRUE) %>% order
+        non.ss <- which(!(1:nrow(specRegion) %in% s$subset))
+        reorder <- c(s$subset[sortorder.ss], non.ss) # size-sorted subset, then rest of matrix (unsorted)
+        
+        devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+        g <- specRegion[reorder,] %>%
+          stackplot(ppm[reg], vshift = .3, hshift = 0, highlight.spec = 1:length(s$subset))+
+          geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "black")
         
         pdf(file = '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/citrate_peak_stackplot_selected.pdf', width = 12, height = 6)
             g
@@ -103,17 +107,7 @@ which(reg %in% s$peak)
           g
         dev.off()
         
-        
-        s$finalRegion <- reg
-        sr <- list(
-          cor = cor(specRegion[s$subset, ], xmat[s$subset, driver]),
-          cov = cor(specRegion[s$subset, ], xmat[s$subset, driver]) %>% scale_between # %>% fit_batman(scale.to, exclude.lowest = 0.5) %>% .[["feat.fit"]]
-        )
-        sr$cor[sr$cor < 0.8] <- NA
-        sr$cov[sr$cov < 0.8] <- NA
-        s$corr <- sr$cor
-        s$covar <- sr$cov
-        devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+        s=fse.result$storm_features[[a.ind]]
         g <- plot_storm_refRegions(xmat = xmat, s = s, ppm = ppm, calcStocsy = F, xlim = range(reg) %>% ppm[.]) +
           geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "black")
         
@@ -121,7 +115,33 @@ which(reg %in% s$peak)
           g
         dev.off()
 
+  # Citrate ref
+  
+    ldp <- readRDS(paste0(tmpdir,"/lib.data.processed.RDS"))
+    ref.names <- c("Citrate", "AMP", "Norepinephrine", "Niacin", "L-Phenylalanine", "L-glutamine")
+    
+    lapply(ref.names, function(r){
+      
+      ref_pdf(ref.name = r, 
+              ldp = ldp, 
+              ppm = ppm, 
+              where = '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling')
+      
+    })
 
-
-
- 
+  ref_pdf <- function(ref.name, ldp, ppm, where = '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling'){
+    message(ref.name)
+    ref.num <- ldp %>% lapply(function(x) x$compound.name) %>% unlist %>% stringr::str_equal(ref.name) %>% which %>% .[1]
+    ref <- ldp[[ref.num]] %>% expand_ref(ppm)
+    ref$mapped$data[is.na(ref$mapped$data)] <- 0
+    pdf(file = paste0(where,'/',ref.name,'_ref.pdf'), width = 12, height = 6)
+     
+      simplePlot(ref$mapped$data, 
+                 xvect = ref$mapped$ppm, 
+                 xdir = 'reverse', 
+                 linecolor = 'blue', 
+                 opacity = 0.5) %>% print
+    dev.off()
+    return(NULL)
+  }
+  
