@@ -11,7 +11,8 @@ stackplot(
   hshift = 0,
   shift_by = NULL,
   xdir = "reverse",
-  show = TRUE
+  show = TRUE,
+  highlight.spec = NA
 )
 }
 \arguments{

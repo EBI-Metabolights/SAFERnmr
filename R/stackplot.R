@@ -28,7 +28,8 @@ stackplot <- function(ymat = NULL, xvect = NULL,
                       vshift = 1, hshift = 0,
                       shift_by = NULL,
                       xdir = "reverse",
-                      show = TRUE){
+                      show = TRUE,
+                      highlight.spec = NA){
   # Requires
   #   ggplot2
   #   ggridges
@@ -65,7 +66,15 @@ stackplot <- function(ymat = NULL, xvect = NULL,
   
     d <- reshape2::melt(df, id.vars="ppm")
     colnames(d) <- c("ppm", "specNumber", "Spectral Intensity")
-    d$color <- rep(alpha("gray", 0.6))
+    
+    
+    d$group <- 'normal'
+    group.colors <- c(normal = alpha("gray", 0.6), selected = alpha("red", 0.6))
+    
+    if (is.integer(highlight.spec)){
+      d$group[d$specNumber %in% highlight.spec] <- 'selected'
+    }
+      
     d$shiftBy <- NA
     d <- d %>% filter(!is.na(`Spectral Intensity`))
     
@@ -86,8 +95,10 @@ stackplot <- function(ymat = NULL, xvect = NULL,
               aes(x = `ppm`, 
                   y = `shiftBy`,
                   height = `Spectral Intensity`,
-                  group = `shiftBy`)) +
-    
+                  group = `shiftBy`,
+                  fill = `group`)) +
+      
+        scale_fill_manual(values = group.colors) +
         ggridges::geom_ridgeline(na.rm = TRUE)
     
     if (xdir == "reverse"){g <- g + scale_x_reverse(breaks = breaks_pretty())}
