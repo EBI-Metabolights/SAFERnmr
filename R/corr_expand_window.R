@@ -23,6 +23,29 @@
 #' @importFrom ggplot2 geom_line geom_vline geom_point scale_x_reverse
 #' @export
 corr_expand_window <- function(xmat, ppm, peakInd, wind){
+  # setClass("stocsyObject", slots=list(r="numeric", cov="numeric", driver= "numeric"))
+  
+  stocsy <- function(mat, sel.reg, driver,
+                     plotting = FALSE){
+    
+    driver.ind <- vectInds(driver, sel.reg)
+    
+    # sr <- new("stocsyObject", 
+    #           r = cor(mat, mat[, driver.ind]), 
+    #           cov = cov(mat, mat[, driver.ind]), 
+    #           driver = driver,
+    #           driver.relative = driver.ind)
+    
+    sr <- list(
+      r = cor(mat, mat[, driver.ind]),
+      cov = cov(mat, mat[, driver.ind]),
+      driver = driver,
+      driver.relative = driver.ind
+    )
+    
+    return(sr)
+  }
+  
   # peakInd <- peaks.init[i]
   # Select a region that's close by and not out of bounds
   # no bigger than max(ppm), no smaller than min(ppm), within n * 2 indices
@@ -31,11 +54,12 @@ corr_expand_window <- function(xmat, ppm, peakInd, wind){
     offset <- peakInd-min(wind) # (this might change if wind is out of bounds)
     
   # Local STOCSY within window
+
     sr <- stocsy(xmat[,wind], wind, peakInd,
                  plotting = FALSE)
-    
+
   # Get local mins in correlation vector around peak
-    localMins <- localMinima(sr@r)
+    localMins <- localMinima(sr$r)
   
     corrRbound <- (localMins > offset+1) %>%  # Take local mins to the right of driver peak    --- inds in wind
       which() %>% localMins[.] %>% min() %>%  # get the ind of the leftmost one --- inds in wind
@@ -48,12 +72,12 @@ corr_expand_window <- function(xmat, ppm, peakInd, wind){
   # if you wanted ppm inds or vals:  %>% wind[.] #%>% ppm[.]
     # browser()
   # Check extracted window by plotting. Color in these STOCSYs is abs(cc)
-                  # df <- data.frame(r = sr@r,inds = wind)
+                  # df <- data.frame(r = sr$r,inds = wind)
                   # g <- ggplot(data = df, aes(x = inds, y = r)) +
                   #   geom_line() +
                   #   geom_vline(xintercept = peakInd, linetype = 2, col = "grey") +
                   #   geom_vline(xintercept = wind[c(corrLbound, corrRbound)], linetype = 1, col = "grey") +
-                  #   geom_point(data = data.frame(xs = wind[localMins], ys = sr@r[localMins]),
+                  #   geom_point(data = data.frame(xs = wind[localMins], ys = sr$r[localMins]),
                   #          aes(x = xs, y = ys)) +
                   #   scale_x_reverse()
                   # plot(g)
@@ -61,9 +85,9 @@ corr_expand_window <- function(xmat, ppm, peakInd, wind){
   # Store data within list
     vals <- list()
     vals$peak <- peakInd
-    vals$intcorr <- sum(sr@r[corrLbound:corrRbound])
-    vals$data <- rbind(corr = sr@r[corrLbound:corrRbound],
-                       cov = sr@cov[corrLbound:corrRbound],
+    vals$intcorr <- sum(sr$r[corrLbound:corrRbound])
+    vals$data <- rbind(corr = sr$r[corrLbound:corrRbound],
+                       cov = sr$cov[corrLbound:corrRbound],
                        inds = wind[corrLbound:corrRbound])
     vals$sr <- sr
     vals$wind <- wind
