@@ -163,18 +163,23 @@ filter_matches <- function(pars){
 #########################################################################################################
     # Estimate the number of backfits, and jettison matches to keep below computational limit
     
+      # This requires that the sfe field contains ss information for each feature, and that
+      # the number of features in the features object actually matches the indices listed
+      # in match.info. 
+    
       ss.lengths <- feature.c$sfe %>% lapply(function(x){
         x$feat$ss %>% length
       }) %>% unlist
       contribution <- ss.lengths[match.info$feat]
       est.bfs <- contribution %>% sum
-      message('Estimated backfits: ', est.bfs)
+      message('Estimated backfits: ', est.bfs, ' at match rval cutoff of ', pars$matching$r.thresh, '.')
 
       if (est.bfs > pars$matching$filtering$max.backfits){
         # limit the number of matches - only take the top n such that they don't exceed max number
         
         message('\n\tBackfit limit is set to ', pars$matching$filtering$max.backfits, '.' )
-          # Sort matches by rval, then take the top n such that # backfits < limit
+        
+          # Sort matches by rval, then take the top n until # estimated backfits < limit
           
             sort.order <- order(match.info$rval, decreasing = TRUE)
             cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
@@ -184,7 +189,7 @@ filter_matches <- function(pars){
             lost <- length(sort.order)-length(keep)
             
         message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
-        message('\n\tNew effective match rval cutoff is ', min(match.info$rval), '.)')
+        message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
         
       }
 
@@ -201,7 +206,7 @@ filter_matches <- function(pars){
     
     # Back-fit each matched reference region to the subset spectra
       # adjusted to account for sfe
-        # match.info <- match.info[1:10000,]
+        
         backfit.results <- backfit_rfs3(match.info = match.info,
                                         feature.c = feature.c, # has sfe data 
                                         xmat = xmat,
