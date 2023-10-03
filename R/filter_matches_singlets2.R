@@ -55,7 +55,7 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
   # Loop over each mi.list element (match.info row) and find how many peaks were matched
   
     npeaks <- mclapply(mi.list, function(mi){
-  
+      tryCatch({
       # How many f.pks (after filtering for matched region and na-gaps) were included?
   
         f.pks <- feat.pks[[mi$feat]]
@@ -65,6 +65,7 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
                                  f.model <= mi$feat.end]
         
         npks.feat <- sum(f.pks %in% f.pts.matched)
+        if (npks.feat %>% is.null){npks.feat <- 0}
       
       # Same for ref peaks?
       
@@ -75,11 +76,18 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
                                  r.model <= mi$ref.end]
         
         npks.ref <- sum(r.pks %in% r.pts.matched)
-  
+        if (npks.ref %>% is.null){npks.ref <- 0}
+
       # Put in df
       
         data.frame(feat = npks.feat,
                    ref = npks.ref)
+        
+      }, error = function(cond){
+        data.frame(feat = 0,
+                   ref = 0)
+      }
+      )
         
     }, mc.cores = ncores) %>% rbindlist
     
