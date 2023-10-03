@@ -199,10 +199,11 @@ emptyScore <-
                           min.score <- fsa
                             min.score$score.name = 'min.score'
         
-                          ref.pairs$fsaxrval <- ref.pairs$fit.fsa * ref.pairs$match.rval
+                          ref.pairs$fsaxrval <- (ref.pairs$fit.fsa + ref.pairs$match.rval)/2
                           ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fit.fsa,
                                                                       ref.pairs$match.rval,
-                                                                      ref.pairs$fsaxrval),value = TRUE)
+                                                                      ref.pairs$fsaxrval),
+                                                                value = TRUE)
                           
                         # Loop through ref-ss.spec combinations and calculate scores ####
                         # - score objects will be re-copied for each lapply iteration, so 
