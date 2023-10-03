@@ -295,8 +295,8 @@ emptyScore <-
                                 
                                 # If correlating to refspec and prs, now is the time
                                   
-                                  fsaxrval <- fsaxrval
-                                  score.rf.ids <- fsaxrval$rf.ids
+                                  # fsaxrval <- fsaxrval
+                                  # score.rf.ids <- fsaxrval$rf.ids
                                   
                                   
                                 # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
