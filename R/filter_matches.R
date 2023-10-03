@@ -42,12 +42,22 @@ filter_matches <- function(pars){
       rm(fse.result)
 
     feature.c <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
-    refmat.c <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
-    pad.size <- readRDS(paste0(tmpdir, "/temp_data_matching/pad.size.RDS"))
-    # matches <- readRDS(paste0(tmpdir, "/matches.initial.RDS"))
+    
+    if (dir.exists(paste0(tmpdir, "/temp_data_matching"))){
+      refmat.c <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
+      pad.size <- readRDS(paste0(tmpdir, "/temp_data_matching/pad.size.RDS"))
+    } else {
+      unzip(paste0(tmpdir, "/temp_data_matching.zip"), 
+            exdir = paste0(tmpdir, "/temp_data_matching"),
+            junkpaths = TRUE)
+      refmat.c <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS"))
+      pad.size <- readRDS(paste0(tmpdir, "/temp_data_matching/pad.size.RDS"))
+      # matches <- readRDS(paste0(tmpdir, "/matches.initial.RDS"))
+    }
     
     # Weed out empty matches or those which failed
     matches <- readRDS(paste0(tmpdir, "/matches.RDS"))
+      
       # if any invalid matches for the feature
         matches <- matches[!is_nullish(matches)]
       # per feature, was NA returned, or was ('matches', 'peak.quality')?
@@ -81,6 +91,7 @@ filter_matches <- function(pars){
       peak.qualities <- matches.split$peak.quality
         if (length(pq.featureNumbers) != length(peak.qualities)) { stop(' peak qualities not of same length as pq.featureNumbers!')}
         rm(matches.split)
+        
         
 ######################### Propagate matches to feature clusters  ##########################
 
@@ -150,18 +161,52 @@ filter_matches <- function(pars){
         # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.filtered.RDS"))
 
 #########################################################################################################
-    # At this point, match.info is set. Assign IDs
+    # Estimate the number of backfits, and jettison matches to keep below computational limit
+    
+      # This requires that the sfe field contains ss information for each feature, and that
+      # the number of features in the features object actually matches the indices listed
+      # in match.info. 
+    
+      ss.lengths <- feature.c$sfe %>% lapply(function(x){
+        x$feat$ss %>% length
+      }) %>% unlist
+      contribution <- ss.lengths[match.info$feat]
+      est.bfs <- contribution %>% sum
+      message('Estimated backfits: ', est.bfs, ' at match rval cutoff of ', pars$matching$r.thresh, '.')
+
+      if (est.bfs > pars$matching$filtering$max.backfits){
+        # limit the number of matches - only take the top n such that they don't exceed max number
+        
+        message('\n\tBackfit limit is set to ', pars$matching$filtering$max.backfits, '.' )
+        
+          # Sort matches by rval, then take the top n until # estimated backfits < limit
+          
+            sort.order <- order(match.info$rval, decreasing = TRUE)
+            cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
+            keep <- sort.order[1:cutoff]
+            match.info <- match.info[keep, ]
+            match.info <- match.info[order(keep),] #resort so mi is in same order as before
+            lost <- length(sort.order)-length(keep)
+            
+        message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
+        message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
+        
+      }
+
+            # At this point, match.info is set. Assign IDs
                           
        match.info$id <- 1:nrow(match.info)
 
 ######################### Back-fit reference to spectra  #############################    
     
       message('\n\nBack-fitting ref-feats to each spectrum in the relevant subset...\n')
+      
+      
     printTime()
     
     # Back-fit each matched reference region to the subset spectra
       # adjusted to account for sfe
-        # match.info <- match.info[1:10000,]
+        
         backfit.results <- backfit_rfs3(match.info = match.info,
                                         feature.c = feature.c, # has sfe data 
                                         xmat = xmat,
@@ -171,7 +216,9 @@ filter_matches <- function(pars){
         message('Saving backfits...\n\n\n')
         saveRDS(backfit.results, paste0(tmpdir,"/smrf.RDS"))
         # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
-        unlink(paste0(tmpdir, "/matches.RDS")) # 
+        # unlink(paste0(tmpdir, "/matches.RDS")) # 
+        # matches <- readRDS(paste0(tmpdir, "/smrf.RDS"))
+        #   matches <- matches$match.info
 
       printTime()
       
