@@ -63,7 +63,8 @@ score_matches <- function(pars){
         # nrefs <- length(unique(match.info$ref))
         # chunk.size <- max(1, nrefs / pars$par$ncores)
         # f.grp <- ceiling((1:nrefs) / chunk.size)
-      
+        # 
+
       ss.ref.pairs <- pblapply(1:nrow(match.info), function(m) 
         {
           # m <- 1
@@ -95,6 +96,7 @@ score_matches <- function(pars){
                          ss.spec = bf$ss.spec,
                          fit.fsa = bf$fit.fsa,
                          fit.rval = bf$fit.rval,
+                         match.rval = mi$rval,
                          # rmse = bf$rmse,
                          # rmse.biased = bf$rmse.biased,
                          pct.ref = bf$pct.ref)
