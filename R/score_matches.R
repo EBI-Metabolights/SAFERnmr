@@ -41,11 +41,14 @@ score_matches <- function(pars){
     ######################### Build match matrix  #############################    
     # Get the processed library data:
       
-      # refmat <- lapply(lib.data.processed, 
-      #                  function(x) x$mapped$data / sum(x$mapped$data, na.rm = T)
-      #                  ) %>% do.call(rbind,.)
+      if (!dir.exists(paste0(tmpdir, "/temp_data_matching"))){
+         unzip(paste0(tmpdir, "/temp_data_matching.zip"), 
+              exdir = paste0(tmpdir, "/temp_data_matching"),
+              junkpaths = TRUE)
+      }
+      
+      refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows()
 
-      refmat <- readRDS(paste0(tmpdir,"/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows()
 
       cmpd.names <- lapply(lib.data.processed, function(x) x$compound.name) %>% do.call(rbind,.)
       # write(cmpd.names,"/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo.cmpd.names.txt", sep = '\t')
