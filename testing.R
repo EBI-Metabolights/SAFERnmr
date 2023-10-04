@@ -323,3 +323,78 @@ tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/tight/MTBLS
         
 # For each std run, randomly select n scores 
         
+
+    
+    
+devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+
+tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS_rescore.RDS'
+pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
+pars$dirs$temp <- tmpdir
+pars$debug$enabled <- TRUE
+pars$par$ncores <- 4
+pars$debug$all.outputs <- TRUE
+
+
+
+cmpds <- c('CHEBI:1148','CHEBI:60647','CHEBI:24898','CHEBI:25017','CHEBI:27266','CHEBI:60645','CHEBI:24898','CHEBI:35932','CHEBI:16530','CHEBI:16236','CHEBI:20067','unknown','unknown','CHEBI:30860','unknown','CHEBI:78320','unknown','CHEBI:50129','CHEBI:16449','CHEBI:64390','CHEBI:74911','CHEBI:25017','CHEBI:25094','CHEBI:18257','CHEBI:18211','CHEBI:15366','CHEBI:15366','CHEBI:18257','CHEBI:24898','CHEBI:17533','unknown','CHEBI:21547','unknown','unknown','CHEBI:17533','CHEBI:28300','CHEBI:28300','CHEBI:28300','CHEBI:30772','CHEBI:15347','CHEBI:15344','CHEBI:74903','CHEBI:64390','CHEBI:30744','CHEBI:32816','CHEBI:18261','CHEBI:6650','CHEBI:15741','CHEBI:20067','CHEBI:30915','CHEBI:18237','CHEBI:28300','CHEBI:30769','CHEBI:30769','CHEBI:17170','CHEBI:15611','CHEBI:17724','CHEBI:16628','CHEBI:18139','CHEBI:17724','unknown','unknown','CHEBI:16810','CHEBI:16919','CHEBI:16737','CHEBI:27389','CHEBI:16919','CHEBI:17497','CHEBI:16704','CHEBI:16737','CHEBI:16704','CHEBI:78320','CHEBI:16704','CHEBI:16704','CHEBI:6650','CHEBI:64399','CHEBI:64399','unknown','unknown','CHEBI:15676','CHEBI:16335','CHEBI:18012','CHEBI:27838','CHEBI:27410','unknown','CHEBI:27838','unknown','unknown','unknown','CHEBI:32980','CHEBI:104011','CHEBI:27637','CHEBI:18186','CHEBI:27637','unknown','unknown','CHEBI:27570','CHEBI:32980','CHEBI:43355','CHEBI:64414','CHEBI:18186','CHEBI:43355','CHEBI:28044','CHEBI:18089','CHEBI:18089','CHEBI:27410','CHEBI:18123','CHEBI:18123','CHEBI:15940','unknown','CHEBI:30751','CHEBI:64399','CHEBI:18123','CHEBI:64399','CHEBI:18123')
+cmpds <- tolower(cmpds)
+cmpds <- unique(cmpds)
+data.chebis <- cmpds[!grepl('nknown',cmpds)] 
+
+gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo_bmrb2chebi.xlsx')
+gissmo.chebis.full <- gissmo.cmpds$database_identifier %>% tolower
+gissmo.chebis <- gissmo.chebis.full %>% tolower %>% unique %>% na.omit
+
+
+chebis.matched <- which(gissmo.chebis %in% data.chebis) %>% gissmo.chebis[.]
+
+lapply(gissmo.cmpds$metabolite_identification, function(x){
+  rownames(scores.mat)
+})
+
+matches <- 
+  lapply(chebis.matched, function(x){
+    
+    match.rows <- gissmo.chebis.full %in% 
+    names <- c(gissmo.cmpds$metabolite_identification[match.rows],
+               gissmo.cmpds$`Compound Name`[match.rows]) %>% unique
+    
+    match.in.dataset <- 
+    scores <- 
+    data.frame(names = paste(names, collapse = ', '),
+               chebi = x)
+    
+  }) %>% do.call(rbind,.)
+
+scores <- readRDS(paste0(tmpdir, '/scores.RDS'))
+scores.mat <- scores$ss.ref.mat
+rownums <- 1:nrow(scores.mat)
+
+score.summary <- lapply(rownums, function(m){
+  
+  # Get the top 5 scores for this metabolite
+  
+    met.scores <- scores.mat[m,]
+      score.order <- order(met.scores, decreasing = TRUE)
+      
+    top.5.samples <- score.order[1:5]
+    top.5.scores <- met.scores[top.5.samples]
+    
+  # Report the mean score
+    mean.score <- mean(top.5.scores)
+    
+    list(mean.score = mean.score,
+         top.5.samples = top.5.samples,
+         top.5.scores = top.5.scores)
+}) %>% unlist(recursive = FALSE)
+
+score.summary <- split(score.summary, names(score.summary))
+
+mean.scores <- score.summary$mean.score %>% unlist
+
+df <- data.frame(mean.score = mean.scores,
+                 ref.num = 1:nrow(scores.mat),
+                 compound.name = rownames(scores.mat))
+
+# For each of the matched chebis, report the highest mean score
