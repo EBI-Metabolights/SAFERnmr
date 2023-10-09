@@ -3,6 +3,18 @@
 # 
 
 devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std'
+
+backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
+scores <- readRDS(paste0(tmpdir,"/scores.RDS"))
+
+
+pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
+pars$dirs$temp <- tmpdir
+pars$debug$enabled <- TRUE
+pars$par$ncores <- 4
+pars$debug$all.outputs <- TRUE
+pars$matching$filtering$max.backfits <- 1E5
 
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
 

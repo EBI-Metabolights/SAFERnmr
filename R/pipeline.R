@@ -71,12 +71,31 @@ pipeline <- function(params_loc, params_obj) {
   #           }, error = function(cond){return('failed setup')})
   # 
   # if (!is.null(status)){return(status)}
-  
+    run.summary <- data.frame(study = pars$study$id, 
+                              spec.MHz = pars$study$spectrometer.frequency,
+                              data = pars$files$spectral.matrix,
+                              ref.library = pars$files$lib.data,
+                              np = pars$corrpockets$noise.percentile,
+                              protofeature.r = pars$corrpockets$rcutoff,
+                              storm.r = pars$storm$correlation.r.cutoff,
+                              storm.b = pars$storm$b,
+                              min.subset = pars$tina$min.subset,
+                              max.feats = pars$tina$nfeats,
+                              max.hits = pars$matching$max.hits,
+                              match.r = pars$matching$r.thresh, # this will get updated by bf limit
+                              ppm.tol = pars$matching$filtering$ppm.tol,
+                              max.backfits = pars$matching$filtering$max.backfits,
+                              par.ncores = pars$par$ncores,
+                              galaxy = pars$galaxy$enabled,
+                              verbose = pars$debug$all.outputs
+                              )
+               
 ################################################################################################################################### 
 ## Feature Shape Extraction
 
   # status <- tryCatch({
-    fse(pars)
+    run.summary <- fse(pars) %>% cbind(run.summary, .)
+    
   #   }, error = function(cond){return('failed fse')})
   # 
   # if (!is.null(status)){return(status)}
@@ -87,7 +106,9 @@ pipeline <- function(params_loc, params_obj) {
 # - associate features whose shapes are highly similar
 
   # status <- tryCatch({
-    tina(pars)
+    
+    run.summary <- tina(pars) %>% cbind(run.summary, .)
+    
     # }, error = function(cond){return('failed tina')})
   # 
   # if (!is.null(status)){return(status)}
@@ -98,7 +119,9 @@ pipeline <- function(params_loc, params_obj) {
 # - parallelized
   
   # status <- tryCatch({
-              match_features2refs_par_setup(pars)
+  
+              run.summary <- match_features2refs_par_setup(pars) %>% cbind(run.summary, .)
+              
   #           }, error = function(cond){return('failed match setup')})
   # 
   # if (!is.null(status)){return(status)}
@@ -106,7 +129,9 @@ pipeline <- function(params_loc, params_obj) {
   gc() # garbage collect before big parallel compute
   
   # status <- tryCatch({
-              match_features2refs_par_explicit(pars)
+              
+              run.summary <- match_features2refs_par_explicit(pars) %>% cbind(run.summary, .)
+              
   #           }, error = function(cond){return('failed matching')})
   # 
   # if (!is.null(status)){return(status)}
@@ -118,7 +143,8 @@ pipeline <- function(params_loc, params_obj) {
 # - backfit ref subsignatures to individual dataset spectra
 
   # status <- tryCatch({
-              filter_matches(pars) 
+              
+              run.summary <- filter_matches(pars) %>% cbind(run.summary, .)
   #           }, error = function(cond){return('failed match filtering')})
   #   
   # if (!is.null(status)){return(status)}
@@ -140,11 +166,22 @@ pipeline <- function(params_loc, params_obj) {
 #   *** Format as MAF file and print match plots on request ***
 
   # status <- tryCatch({
-              score_matches(pars)
+              run.summary <- score_matches(pars) %>% cbind(run.summary, .)
   #           }, error = function(cond){return('failed match scoring')})
   #   
   # if (!is.null(status)){return(status)}
-  
+
+################################################################################################################################### 
+## Summarize Results
+# - produce a score to summarize the quality of the matches:
+
+  print(run.summary)      
+  saveRDS(run.summary, paste0(pars$dirs$temp, "/run.summary.RDS"))
+              
+################################################################################################################################### 
+## Clean up 
+# - produce a score to summarize the quality of the matches:
+              
   zip(files = paste0(pars$dirs$temp, '/debug_extra.outputs'), 
       zipfile = paste0(pars$dirs$temp, '/debug_extra.outputs.zip'))
   unlink(paste0(pars$dirs$temp, '/debug_extra.outputs'), recursive = TRUE)

@@ -256,8 +256,9 @@ fse <- function(pars){
           # Print out breakdown of statuses
             fm <- fmodes %>% plyr::ldply(rbind)
             colnames(fm) <- 'status'
+            fm <- fm %>% group_by(status) %>% count %>% as.data.frame
             
-            print(fm %>% group_by(status) %>% count %>% as.data.frame)
+            print(fm)
       
             
 # ##### Save #####
@@ -307,4 +308,12 @@ fse <- function(pars){
     message('-------------------------------------------------------')
     message('-------------------       FSE       -------------------')
     message('-------------------------------------------------------')
+    
+    fm$status <- paste0(fm$status,'.SATs')
+    fm <- rbind(data.frame(status = 'protofeatures', 
+                           freq = length(regions_subset)),
+                fm)
+    fm <- setNames(data.frame(t(fm[,-1])), fm[,1] %>% str_replace(' ', '.'))
+    
+    return(fm)
 }

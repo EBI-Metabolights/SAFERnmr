@@ -233,7 +233,8 @@ match_features2refs_par_explicit <- function(pars){
             # if (is.null(matches.chunk)){message('\tfailed')} else {message('\tsucceeded'); return(matches.chunk)}
           
       }
-        print(Sys.time() - t1)
+        matching.time <- Sys.time() - t1
+        print(matching.time)
 
         parallel::stopCluster(my.cluster)
         
@@ -250,6 +251,8 @@ match_features2refs_par_explicit <- function(pars){
   message('-------------------  Parallel Matching Complete -------------------')
   message('-------------------------------------------------------------------')
 
+  return(data.frame(matches.init = length(matches.all),
+                    matching.elapsed.time = matching.time))
 }
     
     

@@ -158,6 +158,7 @@ filter_matches <- function(pars){
         #                                        pars$par$ncores)
         
         match.info %>% debug_write("match.info.filtered.RDS", pars)
+        filtered.matches <- nrow(match.info)
         # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.filtered.RDS"))
 
 #########################################################################################################
@@ -215,6 +216,9 @@ filter_matches <- function(pars){
         
         message('Saving backfits...\n\n\n')
         saveRDS(backfit.results, paste0(tmpdir,"/smrf.RDS"))
+        
+        n.backfits = lapply(backfit.results$backfits, nrow) %>% unlist %>% sum
+        
         # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
         # unlink(paste0(tmpdir, "/matches.RDS")) # 
         # matches <- readRDS(paste0(tmpdir, "/smrf.RDS"))
@@ -227,5 +231,10 @@ filter_matches <- function(pars){
   message('-----------------------------------------------------------------')
   message('\nWe just generated ', lapply(backfit.results$backfits, nrow) %>% unlist %>% sum, ' pieces of annotation evidence.')
   message("\nNow, let's turn these into PCRS x sample scores.")
+  
+  return(data.frame(filtered.matches = filtered.matches,
+                    used.matches = nrow(match.info),
+                    match.r.effective = min(match.info$rval),
+                    backfits = n.backfits))
 }
   

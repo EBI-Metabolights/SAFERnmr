@@ -114,7 +114,7 @@ match_features2refs_par_setup <- function(pars) {
           # Try to get lib.data from galaxy$gissmo_location. If that fails, try files$lib.data. If that fails, return NULL
           lib.data <- tryCatch(
             {          
-                message('\tReading lib.data from ',galaxy$gissmo_location,'...')
+                message('\tReading lib.data from ',pars$galaxy$gissmo_location,'...')
                 
                 readRDS(pars$galaxy$gissmo_location)
             },
@@ -138,6 +138,7 @@ match_features2refs_par_setup <- function(pars) {
   
             }
           )
+          
             
         } else {
           
@@ -191,7 +192,7 @@ match_features2refs_par_setup <- function(pars) {
           )
   
         }
-        
+        nrefs <- length(lib.data.processed)
       
     ##################################################################################################################
 
@@ -286,4 +287,8 @@ match_features2refs_par_setup <- function(pars) {
   message('\n--------------------------------------------------------------------------')
   message('-------------------  Parallel Matching Setup complete. -------------------')
   message('--------------------------------------------------------------------------')
+  
+  return(data.frame(library.galaxy = paste0(pars$galaxy$gissmo_location, ''),
+                    library.local = paste0(pars$files$lib.data, ''),
+                    n.refs = nrefs))
 }

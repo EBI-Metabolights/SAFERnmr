@@ -366,6 +366,13 @@ tina <- function(pars){
   message('-------------------  TINA Complete  -------------------')
   message('-------------------------------------------------------')
         
+  ss.lengths <- feature.final$sfe %>% lapply(function(x){
+        x$feat$ss %>% length
+      }) %>% unlist
+  
+  return(data.frame(n.feats = feature.final$stack %>% nrow,
+                    med.ss.length = ss.lengths %>% median %>% round))
+  
 }
 
 
