@@ -136,6 +136,7 @@ score_matches <- function(pars){
         scores$ss.ref.mat <- ss.ref.mat.nd %>% t
         saveRDS(scores, paste0(tmpdir, "/scores.RDS"))
         # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
+        # ss.ref.mat.nd <- scores$ss.ref.mat %>% t
         unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
         
       # Plot the matrix as an HCA'd heatmap
@@ -190,12 +191,14 @@ score_matches <- function(pars){
   message('-------------------  Match Scoring Completed -------------------')
   message('----------------------------------------------------------------')
         
-  return(data.frame(
-    score.metric = 'fsaxrval',
-    max.score = max(ss.ref.mat.nd),
-    n.compounds = sum(ann.cmpds),
-    n.best.bfs = rfs.used$fsaxrval %>% unlist %>% length
-  ))
+  return(
+    data.frame(
+      score.metric = 'fsaxrval',
+      max.score = max(ss.ref.mat.nd),
+      n.compounds = sum(ann.cmpds),
+      n.best.bfs = rfs.used$fsaxrval %>% unlist %>% length
+    )
+  )
 }
          
          

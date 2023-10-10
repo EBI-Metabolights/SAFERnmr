@@ -22,7 +22,7 @@ pars$matching$filtering$max.backfits <- 1E5
 
     study <- 'MTBLS1'
     tmpdir <- '/Users/mjudge/Downloads/nfs 3/production/odonovan/nmr_staging/pipeline_tests/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
-    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
+    # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'ø
     # study <- 'MTBLS424'
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS'
     # study <- 'MTBLS430'
@@ -348,7 +348,7 @@ pars$par$ncores <- 4
 pars$debug$all.outputs <- TRUE
 
 
-
+# Map the results from MTBLS1 maf file using chebis
 cmpds <- c('CHEBI:1148','CHEBI:60647','CHEBI:24898','CHEBI:25017','CHEBI:27266','CHEBI:60645','CHEBI:24898','CHEBI:35932','CHEBI:16530','CHEBI:16236','CHEBI:20067','unknown','unknown','CHEBI:30860','unknown','CHEBI:78320','unknown','CHEBI:50129','CHEBI:16449','CHEBI:64390','CHEBI:74911','CHEBI:25017','CHEBI:25094','CHEBI:18257','CHEBI:18211','CHEBI:15366','CHEBI:15366','CHEBI:18257','CHEBI:24898','CHEBI:17533','unknown','CHEBI:21547','unknown','unknown','CHEBI:17533','CHEBI:28300','CHEBI:28300','CHEBI:28300','CHEBI:30772','CHEBI:15347','CHEBI:15344','CHEBI:74903','CHEBI:64390','CHEBI:30744','CHEBI:32816','CHEBI:18261','CHEBI:6650','CHEBI:15741','CHEBI:20067','CHEBI:30915','CHEBI:18237','CHEBI:28300','CHEBI:30769','CHEBI:30769','CHEBI:17170','CHEBI:15611','CHEBI:17724','CHEBI:16628','CHEBI:18139','CHEBI:17724','unknown','unknown','CHEBI:16810','CHEBI:16919','CHEBI:16737','CHEBI:27389','CHEBI:16919','CHEBI:17497','CHEBI:16704','CHEBI:16737','CHEBI:16704','CHEBI:78320','CHEBI:16704','CHEBI:16704','CHEBI:6650','CHEBI:64399','CHEBI:64399','unknown','unknown','CHEBI:15676','CHEBI:16335','CHEBI:18012','CHEBI:27838','CHEBI:27410','unknown','CHEBI:27838','unknown','unknown','unknown','CHEBI:32980','CHEBI:104011','CHEBI:27637','CHEBI:18186','CHEBI:27637','unknown','unknown','CHEBI:27570','CHEBI:32980','CHEBI:43355','CHEBI:64414','CHEBI:18186','CHEBI:43355','CHEBI:28044','CHEBI:18089','CHEBI:18089','CHEBI:27410','CHEBI:18123','CHEBI:18123','CHEBI:15940','unknown','CHEBI:30751','CHEBI:64399','CHEBI:18123','CHEBI:64399','CHEBI:18123')
 cmpds <- tolower(cmpds)
 cmpds <- unique(cmpds)
@@ -410,3 +410,182 @@ df <- data.frame(mean.score = mean.scores,
                  compound.name = rownames(scores.mat))
 
 # For each of the matched chebis, report the highest mean score
+
+
+
+############ Get a list of metabolites for each sample type ###########
+
+  # tmpdir
+    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
+  
+  # Urine
+  
+  # Blood serum
+  
+  # Cells
+
+  # For each study, note the metabolites id'd ####
+    
+    # Load MTBLS1 ####
+    
+      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS1/download/4ZWHUHHlKR?file=m_MTBLS1_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+      study.dir <- paste0(tmpdir,'mtbls1/')
+      dir.create(study.dir)
+      # download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+                             fill = TRUE, header = TRUE, 
+                             sep = '\t', quote = "")
+      compounds <- data.frame(db.id = maf.data$database_identifier,
+                              name = maf.data$metabolite_identification) %>% distinct
+      compounds$study <- 'MTBLS1'
+      
+      cmpd.list <- list(compounds)
+      
+    # Load MTBLS395 ####
+    
+      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS395/download/92353320-750c-40e8-a9af-031af8d7f8f4?file=m_MTBLS395_amiflorenceii_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+      study.dir <- paste0(tmpdir,'mtbls395/')
+      dir.create(study.dir)
+      # download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+                             fill = TRUE, header = TRUE,
+                             sep = '\t')
+      compounds <- data.frame(db.id = maf.data$database_identifier,
+                              name = maf.data$metabolite_identification) %>% distinct
+      compounds$study <- 'MTBLS395'
+      cmpd.list[[2]] <- compounds
+      
+    # Load MTBLS424 ####
+    
+      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS424/download/3ca6dc8a-0f60-421a-b0af-0d49bd12420c?file=m_MTBLS424_breast_cancer_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+      study.dir <- paste0(tmpdir,'mtbls424/')
+      dir.create(study.dir)
+      # download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+                             fill = TRUE, header = TRUE,
+                             sep = '\t')
+      compounds <- data.frame(db.id = maf.data$database_identifier,
+                              name = maf.data$metabolite_identification) %>% distinct
+      compounds$study <- 'MTBLS424'
+      cmpd.list[[3]] <- compounds
+      
+    # Load MTBLS430 ####
+    
+      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS430/download/9d17bf2d-18b7-41ce-9446-ee600aef4f5a?file=m_MTBLS430_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+      study.dir <- paste0(tmpdir,'mtbls430/')
+      dir.create(study.dir)
+      # download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+                             fill = TRUE, header = TRUE,
+                             sep = '\t')
+      compounds <- data.frame(db.id = maf.data$database_identifier,
+                              name = maf.data$metabolite_identification) %>% distinct
+      compounds$study <- 'MTBLS430'
+      cmpd.list[[4]] <- compounds
+      
+        
+    
+    
+      
+    # Combine into single df ####
+      cmpd.list <- do.call(rbind,cmpd.list) %>% distinct
+      cmpd.list <- cmpd.list %>% filter(db.id != "" & db.id != "unknown")
+      cmpd.list$name[!duplicated(cmpd.list$db.id)] 
+      
+    # Make venn diagram ####
+    # Load library
+    library(VennDiagram)
+     
+    # Prepare palette:
+    library(RColorBrewer)
+    myCol <- brewer.pal(length(unique(cmpd.list$study)), "Pastel2")
+    
+    venn.diagram(
+            x = cmpd.list$db.id %>% split(cmpd.list$study),
+            category.names = unique(cmpd.list$study),
+            filename = 'cmpds_venn_diagramm.png',
+            output=TRUE,
+            
+            # Output features
+            imagetype="png" ,
+            height = 480*2 , 
+            width = 480*2 , 
+            resolution = 300,
+            compression = "lzw",
+            
+            # Circles
+            lwd = 2,
+            lty = 'blank',
+            fill = myCol,
+            
+            # Numbers
+            cex = .6,
+            fontface = "bold",
+            fontfamily = "sans",
+            
+            # Set names
+            cat.cex = 0.6,
+            cat.fontface = "bold",
+            cat.default.pos = "outer",
+            # cat.pos = c(-27, 27, 135),
+            # cat.dist = c(0.055, 0.055, 0.085),
+            cat.fontfamily = "sans",
+            # rotation = 1
+    )
+        
+          
+          
+
+  # Which compounds are in the 600 and 700 MHz Gissmo data?
+  
+    lib.data.600 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS')
+    lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_600MHz.RDS')
+
+    lapply(lib.data.600, function(x) x$compound.name)
+    
+    cmpds <- 
+    
+    data.chebis <- cmpds[!grepl('nknown',cmpds)] 
+    
+    gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo_bmrb2chebi.xlsx')
+    gissmo.chebis.full <- gissmo.cmpds$database_identifier %>% tolower
+    gissmo.chebis <- gissmo.chebis.full %>% tolower %>% unique %>% na.omit
+    
+    
+    chebis.matched <- which(gissmo.chebis %in% data.chebis) %>% gissmo.chebis[.]
+    
+    lapply(gissmo.cmpds$metabolite_identification, function(x){
+      rownames(scores.mat)
+    })
+    
+    matches <- 
+      lapply(chebis.matched, function(x){
+        
+        match.rows <- gissmo.chebis.full %in% 
+        names <- c(gissmo.cmpds$metabolite_identification[match.rows],
+                   gissmo.cmpds$`Compound Name`[match.rows]) %>% unique
+        
+        match.in.dataset <- 
+        scores <- 
+        data.frame(names = paste(names, collapse = ', '),
+                   chebi = x)
+        
+      }) %>% do.call(rbind,.)
+    
+    scores <- readRDS(paste0(tmpdir, '/scores.RDS'))
+    scores.mat <- scores$ss.ref.mat
+    rownums <- 1:nrow(scores.mat)
+
+  # # Try reading in HMDB spectrum ####
+  # source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/readJCAMPDX.R')
+  # jd <- readJCAMPDX('/Users/mjudge/Downloads/HMDB0000159_142590_predicted_H_500.jdx', 'HMDB0000159_142590_predicted_H_500')
+  # source('~/Documents/GitHub/MARIANA_setup_chron/R/readnmrML.R')
+  # jd <- readnmrML('/Users/mjudge/Downloads/500_1H_for_JSviewer_HMDB0000159.nmrML', 'HMDB0000159_142590_predicted_H_500')
+   
+    
+  # write a lib data function for HMDB files
+  
+  # Try reading in processed NPC data ####
+  
+  # write a lib data function for 1r files
+

@@ -159,7 +159,7 @@ emptyScore <-
               # chonk <- chonks[[3]]                               
               # Go through this list of by.refs
                                                                    
-              # pblapply(chonk[1:10], function(r.list){
+              # pblapply(chonk[1:5], function(r.list){
               pblapply(chonk, function(r.list){
                 tryCatch(
                   {
