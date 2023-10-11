@@ -34,6 +34,7 @@
 #' @export
 pipeline <- function(params_loc, params_obj) {
   
+  start.time <- Sys.time()
   # status <- NULL
   # status <- tryCatch({
                 if (isFALSE(missing(params_obj))) {
@@ -175,9 +176,13 @@ pipeline <- function(params_loc, params_obj) {
 ## Summarize Results
 # - produce a score to summarize the quality of the matches:
 
+  run.summary$total.time <- Sys.time()-start.time           
   print(run.summary)      
-  saveRDS(run.summary, paste0(pars$dirs$temp, "/run.summary.RDS"))
-              
+  # saveRDS(run.summary, paste0(pars$dirs$temp, "/run.summary.RDS"))
+  # run.summary <- readRDS(paste0(pars$dirs$temp, "/run.summary.RDS"))
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.RDS"))          
+  # run.summary <- read.csv(paste0(pars$dirs$temp, "/run.summary.RDS"))
+  
 ################################################################################################################################### 
 ## Clean up 
 # - produce a score to summarize the quality of the matches:
