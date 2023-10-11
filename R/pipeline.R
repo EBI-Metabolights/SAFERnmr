@@ -70,7 +70,12 @@ pipeline <- function(params_loc, params_obj) {
                 # file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
               
   #           }, error = function(cond){return('failed setup')})
-  # 
+  
+               
+  # Create a timestamped subdirectory under this tmp dir name and set tmpdir to that
+    pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric )
+    dir.create(pars$dirs$temp , showWarnings = F)             
+               
   # if (!is.null(status)){return(status)}
     run.summary <- data.frame(study = pars$study$id, 
                               spec.MHz = pars$study$spectrometer.frequency,
@@ -176,12 +181,21 @@ pipeline <- function(params_loc, params_obj) {
 ## Summarize Results
 # - produce a score to summarize the quality of the matches:
 
-  run.summary$total.time <- Sys.time()-start.time           
-  print(run.summary)      
+  run.summary$total.time <- as.character((Sys.time()-start.time) %>% round(1))   
+  
+  si <- Sys.info() %>% as.list()
+  
+  run.summary$safer.version <- packageVersion("SAFER") %>% as.character
+  run.summary$r.version <- R.version$version.string
+  run.summary$r.platform <- R.version$platform
+  run.summary$system.version <- si$version
+  run.summary$run.id <- start.time %>% as.numeric
+  
+  print(t(run.summary))     
   # saveRDS(run.summary, paste0(pars$dirs$temp, "/run.summary.RDS"))
   # run.summary <- readRDS(paste0(pars$dirs$temp, "/run.summary.RDS"))
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.RDS"))          
-  # run.summary <- read.csv(paste0(pars$dirs$temp, "/run.summary.RDS"))
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))          
+  # run.summary <- read.csv(paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Clean up 
