@@ -3,10 +3,10 @@
 # 
 
 devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
-tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std'
+tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS_quick'
 
-backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
-scores <- readRDS(paste0(tmpdir,"/scores.RDS"))
+# backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
+# scores <- readRDS(paste0(tmpdir,"/scores.RDS"))
 
 
 pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
@@ -16,6 +16,7 @@ pars$par$ncores <- 4
 pars$debug$all.outputs <- TRUE
 pars$matching$filtering$max.backfits <- 1E5
 
+########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
 
   # Choose study
