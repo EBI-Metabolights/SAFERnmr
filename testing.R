@@ -540,18 +540,19 @@ df <- data.frame(mean.score = mean.scores,
   
     lib.data.600 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS')
     lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_600MHz.RDS')
-
-    lapply(lib.data.600, function(x) x$compound.name)
-    
-    cmpds <- 
-    
-    data.chebis <- cmpds[!grepl('nknown',cmpds)] 
     
     gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo_bmrb2chebi.xlsx')
+    
+    lib.data.600 <- add_chebiIDs(lib.data = lib.data.600, key = gissmo.cmpds)
+      lib.data.600 %>% lapply(function(x) x$chebi.id) %>% unlist
+    
     gissmo.chebis.full <- gissmo.cmpds$database_identifier %>% tolower
     gissmo.chebis <- gissmo.chebis.full %>% tolower %>% unique %>% na.omit
     
+    cmpds <- lapply(lib.data.600, function(x) x$compound.name)
     
+    data.chebis <- cmpds[!grepl('nknown',cmpds)] 
+
     chebis.matched <- which(gissmo.chebis %in% data.chebis) %>% gissmo.chebis[.]
     
     lapply(gissmo.cmpds$metabolite_identification, function(x){
