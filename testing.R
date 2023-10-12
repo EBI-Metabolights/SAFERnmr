@@ -454,7 +454,15 @@ df <- data.frame(mean.score = mean.scores,
       compounds <- data.frame(db.id = maf.data$database_identifier,
                               name = maf.data$metabolite_identification) %>% distinct
       compounds$study <- 'MTBLS395'
-      cmpd.list[[2]] <- compounds
+      
+      # Get Pantelis' annotations 
+        
+        sorted <- stringdist::stringdist("Ethanol", key$`Compound Name`, method = 'lcs') %>% order
+
+        key[sorted,c("database_identifier", 'Compound Name')] %>% head(10)
+        
+      
+      # cmpd.list[[2]] <- compounds
       
     # Load MTBLS424 ####
     

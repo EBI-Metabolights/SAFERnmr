@@ -73,7 +73,7 @@ pipeline <- function(params_loc, params_obj) {
   
                
   # Create a timestamped subdirectory under this tmp dir name and set tmpdir to that
-    pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric )
+    pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric %>% round )
     dir.create(pars$dirs$temp , showWarnings = F)             
                
   # if (!is.null(status)){return(status)}
@@ -189,7 +189,7 @@ pipeline <- function(params_loc, params_obj) {
   run.summary$r.version <- R.version$version.string
   run.summary$r.platform <- R.version$platform
   run.summary$system.version <- si$version
-  run.summary$run.id <- start.time %>% as.numeric
+  run.summary$run.id <- start.time %>% as.numeric %>% round
   
   print(t(run.summary))     
   # saveRDS(run.summary, paste0(pars$dirs$temp, "/run.summary.RDS"))
