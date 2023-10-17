@@ -314,6 +314,8 @@ fse <- function(pars){
                            freq = length(regions_subset)),
                 fm)
     fm <- setNames(data.frame(t(fm[,-1])), fm[,1] %>% str_replace(' ', '.'))
+    fm$n.samples <- nrow(xmat)
+    fm$n.points <- ncol(xmat)
     
     return(fm)
 }
