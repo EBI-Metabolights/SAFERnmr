@@ -37,25 +37,35 @@ pipeline <- function(params_loc, params_obj) {
   start.time <- Sys.time()
   # status <- NULL
   # status <- tryCatch({
+  # The goal of this section is to get:
+  # - params_loc (an actual filepath of the params file)
+  # - run_params (the parameters used for the run)
+  # 
                 if (isFALSE(missing(params_obj))) {
                   run_params <- params_obj
+                  
+                  # Write the params file to the temp dir
+                  params_loc <- './params.yaml'
+                  yaml::write_yaml(params_obj, file = params.loc)
+                  
                 } else if (missing(params_loc)) {
                   # load default params
                   filepath <- base::system.file(
                     "extdata", "default_params.yaml",
                     package = "SAFER"
                   )
-                  run_params <- yaml::yaml.load_file(filepath, eval.expr = TRUE)
+                  
+                  params_loc <- filepath
+                  run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
                   default <- TRUE
                   
                 } else {
                   # >>> This is the usual route <<<
                   # load supplied params
                   run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
-                  dir.create(run_params$dirs$temp, showWarnings = F)
-                  file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'), overwrite = TRUE)
+                  
                 }
-              
+               
                pars <- run_params
                 
                 if (is.null(pars$dirs$temp)){
@@ -65,7 +75,7 @@ pipeline <- function(params_loc, params_obj) {
                     dir.create(pars$dirs$temp, showWarnings = F)
                   }
                 }
-              
+               
                 # Don't use lib.info path from now on. Assume it's in tmpdir
                 # file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
               
@@ -74,7 +84,10 @@ pipeline <- function(params_loc, params_obj) {
                
   # Create a timestamped subdirectory under this tmp dir name and set tmpdir to that
     pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric %>% round )
-    dir.create(pars$dirs$temp , showWarnings = F)             
+    dir.create(pars$dirs$temp , showWarnings = F)  
+    
+    dir.create(run_params$dirs$temp, showWarnings = F)
+    file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'), overwrite = TRUE)
                
   # if (!is.null(status)){return(status)}
     run.summary <- data.frame(study = pars$study$id, 
