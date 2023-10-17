@@ -40,7 +40,7 @@ pipeline <- function(params_loc, params_obj) {
   # The goal of this section is to get:
   # - params_loc (an actual filepath of the params file)
   # - run_params (the parameters used for the run)
-  # 
+  
                 if (isFALSE(missing(params_obj))) {
                   run_params <- params_obj
                   
@@ -89,8 +89,16 @@ pipeline <- function(params_loc, params_obj) {
     dir.create(run_params$dirs$temp, showWarnings = F)
     file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'), overwrite = TRUE)
                
-  # if (!is.null(status)){return(status)}
-    run.summary <- data.frame(study = pars$study$id, 
+  # Validate parameters before beginning
+    
+    pars.passed.checks <- valid_pars(pars)
+    
+    status <- 'completed setup'
+    
+    run.summary <- data.frame(local.id = run_params$dirs$temp,
+                              status = status,
+                              pars.passed.checks = pars.passed.checks,
+                              study = pars$study$id, 
                               spec.MHz = pars$study$spectrometer.frequency,
                               data = pars$files$spectral.matrix,
                               ref.library = pars$files$lib.data,
@@ -108,29 +116,58 @@ pipeline <- function(params_loc, params_obj) {
                               galaxy = pars$galaxy$enabled,
                               verbose = pars$debug$all.outputs
                               )
+    
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
                
 ################################################################################################################################### 
 ## Feature Shape Extraction
 
-  # status <- tryCatch({
-    run.summary <- fse(pars) %>% cbind(run.summary, .)
+  fse.summary <- tryCatch({
     
-  #   }, error = function(cond){return('failed fse')})
-  # 
-  # if (!is.null(status)){return(status)}
+     run.sum <- fse(pars)
+
+  }, error = function(cond){NULL})
+  
+  if (is.data.frame(fse.summary)){
+    
+    run.summary <- cbind(run.summary, fse.summary)
+    run.summary$status <- 'completed fse'
+    
+  } else {
+    
+    run.summary$status <- 'failed fse' 
+    
+  }
+  
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## TINA / SAFARI
 # - filter out feature shapes which make no sense
 # - associate features whose shapes are highly similar
 
-  # status <- tryCatch({
+  tina.summary <- tryCatch({
     
-    run.summary <- tina(pars) %>% cbind(run.summary, .)
+     run.sum <- tina(pars)
+
+  }, error = function(cond){NULL})
+  
+  if (is.data.frame(tina.summary)){
     
-    # }, error = function(cond){return('failed tina')})
-  # 
-  # if (!is.null(status)){return(status)}
+    run.summary <- cbind(run.summary, tina.summary)
+    run.summary$status <- 'completed tina'
+    
+  } else {
+    
+    run.summary$status <- 'failed tina' 
+    
+  }
+  
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+  
   
 ################################################################################################################################### 
 ## Match spectra to the database 
@@ -139,21 +176,49 @@ pipeline <- function(params_loc, params_obj) {
   
   # status <- tryCatch({
   
-              run.summary <- match_features2refs_par_setup(pars) %>% cbind(run.summary, .)
               
-  #           }, error = function(cond){return('failed match setup')})
-  # 
-  # if (!is.null(status)){return(status)}
+  match.setup.summary <- tryCatch({
+    
+     match_features2refs_par_setup(pars)
+
+  }, error = function(cond){NULL})
+  
+  if (is.data.frame(match.setup.summary)){
+    
+    run.summary <- cbind(run.summary, match.setup.summary)
+    run.summary$status <- 'completed match setup'
+    
+  } else {
+    
+    run.summary$status <- 'failed match setup' 
+    
+  }
+  
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
   gc() # garbage collect before big parallel compute
   
-  # status <- tryCatch({
-              
-              run.summary <- match_features2refs_par_explicit(pars) %>% cbind(run.summary, .)
-              
-  #           }, error = function(cond){return('failed matching')})
-  # 
-  # if (!is.null(status)){return(status)}
+  
+  match.summary <- tryCatch({
+    
+     match_features2refs_par_explicit(pars)
+
+  }, error = function(cond){NULL})
+  
+  if (is.data.frame(match.summary)){
+    
+    run.summary <- cbind(run.summary, match.summary)
+    run.summary$status <- 'completed matching'
+    
+  } else {
+    
+    run.summary$status <- 'failed matching'
+    
+  }
+  
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Match filtering
@@ -161,12 +226,26 @@ pipeline <- function(params_loc, params_obj) {
 # - filter for (deltappm)
 # - backfit ref subsignatures to individual dataset spectra
 
-  # status <- tryCatch({
-              
-              run.summary <- filter_matches(pars) %>% cbind(run.summary, .)
-  #           }, error = function(cond){return('failed match filtering')})
-  #   
-  # if (!is.null(status)){return(status)}
+
+  match.filt.summary <- tryCatch({
+    
+     filter_matches(pars)
+
+  }, error = function(cond){NULL})
+  
+  if (is.data.frame(match.filt.summary)){
+    
+    run.summary <- cbind(run.summary, match.filt.summary)
+    run.summary$status <- 'completed match filtering/backfitting'
+    
+  } else {
+    
+    run.summary$status <- 'failed match filtering/backfitting'
+    
+  }
+  
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Assess matches
@@ -184,12 +263,27 @@ pipeline <- function(params_loc, params_obj) {
 #   - calls a function "pair_score_summation.R" which has a parallelized section
 #   *** Format as MAF file and print match plots on request ***
 
-  # status <- tryCatch({
-              run.summary <- score_matches(pars) %>% cbind(run.summary, .)
-  #           }, error = function(cond){return('failed match scoring')})
-  #   
-  # if (!is.null(status)){return(status)}
+  
+  match.score.summary <- tryCatch({
+    
+     score_matches(pars)
 
+  }, error = function(cond){NULL})
+  
+  if (is.data.frame(match.score.summary)){
+    
+    run.summary <- cbind(run.summary, match.score.summary)
+    run.summary$status <- 'completed match scoring'
+    
+  } else {
+    
+    run.summary$status <- 'failed match scoring'
+    
+  }
+  
+  run.summary$write.time <- Sys.time()
+  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+  
 ################################################################################################################################### 
 ## Summarize Results
 # - produce a score to summarize the quality of the matches:
@@ -204,9 +298,8 @@ pipeline <- function(params_loc, params_obj) {
   run.summary$system.version <- si$version
   run.summary$run.id <- start.time %>% as.numeric %>% round
   
+  run.summary$write.time <- Sys.time()
   print(t(run.summary))     
-  # saveRDS(run.summary, paste0(pars$dirs$temp, "/run.summary.RDS"))
-  # run.summary <- readRDS(paste0(pars$dirs$temp, "/run.summary.RDS"))
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))          
   # run.summary <- read.csv(paste0(pars$dirs$temp, "/run.summary.csv"))
   
