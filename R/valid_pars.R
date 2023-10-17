@@ -10,43 +10,6 @@
 #' 
 #' @export
 valid_pars <- function(pars){
-  
-  # Blanket checks: ####
-  
-    # Correct any scientific notations that didn't get converted by yaml
-      pars <- convert_sciNotation_pars(pars)
-    
-    # Convert any empties or missings to defaults
-    
-      
-      
-  # Field-specific Validators: ####
-  
-    warnings <- check_each_par_value(pars)
-    
-    # Print all error messages
-    
-    validation.pass <- length(warnings) == 0
-    
-  # Report ####
-  
-    if(!validation.pass) {
-      
-      cat("Parameter validation warnings:\n")
-      i <- 0
-      for (msg in warnings) {
-        cat(i, ' - ', msg, "\n\n")
-        i <- i + 1
-      }
-      
-    } else {
-      
-      cat("Validation successful. No errors found.\n")
-
-    }
-    
-    return(validation.pass)
-    
   # Accessory functions: ####
     detect.convert.scientificNotation <- function(x){
       
@@ -424,6 +387,42 @@ valid_pars <- function(pars){
       
       return(error_messages)
     }
+  
+  # Blanket checks: ####
+  
+    # Correct any scientific notations that didn't get converted by yaml
+      pars <- convert_sciNotation_pars(pars)
+    
+    # Convert any empties or missings to defaults
+    
+      
+      
+  # Field-specific Validators: ####
+  
+    warnings <- check_each_par_value(pars)
+    
+    # Print all error messages
+    
+    validation.pass <- length(warnings) == 0
+    
+  # Report ####
+  
+    if(!validation.pass) {
+      
+      cat("Parameter validation warnings:\n")
+      i <- 0
+      for (msg in warnings) {
+        cat(i, ' - ', msg, "\n\n")
+        i <- i + 1
+      }
+      
+    } else {
+      
+      cat("Validation successful. No errors found.\n")
+
+    }
+    
+    return(validation.pass)
     
 }
 

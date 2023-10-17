@@ -95,7 +95,7 @@ pipeline <- function(params_loc, params_obj) {
     
     status <- 'completed setup'
     
-    run.summary <- data.frame(local.id = run_params$dirs$temp,
+    run.summary <- data.frame(local.id = start.time,
                               status = status,
                               pars.passed.checks = pars.passed.checks,
                               study = pars$study$id, 
@@ -307,17 +307,24 @@ pipeline <- function(params_loc, params_obj) {
 ## Clean up 
 # - produce a score to summarize the quality of the matches:
               
-  zip(files = paste0(pars$dirs$temp, '/debug_extra.outputs'), 
-      zipfile = paste0(pars$dirs$temp, '/debug_extra.outputs.zip'))
-  unlink(paste0(pars$dirs$temp, '/debug_extra.outputs'), recursive = TRUE)
+  paste0(pars$dirs$temp, '/debug_extra.outputs')
+  if (dir.exists(paste0(pars$dirs$temp, '/debug_extra.outputs'))){
+    zip(files = paste0(pars$dirs$temp, '/debug_extra.outputs'), 
+        zipfile = paste0(pars$dirs$temp, '/debug_extra.outputs.zip'))
+    unlink(paste0(pars$dirs$temp, '/debug_extra.outputs'), recursive = TRUE)
+  }
   
-  zip(files = paste0(pars$dirs$temp, '/plots'), 
-      zipfile = paste0(pars$dirs$temp, '/plots.zip'))
-  unlink(paste0(pars$dirs$temp, '/plots'),recursive = TRUE)
+  if (dir.exists(paste0(pars$dirs$temp, '/plots'))){
+    zip(files = paste0(pars$dirs$temp, '/plots'), 
+        zipfile = paste0(pars$dirs$temp, '/plots.zip'))
+    unlink(paste0(pars$dirs$temp, '/plots'),recursive = TRUE)
+  }
   
-  zip(files = paste0(pars$dirs$temp, '/temp_data_matching'), 
-      zipfile = paste0(pars$dirs$temp, '/temp_data_matching.zip'))
-  unlink(paste0(pars$dirs$temp, '/temp_data_matching'), recursive = TRUE)
+  if (dir.exists(paste0(pars$dirs$temp, '/temp_data_matching'))){
+    zip(files = paste0(pars$dirs$temp, '/temp_data_matching'), 
+        zipfile = paste0(pars$dirs$temp, '/temp_data_matching.zip'))
+    unlink(paste0(pars$dirs$temp, '/temp_data_matching'), recursive = TRUE)
+  }
   
   message('Saving session info...')
   saveRDS(sessionInfo(), paste0(pars$dirs$temp, "/session.info.RDS"))
