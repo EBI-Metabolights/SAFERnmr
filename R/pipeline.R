@@ -39,10 +39,10 @@ pipeline <- function(params_loc, params_obj) {
   # status <- tryCatch({
   # The goal of this section is to get:
   # - params_loc (an actual filepath of the params file)
-  # - run_params (the parameters used for the run)
+  # - pars (the parameters used for the run)
   
                 if (isFALSE(missing(params_obj))) {
-                  run_params <- params_obj
+                  pars <- params_obj
                   
                   # Write the params file to the temp dir
                   params_loc <- './params.yaml'
@@ -56,18 +56,16 @@ pipeline <- function(params_loc, params_obj) {
                   )
                   
                   params_loc <- filepath
-                  run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
+                  pars <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
                   default <- TRUE
                   
                 } else {
                   # >>> This is the usual route <<<
                   # load supplied params
-                  run_params <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
+                  pars <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
                   
                 }
                
-               pars <- run_params
-                
                 if (is.null(pars$dirs$temp)){
                   pars$dirs$temp <- '.'
                 } else {
@@ -86,8 +84,8 @@ pipeline <- function(params_loc, params_obj) {
     pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric %>% round )
     dir.create(pars$dirs$temp , showWarnings = F)  
     
-    dir.create(run_params$dirs$temp, showWarnings = F)
-    file.copy(params_loc, paste0(run_params$dirs$temp,'/params.yaml'), overwrite = TRUE)
+    dir.create(pars$dirs$temp, showWarnings = F)
+    file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'), overwrite = TRUE)
                
   # Validate parameters before beginning
     
