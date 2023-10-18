@@ -107,7 +107,7 @@ pipeline <- function(params_loc, params_obj) {
                               storm.r = pars$storm$correlation.r.cutoff,
                               storm.b = pars$storm$b,
                               min.subset = pars$tina$min.subset,
-                              max.feats = pars$tina$nfeats,
+                              max.feats = pars$debug$throttle_features,
                               max.hits = pars$matching$max.hits,
                               match.r = pars$matching$r.thresh, # this will get updated by bf limit
                               ppm.tol = pars$matching$filtering$ppm.tol,
@@ -299,6 +299,7 @@ pipeline <- function(params_loc, params_obj) {
   run.summary$run.id <- start.time %>% as.numeric %>% round
   
   run.summary$write.time <- Sys.time()
+  names(run.summary) <- names(run.summary) %>% stringr::str_replace_all('\\.', '_') # change dots for _ to make shell stuff easier on FTP
   print(t(run.summary))     
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))          
   # run.summary <- read.csv(paste0(pars$dirs$temp, "/run.summary.csv"))
