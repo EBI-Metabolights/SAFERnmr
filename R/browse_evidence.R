@@ -36,6 +36,10 @@ browse_evidence <- function(results.dir = NULL){
 
   pars <- yaml::yaml.load_file(paste0(results.dir,'params.yaml'), eval.expr = TRUE)
   
+  # Apply same validation function as in the pipeline (so pars are interpreted the same throughout)
+    par.list <- pars %>% valid_pars(quiet = TRUE)
+    pars <- par.list$pars
+  
   study <- pars$study$id
   ppm.tolerance = pars$matching$filtering$ppm.tol
   hshift = 0
