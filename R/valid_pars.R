@@ -10,7 +10,7 @@
 #' @importFrom magrittr %>%
 #' 
 #' @export
-valid_pars <- function(pars){
+valid_pars <- function(pars, quiet = FALSE){
   # Accessory functions: ####
     detect.convert.scientificNotation <- function(x){
       
@@ -251,7 +251,13 @@ valid_pars <- function(pars){
             if (!is.numeric(tina$min.subset)) {
               warnings <- c(warnings, paste("tina$min.subset should be numeric. Current value:", tina$min.subset))
             } else {
-              tina$min.subset <- tina$min.subset %>% round %>% as.integer
+              # Coerce type to int, report if changes
+                tms.1 <- tina$min.subset
+                tina$min.subset <- tina$min.subset %>% round %>% as.integer
+                if (tina$min.subset != tms.1){
+                  message('tina$min.subset rounded from ', tms.1, ' to ', tina$min.subset)
+                }
+                
               if(!is.integer(tina$min.subset)){
                   c(warnings, 
                     paste0("tina$min.subset is an integer which is the minimum number of spectra a feature must be found in in order to be considered a feature. This is typically no less than 5 spectra, and cannot be less than 3 (below this, correlations not meaningful). If > n.samples, nothing will be found.",
@@ -348,7 +354,13 @@ valid_pars <- function(pars){
         
         if(!is.null(matching$max.hits)){
           if (is.numeric(matching$max.hits)){
-            matching$max.hits <- matching$max.hits %>% round %>% as.integer
+            # Coerce type to int, report if changes
+                mh.1 <- matching$max.hits
+                matching$max.hits <- matching$max.hits %>% round %>% as.integer
+                if (matching$max.hits != mh.1){
+                  message('matching$max.hits rounded from ', mh.1, ' to ', matching$max.hits)
+                }
+            
           }
           if (!is.integer(matching$max.hits)) {
             warnings <- c(warnings, paste("matching$max.hits should be an integer > 0. Current value:", matching$max.hits))
@@ -423,7 +435,12 @@ valid_pars <- function(pars){
         if(!is.null(par)){
           if(!is.null(par$ncores)){
             if(is.numeric(par$ncores)){
-              par$ncores <- as.integer(par$ncores %>% round)
+              # Coerce type to int, report if changes
+                pnc.1 <- par$ncores
+                par$ncores <- as.integer(par$ncores %>% round)
+                if (par$ncores != pnc.1){
+                  message('par$ncores rounded from ', pnc.1, ' to ', par$ncores)
+                }
             }
             if (!is.integer(par$ncores)) {
               warnings <- c(warnings, paste("par$ncores should be an integer. Current value:", par$ncores))
@@ -505,19 +522,21 @@ valid_pars <- function(pars){
     
   # Report ####
   
-    if(!validation.pass) {
-      
-      cat("Parameter validation warnings:\n")
-      i <- 0
-      for (msg in check.results$warnings) {
-        cat(i, ' - ', msg, "\n\n")
-        i <- i + 1
+    if (!quiet){
+      if(!validation.pass) {
+        
+        cat("Parameter validation warnings:\n")
+        i <- 0
+        for (msg in check.results$warnings) {
+          cat(i, ' - ', msg, "\n\n")
+          i <- i + 1
+        }
+        
+      } else {
+        
+        cat("Validation successful. No errors found.\n")
+  
       }
-      
-    } else {
-      
-      cat("Validation successful. No errors found.\n")
-
     }
     
     return(list(pars = check.results$pars,
