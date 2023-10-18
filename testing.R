@@ -427,8 +427,10 @@ df <- data.frame(mean.score = mean.scores,
 
   # For each study, note the metabolites id'd ####
     
-    # Load MTBLS1 ####
+tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
     
+    # Load MTBLS1 ####
+      
       maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS1/download/4ZWHUHHlKR?file=m_MTBLS1_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
       study.dir <- paste0(tmpdir,'mtbls1/')
       dir.create(study.dir)
@@ -456,13 +458,32 @@ df <- data.frame(mean.score = mean.scores,
       compounds$study <- 'MTBLS395'
       
       # Get Pantelis' annotations 
-        
-        sorted <- stringdist::stringdist("Ethanol", key$`Compound Name`, method = 'lcs') %>% order
+        pt.ids <- readxl::read_excel('/Users/mjudge/Downloads/List_of_metabolites.xlsx',col_names = FALSE)
+        cmpd.names <- lapply(1:nrow(pt.ids), function(x) pt.ids[x,1] %>% as.character) %>% unlist
+        pt.cmpds <- lapply(1:nrow(pt.ids), function(x) {
+          chebis <- pt.ids[x,-1] %>% as.character()
+          
+          # If any of the chebis for the pt annotation match, just use that
+          matched <- chebis %in% compounds$db.id
+          if (any(matched)){
+            # Already present, use that one
+            chebis <- chebis[matched]
+          } else {
+            # If no match, use the first chebi (not L or R; NA if no chebi)
+            chebis <- chebis[1]
+          }
+          
+          data.frame(db.id = chebis,
+                     name = cmpd.names[x],
+                     study = 'MTBLS395')
 
-        key[sorted,c("database_identifier", 'Compound Name')] %>% head(10)
+        }) %>% do.call(rbind,.)
         
-      
-      # cmpd.list[[2]] <- compounds
+        
+        compounds <- rbind(compounds, pt.cmpds)
+        compounds <- compounds[!duplicated(compounds$db.id),]
+        
+      cmpd.list[[2]] <- compounds
       
     # Load MTBLS424 ####
     
@@ -512,7 +533,7 @@ df <- data.frame(mean.score = mean.scores,
     venn.diagram(
             x = cmpd.list$db.id %>% split(cmpd.list$study),
             category.names = unique(cmpd.list$study),
-            filename = 'cmpds_venn_diagramm.png',
+            filename = paste0(tmpdir,'cmpds_venn_diagramm.png'),
             output=TRUE,
             
             # Output features
@@ -545,7 +566,7 @@ df <- data.frame(mean.score = mean.scores,
           
           
 
-  # Which compounds are in the 600 and 700 MHz Gissmo data?
+  # Which compounds are in the 600 and 700 MHz Gissmo data? #####
   
     lib.data.600 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS')
     lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_600MHz.RDS')
@@ -553,16 +574,36 @@ df <- data.frame(mean.score = mean.scores,
     gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo_bmrb2chebi.xlsx')
     
     lib.data.600 <- add_chebiIDs(lib.data = lib.data.600, key = gissmo.cmpds)
-      lib.data.600 %>% lapply(function(x) x$chebi.id) %>% unlist
+      
     
     gissmo.chebis.full <- gissmo.cmpds$database_identifier %>% tolower
-    gissmo.chebis <- gissmo.chebis.full %>% tolower %>% unique %>% na.omit
+    gissmo.chebis <- gissmo.chebis.full %>% toupper %>% unique %>% na.omit
     
-    cmpds <- lapply(lib.data.600, function(x) x$compound.name)
+    # cmpds <- lapply(lib.data.600, function(x) x$compound.name)
     
-    data.chebis <- cmpds[!grepl('nknown',cmpds)] 
+    # data.chebis <- cmpds[!grepl('nknown',cmpds)] 
+    data.chebis <- lib.data.600 %>% lapply(function(x) x$chebi.id) %>% unlist
+    data.chebis <- cmpd.list$db.id %>% unique
 
-    chebis.matched <- which(gissmo.chebis %in% data.chebis) %>% gissmo.chebis[.]
+    chebis.needed <- (!(data.chebis %in% gissmo.chebis)) %>% data.chebis[.]
+    chebis.matched <- (gissmo.chebis %in% data.chebis) %>% gissmo.chebis[.]
+    
+    !(data.chebis %in% gissmo.chebis)
+    
+  # Match to specific dataset ####
+    
+    md <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/'
+    tmpdir <- paste0(md,'MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS_std/')
+    tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/1697097481.99655/'
+    scores <- readRDS(paste0(tmpdir, 'scores.RDS'))
+    
+    scores.mat <- scores$ss.ref.mat
+    data.cmpds <- scores.mat %>% rowSums %>% order(decreasing = TRUE) %>% scores.mat[., ] %>% rownames %>% unique
+    dma <- which(data.cmpds %in% cmpd.list$name)
+      dma.score <- scores.mat %>% rowSums %>% .[dma]
+      dma <- data.frame(name)
+      plot(x = )
+    author.ann.found.in.top.10 <- which(data.cmpds %in% cmpd.list[cmpd.list$study == 'MTBLS424',]$db.id)
     
     lapply(gissmo.cmpds$metabolite_identification, function(x){
       rownames(scores.mat)
