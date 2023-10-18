@@ -4,7 +4,7 @@
 \alias{valid_pars}
 \title{Parameter validation (using params object)}
 \usage{
-valid_pars(pars)
+valid_pars(pars, quiet = FALSE)
 }
 \arguments{
 \item{pars}{A list of input parameters.}
