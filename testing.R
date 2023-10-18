@@ -640,3 +640,67 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
   
   # write a lib data function for 1r files
 
+# Backfit cutoff sensitivity gradient ####
+
+    # For a given study
+      devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+      tmpdir<- '/Users/mjudge/Downloads/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697097422.51659'
+      pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
+      pars$dirs$temp <- tmpdir
+      pars$debug$enabled <- TRUE
+      pars$par$ncores <- 4
+      pars$debug$all.outputs <- TRUE
+      pars$matching$filtering$max.backfits <- 1E5
+      bf.limit <- pars$matching$filtering$max.backfits
+      
+    # Progressively lower the backfit limit and rescore
+    
+      # Get the features obj
+      
+        feature.c <- readRDS(paste0(tmpdir,"/feature.final.RDS"))
+      
+      # Get the backfits 
+        
+        backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
+          match.info <- backfit.results$match.info
+          backfits <- backfit.results$backfits
+
+    # Jettison matches to satisfy backfit ceiling
+    
+      ss.lengths <- feature.c$sfe %>% lapply(function(x){
+        x$feat$ss %>% length
+      }) %>% unlist
+      
+      contribution <- ss.lengths[match.info$feat]
+      est.bfs <- contribution %>% sum
+      
+          # Sort matches by rval, then take the top n until # estimated backfits < limit
+          
+            sort.order <- order(match.info$rval, decreasing = TRUE)
+              cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
+                keep <- sort.order[1:cutoff]
+                  match.info <- match.info[keep, ]
+                  match.info <- match.info[order(keep),] #resort so mi is in same order as before
+                
+                  lost <- length(sort.order)-length(keep)
+            
+            message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
+            message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
+            
+      }
+      
+      # Use the rval to select them
+      
+        
+      
+      # Compare to what it would be if selected based on top scoring backfits (if every fit was actually computed)
+    
+        
+    
+    
+    
+    
+    
+    
+    
+    
