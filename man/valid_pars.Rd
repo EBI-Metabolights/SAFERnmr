@@ -10,11 +10,12 @@ valid_pars(pars)
 \item{pars}{A list of input parameters.}
 }
 \value{
-Adjusted parameters
+list with adjusted parameters and any warnings
 }
 \description{
 Correct any obviously incorrect params. Replace any empties with default params.
 }
 \details{
-Then go through a bunch of checks to see if params are reasonable.
+Then go through a bunch of checks to see if params are reasonable. 
+Note: as of 18OCT2023, OPTICS clustering checks are not tested, as clustering is not currently recommended. These are commented out and can easily be added again.
 }
