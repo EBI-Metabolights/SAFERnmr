@@ -89,7 +89,9 @@ pipeline <- function(params_loc, params_obj) {
                
   # Validate parameters before beginning
     
-    pars.passed.checks <- valid_pars(pars)
+    par.val <- valid_pars(pars)
+    pars <- par.val$pars
+    pars.passed.checks <- par.val$validation.pass
     
     status <- 'completed setup'
     
