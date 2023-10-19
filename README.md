@@ -1,6 +1,9 @@
 ## SAFER
 (Spectral Annotation by Feature Extraction and Reference matching)
 
+[![DOI](https://zenodo.org/badge/531570333.svg)](https://zenodo.org/doi/10.5281/zenodo.10022482)
+
+
 # Background
 This is a beta repo for the SAFER approach to 1D NMR data annotation (v2.0.3).
 
