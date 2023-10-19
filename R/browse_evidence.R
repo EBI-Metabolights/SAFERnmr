@@ -174,6 +174,8 @@ drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 
               plot_ly(source = source.name, # x = colnames(mat),
                       z = mat, #zmin = min(mat, na.rm = T), zmax = max(mat, na.rm = T),
                       zauto = TRUE,
+                      # colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
+                      colors = colorRamp(c("gray","#feb24c", "#f03b20")),
                       type = 'heatmap',
                       hovertemplate = paste('<b>Compound</b>: %{y}',
                                             '<br><b>Sample</b>: %{x}',
@@ -218,6 +220,8 @@ drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 
                 type = 'heatmap',
                 y = rownames(mat),
                 z = mat, 
+                colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
+                # colors = colorRamp(c("gray","#feb24c", "#f03b20")),
                 zauto = TRUE, #zmin = 0, zmax = 1, # color scale
                 hovertemplate = paste('<b>Compound</b>: %{y}',
                                       '<br><b>Sample</b>: %{x}',
@@ -257,15 +261,15 @@ drawScatterScores <- function(mat, dropRowNames = F, source.name = 'scatter'){
                       df, x = ~cols, y = ~score,
                       #size = ~score,
                       color = ~score,
+                      colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
                       marker = list(  
                                       # colorbar = list(title = "Evidence Score"),
                                       cauto = FALSE,
                                       cmin = 0,
                                       cmax = 1
                                     ),
-                      hovertemplate = paste('<b>Compound</b>: %{y}',
-                                            '<br><b>Sample</b>: %{x}',
-                                            '<br><b>Score</b>: %{z:.2f}',
+                      hovertemplate = paste('<br><b>Sample</b>: %{x}',
+                                            '<br><b>Score</b>: %{y:.2f}',
                                             '<extra></extra>')
                       ) %>%
               layout(
@@ -284,6 +288,7 @@ drawScatterScores <- function(mat, dropRowNames = F, source.name = 'scatter'){
                       df, x = ~rows, y = ~cols,
                       size = ~score,
                       color = ~score,
+                      colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
                       marker = list(    
                                       # colorbar = list(title = "Evidence Score"),
                                       cauto = FALSE,
@@ -291,9 +296,8 @@ drawScatterScores <- function(mat, dropRowNames = F, source.name = 'scatter'){
                                       cmax = 1
                                     ),
                       
-                      hovertemplate = paste('<b>Compound</b>: %{y}',
-                                            '<br><b>Sample</b>: %{x}',
-                                            '<br><b>Score</b>: %{z:.2f}',
+                      hovertemplate = paste('<br><b>Sample</b>: %{x}',
+                                            '<br><b>Score</b>: %{y:.2f}',
                                             '<extra></extra>')
                       ) %>%
               layout(
