@@ -298,6 +298,7 @@ pipeline <- function(params_loc, params_obj) {
   run.summary$system.version <- si$version
   run.summary$run.id <- start.time %>% as.numeric %>% round
   
+  run.summary$status <- 'complete'
   run.summary$write.time <- Sys.time()
   names(run.summary) <- names(run.summary) %>% stringr::str_replace_all('\\.', '_') # change dots for _ to make shell stuff easier on FTP
   print(t(run.summary))     
