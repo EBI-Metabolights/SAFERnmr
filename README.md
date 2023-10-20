@@ -35,11 +35,12 @@ Each fit constitutes a potential association between a region in a reference spe
 
 # To use this package (still writing this):
    1) set up the params file `params.yaml`
-   2) ensure the 4 necessary files are present
+   2) ensure the 4 necessary files are present in the locations given in `params.yaml`
    3) Run in R:
       ```
       devtools::document('replace_with_cloned_github_directory')
-      pipeline('path_to_data_directory')
+      pipeline('path_to_params.yaml')
+      browse_results('path_to_data_directory')
       ```
 
 
