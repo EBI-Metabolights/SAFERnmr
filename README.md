@@ -40,7 +40,7 @@ Each fit constitutes a potential association between a region in a reference spe
       ```
       devtools::document('replace_with_cloned_github_directory')
       pipeline('path_to_params.yaml')
-      browse_results('path_to_data_directory')
+      browse_evidence('path_to_data_directory')
       ```
 
 
