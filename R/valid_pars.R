@@ -443,13 +443,13 @@ valid_pars <- function(pars, quiet = FALSE){
                 }
             }
             if (!is.integer(par$ncores)) {
-              warnings <- c(warnings, paste("par$ncores should be an integer. Current value:", par$ncores))
+              warnings <- c(warnings, paste0("par$ncores should be an integer. par$ncores sets the number of cores available for parallel operations in the pipeline. Ensure there are enough cores available (checked here using the range: c(1, parallel::detectCores()-1)), which evaluates to ", c(1, parallel::detectCores()-1),", and that there is enough RAM to allocate to each one (**Note: on HPC systems, cores may not be recruited yet - if so, this upper bound won't useful). The average dataset will require up to 10-15Gb per core, depending on several factors such as the reference library size, the number of features, the size of the spectral matrix (number of samples and number of points), the average subset size, etc.. "," Current value: ", par$ncores))
             } else {
-                if (!in_range(par$ncores, 1, parallel::detectCores()-1)){
-                  warnings <- c(warnings,
-                                      paste0("par$ncores sets the number of cores available for parallel operations in the pipeline. Ensure there are enough cores available (checked here using the range: c(1, parallel::detectCores()-1)), which evaluates to ", c(1, parallel::detectCores()-1),", and that there is enough RAM to allocate to each one. The average dataset will require up to 10-15Gb per core, depending on several factors such as the reference library size, the number of features, the size of the spectral matrix (number of samples and number of points), the average subset size, etc.. ",
-                                             " Current value: ", par$ncores))
-                }
+                # if (!in_range(par$ncores, 1, parallel::detectCores()-1)){
+                #   warnings <- c(warnings,
+                #                       paste0("par$ncores sets the number of cores available for parallel operations in the pipeline. Ensure there are enough cores available (checked here using the range: c(1, parallel::detectCores()-1)), which evaluates to ", c(1, parallel::detectCores()-1),", and that there is enough RAM to allocate to each one. The average dataset will require up to 10-15Gb per core, depending on several factors such as the reference library size, the number of features, the size of the spectral matrix (number of samples and number of points), the average subset size, etc.. ",
+                #                              " Current value: ", par$ncores))
+                # }
             } 
           }
           
