@@ -855,7 +855,7 @@ files <- list(
 
     # Extract out run summary data ####
       data <- dir(data.dir, )
-        dontuse <- grepl('.zip$|.csv$', data)
+        dontuse <- grepl('.zip$|.csv$|.pdf$|.xlsx$|1697751863|1697759923', data)
         unzipped <- !dontuse
       data.unzipped <- paste0(data.dir,data[unzipped])
         
@@ -867,37 +867,70 @@ files <- list(
       }) %>% bind_rows
       # %>% do.call(rbind,.)
       
+
       df$local_id <- df$local_id %>% as.character()
       df <- df[,!(names(df) == 'X')]
-      write.csv(df, paste0(data.dir,'/local.index.csv'), row.names = FALSE)
+      # write.csv(df, paste0(data.dir,'/local.index.csv'), row.names = FALSE)
 
   
+      
     # Correlations between params and outcomes ####
       
-      fse.pars <- c('protofeatures','did_not.converge_SATs','empty_subset_SATs',
-                    'peak_contains.NULL_SATs','reference_degenerated_SATs',
-                    'subset_degenerated_SATs','succeeded_SATs','n_feats','med_ss_length')
-      match.pars <- c('matches_init','matching_elapsed_time','filtered_matches',
-                      'used_matches','match_r_effective')
-      bf.pars <- c('backfits','max_score','n_compounds','n_best_bfs','total_time')
+      studies <- c('MTBLS1','MTBLS395','MTBLS424','MTBLS430')
+      colors <- RColorBrewer::brewer.pal(length(studies), 'Set2')
       
-      test <- fse.pars
-      against <- 'storm_r'
+      # layout(matrix(seq(length(test)),nrow=1))
+          # 
+          # Map(function(x,y)
+          #   {
+          #   
+          #     plot(df[c(x,y)], type = "b")
+          #     # title(main = studies[x])
+          #   
+          #   },
+          #   x = names(df[against]), 
+          #   y = names(df[test])
+          #   )    
+          
       
-      test <- c(match.pars, bf.pars)
-      against <- 'match_r'
+        
+        fse.pars <- c('protofeatures','did_not_converge_SATs','empty_subset_SATs',
+                      'peak_contains_NULL_SATs','reference_degenerated_SATs',
+                      'subset_degenerated_SATs','succeeded_SATs','n_feats','med_ss_length')
+        match.pars <- c('matches_init','matching_elapsed_time','filtered_matches',
+                        'used_matches','match_r_effective')
+        bf.pars <- c('backfits','max_score','n_compounds','n_best_bfs','total_time')
+        
+        
+        against <- 'storm_r'
+        
+        test <- c(fse.pars, match.pars, bf.pars)
+     
+       plots <- lapply(1:length(test), function(x){
+       
+          # Basic plot
+            this.par <- test[x]
+            dft <- data.frame(study = df$study,
+                              x = df[,against],
+                              y = df[,this.par])
+          
+            
+            ggplot(data=dft,
+                   aes(x=x, y=y, colour=study)) + 
+              geom_line() +
+              labs(y = this.par, x = against, title = "") +
+              theme_minimal()
+       })
+       
+        pdf(file = paste0(data.dir,against,'_vs_all.pdf'), 
+            width = 15, height = 15)
+       
+          gridExtra::grid.arrange(grobs = plots)
+          
+        dev.off()
+        
+        
+      
+      
     
-      
-      layout(matrix(seq(length(test)),nrow=1))
-      
-      Map(function(x,y) 
-        plot(df[c(x,y)], type = "b"), 
-          x = names(df[against]), 
-          y = names(df[test])
-        )
-      
-      plot(x= df$match_r, y=df$filtered_matches/df$n_feats)
-    
-    
-      
       
