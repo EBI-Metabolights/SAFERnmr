@@ -819,18 +819,60 @@ files <- list(
       
 # Simplified Gradient Tests for parameter sensitivity (19-20OCT) ####
 
-      data <- c('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627634',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627674',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627731',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627789')
+    # Unzip any non-unzipped files ####
+      data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
+      data <- dir(data.dir)
+      zipped <- grepl('.zip', data)
+      unzipped <- !zipped
+      
+      data.not.unzipped <- data[zipped] %>% .[!((data[zipped] %>% stringr::str_remove_all('.zip')) %in% data[unzipped])]
+      
+      fail <- lapply(data.not.unzipped, function(d){
+        
+        message('Unzipping ', d, ' ...')
+        tryCatch({
+            run.id <- d %>% stringr::str_remove('.zip$')
+            subdirs <- unzip(paste0(data.dir, d), list = T)
+            f.names <- subdirs$Name %>% 
+                stringr::str_replace("/$", "") %>% # remove trailing '/'
+                stringr::str_split('/') %>% # split up filepath
+                lapply(function(x) tail(x, 1)) %>% unlist # take the last part of each one
   
-      df <- lapply(data, function(x){
-        read.csv(paste0(x, '/run.summary.csv'))
-      }) %>% do.call(rbind,.)
-       
-      write.csv(df, paste0('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/run.summary.csv'))
+            run.dir <- which(f.names == run.id) %>% .[1]
+            
+            unzip(paste0(data.dir, d), files = subdirs$Name[run.dir], junkpaths = TRUE, exdir = paste0(data.dir, run.id) )
+            
+            a <- pblapply(seq_along(f.names) %>% .[-run.dir], function(x){
+              unzip(paste0(data.dir, d), files = subdirs$Name[x], junkpaths = TRUE, exdir = paste0(data.dir, run.id) )
+            })
+        
+            return(0)
+            
+          }, error = function(cond){
+            1
+          })
+      })
 
-  # Correlations between params and outcomes
+    # Extract out run summary data ####
+      data <- dir(data.dir, )
+        dontuse <- grepl('.zip$|.csv$', data)
+        unzipped <- !dontuse
+      data.unzipped <- paste0(data.dir,data[unzipped])
+        
+      df <- lapply(data.unzipped, function(x){
+        dat <- read.csv(paste0(x, '/run.summary.csv'))
+        names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
+        #print(names(dat) %>% .[1:5])
+        dat
+      }) %>% bind_rows
+      # %>% do.call(rbind,.)
+      
+      df$local_id <- df$local_id %>% as.character()
+      df <- df[,!(names(df) == 'X')]
+      write.csv(df, paste0(data.dir,'/local.index.csv'), row.names = FALSE)
+
+  
+    # Correlations between params and outcomes ####
       
       fse.pars <- c('protofeatures','did_not.converge_SATs','empty_subset_SATs',
                     'peak_contains.NULL_SATs','reference_degenerated_SATs',
