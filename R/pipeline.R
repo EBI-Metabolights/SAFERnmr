@@ -142,15 +142,17 @@ pipeline <- function(params_loc, params_obj) {
     names(fse.summary) <- names(fse.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, fse.summary)
     run.summary$status <- 'completed fse'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
     
   } else {
     
-    run.summary$status <- 'failed fse' 
-    
+    run.summary$status <- 'failed fse'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+    return(run.summary$status) # exit early
   }
   
-  run.summary$write_time <- Sys.time()
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## TINA / SAFARI
@@ -159,7 +161,7 @@ pipeline <- function(params_loc, params_obj) {
 
   tina.summary <- tryCatch({
     
-     run.sum <- tina(pars)
+     tina.summary <- tina(pars)
 
   }, error = function(cond){NULL})
   
@@ -167,15 +169,17 @@ pipeline <- function(params_loc, params_obj) {
     names(tina.summary) <- names(tina.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, tina.summary)
     run.summary$status <- 'completed tina'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
     
   } else {
     
     run.summary$status <- 'failed tina' 
-    
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+    return(run.summary$status)
   }
   
-  run.summary$write_time <- Sys.time()
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
   
 ################################################################################################################################### 
@@ -196,15 +200,17 @@ pipeline <- function(params_loc, params_obj) {
     names(match.setup.summary) <- names(match.setup.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.setup.summary)
     run.summary$status <- 'completed match setup'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
     
   } else {
     
     run.summary$status <- 'failed match setup' 
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+    return(run.summary$status)
     
   }
-  
-  run.summary$write_time <- Sys.time()
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
   gc() # garbage collect before big parallel compute
   
@@ -219,15 +225,18 @@ pipeline <- function(params_loc, params_obj) {
     names(match.summary) <- names(match.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.summary)
     run.summary$status <- 'completed matching'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
     
   } else {
     
     run.summary$status <- 'failed matching'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+    return(run.summary$status)
     
   }
   
-  run.summary$write_time <- Sys.time()
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Match filtering
@@ -246,15 +255,18 @@ pipeline <- function(params_loc, params_obj) {
     names(match.filt.summary) <- names(match.filt.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.filt.summary)
     run.summary$status <- 'completed match filtering/backfitting'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
     
   } else {
     
     run.summary$status <- 'failed match filtering/backfitting'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+    return(run.summary$status)
     
   }
   
-  run.summary$write_time <- Sys.time()
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Assess matches
@@ -283,15 +295,18 @@ pipeline <- function(params_loc, params_obj) {
     names(match.score.summary) <- names(match.score.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.score.summary)
     run.summary$status <- 'completed match scoring'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
     
   } else {
     
     run.summary$status <- 'failed match scoring'
+    run.summary$write_time <- Sys.time()
+    write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
+    return(run.summary$status)
     
   }
   
-  run.summary$write_time <- Sys.time()
-  write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Summarize Results
@@ -301,8 +316,7 @@ pipeline <- function(params_loc, params_obj) {
   
   run.summary$status <- 'complete'
   run.summary$write_time <- Sys.time()
-  names(run.summary) <- names(run.summary) %>% stringr::str_replace_all('\\.', '_') # change dots for _ to make shell stuff easier on FTP
-  print(t(run.summary))     
+  print(t(run.summary))
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))          
   # run.summary <- read.csv(paste0(pars$dirs$temp, "/run.summary.csv"))
   
@@ -331,6 +345,6 @@ pipeline <- function(params_loc, params_obj) {
   
   message('Saving session info...')
   saveRDS(sessionInfo(), paste0(pars$dirs$temp, "/session.info.RDS"))
-  status <- 'success'
-  return(status)
+  
+  return(run.summary$status)
 }
