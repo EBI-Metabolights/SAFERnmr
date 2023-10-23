@@ -5,28 +5,32 @@
       pars <- yaml::yaml.load_file(template, eval.expr = TRUE)
       
       mat.loc <- '/nfs/production/odonovan/nmr_staging/spectral_matrices/'
-      end.loc <- '/nfs/production/odonovan/nmr_staging/pipeline_tests/'
+      end.loc <- '/nfs/production/odonovan/nmr_staging/safer_runs/'
       out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/try_4/'
       out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/backfit_limit_gradient_1/'
       studies <- list(
                       list(
                           name = 'MTBLS1',
                           spectral.matrix = 'MTBLS1_1r_noesypr1d_spectralMatrix.RDS',
+                          library = '/nfs/production/odonovan/nmr_staging/gissmo_ref/data.list_700MHz.RDS',
                           spec.freq = 700
                           ),
                       list(
                           name = 'MTBLS395',
                           spectral.matrix = 'MTBLS395_1r_cpmgpr1d.comp_spectralMatrix.RDS',
+                          library = '/nfs/production/odonovan/nmr_staging/gissmo_ref/data.list_600MHz.RDS',
                           spec.freq = 600
                           ),
                       list(
                           name = 'MTBLS424',
                           spectral.matrix = 'MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS',
+                          library = '/nfs/production/odonovan/nmr_staging/gissmo_ref/data.list_600MHz.RDS',
                           spec.freq = 600
                           ),
                       list(
                           name = 'MTBLS430',
                           spectral.matrix = 'MTBLS430_1r_noesygppr1d.comp_spectralMatrix.RDS',
+                          library = '/nfs/production/odonovan/nmr_staging/gissmo_ref/data.list_600MHz.RDS',
                           spec.freq = 600
                           )
       )
@@ -39,9 +43,11 @@
         pars.studies <- lapply(studies, function(s){
           
           pars$dirs$temp <- paste0(end.loc,s$spectral.matrix)
+          # pars$dirs$temp <- end.loc
           pars$study$id <- s$name
           pars$study$spectrometer.frequency <- s$spec.freq
           pars$files$spectral.matrix <- paste0(mat.loc,s$spectral.matrix)
+          pars$files$lib.data <- s$library
           return(pars)
         })
         
@@ -71,7 +77,7 @@
 
       par.templates <- list(pars.6, pars.7, pars.8, pars.9)
  
-      ## Backfit gradient
+      # # Backfit gradient
       # parset <- pars.7
       # pars.3 <- parset
       #   pars.3$matching$filtering$max.backfits <- 1E3
@@ -91,8 +97,8 @@
     # Apply par changes for different studies 
       par.list <- lapply(par.templates, function(pt){
          
-        # edit_pars_studies(pt, studies[1]) # MTBLS1
-        edit_pars_studies(pt, studies) # all studies
+        edit_pars_studies(pt, studies[1]) # MTBLS1
+        # edit_pars_studies(pt, studies) # all studies
         
       })
         
