@@ -95,29 +95,38 @@ pipeline <- function(params_loc, params_obj) {
     
     status <- 'completed setup'
     
-    run.summary <- data.frame(local.id = start.time,
+    run.summary <- data.frame(run_id = start.time %>% as.numeric %>% round,
                               status = status,
-                              pars.passed.checks = pars.passed.checks,
-                              study = pars$study$id, 
-                              spec.MHz = pars$study$spectrometer.frequency,
+                              pars_passed_checks = pars.passed.checks,
+                              study = pars$study$id,
+                              spec_MHz = pars$study$spectrometer.frequency,
                               data = pars$files$spectral.matrix,
-                              ref.library = pars$files$lib.data,
-                              np = pars$corrpockets$noise.percentile,
-                              protofeature.r = pars$corrpockets$rcutoff,
-                              storm.r = pars$storm$correlation.r.cutoff,
-                              storm.b = pars$storm$b,
-                              min.subset = pars$tina$min.subset,
-                              max.feats = pars$debug$throttle_features,
-                              max.hits = pars$matching$max.hits,
-                              match.r = pars$matching$r.thresh, # this will get updated by bf limit
-                              ppm.tol = pars$matching$filtering$ppm.tol,
-                              max.backfits = pars$matching$filtering$max.backfits,
-                              par.ncores = pars$par$ncores,
-                              galaxy = pars$galaxy$enabled,
-                              verbose = pars$debug$all.outputs
-                              )
+                              ref_library = pars$files$lib.data)
     
-  run.summary$write.time <- Sys.time()
+    si <- Sys.info() %>% as.list()
+  
+    run.summary$safer_version <- packageVersion("SAFER") %>% as.character
+    run.summary$r_version <- R.version$version.string
+    run.summary$r_platform <- R.version$platform
+    run.summary$system_version <- si$version
+
+    # List some key parameters
+      run.summary$np <- pars$corrpockets$noise.percentile
+      run.summary$protofeature_r <- pars$corrpockets$rcutoff
+      run.summary$storm_r <- pars$storm$correlation.r.cutoff
+      run.summary$storm_b <- pars$storm$b
+      run.summary$min_subset <- pars$tina$min.subset
+      run.summary$max_feats <- pars$debug$throttle_features
+      run.summary$max_hits <- pars$matching$max.hits
+      run.summary$match_r <- pars$matching$r.thresh # this will get updated by bf limit
+      run.summary$ppm_tol <- pars$matching$filtering$ppm.tol
+      run.summary$max_backfits <- pars$matching$filtering$max.backfits
+      run.summary$par_ncores <- pars$par$ncores
+      run.summary$galaxy <- pars$galaxy$enabled
+      run.summary$verbose <- pars$debug$all.outputs
+
+
+  run.summary$write_time <- Sys.time() # always timestamp write commands
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
                
 ################################################################################################################################### 
@@ -130,7 +139,7 @@ pipeline <- function(params_loc, params_obj) {
   }, error = function(cond){NULL})
   
   if (is.data.frame(fse.summary)){
-    
+    names(fse.summary) <- names(fse.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, fse.summary)
     run.summary$status <- 'completed fse'
     
@@ -140,7 +149,7 @@ pipeline <- function(params_loc, params_obj) {
     
   }
   
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
@@ -155,7 +164,7 @@ pipeline <- function(params_loc, params_obj) {
   }, error = function(cond){NULL})
   
   if (is.data.frame(tina.summary)){
-    
+    names(tina.summary) <- names(tina.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, tina.summary)
     run.summary$status <- 'completed tina'
     
@@ -165,7 +174,7 @@ pipeline <- function(params_loc, params_obj) {
     
   }
   
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
   
@@ -184,7 +193,7 @@ pipeline <- function(params_loc, params_obj) {
   }, error = function(cond){NULL})
   
   if (is.data.frame(match.setup.summary)){
-    
+    names(match.setup.summary) <- names(match.setup.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.setup.summary)
     run.summary$status <- 'completed match setup'
     
@@ -194,7 +203,7 @@ pipeline <- function(params_loc, params_obj) {
     
   }
   
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
   gc() # garbage collect before big parallel compute
@@ -207,7 +216,7 @@ pipeline <- function(params_loc, params_obj) {
   }, error = function(cond){NULL})
   
   if (is.data.frame(match.summary)){
-    
+    names(match.summary) <- names(match.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.summary)
     run.summary$status <- 'completed matching'
     
@@ -217,7 +226,7 @@ pipeline <- function(params_loc, params_obj) {
     
   }
   
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
@@ -234,7 +243,7 @@ pipeline <- function(params_loc, params_obj) {
   }, error = function(cond){NULL})
   
   if (is.data.frame(match.filt.summary)){
-    
+    names(match.filt.summary) <- names(match.filt.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.filt.summary)
     run.summary$status <- 'completed match filtering/backfitting'
     
@@ -244,7 +253,7 @@ pipeline <- function(params_loc, params_obj) {
     
   }
   
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
@@ -271,7 +280,7 @@ pipeline <- function(params_loc, params_obj) {
   }, error = function(cond){NULL})
   
   if (is.data.frame(match.score.summary)){
-    
+    names(match.score.summary) <- names(match.score.summary) %>% stringr::str_replace_all('\\.', '_')
     run.summary <- cbind(run.summary, match.score.summary)
     run.summary$status <- 'completed match scoring'
     
@@ -281,25 +290,17 @@ pipeline <- function(params_loc, params_obj) {
     
   }
   
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))
   
 ################################################################################################################################### 
 ## Summarize Results
 # - produce a score to summarize the quality of the matches:
 
-  run.summary$total.time <- as.character((Sys.time()-start.time) %>% round(1))   
-  
-  si <- Sys.info() %>% as.list()
-  
-  run.summary$safer.version <- packageVersion("SAFER") %>% as.character
-  run.summary$r.version <- R.version$version.string
-  run.summary$r.platform <- R.version$platform
-  run.summary$system.version <- si$version
-  run.summary$run.id <- start.time %>% as.numeric %>% round
+  run.summary$total_time <- Sys.time()-start.time
   
   run.summary$status <- 'complete'
-  run.summary$write.time <- Sys.time()
+  run.summary$write_time <- Sys.time()
   names(run.summary) <- names(run.summary) %>% stringr::str_replace_all('\\.', '_') # change dots for _ to make shell stuff easier on FTP
   print(t(run.summary))     
   write.csv(x = run.summary, file = paste0(pars$dirs$temp, "/run.summary.csv"))          
