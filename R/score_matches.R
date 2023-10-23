@@ -11,7 +11,7 @@
 #' @importFrom magrittr %>%
 #'
 #'
-score_matches <- function(pars){
+score_matches <- function(pars, selection=NULL, alt.name = ''){
   
   message('-------------------------------------------------------')
   message('-------------------  Match Scoring  -------------------')
@@ -37,6 +37,10 @@ score_matches <- function(pars){
     backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
       match.info <- backfit.results$match.info
       backfits <- backfit.results$backfits
+      if (!is.null(selection)){
+        match.info <- match.info[selection]
+        backfits <- backfits[selection]
+      }
       
     ######################### Build match matrix  #############################    
     # Get the processed library data:
@@ -134,7 +138,7 @@ score_matches <- function(pars){
               colnames(ss.ref.mat.nd) <- cmpd.names
  
         scores$ss.ref.mat <- ss.ref.mat.nd %>% t
-        saveRDS(scores, paste0(tmpdir, "/scores.RDS"))
+        saveRDS(scores, paste0(tmpdir, "/scores",alt.name,".RDS"))
         # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
         # ss.ref.mat.nd <- scores$ss.ref.mat %>% t
         unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
