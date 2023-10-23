@@ -200,7 +200,7 @@ pars$matching$filtering$max.backfits <- 1E5
         save.image(file = paste0('/Users/mjudge/Desktop/',study, '_specfits_', scoreType, '.RData'))
       
         
-########### parameter sensitivity testing #########
+########### parameter sensitivity testing (pre-summ file) #########
 
 tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/tight/MTBLS1_nmrML_pulProg_missing_spectralMatrix_tight"
 # tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/sloppy/MTBLS1_nmrML_pulProg_missing_spectralMatrix_sloppy"
@@ -627,7 +627,7 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
     scores.mat <- scores$ss.ref.mat
     rownums <- 1:nrow(scores.mat)
 
-  # # Try reading in HMDB spectrum ####
+# Try reading in HMDB spectrum ####
   # source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/readJCAMPDX.R')
   # jd <- readJCAMPDX('/Users/mjudge/Downloads/HMDB0000159_142590_predicted_H_500.jdx', 'HMDB0000159_142590_predicted_H_500')
   # source('~/Documents/GitHub/MARIANA_setup_chron/R/readnmrML.R')
@@ -636,7 +636,7 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
     
   # write a lib data function for HMDB files
   
-  # Try reading in processed NPC data ####
+# Try reading in processed NPC data ####
   
   # write a lib data function for 1r files
 
@@ -644,7 +644,7 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
 
     # For a given study
       devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
-      tmpdir<- '/Users/mjudge/Downloads/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697097422.51659'
+      tmpdir<- '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627674'
       pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
       pars$dirs$temp <- tmpdir
       pars$debug$enabled <- TRUE
@@ -659,48 +659,203 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
       
         feature.c <- readRDS(paste0(tmpdir,"/feature.final.RDS"))
       
-      # Get the backfits 
+      # Get the backfits
         
         backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
-          match.info <- backfit.results$match.info
-          backfits <- backfit.results$backfits
-
-    # Jettison matches to satisfy backfit ceiling
-    
-      ss.lengths <- feature.c$sfe %>% lapply(function(x){
-        x$feat$ss %>% length
-      }) %>% unlist
-      
-      contribution <- ss.lengths[match.info$feat]
-      est.bfs <- contribution %>% sum
-      
-          # Sort matches by rval, then take the top n until # estimated backfits < limit
-          
-            sort.order <- order(match.info$rval, decreasing = TRUE)
-              cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
-                keep <- sort.order[1:cutoff]
-                  match.info <- match.info[keep, ]
-                  match.info <- match.info[order(keep),] #resort so mi is in same order as before
-                
-                  lost <- length(sort.order)-length(keep)
-            
-            message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
-            message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
-            
-      }
-      
-      # Use the rval to select them
-      
         
+      # Generate bf files at each bf.limit
+      
+      bf.limits <- c(1E3, 1E4, 1E5, 1E6, 1E7, 1E8)
+        
+      # report <- lapply(bf.limits, function(bf.limit){
+      selections <- lapply(bf.limits, function(bf.limit){
+        
+          # Reset data ####
+          
+              match.info <- backfit.results$match.info
+              backfits <- backfit.results$backfits
+    
+          # Take all the backfits for the maximum bf.limit and calculate their contributions ####
+        
+              ss.lengths <- feature.c$sfe %>% lapply(function(x){
+                x$feat$ss %>% length
+              }) %>% unlist
+              
+              
+            
+          # Sort matches by rval, then take the top n until # estimated backfits < limit ####
+          
+              sort.order <- order(match.info$rval, decreasing = TRUE)
+              
+                match.info <- match.info[sort.order,]
+                backfits <- backfits[sort.order]
+                
+                contribution <- ss.lengths[match.info$feat]
+                    est.bfs <- sum(contribution)
+                  cum.bfs <- cumsum(contribution)
+              
+                  cutoff <- max(which(cum.bfs < bf.limit))
+                    keep <- 1:cutoff
+                      match.info <- match.info[keep, ]
+                      backfits <- backfits[keep]
+                      
+                      lost <- length(sort.order)-length(keep)
+              
+              
+              message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
+              message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
+              # message('Saving backfits...\n\n\n')
+              
+              # bfr <- list(match.info = match.info,
+              #             backfits = backfits,
+              #             all.succeeded = backfit.results$all.succeeded)
+              
+              # saveRDS(bfr, paste0(tmpdir,"/smrf_",
+              #                     bf.limit %>% formatC(format = "e", digits = 0) %>% 
+              #                       toupper %>% stringr::str_remove_all(pattern = "\\+"),
+              #                                 ".RDS"))
+              
+          return(sort.order[keep])
+          # return(
+          #        data.frame(bf.limit = bf.limit,
+          #                   rval.effective = min(match.info$rval),
+          #                   n.matches = nrow(match.info),
+          #                   n.matches.lost = lost,
+          #                   pct.lost = lost/length(sort.order)
+          #                   )
+          #      )
+            
+      # }) %>% do.call(rbind,.)              
+      })
+      
+      # plot(report$bf.limit, report$rval.effective, log = 'x', pch = 19, col = 'blue')
+      
+      lapply(1:length(bf.limits), function(x){
+        message(' ---------------------------------------------------------------------------------------------------- ')
+        message(bf.limits[x])
+        score_matches(pars, 
+                      selection = selections[[x]], 
+                      alt.name = bf.limits[x] %>% 
+                        formatC(format = "e", digits = 0) %>% toupper %>% stringr::str_remove_all(pattern = "\\+")
+                      )
+        message(' ---------------------------------------------------------------------------------------------------- ')
+        message('  ')
+      })
+      
       
       # Compare to what it would be if selected based on top scoring backfits (if every fit was actually computed)
     
-        
+        rescore()
+    
+# 424 Tests for parameter sensitivity ####
+
+      data <- c('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627634',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627674',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627731',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627789')
+  
+      df <- lapply(data, function(x){
+        read.csv(paste0(x, '/run.summary.csv'))
+      }) %>% do.call(rbind,.)
+       
+      write.csv(df, paste0('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/run.summary.csv'))
+
+  # Correlations between params and outcomes
+      
+      fse.pars <- c('protofeatures','did_not.converge_SATs','empty_subset_SATs',
+                    'peak_contains.NULL_SATs','reference_degenerated_SATs',
+                    'subset_degenerated_SATs','succeeded_SATs','n_feats','med_ss_length')
+      match.pars <- c('matches_init','matching_elapsed_time','filtered_matches',
+                      'used_matches','match_r_effective')
+      bf.pars <- c('backfits','max_score','n_compounds','n_best_bfs','total_time')
+      
+      test <- fse.pars
+      against <- 'storm_r'
+      
+      test <- c(match.pars, bf.pars)
+      against <- 'match_r'
+    
+      
+      layout(matrix(seq(length(test)),nrow=1))
+      
+      Map(function(x,y) 
+        plot(df[c(x,y)], type = "b"), 
+          x = names(df[against]), 
+          y = names(df[test])
+        )
+      
+      plot(x= df$match_r, y=df$filtered_matches/df$n_feats)
     
     
+      
+# MWB Tests ####
+
+            
+  # Convert downloads to SM
+  
+      source("./R/readnmrML.R")
+      source("./R/readBrukerNMR.R")
+      source("./R/readJCAMPDX.R")  
+      
+      downloads <- '/Users/mjudge/Documents/metabolomics_workbench/downloaded_studies'
+      
+      fnames <- dir(downloads)
+      fnames <- fnames[!grepl('*.zip', fnames)]
+      '/Users/mjudge/Documents/metabolomics_workbench/downloaded_studies/NMR raw data/1D'
+      
+files <- list(
+      # Design of Experiments for Maximizing T cell endpoints
+      ST001476 = c('/Users/mjudge/Documents/metabolomics_workbench/downloaded_studies/ST001476/Tcell_data/data/batch1', '/Users/mjudge/Documents/metabolomics_workbench/downloaded_studies/ST001476/Tcell_data/data/batch2'),
+                  
+      # NMR metabolomics on Salmonella enterica
+      ST001308 = c('/Users/mjudge/Documents/metabolomics_workbench/downloaded_studies/ST001308/For_upload/raw_processed_NMR_data/pellet_data/nmrpipe/GG_slm_4_jan_800_prj_v2-2/ft_1h1d','/Users/mjudge/Documents/metabolomics_workbench/downloaded_studies/ST001308/For_upload/raw_processed_NMR_data/media_data/nmrpipe/GG_slm_21_dec_media/ft_1h1d')
+)
+      
+      
+      filepaths.spectra <- 
+      readBrukerNMR(filepaths, rnames)
+      
+      
+      
+# Simplified Gradient Tests for parameter sensitivity (19-20OCT) ####
+
+      data <- c('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627634',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627674',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627731',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627789')
+  
+      df <- lapply(data, function(x){
+        read.csv(paste0(x, '/run.summary.csv'))
+      }) %>% do.call(rbind,.)
+       
+      write.csv(df, paste0('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/run.summary.csv'))
+
+  # Correlations between params and outcomes
+      
+      fse.pars <- c('protofeatures','did_not.converge_SATs','empty_subset_SATs',
+                    'peak_contains.NULL_SATs','reference_degenerated_SATs',
+                    'subset_degenerated_SATs','succeeded_SATs','n_feats','med_ss_length')
+      match.pars <- c('matches_init','matching_elapsed_time','filtered_matches',
+                      'used_matches','match_r_effective')
+      bf.pars <- c('backfits','max_score','n_compounds','n_best_bfs','total_time')
+      
+      test <- fse.pars
+      against <- 'storm_r'
+      
+      test <- c(match.pars, bf.pars)
+      against <- 'match_r'
+    
+      
+      layout(matrix(seq(length(test)),nrow=1))
+      
+      Map(function(x,y) 
+        plot(df[c(x,y)], type = "b"), 
+          x = names(df[against]), 
+          y = names(df[test])
+        )
+      
+      plot(x= df$match_r, y=df$filtered_matches/df$n_feats)
     
     
-    
-    
-    
-    
+      
+      
