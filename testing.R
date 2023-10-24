@@ -16,6 +16,29 @@ pars$par$ncores <- 4
 pars$debug$all.outputs <- TRUE
 pars$matching$filtering$max.backfits <- 1E5
 
+# Accessory ####
+
+index_studies <- function(data.dir, exclude = NULL){
+  
+  # Extract out run summary data ####
+  
+      data <- dir(data.dir)
+        dontuse <- grepl(paste('.zip$','.csv$','.pdf$','.xlsx$',exclude %>% paste(collapse = "|"), sep = "|"), data)
+        unzipped <- !dontuse
+      data.unzipped <- paste0(data.dir,data[unzipped])
+
+
+    df <- lapply(data.unzipped, function(x){
+        dat <- read.csv(paste0(x, '/run.summary.csv'))
+        names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
+        dat
+    }) %>% bind_rows
+    
+    df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
+    df$local_path <- data.unzipped
+    df
+}
+
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
 
@@ -748,7 +771,7 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
         rescore()
     
 # 424 Tests for parameter sensitivity ####
-
+        
       data <- c('/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627634',
             '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627674',
             '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627731',
@@ -931,6 +954,191 @@ files <- list(
         
         
       
-      
+# Backfit cutoff sensitivity (independent runs) ####
+  devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+  data <- c('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698065195',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698064943',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698063089',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698063031',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698062969',
+            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698062903')    
+        
+  df <- lapply(data, function(x){
+        dat <- read.csv(paste0(x, '/run.summary.csv'))
+        names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
+        #print(names(dat) %>% .[1:5])
+        dat
+      }) %>% bind_rows
+
+  test <- c('filtered_matches', 'used_matches','match_r_effective','backfits','max_score','n_compounds','total_time','corr')
+  df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
+  
+  
+  # pars <- data %>% lapply(function(run){
+  #   pars <- yaml::yaml.load_file(paste0(run,'/params.yaml'), eval.expr = TRUE)
+  #   df <- pars %>% unlist %>% as.list %>% as.data.frame
+  #   df$local.file <- run
+  #   df
+  # }) %>% bind_rows
+  
+  mats <- data %>% lapply(function(run){
+    # run <- data[1]
+    scores <- readRDS(paste0(run,'/scores.RDS'))
+    scores$ss.ref.mat
+  })
+
+  key <- df$max_backfits %>% which.max
+  key.mat <- mats[[key]]
+  # key.mat[key.mat == 0] <- NA
+  
+  df$corr <- lapply(mats, function(mat){
+    # mat[mat == 0] <- NA
+    # cor( c(key.mat), c(mat), use = 'pairwise.complete.obs')
+    cor( c(key.mat), c(mat), use = 'pairwise.complete.obs')
+  }) %>% unlist
+
+  runs.info <- df
+  # layout(matrix(seq(length(test)),nrow=1))
+  # 
+  # Map(function(x,y)
+  #   {
+  #     plot(df[c(x,y)], type = "b", log = 'x')
+  #   },
+  #   x = names(df['max_backfits']),
+  #   y = names(df[test])
+  #   )
+  
+  # N compounds is ~ coverage of metabolites ####
+  
+    bf.number <- 1
+    # Loop through spectra and count % coverage ####
+    # - allow repeats
+     
     
+    run <- data[bf.number]
+      message('Reading ', run, '...')
+      fse.result <- readRDS(paste0(run, '/fse.result.RDS'))
+        xmat <- fse.result$xmat
+        ppm <- fse.result$ppm
+        
+        xcov <- matrix(0, nrow(xmat), ncol(xmat))
+        
+      backfits <- readRDS(paste0(run, '/smrf.RDS'))
+        bf.rows <- backfits$backfits %>% rbindlist
+        
+      # tally each bf
+        message('Computing coverage matrix ...')
+        for (i in 1:nrow(bf.rows)){
+          cols <- bf.rows$spec.start[i]:bf.rows$spec.end[i]
+          xcov[bf.rows$ss.spec[i], cols] <- xcov[bf.rows$ss.spec[i], cols] + 1
+        }
+        
+        xmat.numel <- xcov %>% dim %>% prod
+        pts.covered <- sum(xcov > 0)
+        
+        # What about coverage/signal?
+        
+        # Saturation
+        # cor(c(xmat), c(xcov))
+        
+        coverage.x <- pts.covered/xmat.numel
+        max.depth <- max(xcov)
+        
+        # scattermore::scattermoreplot(x = seq_along(xcov), xlab = 'pts',
+        #                              y = sort(xcov), ylab = 'depth')
+        
+        coverage.mean <- Rfast::colmeans(xcov)
+        spectral.mean <- Rfast::colmeans(xmat)
+        
+        # cor(c(coverage.mean), c(spectral.mean))
+        
+        message('Plotting coverage spectrum ...')
+        library(ggplot2)
+
+        df <- data.frame(y1 = spectral.mean,
+                         y2 = coverage.mean,
+                         x = ppm)
+        
+        max.ratio <- max(df$y2)/max(df$y1)
+
+        p <- ggplot(df, aes(x = x)) +
+          geom_line(aes(y = y1*max.ratio, color = "y1"), linewidth = 1) +
+          geom_line(aes(y = y2, color = "y2"), linewidth = 1) +
+          scale_color_manual(values = c("y1" = "red", "y2" = "blue"), labels = c('Spectral Intensity','Coverage Depth')) +
+          labs(y = "xcov", x = "1H Chemical Shift ∂ (ppm)") +
+          theme_minimal() +
+          theme(axis.text = element_text(size = 12), axis.title = element_text(size = 14),
+                legend.title = element_text(size = 12), legend.text = element_text(size = 12)) +
+          scale_y_continuous(
+            name = "Mean Depth",
+            sec.axis = sec_axis(~./max.ratio, name = "Spectral Intensity")
+          ) + 
+          scale_x_reverse() #+ 
+          #theme(legend.position = "inside")
+        
+        # plotly::ggplotly(p)
+        
+        plot.loc <- run %>% strsplit('/') %>% .[[1]] %>% rev %>% .[-1] %>% rev %>% paste(collapse = '/')
+        pdf(file = paste0(plot.loc, '/',
+                          runs.info$study[1], 
+                          '_bf.',runs.info$max_backfits[bf.number] %>% 
+                            formatC(format = "e", digits = 0) %>% toupper %>% 
+                            stringr::str_remove_all(pattern = "\\+"),
+                          '_spectral.coverage.pdf'),
+            width = 8, height = 4)
+          p
+        dev.off()
+
+       
+    # Loop through ref spectra and count % coverage ####
+    
+      run <- data[1]
+      fse.result <- readRDS(paste0(run, '/fse.result.RDS'))
+        xmat <- fse.result$xmat
+        ppm <- fse.result$ppm
+        
+        xcov <- matrix(0, nrow(xmat), ncol(xmat))
+        
+      backfits <- readRDS(paste0(run, '/smrf.RDS'))
+        bf.rows <- backfits$backfits %>% rbindlist
+
+
+    mi <- backfits$match.info
+    
+    ldp <- readRDS(paste0(run, '/lib.data.processed.RDS'))
+    ldp <- ldp %>% lapply(function(x) x %>% expand_ref(ppm))
+    
+    ref.counts <- matrix(0, nrow = length(ldp), ncol = length(ppm))
+    
+    mi$counts <- lapply(1:nrow(mi), function(x){
+      return(backfits$backfits[[x]] %>% nrow)
+    })
+    
+    for (i in 1:nrow(mi)){
+      cols <- mi$ref.start[i]:mi$ref.end[i]
+      ref.counts[mi$ref[i], cols] <- ref.counts[mi$ref[i], cols] + 1
+    }
+    
+    # Raw coverage
+      sum(ref.counts > 0)/(ref.counts%>%dim%>%prod)
+    
+    # Since ref spectra are mostly empty, however, it makes sense to calculate
+    # % useful signal covered:
+    
+      refmat <- lapply(ldp, function(x) x$mapped$data) %>% do.call(rbind,.)
+        refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
+        refmat[is.na(refmat)] <- 0
+        
+      ref.counts.normed <- (ref.counts > 0) * refmat
+      mean(ref.counts.normed)/mean(refmat)
       
+      coverage.mean.ref <- Rfast::colmeans(ref.counts)
+      
+      plot_spec(coverage.mean.ref, ppm)
+    
+    
+    
+    
+    
+    
+  
