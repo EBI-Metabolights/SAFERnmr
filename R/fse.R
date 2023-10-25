@@ -177,11 +177,11 @@ fse <- function(pars){
         
         colwithPair <- pocketPairs$peakMap %>% is.na %>% "!"(.) %>% 
           t %>% rowSums(na.rm = TRUE) %>% ">"(.,0) %>% which
-        regions_subset <- colwithPair %in% testregion %>% which
+        regions_subset <- (colwithPair %in% testregion) %>% which
         storm_rnd1 = list()
         
         
-        message("Running storm on ",numPairs, " provided protofeatures.")
+        message("Running storm on ",length(regions_subset), " provided protofeatures.")
         
         storm_rnd1 <- 
               mclapply(regions_subset,
