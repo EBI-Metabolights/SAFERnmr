@@ -153,10 +153,6 @@ filter_matches <- function(pars){
         message('Filtering out singlet matches (either ref or feature)...')
           match.info <- filter_matches_singlets2(match.info, feature.c, refmat.c, pars$par$ncores)
           
-        # match.info <- filter_matches_singlets(match.info, feature.c$stack, refmat.c,
-        #                                        pars$matching$filtering$res.area.threshold,
-        #                                        pars$par$ncores)
-        
         match.info %>% debug_write("match.info.filtered.RDS", pars)
         filtered.matches <- nrow(match.info)
         # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.filtered.RDS"))
