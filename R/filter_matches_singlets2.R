@@ -22,7 +22,7 @@
 #' @import pbapply
 #' 
 #' @export
-filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
+filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores = 1){
   
   # Pre-compute all feature peaks ####
   
@@ -35,7 +35,8 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
     feat.pks <- mclapply(feats, function(f){
       pk_maxs(f, mask = !is.na(f))
     }, mc.cores = ncores)
-        
+    
+    
   # Pre-compute all ref peaks ####
   
     refs <- refmat.c %>% cstack_expandRows
@@ -47,6 +48,7 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
     ref.pks <- mclapply(refs, function(r){
       pk_maxs(r, mask = !is.na(r))
     }, mc.cores = ncores)
+    
 
   # Split up match.info into a list ####
   
@@ -55,6 +57,7 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
   # Loop over each mi.list element (match.info row) and find how many peaks were matched
   
     npeaks <- mclapply(mi.list, function(mi){
+    # npeaks <- pblapply(mi.list, function(mi){
       tryCatch({
       # How many f.pks (after filtering for matched region and na-gaps) were included?
   
@@ -89,10 +92,11 @@ filter_matches_singlets2 <- function(match.info, feature.c, refmat.c, ncores){
       }
       )
         
-    }, mc.cores = ncores) %>% rbindlist
+    }, mc.cores = ncores
+    ) %>% rbindlist
     
   match.info$numpeaks.feat <- npeaks$feat
-  match.info$numpeaks.ref <- npeaks$feat
+  match.info$numpeaks.ref <- npeaks$ref
   
   filt <- match.info$numpeaks.feat > 1 & match.info$numpeaks.ref > 1
     
