@@ -12,6 +12,8 @@
 #'
 #'
 score_matches <- function(pars, selection=NULL, alt.name = ''){
+  
+  # Accessory ####
   drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap'){
   if(dropRowNames){
     rownames(mat) <- NULL
@@ -49,6 +51,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
                       z = mat, #zmin = min(mat, na.rm = T), zmax = max(mat, na.rm = T),
                       zauto = TRUE,
                       y = rownames(mat),
+                      x = colnames(mat),
                       colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
                       type = 'heatmap',
                       hovertemplate = paste('<b>Compound</b>: %{y}',
@@ -74,6 +77,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
         plot_ly(source = source.name, # x = colnames(mat),
                 type = 'heatmap',
                 y = rownames(mat),
+                x = colnames(mat),
                 z = mat, 
                 colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
                 zauto = TRUE, #zmin = 0, zmax = 1, # color scale
@@ -92,6 +96,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
   fig
 }
 
+  # Banner ####
   message('-------------------------------------------------------')
   message('-------------------  Match Scoring  -------------------')
   message('-------------------------------------------------------')
@@ -215,6 +220,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
           # Add colnames (compounds) to scores matrix 
               
               colnames(ss.ref.mat) <- cmpd.names
+              rownames(ss.ref.mat) <- rownames(xmat)
  
         scores$ss.ref.mat <- ss.ref.mat %>% t
         saveRDS(scores, paste0(tmpdir, "/scores",alt.name,".RDS"))
