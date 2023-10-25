@@ -4,7 +4,7 @@
 \alias{filter_matches_singlets2}
 \title{Remove singlet matches}
 \usage{
-filter_matches_singlets2(match.info, feature.c, refmat.c, ncores)
+filter_matches_singlets2(match.info, feature.c, refmat.c, ncores = 1)
 }
 \arguments{
 \item{pars}{A list of input parameters.}
