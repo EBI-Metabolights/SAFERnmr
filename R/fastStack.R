@@ -75,9 +75,16 @@ addpoints_as_needed <- function(mat, xvals, plt.pars, target.ratio = 1)
   })
   
   denser.mat <- lapply(mat.list, function(v) {
+    ## Plot to see:
+    # pdf('/Users/mjudge/test.pdf')
+    #   v %>% plot(cex = 0.1)
+    # dev.off()
     
-    #v %>% plot(cex = 0.1)
-
+    if (all(is.na(v))){
+      return(list(new.xvals = NA,
+                  new.vals = NA))
+    }
+    
     y.per.pixel <- diff(range(v, na.rm=TRUE)) / plt.pars$pixels[2]
     x.per.pixel <- length(v) / plt.pars$pixels[1]
     
@@ -100,10 +107,19 @@ addpoints_as_needed <- function(mat, xvals, plt.pars, target.ratio = 1)
             # length.out = max(points.needed.per.segment[x], 0) # if no points were necessary here, delete
             ) 
       }) %>% unlist %>% sort %>% unique
-    
-      new.vals <- pracma::interp1(x = xvals, 
-                                  y = v, 
-                                  xi = new.xvals) #%>% plot(x = new.xvals, y = ., cex = 0.1)
+      
+      new.vals <- tryCatch(
+        {
+          new.vals <- pracma::interp1(x = xvals, 
+                                      y = v, 
+                                      xi = new.xvals) #%>% plot(x = new.xvals, y = ., cex = 0.1)
+          new.vals
+        },
+        error = function(cond){
+          return(list(new.xvals = NA,
+                      new.vals = NA))
+        }
+      )
       
       list(new.xvals = new.xvals,
            new.vals = new.vals)
@@ -180,8 +196,15 @@ addpoints_evenly <- function(mat, xvals, res.increase = 5)
 }
  
 denser_mat_to_df <- function(denser.mat){
-  data.frame(ppm = lapply(denser.mat, function(x) x$new.xvals) %>% unlist, 
-             int = lapply(denser.mat, function(x) x$new.vals) %>% unlist)
+  new.xvals <- lapply(denser.mat, function(x) x$new.xvals) %>% unlist
+  new.vals <- lapply(denser.mat, function(x) x$new.vals) %>% unlist
+  
+  if (length(new.vals) == length(new.xvals)){
+    data.frame(ppm = new.xvals, 
+               int = new.vals)
+  } else {
+    stop('denser_mat_to_df: xvals and vals mismatched')
+  }
 }
   
 # Put features in an x-sized matrix:
