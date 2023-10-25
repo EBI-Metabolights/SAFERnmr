@@ -45,7 +45,7 @@ pipeline <- function(params_loc, params_obj) {
                   pars <- params_obj
                   
                   # Write the params file to the temp dir
-                  params_loc <- './params.yaml'
+                  params_loc <- paste0(pars$dirs$temp,'/params.yaml')
                   yaml::write_yaml(params_obj, file = params_loc)
                   
                 } else if (missing(params_loc)) {
