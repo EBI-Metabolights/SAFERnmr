@@ -12,7 +12,86 @@
 #'
 #'
 score_matches <- function(pars, selection=NULL, alt.name = ''){
+  drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap'){
+  if(dropRowNames){
+    rownames(mat) <- NULL
+  } else {
+    
+      if(!is.na(clipRowNames)){ # assume integer
+          rownames(mat) <- rownames(mat) %>% stringr::str_trunc(clipRowNames, ellipsis = '')
+      }
+    
+      # If rownames are not unique, modify them ####
+        # - what we want to do is give the first n characters
+          rn <- data.frame(name = rownames(mat)) %>% 
+                  dplyr::group_by(name) %>%
+                  # add row number within each group
+                  dplyr::mutate(instance = dplyr::row_number()) %>%
+                  dplyr::ungroup()
+          
+          rn$unique.name <- lapply(1:nrow(rn), function(r) {
+            
+              paste(
+                      rn$name[r],
+                      rep(' ', rn$instance[r]-1),
+                      collapse = ''
+              )
+       
+            }) %>% unlist
+          rownames(mat) <- rn$unique.name
+
+  }
+
+  if(nrow(mat) == 1){
+        
+        fig <- 
+              plot_ly(source = source.name, # x = colnames(mat),
+                      z = mat, #zmin = min(mat, na.rm = T), zmax = max(mat, na.rm = T),
+                      zauto = TRUE,
+                      y = rownames(mat),
+                      colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
+                      type = 'heatmap',
+                      hovertemplate = paste('<b>Compound</b>: %{y}',
+                                            '<br><b>Sample</b>: %{x}',
+                                            '<br><b>Score</b>: %{z:.2f}',
+                                            '<extra></extra>')
+                      ) %>%
+              layout(
+                      yaxis = list(
+                                    # title = rownames(mat),
+                                    zeroline = FALSE,
+                                    showline = FALSE,
+                                    showticklabels = TRUE,
+                                    ticks = FALSE,
+                                    showgrid = FALSE
+                                  ),
+                      xaxis = list(title = list(text='Sample', font = list(size = 20), standoff = 25)),
+                      hoverlabel = list(font=list(size=15)))
+                     
+  } 
+  else {
+    fig <- 
+        plot_ly(source = source.name, # x = colnames(mat),
+                type = 'heatmap',
+                y = rownames(mat),
+                z = mat, 
+                colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
+                zauto = TRUE, #zmin = 0, zmax = 1, # color scale
+                hovertemplate = paste('<b>Compound</b>: %{y}',
+                                      '<br><b>Sample</b>: %{x}',
+                                      '<br><b>Score</b>: %{z:.2f}',
+                                      '<extra></extra>')
+                ) %>%
+        layout(yaxis = list(title = list(text='Compound', font = list(size = 20), standoff = 25)),
+                xaxis = list(title = list(text='Sample', font = list(size = 20), standoff = 25)),
+                hoverlabel = list(font=list(size=15))
+               )
+    
+  }
   
+  fig
+}
+
   message('-------------------------------------------------------')
   message('-------------------  Match Scoring  -------------------')
   message('-------------------------------------------------------')
@@ -126,46 +205,55 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
               # scattermore::scattermoreplot(seq_along(vals), sort(vals))
               # hist(scores, breaks = 1000)
               
-              ss.ref.mat.nd <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
+              ss.ref.mat <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
               linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
                                 cols = ss.ref.pair.scores$ref, 
                                 m = nrow(xmat))
               
-              ss.ref.mat.nd[linds] <- vals
+              ss.ref.mat[linds] <- vals
     
           # Add colnames (compounds) to scores matrix 
               
-              colnames(ss.ref.mat.nd) <- cmpd.names
+              colnames(ss.ref.mat) <- cmpd.names
  
-        scores$ss.ref.mat <- ss.ref.mat.nd %>% t
+        scores$ss.ref.mat <- ss.ref.mat %>% t
         saveRDS(scores, paste0(tmpdir, "/scores",alt.name,".RDS"))
         # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
-        # ss.ref.mat.nd <- scores$ss.ref.mat %>% t
+        # ss.ref.mat <- scores$ss.ref.mat %>% t
         unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
         
       # Plot the matrix as an HCA'd heatmap
         ann.cmpds <- tryCatch({
-          Rfast::colsums(ss.ref.mat.nd) > 0
+          Rfast::colsums(ss.ref.mat) > 0
         }, error = function(cond){
           TRUE
         })
         
+        
         tryCatch(
           {
-            pdf(file = paste0(tmpdir,"/match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
-                width = 8, # The width of the plot in inches
-                height = 8) # The height of the plot in inches
-            
-              ss.ref.mat.nd <- ss.ref.mat.nd[, ann.cmpds, drop = FALSE] %>% t
+              ss.ref.mat <- ss.ref.mat[, ann.cmpds, drop = FALSE] %>% t
               
-              if (nrow(ss.ref.mat.nd) == 1){
-                heatmap(rbind(ss.ref.mat.nd,ss.ref.mat.nd), scale = 'none',Rowv = NA) # cheat to get heatmap with "1" row
+            # Always cluster samples
+              sample.order <- hclust(dist(t(ss.ref.mat)))$order
+              ss.ref.mat <- ss.ref.mat[, sample.order,drop = FALSE]
+              
+            # Only cluster refs if there are > 1
+              if (nrow(ss.ref.mat) == 1){
+              
+                ref.order <- 1
+                
               } else {
-                heatmap(ss.ref.mat.nd, scale = 'none') # Rowv = NA, Colv = NA,
+              
+                ref.order <- hclust(dist(ss.ref.mat))$order
+                
               }
+              
+                
+                drawHeatmap(ss.ref.mat[ref.order,,drop=FALSE], dropRowNames = FALSE) %>% 
+                  htmlwidgets::saveWidget(file = paste0(tmpdir,"/match_scores_sample_x_compound.html"), selfcontained = TRUE)
+              
 
-            dev.off()
-            
           },
           error = function(cond){
             message('\n\tScore matrix plotting error..')
@@ -175,11 +263,11 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
           
           # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
           # rfs.used <- scores$rfs.used
-          # ss.ref.mat.nd <- scores$ss.ref.mat
+          # ss.ref.mat <- scores$ss.ref.mat
         
 ######################################################################################################
   # Given scores matrix, do any compounds match known annotations? ####
-        # scores.mat <- ss.ref.mat.nd
+        # scores.mat <- ss.ref.mat
         # scores.mat <- ss.ref.mat
         
           # lib.data.processed[[47]]$mapped$data %>% t %>% trim_sides %>% simplePlot(linecolor = 'black') + ggtitle(paste0(cmpd.names[47]))
@@ -204,7 +292,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
   return(
     data.frame(
       score.metric = 'fsaxrval',
-      max.score = max(ss.ref.mat.nd),
+      max.score = max(ss.ref.mat),
       n.compounds = sum(ann.cmpds),
       n.best.bfs = rfs.used$fsaxrval %>% unlist %>% length
     )
