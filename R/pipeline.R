@@ -42,14 +42,17 @@ pipeline <- function(params_loc, params_obj) {
   # - pars (the parameters used for the run)
   
                 if (isFALSE(missing(params_obj))) {
+                  
+                  message('Using supplied parameter object...')
                   pars <- params_obj
                   
                   # Write the params file to the temp dir
-                  params_loc <- paste0(pars$dirs$temp,'/params.yaml')
+                  params_loc <- paste0(pars$dirs$temp,'/params.yaml') %>% stringr::str_replace(pattern = '//','/')
                   yaml::write_yaml(params_obj, file = params_loc)
                   
                 } else if (missing(params_loc)) {
                   # load default params
+                  message('Loading default parameters...')
                   filepath <- base::system.file(
                     "extdata", "default_params.yaml",
                     package = "SAFER"
@@ -62,6 +65,7 @@ pipeline <- function(params_loc, params_obj) {
                 } else {
                   # >>> This is the usual route <<<
                   # load supplied params
+                  message('Using parameters from the provided file...')
                   pars <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
                   
                 }
@@ -70,22 +74,19 @@ pipeline <- function(params_loc, params_obj) {
                   pars$dirs$temp <- '.'
                 } else {
                   if(!dir.exists(pars$dirs$temp)){
+                    message(pars$dirs$temp, ' did not exist. Creating...')
                     dir.create(pars$dirs$temp, showWarnings = F)
                   }
                 }
                
-                # Don't use lib.info path from now on. Assume it's in tmpdir
-                # file.copy(pars$files$lib.info, paste0(pars$dirs$temp,'/lib.info.RDS'))
-              
-  #           }, error = function(cond){return('failed setup')})
-  
                
   # Create a timestamped subdirectory under this tmp dir name and set tmpdir to that
-    pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric %>% round )
+    pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric %>% round ) %>% stringr::str_replace(pattern = '//','/')
+    message('Setting up run-specific temp directory...')
     dir.create(pars$dirs$temp , showWarnings = F)  
     
-    dir.create(pars$dirs$temp, showWarnings = F)
-    file.copy(params_loc, paste0(pars$dirs$temp,'/params.yaml'), overwrite = TRUE)
+    message('Writing updated params.yaml to run-specific temp directory...')
+    yaml::write_yaml(pars, paste0(pars$dirs$temp,'/params.yaml'))
                
   # Validate parameters before beginning
     
