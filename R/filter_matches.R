@@ -180,34 +180,45 @@ filter_matches <- function(pars){
         
         message('\n\tBackfit limit is set to ', pars$matching$filtering$max.backfits, '.' )
           pars$matching$filtering$select <- 'random'
+          
           if (pars$matching$filtering$select == 'rval'){
             # Sort matches by rval, then take the top n until # estimated backfits < limit
             
               sort.order <- order(match.info$rval, decreasing = TRUE)
-              cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
-              keep <- sort.order[1:cutoff]
-              match.info <- match.info[keep, ]
-              match.info <- match.info[order(keep),] #resort so mi is in same order as before
-              lost <- length(sort.order)-length(keep)
-              
+
           } else {
             # Randomly select matches to satisfy
               
               sort.order <- runif(nrow(match.info)) %>% order
-              cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
+
+          }
+
+        # Figure out what the default bf.limit would be for this set of features (min subset) ####
+          smallest.subset <- which.min(contribution[sort.order])
+          cutoff.msg <- paste0('\n\tmatching$filtering$max.backfits (',
+                               pars$matching$filtering$max.backfits,
+                               ') may be set too low.',
+                               '\n\tAt this setting, no matches would be kept. ',
+                               '\n\tDefaulting to smallest subset (',
+                               contribution[sort.order[smallest.subset]],
+                               ') to preserve at least 1 match.')
+          
+        # Figure out how many matches we can keep, drawn in order from sort.order so we don't exceed max.backfits ####
+          cutoff <- tryCatch({max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))}, 
+                              error = function(cond){message(cutoff.msg); 1}, 
+                              warning = function(cond){message(cutoff.msg); 1})
+              
               keep <- sort.order[1:cutoff]
               match.info <- match.info[keep, ]
               match.info <- match.info[order(keep),] #resort so mi is in same order as before
               lost <- length(sort.order)-length(keep)
-
-          }
             
         message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
         message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
         
       }
 
-            # At this point, match.info is set. Assign IDs
+            # At this point, match.info is set. Assign IDs ####
                           
        match.info$id <- 1:nrow(match.info)
 
