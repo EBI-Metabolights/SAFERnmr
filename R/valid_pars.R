@@ -166,7 +166,7 @@ valid_pars <- function(pars, quiet = FALSE){
           }
           
           if(!is.null(corrpockets$only.region.between)){
-            if (!is.null(corrpockets$only.region.between)) {
+            if (!(is.numeric(corrpockets$only.region.between) && length(corrpockets$only.region.between)==2)) {
               warnings <- c(warnings, 
                                   paste("corrpockets$only.region.between should be 2 numerics provided as e.g. c(0, 10) or empty(NULL). ",
                                         "Current value:",corrpockets$only.region.between))
