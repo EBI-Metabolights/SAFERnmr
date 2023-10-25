@@ -175,7 +175,7 @@ drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 
                       z = mat, #zmin = min(mat, na.rm = T), zmax = max(mat, na.rm = T),
                       zauto = TRUE,
                       # colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
-                      colors = colorRamp(c("gray","#feb24c", "#f03b20")),
+                      colors = colorRamp(c("#ffeda0","#feb24c", "#f03b20")),
                       type = 'heatmap',
                       hovertemplate = paste('<b>Compound</b>: %{y}',
                                             '<br><b>Sample</b>: %{x}',
