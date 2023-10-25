@@ -179,15 +179,28 @@ filter_matches <- function(pars){
         # limit the number of matches - only take the top n such that they don't exceed max number
         
         message('\n\tBackfit limit is set to ', pars$matching$filtering$max.backfits, '.' )
-        
-          # Sort matches by rval, then take the top n until # estimated backfits < limit
-          
-            sort.order <- order(match.info$rval, decreasing = TRUE)
-            cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
-            keep <- sort.order[1:cutoff]
-            match.info <- match.info[keep, ]
-            match.info <- match.info[order(keep),] #resort so mi is in same order as before
-            lost <- length(sort.order)-length(keep)
+          pars$matching$filtering$select <- 'random'
+          if (pars$matching$filtering$select == 'rval'){
+            # Sort matches by rval, then take the top n until # estimated backfits < limit
+            
+              sort.order <- order(match.info$rval, decreasing = TRUE)
+              cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
+              keep <- sort.order[1:cutoff]
+              match.info <- match.info[keep, ]
+              match.info <- match.info[order(keep),] #resort so mi is in same order as before
+              lost <- length(sort.order)-length(keep)
+              
+          } else {
+            # Randomly select matches to satisfy
+              
+              sort.order <- runif(nrow(match.info)) %>% order
+              cutoff <- max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))
+              keep <- sort.order[1:cutoff]
+              match.info <- match.info[keep, ]
+              match.info <- match.info[order(keep),] #resort so mi is in same order as before
+              lost <- length(sort.order)-length(keep)
+
+          }
             
         message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
         message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
