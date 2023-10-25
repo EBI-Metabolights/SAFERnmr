@@ -155,9 +155,15 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
             pdf(file = paste0(tmpdir,"/match_scores_sample_x_compound.pdf"),   # The directory you want to save the file in
                 width = 8, # The width of the plot in inches
                 height = 8) # The height of the plot in inches
-              ss.ref.mat.nd <- ss.ref.mat.nd[, ann.cmpds]
-              heatmap(ss.ref.mat.nd, scale = 'none') # Rowv = NA, Colv = NA,
+            
+              ss.ref.mat.nd <- ss.ref.mat.nd[, ann.cmpds, drop = FALSE] %>% t
               
+              if (nrow(ss.ref.mat.nd) == 1){
+                heatmap(rbind(ss.ref.mat.nd,ss.ref.mat.nd), scale = 'none',Rowv = NA) # cheat to get heatmap with "1" row
+              } else {
+                heatmap(ss.ref.mat.nd, scale = 'none') # Rowv = NA, Colv = NA,
+              }
+
             dev.off()
             
           },
