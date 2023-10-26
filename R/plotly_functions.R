@@ -10,7 +10,7 @@
 #' 
 #' @importFrom magrittr %>%
 #' @importFrom stringr str_replace str_trunc
-#' @importFrom dyplyr group_by mutate row_number ungroup
+#' @importFrom dplyr group_by mutate row_number ungroup
 #' @importFrom grDevices colorRamp
 #' @import plotly
 #'  
