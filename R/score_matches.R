@@ -183,7 +183,11 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
           }
         )
 
-          
+        # Clean up any plotly js dependency files (not needed)
+          js.dependency.dir <- paste0(pars$dirs$temp, '/match_scores_sample_x_compound')
+          if (dir.exists(js.dependency.dir)){
+            unlink(js.dependency.dir, recursive = TRUE)
+          }
           # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
           # rfs.used <- scores$rfs.used
           # ss.ref.mat <- scores$ss.ref.mat
