@@ -1,13 +1,15 @@
 # Generate param files
   devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
       
-      template <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/424_tests/MTBLS424_r.6_params.yaml'
+      template <- '/Users/mjudge/Downloads/backfit_limit_gradient_3/MTBLS1_bf_1E08_params.yaml'
       pars <- yaml::yaml.load_file(template, eval.expr = TRUE)
       
       mat.loc <- '/nfs/production/odonovan/nmr_staging/spectral_matrices/'
       end.loc <- '/nfs/production/odonovan/nmr_staging/safer_runs/'
-      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/try_4/'
-      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/backfit_limit_gradient_1/'
+      # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/try_4/'
+      # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/backfit_limit_gradient_1/'
+      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/storm_gradient_1/'
+      
       studies <- list(
                       list(
                           name = 'MTBLS1',
@@ -60,11 +62,14 @@
           parset$corrpockets$rcutoff <- 0.5
           parset$corrpockets$noise.percentile <- 0.99
           parset$corrpockets$half.window <- 0.06
+          
           parset$storm$correlation.r.cutoff <- 0.6
+          
           parset$tina$min.subset <- 5
+          
           parset$matching$r.thresh <- .8
           parset$matching$filtering$ppm.tol <- .1
-          parset$matching$filtering$max.backfits <- 1E7
+          parset$matching$filtering$max.backfits <- 5E7
           parset$par$ncores <- 48
           
       pars.6 <- parset
@@ -76,7 +81,7 @@
         pars.9$storm$correlation.r.cutoff <- 0.9
 
       par.templates <- list(pars.6, pars.7, pars.8, pars.9)
- 
+      
       # # Backfit gradient
       # parset <- pars.7
       # pars.3 <- parset
@@ -97,36 +102,34 @@
     # Apply par changes for different studies 
       par.list <- lapply(par.templates, function(pt){
          
-        edit_pars_studies(pt, studies[1]) # MTBLS1
-        # edit_pars_studies(pt, studies) # all studies
+        # edit_pars_studies(pt, studies[1]) # MTBLS1
+        edit_pars_studies(pt, studies) # all studies
         
       })
         
       par.list <- par.list %>% unlist(recursive = F)
       
       dir.create(out.dir)
-      lapply(par.list, function(ps){
+      par.df <- lapply(par.list, function(ps){
         # ps <- par.list[[1]]
-        # yaml::write_yaml(ps, paste0(out.dir, ps$study$id, '_r', ps$storm$correlation.r.cutoff, '_params.yaml'))
+        fname <- paste0(ps$study$id, '_r', ps$storm$correlation.r.cutoff, '_params.yaml')
+        yaml::write_yaml(ps, paste0(out.dir, fname))
         
-        yaml::write_yaml(ps, paste0(out.dir, ps$study$id, '_bf_', 
-                                    ps$matching$filtering$max.backfits %>% 
-                                      formatC(format = "e", digits = 0) %>% 
-                                      toupper %>% stringr::str_remove_all(pattern = "\\+"), 
-                                    '_params.yaml'))
-        
-      })
+        # yaml::write_yaml(ps, paste0(out.dir, ps$study$id, '_bf_', 
+        #                             ps$matching$filtering$max.backfits %>% 
+        #                               formatC(format = "e", digits = 0) %>% 
+        #                               toupper %>% stringr::str_remove_all(pattern = "\\+"), 
+        #                             '_params.yaml'))
+        message(fname,' - written')
+        return(ps %>% unlist %>% as.list %>% as.data.frame)
+      }) %>% bind_rows
       
-      # examplepars <- parset
-      # 
-      # parsets <- edit_each_parset(parsets.studies)
+      # lapply(par.list, function(x) x %>% unlist %>% as.list %>% as.data.frame) %>% bind_rows
+      names(par.df) <- names(par.df) %>% stringr::str_replace_all('\\.', '_')
       
-      
-      # pars$dirs$temp <- tmpdir
-      # pars$debug$enabled <- TRUE
-      # pars$par$ncores <- 4
-      # pars$debug$all.outputs <- TRUE
-      # pars$matching$filtering$max.backfits <- 1E5
+      dir_pop <- function(d, times=1){d %>% strsplit('/') %>% .[[1]] %>% rev %>% .[-(1:times)] %>% rev %>% paste(collapse = '/')}
+      write.csv(par.df, file = paste0(out.dir %>% dir_pop, '/par.table.csv'))
+
 
   # Read base set
   
