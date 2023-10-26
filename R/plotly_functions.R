@@ -9,9 +9,11 @@
 #' @return interactive plotly heatmap object
 #' 
 #' @importFrom magrittr %>%
-#' @importFrom stringr str_replace
+#' @importFrom stringr str_replace str_trunc
+#' @importFrom dyplyr group_by mutate row_number ungroup
+#' @importFrom grDevices colorRamp
 #' @import plotly
-#' 
+#'  
 #' @export
 drawHeatmap <- function(mat, dropRowNames = F, clipRowNames = NA, source.name = 'heatmap'){
   

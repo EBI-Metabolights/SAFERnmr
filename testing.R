@@ -36,8 +36,39 @@ index_studies <- function(data.dir, exclude = NULL){
     
     df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
     df$local_path <- data.unzipped
+    df <- df[,!(names(df) == 'X')]
     df
 }
+    # Unzip any non-unzipped files ####
+      data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
+      data <- dir(data.dir)
+        excluded <- which(grepl('1697751863|1697759923', data))
+        zipped <- grepl('.zip', data)
+        not.zip <- which(!zipped)
+        zipped <- which(zipped)
+        already.unzipped <- zipped[((data[zipped] %>% stringr::str_remove_all('.zip')) %in% data[not.zip])]
+        dont.unzip <- c(already.unzipped, excluded, not.zip)
+
+      fail <- lapply(data[-dont.unzip], function(d){
+        # d <- data[-dont.unzip] %>% .[1]
+        message('Unzipping ', d, ' ...')
+        
+        # New ####
+          tryCatch({
+            run.id <- d %>% stringr::str_remove('.zip$')
+            
+            unzip(paste0(data.dir, d), junkpaths = FALSE, exdir = paste0(data.dir, run.id) )
+
+            return(0)
+            
+          }, error = function(cond){
+            1
+          })
+      })
+
+    par.table <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
+  
+      
 
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
@@ -841,60 +872,57 @@ files <- list(
       
       
 # Simplified Gradient Tests for parameter sensitivity (19-20OCT) ####
-
     # Unzip any non-unzipped files ####
       data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
       data <- dir(data.dir)
-      zipped <- grepl('.zip', data)
-      unzipped <- !zipped
-      
-      data.not.unzipped <- data[zipped] %>% .[!((data[zipped] %>% stringr::str_remove_all('.zip')) %in% data[unzipped])]
-      
-      fail <- lapply(data.not.unzipped, function(d){
-        
+        excluded <- which(grepl('1697751863|1697759923', data))
+        zipped <- grepl('.zip', data)
+        not.zip <- which(!zipped)
+        zipped <- which(zipped)
+        already.unzipped <- zipped[((data[zipped] %>% stringr::str_remove_all('.zip')) %in% data[not.zip])]
+        dont.unzip <- c(already.unzipped, excluded, not.zip)
+
+      fail <- lapply(data[-dont.unzip], function(d){
+        # d <- data[-dont.unzip] %>% .[1]
         message('Unzipping ', d, ' ...')
-        tryCatch({
-            run.id <- d %>% stringr::str_remove('.zip$')
-            subdirs <- unzip(paste0(data.dir, d), list = T)
-            f.names <- subdirs$Name %>% 
-                stringr::str_replace("/$", "") %>% # remove trailing '/'
-                stringr::str_split('/') %>% # split up filepath
-                lapply(function(x) tail(x, 1)) %>% unlist # take the last part of each one
-  
-            run.dir <- which(f.names == run.id) %>% .[1]
-            
-            unzip(paste0(data.dir, d), files = subdirs$Name[run.dir], junkpaths = TRUE, exdir = paste0(data.dir, run.id) )
-            
-            a <- pblapply(seq_along(f.names) %>% .[-run.dir], function(x){
-              unzip(paste0(data.dir, d), files = subdirs$Name[x], junkpaths = TRUE, exdir = paste0(data.dir, run.id) )
-            })
         
+        # New ####
+          tryCatch({
+            run.id <- d %>% stringr::str_remove('.zip$')
+            
+            unzip(paste0(data.dir, d), junkpaths = FALSE, exdir = paste0(data.dir, run.id) )
+
             return(0)
             
           }, error = function(cond){
             1
           })
+
+        # Old ####
+        # tryCatch({
+        #     run.id <- d %>% stringr::str_remove('.zip$')
+        #     subdirs <- unzip(paste0(data.dir, d), list = T)
+        #     f.names <- subdirs$Name %>% 
+        #         stringr::str_replace("/$", "") %>% # remove trailing '/'
+        #         stringr::str_split('/') %>% # split up filepath
+        #         lapply(function(x) tail(x, 1)) %>% unlist # take the last part of each one
+        # 
+        #     run.dir <- which(f.names == run.id) %>% .[1]
+        #     
+        #     unzip(paste0(data.dir, d), files = subdirs$Name[run.dir], junkpaths = TRUE, exdir = paste0(data.dir, run.id) )
+        #     
+        #     a <- pblapply(seq_along(f.names) %>% .[-run.dir], function(x){
+        #       unzip(paste0(data.dir, d), files = subdirs$Name[x], junkpaths = TRUE, exdir = paste0(data.dir, run.id) )
+        #     })
+        # 
+        #     return(0)
+        #     
+        #   }, error = function(cond){
+        #     1
+        #   })
       })
 
-    # Extract out run summary data ####
-      data <- dir(data.dir, )
-        dontuse <- grepl('.zip$|.csv$|.pdf$|.xlsx$|1697751863|1697759923', data)
-        unzipped <- !dontuse
-      data.unzipped <- paste0(data.dir,data[unzipped])
-        
-      df <- lapply(data.unzipped, function(x){
-        dat <- read.csv(paste0(x, '/run.summary.csv'))
-        names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
-        #print(names(dat) %>% .[1:5])
-        dat
-      }) %>% bind_rows
-      # %>% do.call(rbind,.)
-      
-
-      df$local_id <- df$local_id %>% as.character()
-      df <- df[,!(names(df) == 'X')]
-      # write.csv(df, paste0(data.dir,'/local.index.csv'), row.names = FALSE)
-
+    par.table <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
   
       
     # Correlations between params and outcomes ####
@@ -956,23 +984,11 @@ files <- list(
       
 # Backfit cutoff sensitivity (independent runs) ####
   devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
-  data <- c('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698065195',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698064943',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698063089',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698063031',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698062969',
-            '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698062903')    
-        
-  df <- lapply(data, function(x){
-        dat <- read.csv(paste0(x, '/run.summary.csv'))
-        names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
-        #print(names(dat) %>% .[1:5])
-        dat
-      }) %>% bind_rows
-
-  test <- c('filtered_matches', 'used_matches','match_r_effective','backfits','max_score','n_compounds','total_time','corr')
-  df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
+  df <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
+  df <- df %>% tail(6)
+  data <- df$local_path
   
+  test <- c('filtered_matches', 'used_matches','match_r_effective','backfits','max_score','n_compounds','total_time','corr')
   
   # pars <- data %>% lapply(function(run){
   #   pars <- yaml::yaml.load_file(paste0(run,'/params.yaml'), eval.expr = TRUE)
@@ -981,7 +997,7 @@ files <- list(
   #   df
   # }) %>% bind_rows
   
-  mats <- data %>% lapply(function(run){
+  mats <- data %>% pblapply(function(run){
     # run <- data[1]
     scores <- readRDS(paste0(run,'/scores.RDS'))
     scores$ss.ref.mat
@@ -997,16 +1013,24 @@ files <- list(
     cor( c(key.mat), c(mat), use = 'pairwise.complete.obs')
   }) %>% unlist
 
+  df$r2 <- df$corr ^ 2
+  
   runs.info <- df
-  # layout(matrix(seq(length(test)),nrow=1))
-  # 
-  # Map(function(x,y)
-  #   {
-  #     plot(df[c(x,y)], type = "b", log = 'x')
-  #   },
-  #   x = names(df['max_backfits']),
-  #   y = names(df[test])
-  #   )
+  layout(matrix(seq(length(test)),nrow=1))
+
+  Map(function(x,y)
+    {
+      plot(df[c(x,y)], type = "b", log = 'x', ylim = c(0, max(df[y])))
+    },
+    x = names(df['max_backfits']),
+    y = names(df[test])
+    )
+  par(mfrow=c(1,1))
+  plot(x = df$max_backfits, y = df$r2, 
+       type = "b", log = 'x', ylim = c(0, max(df$r2)),
+       ylab = paste0('r^2 vs. ', max(df$max_backfits)),
+       xlab = 'max_backfits')
+  
   
   # N compounds is ~ coverage of metabolites ####
   

@@ -9,6 +9,7 @@
 #' @export
 #' 
 #' @importFrom magrittr %>%
+#' @importFrom htmlwidgets saveWidget
 #'
 #'
 score_matches <- function(pars, selection=NULL, alt.name = ''){
@@ -194,24 +195,6 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
           # ss.ref.mat <- scores$ss.ref.mat
         
 ######################################################################################################
-  # Given scores matrix, do any compounds match known annotations? ####
-        # scores.mat <- ss.ref.mat
-        # scores.mat <- ss.ref.mat
-        
-          # lib.data.processed[[47]]$mapped$data %>% t %>% trim_sides %>% simplePlot(linecolor = 'black') + ggtitle(paste0(cmpd.names[47]))
-          # scattermore::scattermoreplot(1:length(scores.mat), sort(scores.mat))
-          # abline(h = mean(scores.mat))
-
-        # rep.ref <- apply(scores.mat, 2, max)
-        
-        # See if annotations are in maf file list of annotations
-
-                  # matches <- data.frame(gissmo.result = cmpd.names,
-                  #                       best.refscore = rep.ref)
-                  # matches <- matches[order(matches$best.refscore, decreasing = T),]
-                  # 
-            # saveRDS(matches, paste0(tmpdir, "/matches_scored_named.RDS"))
-            # matches <- readRDS(paste0(tmpdir, "/matches_scored_named.RDS"))
   # ####       
   message('----------------------------------------------------------------')
   message('-------------------  Match Scoring Completed -------------------')
