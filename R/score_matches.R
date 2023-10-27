@@ -146,6 +146,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
         # ss.ref.mat <- scores$ss.ref.mat %>% t
         unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
         
+        
       # Plot the matrix as an HCA'd heatmap
         ann.cmpds <- tryCatch({
           Rfast::colsums(ss.ref.mat) > 0
@@ -194,6 +195,53 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
           # rfs.used <- scores$rfs.used
           # ss.ref.mat <- scores$ss.ref.mat
         
+        # Make a caf file
+          ss.ref.mat <- scores$ss.ref.mat %>% t
+          caf.cmpds <- tryCatch({
+            Rfast::colMaxs(ss.ref.mat,value = TRUE) > 0.5
+          }, error = function(cond){
+            FALSE
+          })
+          
+          caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
+          caf.df <- caf.mat %>% as.data.frame
+          names(caf.df) <- tryCatch(
+            {
+              split.names <- names(caf.df) %>% lapply(function(x) x %>% strsplit(split = '\\|') %>% lapply(trimws) %>% unlist)
+              named.names <- lapply(split.names, function(x){
+                
+                msgs <- NULL
+                
+                if(length(x) != 5){
+                  msgs <- c(msgs,'not enough elements extracted from rownames of xmat. Expected format: "file.number | study.id | sample.name | data.format | pulprog". See spectral matrix conversion.')
+                }
+                
+                df <- data.frame(processed.file.name = x[1],
+                           study.name = x[2],
+                           sample.name = x[3],
+                           data.format = x[4],
+                           pulprog = x[5])
+                
+                if(df$study.name != pars$study$id){
+                  msgs <- c(msgs,'study name extracted from xmat rownames does not match pars$study$id')
+                }
+                
+                if(length(msgs) > 0){
+                  error(msgs)
+                }
+                
+              }) %>% do.call(rbind,.)
+            },
+            error = function(cond){
+              message('Sample names were not parsed successfully. Probable reason(s):')
+              message(cond)
+              
+              names(caf.df)
+            }
+            
+          )
+          
+          
 ######################################################################################################
   # ####       
   message('----------------------------------------------------------------')
