@@ -12,7 +12,7 @@
 #' @importFrom htmlwidgets saveWidget
 #'
 #'
-score_matches <- function(pars, selection=NULL, alt.name = ''){
+score_matches <- function(pars, selection=NULL){
   
   # Banner ####
   message('-------------------------------------------------------')
@@ -206,6 +206,7 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
                     }, error = function(cond){
                       FALSE
                     })
+                    
                     
                       
                     caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
