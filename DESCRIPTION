@@ -1,4 +1,4 @@
-Package: SAFER
+Package: SAFER-NMR
 Type: Package
 Title: Spectral Annotation by Feature Extraction and Recovery
 Description: Automated feature extraction and metabolite annotation for 1H1D NMR spectra. 
