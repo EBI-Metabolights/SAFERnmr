@@ -35,6 +35,8 @@
 pipeline <- function(params_loc, params_obj) {
   
   start.time <- Sys.time()
+  run_id <- start.time %>% as.numeric %>% round
+  message('run.id: ', run_id) # print to log so it's easily trackable
   # status <- NULL
   # status <- tryCatch({
   # The goal of this section is to get:
@@ -81,10 +83,13 @@ pipeline <- function(params_loc, params_obj) {
                
                
   # Create a timestamped subdirectory under this tmp dir name and set tmpdir to that
+  
     pars$dirs$temp <- paste0( pars$dirs$temp, '/', start.time %>% as.numeric %>% round ) %>% stringr::str_replace(pattern = '//','/')
     message('Setting up run-specific temp directory...')
     dir.create(pars$dirs$temp , showWarnings = F)  
     
+  # Copy in the params.yaml file
+  
     message('Writing updated params.yaml to run-specific temp directory...')
     yaml::write_yaml(pars, paste0(pars$dirs$temp,'/params.yaml'))
                
@@ -96,7 +101,7 @@ pipeline <- function(params_loc, params_obj) {
     
     status <- 'completed setup'
     
-    run.summary <- data.frame(run_id = start.time %>% as.numeric %>% round,
+    run.summary <- data.frame(run_id = run_id,
                               status = status,
                               pars_passed_checks = pars.passed.checks,
                               study = pars$study$id,
