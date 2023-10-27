@@ -106,7 +106,7 @@ pipeline <- function(params_loc, params_obj) {
     
     si <- Sys.info() %>% as.list()
   
-    run.summary$safer_version <- packageVersion("SAFER") %>% as.character
+    run.summary$safer_version <- packageVersion("SAFER-NMR") %>% as.character
     run.summary$r_version <- R.version$version.string
     run.summary$r_platform <- R.version$platform
     run.summary$system_version <- si$version
