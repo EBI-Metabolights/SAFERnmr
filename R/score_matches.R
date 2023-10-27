@@ -195,52 +195,92 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
           # rfs.used <- scores$rfs.used
           # ss.ref.mat <- scores$ss.ref.mat
         
-        # Make a caf file
-          ss.ref.mat <- scores$ss.ref.mat %>% t
-          caf.cmpds <- tryCatch({
-            Rfast::colMaxs(ss.ref.mat,value = TRUE) > 0.5
-          }, error = function(cond){
-            FALSE
-          })
+        # Make a caf file ####
+        
+          # Construct values under sample names ####
           
-          caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
-          caf.df <- caf.mat %>% as.data.frame
-          names(caf.df) <- tryCatch(
-            {
-              split.names <- names(caf.df) %>% lapply(function(x) x %>% strsplit(split = '\\|') %>% lapply(trimws) %>% unlist)
-              named.names <- lapply(split.names, function(x){
-                
-                msgs <- NULL
-                
-                if(length(x) != 5){
-                  msgs <- c(msgs,'not enough elements extracted from rownames of xmat. Expected format: "file.number | study.id | sample.name | data.format | pulprog". See spectral matrix conversion.')
-                }
-                
-                df <- data.frame(processed.file.name = x[1],
-                           study.name = x[2],
-                           sample.name = x[3],
-                           data.format = x[4],
-                           pulprog = x[5])
-                
-                if(df$study.name != pars$study$id){
-                  msgs <- c(msgs,'study name extracted from xmat rownames does not match pars$study$id')
-                }
-                
-                if(length(msgs) > 0){
-                  error(msgs)
-                }
-                
-              }) %>% do.call(rbind,.)
-            },
-            error = function(cond){
-              message('Sample names were not parsed successfully. Probable reason(s):')
-              message(cond)
-              
-              names(caf.df)
-            }
+            ss.ref.mat <- scores$ss.ref.mat %>% t
+          
+            caf.cmpds <- tryCatch({
+              Rfast::colMaxs(ss.ref.mat,value = TRUE) > 0.5
+            }, error = function(cond){
+              FALSE
+            })
             
-          )
+            caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
+
+            new.cols <- tryCatch(
+              {
+                split.names <- colnames(caf.mat) %>% lapply(function(x) x %>% strsplit(split = '\\|') %>% lapply(trimws) %>% unlist)
+                named.names <- lapply(split.names, function(x){
+                  
+                  msgs <- NULL
+                  
+                  if(length(x) != 5){
+                    msgs <- c(msgs,'not enough elements extracted from rownames of xmat. Expected format: "file.number | study.id | sample.name | data.format | pulprog". See spectral matrix conversion.')
+                  }
+                  
+                  df <- data.frame(processed.file.name = x[1],
+                             study.name = x[2],
+                             sample.name = x[3],
+                             data.format = x[4],
+                             pulprog = x[5])
+                  
+                  if(df$study.name != pars$study$id){
+                    msgs <- c(msgs,'study name extracted from xmat rownames does not match pars$study$id')
+                  }
+                  
+                  if(length(msgs) > 0){
+                    error(msgs)
+                  } else {
+                    return(df)
+                  }
+                  
+                }) %>% do.call(rbind,.)
+              },
+              error = function(cond){
+                message('Sample names were not parsed successfully. Probable reason(s):')
+                message(cond)
+                
+                df <- as.data.frame(names(caf.df))
+                names(df) <- 'sample.name'
+              }
+            )
+            
+            colnames(caf.mat) <- new.cols$sample.name
+            caf.df <- caf.mat %>% as.data.frame(row.names = 1:nrow(caf.mat))
+
+            caf.df <- cbind(data.frame(metabolite_identification = rownames(caf.mat)), caf.df)
+            
           
+          # Add chebi_ids and alt_ids (if available) ####
+          
+            
+            chebi.ids <- tryCatch(
+              {
+                lapply(lib.data.processed[caf.cmpds], function(x) {
+                  if (!is.null(x$chebi.id)){
+                    x$chebi.id
+                  } else {
+                    NA
+                  }
+                  
+                }) %>% unlist
+
+              }, error = function(cond){
+                NA
+              }
+            )
+            
+            caf.df <- cbind(data.frame(database_identifier = chebi.ids), caf.df)
+          
+          # Write the file
+            
+            runid <- tmpdir %>% strsplit('/') %>% .[[1]] %>% rev %>% .[1]
+            write.table(caf.df, 
+                        file = paste0(tmpdir, '/',runid,'.caf.tsv'), 
+                        row.names = FALSE, col.names = TRUE, sep = '\t')
+            
           
 ######################################################################################################
   # ####       
