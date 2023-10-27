@@ -197,98 +197,58 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
         
         # Make a caf file ####
         
-          # Construct values under sample names ####
-          
-            ss.ref.mat <- scores$ss.ref.mat %>% t
-          
-            caf.cmpds <- tryCatch({
-              Rfast::colMaxs(ss.ref.mat,value = TRUE) > 0.5
-            }, error = function(cond){
-              FALSE
-            })
-            
-              
-            caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
-
-            new.cols <- tryCatch(
-              {
-                split.names <- colnames(caf.mat) %>% lapply(function(x) x %>% strsplit(split = '\\|') %>% lapply(trimws) %>% unlist)
-                
-                named.names <- lapply(split.names, function(x){
+        # Construct values under sample names ####
                   
-                  msgs <- NULL
+                    ss.ref.mat <- scores$ss.ref.mat %>% t
                   
-                  if(length(x) != 5){
-                    stop(c(msgs,'not enough elements extracted from rownames of xmat. Expected format: "file.number | study.id | sample.name | data.format | pulprog". See spectral matrix conversion.'))
-                  }
+                    caf.cmpds <- tryCatch({
+                      Rfast::colMaxs(ss.ref.mat,value = TRUE) > 0.5
+                    }, error = function(cond){
+                      FALSE
+                    })
+                    
+                      
+                    caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
+        
+                    caf.df <- caf.mat %>% as.data.frame(row.names = 1:nrow(caf.mat))
+        
+                    caf.df <- cbind(data.frame(metabolite_identification = rownames(caf.mat)), caf.df)
+                    
                   
-                  df <- data.frame(processed.file.name = x[1],
-                             study.name = x[2],
-                             sample.name = x[3],
-                             data.format = x[4],
-                             pulprog = x[5])
+                  # Add chebi_ids and alt_ids (if available) ####
                   
-                  if(df$study.name != pars$study$id){
-                    msgs <- c(msgs,'study name extracted from xmat rownames does not match pars$study$id')
-                  }
+                    
+                    chebi.ids <- tryCatch(
+                      {
+                        lapply(lib.data.processed[caf.cmpds], function(x) {
+                          if (!is.null(x$chebi.id)){
+                            x$chebi.id
+                          } else {
+                            NA
+                          }
+                          
+                        }) %>% unlist
+        
+                      }, error = function(cond){
+                        return(NA)
+                      }
+                    )
+                    
+                    caf.df <- cbind(data.frame(database_identifier = chebi.ids), caf.df)
+                      
                   
-                  if(length(msgs) > 0){
-                    stop(msgs %>% paste(collapse = '. Also: \n'))
-                  } else {
-                    df
-                  }
-                  
-                }) %>% do.call(rbind,.)
-              },
-              error = function(cond){
-                message('\nSample names were not parsed successfully. Probable reason(s):')
-                message(cond)
-                
-                df <- as.data.frame(colnames(caf.mat))
-                names(df) <- 'sample.name'
-                return(df)
-              }
-            )
+                  # Write the file
+                    
+                    if (!any(caf.cmpds)){
+                        message('\nNo compounds were annotated with evidence score > 0.5 : .caf file will be empty!\n')
+                    }
+        
+                    runid <- tmpdir %>% strsplit('/') %>% .[[1]] %>% rev %>% .[1]
+                    write.table(caf.df, 
+                                file = paste0(tmpdir, '/',runid,'.caf.tsv'), 
+                                row.names = FALSE, col.names = TRUE, sep = '\t')
             
-            colnames(caf.mat) <- new.cols$sample.name
-            caf.df <- caf.mat %>% as.data.frame(row.names = 1:nrow(caf.mat))
-
-            caf.df <- cbind(data.frame(metabolite_identification = rownames(caf.mat)), caf.df)
-            
-          
-          # Add chebi_ids and alt_ids (if available) ####
-          
-            
-            chebi.ids <- tryCatch(
-              {
-                lapply(lib.data.processed[caf.cmpds], function(x) {
-                  if (!is.null(x$chebi.id)){
-                    x$chebi.id
-                  } else {
-                    NA
-                  }
-                  
-                }) %>% unlist
-
-              }, error = function(cond){
-                return(NA)
-              }
-            )
-            
-            caf.df <- cbind(data.frame(database_identifier = chebi.ids), caf.df)
-              
-          
-          # Write the file
-            
-            if (!any(caf.cmpds)){
-                message('\nNo compounds were annotated with evidence score > 0.5 : .caf file will be empty!\n')
-            }
-
-            runid <- tmpdir %>% strsplit('/') %>% .[[1]] %>% rev %>% .[1]
-            write.table(caf.df, 
-                        file = paste0(tmpdir, '/',runid,'.caf.tsv'), 
-                        row.names = FALSE, col.names = TRUE, sep = '\t')
-            
+        
           
 ######################################################################################################
   # ####       
