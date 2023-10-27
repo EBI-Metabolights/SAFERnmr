@@ -1,14 +1,15 @@
+
 <details>
 <summary>dirs</summary>
 <blockquote>
  <details>
  <summary>temp</summary>
  <blockquote>
-  /Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698286479<br>
+  /Users/mjudge/Documents/ftp_ebi/pipeline_runs_new<br>
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Local temp directory, where the timestamped run directory will be created. If the last part of this path doesn't exist, it will be created.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -21,7 +22,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   The local directory from where reference library files are stored.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -30,7 +31,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  Top-level filepaths for the pipeline.<br>
  </blockquote>
  </details>
 </blockquote>
@@ -46,7 +47,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   This is the study ID (e.g. Metabolights study ID).<br>
   </blockquote>
   </details>
  </blockquote>
@@ -59,7 +60,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   What spectrometer frequency were the spectra acquired at in MHz?<br>
   </blockquote>
   </details>
  </blockquote>
@@ -68,7 +69,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  These are details about the study being analyzed - necessary for indexing results, but not checked if running locally.<br>
  </blockquote>
  </details>
 </blockquote>
@@ -84,7 +85,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Filepath to the .RDS spectral matrix file being used. On Galaxy, this can be uploaded or selected. See [specifications](https://github.com/EBI-Metabolights/SAFER-NMR/wiki/Data-processing)<br>
   </blockquote>
   </details>
  </blockquote>
@@ -97,7 +98,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Library reference spectra files. See [specifications](https://github.com/EBI-Metabolights/SAFER-NMR/wiki/Reference-Library-Data)<br>
   </blockquote>
   </details>
  </blockquote>
@@ -106,7 +107,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  File information for pipeline inputs<br>
  </blockquote>
  </details>
 </blockquote>
@@ -122,7 +123,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   1/2 initial tolerance for resonance pairs; this is in PPM<br>
   </blockquote>
   </details>
  </blockquote>
@@ -135,7 +136,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   type of noise cutoff; higher is looser (more noise). <br>
   </blockquote>
   </details>
  </blockquote>
@@ -144,10 +145,18 @@
  <details>
  <summary>only.region.between</summary>
  <blockquote>
+  - -1.0 <br>
+  - 11.0 <br>
+
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   only run corrpocketpairs on this region (e.g. c(-1, 11) - not necessary, but only protofeatures in this region will be STORM'd<br>
+   The bounds can be written on one line as:<br>
+    !expr c(-1, 11)<br>
+   or on two in this form:<br>
+    - -1<br>
+    - 11<br>
   </blockquote>
   </details>
  </blockquote>
@@ -160,7 +169,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Pearson correlation coefficient (r) cutoff for considering correlation peaks in protofeature extraction. <br>
   </blockquote>
   </details>
  </blockquote>
@@ -169,7 +178,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  Protofeature generation parameters. These can be set relatively permissively. See [algorithm details](https://github.com/EBI-Metabolights/SAFER-NMR/wiki/How-FSE-works)<br>
  </blockquote>
  </details>
 </blockquote>
@@ -185,7 +194,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   correlation cutoff (for both subset and profile refinement steps in LOG-STORM)<br>
   </blockquote>
   </details>
  </blockquote>
@@ -198,7 +207,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   STORM adjusted pvalue <br>
   </blockquote>
   </details>
  </blockquote>
@@ -211,7 +220,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   STORM b parameter - increasing opens up the search to a wider area. Units: peak widths<br>
   </blockquote>
   </details>
  </blockquote>
@@ -224,7 +233,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Plots are typically not generated - deprecated parameter!<br>
   </blockquote>
   </details>
  </blockquote>
@@ -233,7 +242,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  Parameters for LOG-STORM. See details about the algorithm [here]()<br>
  </blockquote>
  </details>
 </blockquote>
@@ -250,7 +259,12 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Features outside of these boundaries (ppm units) will be discarded before matching. <br>
+   The bounds can be written on one line as:<br>
+   !expr c(-1, 11)<br>
+   or on two in this form:<br>
+    - -1<br>
+    - 11<br>
   </blockquote>
   </details>
  </blockquote>
@@ -263,7 +277,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Minimum number of spectra in which a feature must be found to be included. Usually set to 4-5, must be > 3 (or else correlations are not really meaningful)<br>
   </blockquote>
   </details>
  </blockquote>
@@ -276,7 +290,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Prominence ratio - in order to detect strong local baseline effects in feature shapes, at least one peak must have prominence > prom.ratio * range(feature.intensities). <br>
   </blockquote>
   </details>
  </blockquote>
@@ -289,7 +303,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Should clustering be attempted to reduce feature shape duplication? Not recommended at present. If used, OPTICS clustering will be employed.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -340,7 +354,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Parameters for OPTICS clustering of feature shapes. Clustering can be used to reduce matching computations. However, matching scales better now, and this is not necessary and can introduce undesirable effects.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -404,7 +418,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Whether or not certain sets of plots should be generated. Can help with troubleshooting.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -413,7 +427,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  Parameters for TINA (TINA Is Not Alignment). This was initially a script for feature de-duplication and combination into clusters, but that is unnecessary as reference matching effectively accomplishes this. Now, since matching scales well, it's more about filtering features and spec-feature extraction (identifying features across spectra).<br>
  </blockquote>
  </details>
 </blockquote>
@@ -429,7 +443,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Not currently in use (leave set to 'representative.feature'. If clustering is done, this determines whether a representative feature shape is used for matching, or whether the weighted.mean of the cluster is used as the shape to match. <br>
   </blockquote>
   </details>
  </blockquote>
@@ -442,7 +456,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   When interpolating reference spectra, it is useful to filter out very low spectral regions in order to compress the reference data matrix. This parameter controls that cutoff, defined in multiples of the whole-spectrum standard deviation. It only needs to be a rough approximation as most useful shape matching information tends to be higher signal. Exercise caution if real PCRSs are used, but imperfect settings shouldn't affect results too much.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -455,7 +469,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   During matching, only the top _max.hits_ convolution peaks between each feature and ref spectrum (fast proxy for cross correlation lags) are assessed for Pearson Correlation Coefficient (r). This should be high enough to allow for several local optima (e.g. 3-5).<br>
   </blockquote>
   </details>
  </blockquote>
@@ -468,7 +482,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   The top _max.hits_ convolution peaks are assessed for Pearson's r. If any matches between the  are lower than this, they are excluded. Note: backfits (matches back to dataset spectra) are limited, so the effective _r.thresh_ may change as a result of jettisoning matches to satisfy that cutoff (_max.backfits_)<br>
   </blockquote>
   </details>
  </blockquote>
@@ -481,7 +495,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Adjusted p-value cutoff for cross-correlations (as defined for STORM).<br>
   </blockquote>
   </details>
  </blockquote>
@@ -497,7 +511,7 @@
    <details>
    <summary>description</summary>
    <blockquote>
-    description<br>
+    What fraction of a matched resonance (peak) in the reference dataset must be accounted for by a fit feature to be considered 'matched'?<br>
    </blockquote>
    </details>
   </blockquote>
@@ -510,7 +524,7 @@
    <details>
    <summary>description</summary>
    <blockquote>
-    description<br>
+    How far away (+/- ppm) can the center of a match be in the dataset from the matched point on the reference spectrum?<br>
    </blockquote>
    </details>
   </blockquote>
@@ -523,7 +537,7 @@
    <details>
    <summary>description</summary>
    <blockquote>
-    description<br>
+    Upper limit to the number of ref-features that can be back-fitted to the dataset spectra from which the corresponding feature was extracted?<br>
    </blockquote>
    </details>
   </blockquote>
@@ -536,7 +550,7 @@
    <details>
    <summary>description</summary>
    <blockquote>
-    description<br>
+    If backfits need to be limited, matches must be discarded. Should they be discarded at 'random', or should higher r-value matches be prioritized ('rval')?<br>
    </blockquote>
    </details>
   </blockquote>
@@ -545,7 +559,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   match filtering parameters<br>
   </blockquote>
   </details>
  </blockquote>
@@ -554,7 +568,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  Parameters for matching to PCRSs (reference spectra). More info on [matching]()<br>
  </blockquote>
  </details>
 </blockquote>
@@ -570,7 +584,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   number of cores to use for computations. It's best to leave a few extra cores on personal machines. Be careful about RAM (expect to use 5-10Gb per core).<br>
   </blockquote>
   </details>
  </blockquote>
@@ -583,7 +597,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   what type of parallel process ("FORK" or "PSOCK"; see parallel::makeCluster documentation). Most parallel operations have now been converted to mclapply, so this primarily affects the matching loops.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -592,7 +606,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  Parallel computing parameters.<br>
  </blockquote>
  </details>
 </blockquote>
@@ -608,7 +622,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Is this going to be run on a Galaxy environment? If so, certain pipeline operations need to change, and this switch will trigger those.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -633,7 +647,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Run in debug mode? This is necessary to throttle features (see below).<br>
   </blockquote>
   </details>
  </blockquote>
@@ -646,7 +660,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   How many features (1:n) should be used for matching? This can keep runs short, but can also result in no matches if very small numbers are used.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -659,7 +673,7 @@
   <details>
   <summary>description</summary>
   <blockquote>
-   description<br>
+   Should intermediate outputs be written to a debug directory? These will be zipped if so.<br>
   </blockquote>
   </details>
  </blockquote>
@@ -668,7 +682,7 @@
  <details>
  <summary>description</summary>
  <blockquote>
-  description<br>
+  things useful for debugging<br>
  </blockquote>
  </details>
 </blockquote>
