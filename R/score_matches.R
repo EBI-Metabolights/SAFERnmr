@@ -207,17 +207,19 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
               FALSE
             })
             
+              
             caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
 
             new.cols <- tryCatch(
               {
                 split.names <- colnames(caf.mat) %>% lapply(function(x) x %>% strsplit(split = '\\|') %>% lapply(trimws) %>% unlist)
+                
                 named.names <- lapply(split.names, function(x){
                   
                   msgs <- NULL
                   
                   if(length(x) != 5){
-                    msgs <- c(msgs,'not enough elements extracted from rownames of xmat. Expected format: "file.number | study.id | sample.name | data.format | pulprog". See spectral matrix conversion.')
+                    stop(c(msgs,'not enough elements extracted from rownames of xmat. Expected format: "file.number | study.id | sample.name | data.format | pulprog". See spectral matrix conversion.'))
                   }
                   
                   df <- data.frame(processed.file.name = x[1],
@@ -231,19 +233,20 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
                   }
                   
                   if(length(msgs) > 0){
-                    error(msgs)
+                    stop(msgs %>% paste(collapse = '. Also: \n'))
                   } else {
-                    return(df)
+                    df
                   }
                   
                 }) %>% do.call(rbind,.)
               },
               error = function(cond){
-                message('Sample names were not parsed successfully. Probable reason(s):')
+                message('\nSample names were not parsed successfully. Probable reason(s):')
                 message(cond)
                 
-                df <- as.data.frame(names(caf.df))
+                df <- as.data.frame(colnames(caf.mat))
                 names(df) <- 'sample.name'
+                return(df)
               }
             )
             
@@ -268,14 +271,19 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
                 }) %>% unlist
 
               }, error = function(cond){
-                NA
+                return(NA)
               }
             )
             
             caf.df <- cbind(data.frame(database_identifier = chebi.ids), caf.df)
+              
           
           # Write the file
             
+            if (!any(caf.cmpds)){
+                message('\nNo compounds were annotated with evidence score > 0.5 : .caf file will be empty!\n')
+            }
+
             runid <- tmpdir %>% strsplit('/') %>% .[[1]] %>% rev %>% .[1]
             write.table(caf.df, 
                         file = paste0(tmpdir, '/',runid,'.caf.tsv'), 
