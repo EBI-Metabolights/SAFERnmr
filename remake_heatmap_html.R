@@ -1,4 +1,4 @@
-devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698286479' # .6
 
 browse_evidence(tmpdir)

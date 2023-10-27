@@ -61,4 +61,4 @@ nestedListToHTML <- function(lst, indent = 0, newline = TRUE) {
 html_output <- nestedListToHTML(pars, newline = TRUE)
 
 # Writing the HTML output to a file
-writeLines(html_output, "/Users/mjudge/Documents/GitHub/SAFER/pars.html")
+writeLines(html_output, "/Users/mjudge/Documents/GitHub/SAFERnmr/pars.html")

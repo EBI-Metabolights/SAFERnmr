@@ -2,7 +2,7 @@
 # 
 # 
 
-devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 # tmpdir <- ''
 
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
@@ -406,7 +406,7 @@ tmpdir <- "/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/tight/MTBLS
 
     
     
-devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
 tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS_rescore.RDS'
 pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
@@ -710,7 +710,7 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
 # Backfit cutoff sensitivity gradient ####
 
     # For a given study
-      devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+      devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
       tmpdir<- '/Users/mjudge/Documents/ftp_ebi/pipeline_tests/MTBLS424_1r_cpmgpr1d_spectralMatrix.RDS_std/1697627674'
       pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
       pars$dirs$temp <- tmpdir
@@ -888,7 +888,7 @@ files <- list(
     
     # functionalized indexing ####
     
-      devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+      devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
       unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
       run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
       
@@ -941,7 +941,7 @@ files <- list(
         
       
 # Backfit cutoff sensitivity (independent runs) ####
-  devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+  devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
   unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
   run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
 

@@ -1,5 +1,5 @@
 # Generate param files
-  devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+  devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
       
       template <- '/Users/mjudge/Downloads/backfit_limit_gradient_3/MTBLS1_bf_1E08_params.yaml'
       pars <- yaml::yaml.load_file(template, eval.expr = TRUE)

@@ -1,4 +1,4 @@
-devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/pars_sens_2/std/MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS'
 
 feature <- readRDS(paste0(tmpdir, '/feature.final.RDS')) %>% expand_features
@@ -71,14 +71,14 @@ which(reg %in% s$peak)
       #   non.ss <- which(!(1:nrow(specRegion) %in% s$subset))
       #   reorder <- c(s$subset[sortorder.ss], non.ss) # size-sorted subset, then rest of matrix (unsorted)
       #   
-      #   # devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+      #   # devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
       #   g <- specRegion[reorder,] %>%
       #     stackplot(ppm[reg], vshift = .3, hshift = 0, highlight.spec = 1:length(s$subset))+
       #     geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "black")
 
       # unSorted stackplot with highlighted subset
       
-        # devtools::document('/Users/mjudge/Documents/GitHub/SAFER')
+        # devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
         g <- specRegion %>%
           stackplot(ppm[reg], vshift = .3, hshift = 0, highlight.spec = s$subset)+
           geom_vline(xintercept = ppm[s$peak], linetype = 2, col = "black")
