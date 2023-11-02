@@ -8,7 +8,7 @@
       end.loc <- '/nfs/production/odonovan/nmr_staging/safer_runs/'
       # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/try_4/'
       # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/backfit_limit_gradient_1/'
-      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/storm_gradient_1/'
+      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/storm_gradient_1E7/'
       
       studies <- list(
                       list(

@@ -6,12 +6,10 @@
 #'
 #' @param pars a list containing necessary parameters for the function
 #' @return RDS file containing match scores between library reference spectra and the best subset spectrum score for each.
-#' @export
 #' 
 #' @importFrom magrittr %>%
-#' @importFrom htmlwidgets saveWidget
 #'
-#'
+#' @export
 score_matches <- function(pars, selection=NULL){
   
   # Banner ####
@@ -124,77 +122,30 @@ score_matches <- function(pars, selection=NULL){
           # Put into matrix
             
               # scores <- ss.ref.pair.scores$score.rmseb
-              vals <- ss.ref.pair.scores$score.fsaxrval
-              # scattermore::scattermoreplot(seq_along(vals), sort(vals))
-              # hist(scores, breaks = 1000)
-              
-              ss.ref.mat <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
-              linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
-                                cols = ss.ref.pair.scores$ref, 
-                                m = nrow(xmat))
-              
-              ss.ref.mat[linds] <- vals
-    
-          # Add colnames (compounds) to scores matrix 
-              
-              colnames(ss.ref.mat) <- cmpd.names
-              rownames(ss.ref.mat) <- rownames(xmat)
- 
-        scores$ss.ref.mat <- ss.ref.mat %>% t
-        saveRDS(scores, paste0(tmpdir, "/scores",alt.name,".RDS"))
-        # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
-        # ss.ref.mat <- scores$ss.ref.mat %>% t
-        unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
+                  vals <- ss.ref.pair.scores$score.fsaxrval
+                  # scattermore::scattermoreplot(seq_along(vals), sort(vals))
+                  # hist(scores, breaks = 1000)
+                  
+                  ss.ref.mat <- matrix(0, nrow = nrow(xmat), ncol = nrow(refmat))
+                  linds <- sub2indR(rows = ss.ref.pair.scores$ss.spec, 
+                                    cols = ss.ref.pair.scores$ref, 
+                                    m = nrow(xmat))
+                  
+                  ss.ref.mat[linds] <- vals
         
-        
-      # Plot the matrix as an HCA'd heatmap
-        ann.cmpds <- tryCatch({
-          Rfast::colsums(ss.ref.mat) > 0
-        }, error = function(cond){
-          TRUE
-        })
-        
-        
-        tryCatch(
-          {
-              ss.ref.mat <- ss.ref.mat[, ann.cmpds, drop = FALSE] %>% t
-              
-            # Always cluster samples
-              sample.order <- hclust(dist(t(ss.ref.mat)))$order
-              ss.ref.mat <- ss.ref.mat[, sample.order,drop = FALSE]
-              
-            # Only cluster refs if there are > 1
-              if (nrow(ss.ref.mat) == 1){
-              
-                ref.order <- 1
-                
-              } else {
-              
-                ref.order <- hclust(dist(ss.ref.mat))$order
-                
-              }
-              
-                
-                drawHeatmap(ss.ref.mat[ref.order,,drop=FALSE], dropRowNames = FALSE) %>% 
-                  htmlwidgets::saveWidget(file = paste0(tmpdir,"/match_scores_sample_x_compound.html"), selfcontained = TRUE)
-              
+              # Add colnames (compounds) to scores matrix 
+                  
+                  colnames(ss.ref.mat) <- cmpd.names
+                  rownames(ss.ref.mat) <- rownames(xmat)
+     
+            scores$ss.ref.mat <- ss.ref.mat %>% t
+            saveRDS(scores, paste0(tmpdir, "/scores",alt.name,".RDS"))
+            # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
+            # ss.ref.mat <- scores$ss.ref.mat %>% t
+            unlink(paste0(tmpdir, "/ss.ref.pairs.RDS"))
+            
+            n.cmpds <- print_html_heatmap_from_scoresfile(tmpdir)
 
-          },
-          error = function(cond){
-            message('\n\tScore matrix plotting error..')
-          }
-        )
-
-        # Clean up any plotly js dependency files (not needed)
-          
-          js.dependency.dir <- paste0(pars$dirs$temp, '/match_scores_sample_x_compound_files')
-          if (dir.exists(js.dependency.dir)){
-            unlink(js.dependency.dir, recursive = TRUE)
-          }
-          # scores <- readRDS(paste0(tmpdir, "/scores.RDS"))
-          # rfs.used <- scores$rfs.used
-          # ss.ref.mat <- scores$ss.ref.mat
-        
         # Make a caf file ####
         
         # Construct values under sample names ####

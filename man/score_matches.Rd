@@ -4,7 +4,7 @@
 \alias{score_matches}
 \title{score_matches function}
 \usage{
-score_matches(pars, selection = NULL, alt.name = "")
+score_matches(pars, selection = NULL)
 }
 \arguments{
 \item{pars}{a list containing necessary parameters for the function}

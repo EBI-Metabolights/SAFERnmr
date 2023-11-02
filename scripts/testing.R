@@ -18,6 +18,7 @@ pars$matching$filtering$max.backfits <- 1E5
 
 # Accessory ####
 
+data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
 index_studies <- function(data.dir, exclude = NULL){
   
   # Extract out run summary data ####
@@ -34,8 +35,8 @@ index_studies <- function(data.dir, exclude = NULL){
         dat
     }) %>% bind_rows
     
-    df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
-    df$matching_elapsed_time[df$matching_elapsed_time > 10]  <- df$matching_elapsed_time[df$matching_elapsed_time > 10] / 60
+    # df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
+    # df$matching_elapsed_time[df$matching_elapsed_time > 10]  <- df$matching_elapsed_time[df$matching_elapsed_time > 10] / 60
     df$local_path <- data.unzipped
     df <- df[,!(names(df) == 'X')]
     df
@@ -44,26 +45,28 @@ unzip_studies <- function(data.dir, exclude = NULL){
   
 
     # Unzip any non-unzipped files ####
-      data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
+      # data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
       data <- dir(data.dir)
         excluded <- which(grepl(exclude %>% paste(collapse = "|"), data))
         zipped <- grepl('.zip', data)
         not.zip <- which(!zipped)
         zipped <- which(zipped)
-        already.unzipped <- zipped[((data[zipped] %>% stringr::str_remove_all('.zip')) %in% data[not.zip])]
+          zip.names <- data[zipped] %>% stringr::str_remove_all('.zip')
+        already.unzipped <- (zip.names %in% data[not.zip]) %>% zipped[.]
         dont.unzip <- c(already.unzipped, excluded, not.zip)
-        
-      if (length(dont.unzip) == length(data)){
-        fail <- lapply(data[-dont.unzip], function(d){
+        do.unzip <- data[-dont.unzip]
+          
+      if (length(do.unzip) > 0){
+        fail <- lapply(do.unzip, function(d){
           # d <- data[-dont.unzip] %>% .[1]
           message('Unzipping ', d, ' ...')
           
           # New ####
             tryCatch({
               run.id <- d %>% stringr::str_remove('.zip$')
-              
-              unzip(paste0(data.dir, d), junkpaths = FALSE, exdir = paste0(data.dir, run.id) )
-  
+              out <- paste0(data.dir, '/',run.id) %>% stringr::str_replace_all('//','/')
+              unzip(paste0(data.dir, '/',d) %>% stringr::str_replace_all('//','/'), junkpaths = FALSE, exdir = out)
+              check_heatmap_html_output(out)
               return(0)
               
             }, error = function(cond){
@@ -76,13 +79,21 @@ unzip_studies <- function(data.dir, exclude = NULL){
         fail <- list('There are no zipped studies which need to be unzipped.')
       }
 
-  return(fail %>% unlist)
+  if (is.numeric(fail)){
+    return(fail %>% unlist)
+  } else {
+    return("nothing to unzip")
+  }
+  
 }
 
     unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
     run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
 
-
+########### Just look at one ######
+  
+  browse_evidence(run.idx$local_path[3])
+    
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
 
@@ -812,7 +823,7 @@ tmpdir <- '/Users/mjudge/Documents/ftp_ebi/study_metabolites/'
       
       # Compare to what it would be if selected based on top scoring backfits (if every fit was actually computed)
     
-        rescore()
+        # rescore()
     
 # 424 Tests for parameter sensitivity ####
         
@@ -896,8 +907,11 @@ files <- list(
         # run.idx <- run.idx[(run.idx$write_time %>% as.POSIXct() %>% as.numeric) <= 1698006395, ]
         # run.idx$run_id %>% cat
         
-      run.idx <- run.idx[run.idx$run_id %in% c('1697740712','1697740820','1697740956','1697741076','1697747670','1697751222','1697751875','1697753401','1697793288','1697793355','1697793655','1697793709','1697823986','1697836051','1697842288','1697865804'),]
-
+      # run.idx <- run.idx[run.idx$run_id %in% c('1697740712','1697740820','1697740956','1697741076','1697747670','1697751222','1697751875','1697753401','1697793288','1697793355','1697793655','1697793709','1697823986','1697836051','1697842288','1697865804'),]
+      run.idx$start <- run.idx$run_id %>% as.POSIXct(origin = "1970-01-01")
+      run.idx <- run.idx[run.idx$start >= "2023-10-26 BST", ]
+      run.idx <- run.idx[run.idx$max_backfits == 5E7,]
+      
     # Correlations between params and outcomes ####
       
       studies <- c('MTBLS1','MTBLS395','MTBLS424','MTBLS430')
