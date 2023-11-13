@@ -181,7 +181,7 @@ fse <- function(pars){
         storm_rnd1 = list()
         
         
-        message("Running storm on ",length(regions_subset), " provided protofeatures between ",bounds[1]," and ",bounds[2]," ppm.")
+        message("Running storm on ",length(regions_subset), " provided protofeatures between ",ppm[bounds[1]]," and ",ppm[bounds[2]]," ppm.")
         
         storm_rnd1 <- 
               mclapply(regions_subset,
