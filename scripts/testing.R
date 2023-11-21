@@ -8,7 +8,6 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
 # scores <- readRDS(paste0(tmpdir,"/scores.RDS"))
 
-
 pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
 pars$dirs$temp <- tmpdir
 pars$debug$enabled <- TRUE
@@ -32,6 +31,7 @@ index_studies <- function(data.dir, exclude = NULL){
     df <- lapply(data.unzipped, function(x){
         dat <- read.csv(paste0(x, '/run.summary.csv'))
         names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
+        dat$local_id <- dat$run_id
         dat
     }) %>% bind_rows
     
@@ -39,6 +39,7 @@ index_studies <- function(data.dir, exclude = NULL){
     # df$matching_elapsed_time[df$matching_elapsed_time > 10]  <- df$matching_elapsed_time[df$matching_elapsed_time > 10] / 60
     df$local_path <- data.unzipped
     df <- df[,!(names(df) == 'X')]
+    df$start <- df$run_id %>% as.POSIXct(origin = "1970-01-01")
     df
 }
 unzip_studies <- function(data.dir, exclude = NULL){
@@ -92,7 +93,7 @@ unzip_studies <- function(data.dir, exclude = NULL){
 
 ########### Just look at one ######
   
-  browse_evidence(run.idx$local_path[3])
+  browse_evidence(run.idx$local_path[11])
     
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
@@ -909,12 +910,12 @@ files <- list(
         
       # run.idx <- run.idx[run.idx$run_id %in% c('1697740712','1697740820','1697740956','1697741076','1697747670','1697751222','1697751875','1697753401','1697793288','1697793355','1697793655','1697793709','1697823986','1697836051','1697842288','1697865804'),]
       run.idx$start <- run.idx$run_id %>% as.POSIXct(origin = "1970-01-01")
-      run.idx <- run.idx[run.idx$start >= "2023-10-26 BST", ]
-      run.idx <- run.idx[run.idx$max_backfits == 5E7,]
+      run.idx <- run.idx[run.idx$start > "2023-10-25 22:14:39 EDT", ]
+      # run.idx <- run.idx[run.idx$max_backfits == 5E7,]
       
     # Correlations between params and outcomes ####
       
-      studies <- c('MTBLS1','MTBLS395','MTBLS424','MTBLS430')
+      studies <- run.idx$study %>% unique
       colors <- RColorBrewer::brewer.pal(length(studies), 'Set2')
         
         fse.pars <- c('protofeatures','did_not_converge_SATs','empty_subset_SATs',
@@ -1141,3 +1142,35 @@ files <- list(
     
     
   
+      
+# Top n for each study ####
+
+      devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+      unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
+      run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
+      
+      # run.idx <- run.idx[run.idx$start > "2023-10-25 22:14:39 EDT", ]
+      
+      # write.csv(run.idx, file = '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/run.idx.csv')
+      
+      study <- which(run.idx$run_id %in% '1698347163') # MTBLS1
+      # study <- which(run.idx$run_id %in% '1698353488') # MTBLS395
+      # study <- which(run.idx$run_id %in% '1698599776') # MTBLS424
+      # study <- which(run.idx$run_id %in% '1698408936') # MTBLS430
+      results.dir <- run.idx$local_path[study] 
+
+      # Pick the top 10 metabolites
+        n <- 5
+        scores <- readRDS(paste0(results.dir, '/scores.RDS'))
+        
+        mean.scores <- lapply(1:nrow(scores$ss.ref.mat), function(x){
+          scores$ss.ref.mat[x, ] %>% sort(decreasing = TRUE) %>% .[1:n] %>% mean
+        }) %>% unlist
+      
+        top.n <- order(mean.scores, decreasing = TRUE) %>% .[1:n]
+        # rownames(scores$ss.ref.mat) %>% .[top10]
+        browse_evidence(results.dir, select.rows = top.n)
+        
+        
+        
+      

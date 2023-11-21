@@ -4,7 +4,7 @@
 \alias{browse_evidence}
 \title{browse_evidence : results viewer shiny app}
 \usage{
-browse_evidence(results.dir = NULL)
+browse_evidence(results.dir = NULL, select.rows = NULL)
 }
 \arguments{
 \item{results.dir}{A list of input parameters.}

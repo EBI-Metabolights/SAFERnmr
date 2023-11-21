@@ -15,11 +15,12 @@
 #' @import plotly
 #' 
 #' @export
-browse_evidence <- function(results.dir = NULL){
+browse_evidence <- function(results.dir = NULL, select.rows = NULL){
 #######################################################################################
   if (is.null(results.dir)) {
     results.dir <- getwd()
   }
+  
   # for the selectizer:
   sort.choices <- c("Scores - cluster", "Search for compound...") # "Compound names - cluster", 'Compound names - alphabetical', 
   
@@ -47,21 +48,6 @@ browse_evidence <- function(results.dir = NULL){
 
 ##########################     Setup/Read Data    ####################################
 
-    # Read in match data
-        backfit.results <- readRDS(paste0(results.dir,"smrf.RDS"))
-          backfits <- backfit.results$backfits
-          match.info <- backfit.results$match.info
-
-    # Read in library data
-        lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
-        
-          # ppm isn't needed anymore; using spectral matrix ppm.
-            lib.data.processed <- lib.data.processed %>% lapply(function(x) {x$data <- NULL; x$ppm <- NULL; return(x)})
-            
-          # add compound names as column in match.info
-            compound.names.refmat <- lapply(lib.data.processed, function(x) x$compound.name) %>% unlist
-            match.info$ref.name <- match.info$ref %>% compound.names.refmat[.]
-          
     # Read in spectral matrix data
         fse.result <- readRDS(paste0(results.dir, "fse.result.RDS"))
           xmat <- fse.result$xmat
@@ -77,21 +63,42 @@ browse_evidence <- function(results.dir = NULL){
         scores.matrix <- scores$ss.ref.mat
         colnames(scores.matrix) <- 1:ncol(scores.matrix)
         
+          if (is.null(select.rows)) {
+            select.rows <- 1:nrow(scores.matrix)
+          }
+        
+    # Read in match data
+        backfit.results <- readRDS(paste0(results.dir,"smrf.RDS"))
+          backfits <- backfit.results$backfits
+          match.info <- backfit.results$match.info
+          
+
+    # Read in library data
+        lib.data.processed <- readRDS(paste0(results.dir, "lib.data.processed.RDS"))
+                
+          # ppm isn't needed anymore; using spectral matrix ppm.
+            
+            lib.data.processed <- lib.data.processed %>% lapply(function(x) {x$data <- NULL; x$ppm <- NULL; return(x)})
+            
+          # add compound names as column in match.info
+            compound.names.refmat <- lapply(lib.data.processed, function(x) x$compound.name) %>% unlist
+            match.info$ref.name <- match.info$ref %>% compound.names.refmat[.]
+          
       rfs.used <- scores$rfs.used
       
 ##########################     Filter    ####################################          
           
       # Remove all compounds without any scores > 0.5
 
-        keeprefs <-  apply(scores.matrix, 1, max) > 0
+        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > 0), select.rows)
         keepsamples <-  apply(scores.matrix, 2, max) > 0
-        refs.used <- which(keeprefs)
+        refs.used <- keeprefs
         compound.names.refmat <- compound.names.refmat[refs.used]
         samples.used <- which(keepsamples)
         
-        scores.matrix <- scores.matrix[keeprefs %>% as.logical,,drop=F]
-        scores.matrix <- scores.matrix[,keepsamples %>% as.logical,drop=F]
-        lib.data.processed <- lib.data.processed[keeprefs %>% as.logical]
+        scores.matrix <- scores.matrix[keeprefs,,drop=F]
+        scores.matrix <- scores.matrix[,keepsamples,drop=F]
+        lib.data.processed <- lib.data.processed[keeprefs]
         
         fits.keep <- match.info$ref %in% refs.used
         match.info <- match.info[fits.keep, ]
@@ -656,7 +663,7 @@ server <- function(input, output, session) {
                                   } else {
                                     
                                     if (values$plotType == "stackplot"){
-                                      # browser()
+                                      
                                       return(
                                 
                                           fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, 
