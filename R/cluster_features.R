@@ -16,7 +16,7 @@
 #' @importFrom magrittr %>%
 #' 
 #' @export
-cluster_features <- function(pars, feature, min.features = 1000, do.clustering = F){
+cluster_features <- function(pars, feature, min.features = 1000, do.clustering = F, max.features = NULL){
 
   dummyClusters <- function(clust.numbers){
         clusters <- list(method = 'none',
@@ -46,7 +46,7 @@ cluster_features <- function(pars, feature, min.features = 1000, do.clustering =
                                                  max.plots = 600,
                                                  plot.loc = this.run,
                                                  plot.name = "feature_clusters.pdf",
-                                                 nfeats = pars$tina$nfeats,
+                                                 nfeats = max.features,
                                                  dist.threads = pars$par$ncores)
     
           # Label the "noise" points as individual clusters

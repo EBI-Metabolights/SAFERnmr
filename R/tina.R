@@ -350,7 +350,7 @@ tina <- function(pars){
       tryCatch(
         {
           # This doesn't return clusters - just writes the data to file
-            cluster_features(pars, feature.final, min.features = 1000, do.clustering)
+            cluster_features(pars, feature.final, min.features = 1000, do.clustering, max.features = nrow(feature.final$stack))
             # cluster.final <- readRDS('/Users/mjudge/Documents/current_run/cluster.final.RDS')
         },
         error = function(cond)

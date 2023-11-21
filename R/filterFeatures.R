@@ -133,7 +133,7 @@ filterFeatures <- function(feature, ppm, ppm.range, min.runlength = 3, min.subse
         message('Excluding ', number.excluded, ' / ', 
                 length(passed), ' passing features (', 
                 (number.excluded/length(passed)*100) %>% round,
-                ' %) to satisfy limit of ', pars$tina$nfeats, ' features ...')
+                ' %) to satisfy limit of ', max.features, ' features ...')
       }
       
       passed %>% test_nullish
