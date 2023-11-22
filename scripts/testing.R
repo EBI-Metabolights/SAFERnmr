@@ -1172,5 +1172,5 @@ files <- list(
         browse_evidence(results.dir, select.rows = top.n)
         
         
-        
+      browse_evidence('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867')
       
