@@ -211,11 +211,12 @@ backfit_rfs3 <- function(match.info,
                               
                               fit <- res$fit
                               
-                              ff <- lil.ref[sf$ref.start:sf$ref.end] * fit$ratio + fit$intercept
-                              fs <- xmat[ sf$ss.spec, res$sf$spec.start:res$sf$spec.end]
                               
-                              plot_fit(list(feat.fit = ff,
-                                            spec.fit = fs), type = 'auc')
+                              # ff <- lil.ref[sf$ref.start:sf$ref.end] * fit$ratio + fit$intercept
+                              # fs <- xmat[ sf$ss.spec, res$sf$spec.start:res$sf$spec.end]
+                              # 
+                              # plot_fit(list(feat.fit = ff,
+                              #               spec.fit = fs), type = 'auc')
                               # plot_fit(list(feat.fit = res$feat,
                               #               spec.fit = res$spec), type = 'auc')
                               
