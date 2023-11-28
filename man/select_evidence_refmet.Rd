@@ -14,10 +14,7 @@ select_evidence_refmet(
   rfs.used,
   lib.data.processed,
   score.name = "fsaxrval",
-  ppm,
-  ppm.tolerance = pars$matching$filtering$ppm.tol,
-  cutoff.residuals.feat = 0.5,
-  cutoff.residuals.spec = 0.5
+  ppm
 )
 }
 \arguments{
@@ -34,10 +31,6 @@ select_evidence_refmet(
 \item{lib.data.processed}{spectral matrix- interpolated reference data}
 
 \item{ppm.tolerance}{max allowed distance for selected ref region and spec region}
-
-\item{cutoff.residuals.feat}{unused}
-
-\item{cutoff.residuals.spec}{unused}
 }
 \value{
 list containing expanded fit data for each backfit passing the filters
