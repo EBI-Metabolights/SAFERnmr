@@ -100,7 +100,7 @@ backfit_rfs3 <- function(match.info,
           # the mi data will be used to index in the ref.mat and feat.stack matrices
           mi$feat <- lapply(mi$feat, function(x) which(feat.numbers == x)) %>% unlist
           mi$ref <- lapply(mi$ref, function(x) which(ref.numbers == x)) %>% unlist
-        
+          
           fcss <- feature.c %>% select_features(feat.numbers)
           
           
@@ -140,14 +140,14 @@ backfit_rfs3 <- function(match.info,
   
       backfits.by.chunk <- mclapply(chunks, function(chunk) {
       ############# For each chunk (in parallel): ###############
-        # chunk <- chunks[[2]]
+        # chunk <- chunks[[1]]
         
         backfits.chunk <- lapply(1:nrow(chunk$match.info),
                            function(m) {
           tryCatch({
             
           #############        For each match:         ###############
-              # m <- 98
+              # m <- 1
               
             # Get data, expand fit ####
               
@@ -185,12 +185,13 @@ backfit_rfs3 <- function(match.info,
                 sfs$ref.end <- mi$ref.end
                       
             # Calculate rf fit for each spec-feature: ####
-                
+              
               fits <- lapply(1:nrow(sfs), function(s){
                 tryCatch(
                   {
                     # Get the ref region and spec data: ####
-                      # s <- 17
+                      # s <- 21
+                      
                       sf <- sfs[s,]
                           
                     # Back-fit the ref region to the filled spec data using the feature ####
@@ -210,6 +211,12 @@ backfit_rfs3 <- function(match.info,
                               
                               fit <- res$fit
                               
+                              
+                              # ff <- lil.ref[sf$ref.start:sf$ref.end] * fit$ratio + fit$intercept
+                              # fs <- xmat[ sf$ss.spec, res$sf$spec.start:res$sf$spec.end]
+                              # 
+                              # plot_fit(list(feat.fit = ff,
+                              #               spec.fit = fs), type = 'auc')
                               # plot_fit(list(feat.fit = res$feat,
                               #               spec.fit = res$spec), type = 'auc')
                               
@@ -218,25 +225,25 @@ backfit_rfs3 <- function(match.info,
                             return(data.frame(ss.spec = sf$ss.spec,
                                               fit.intercept = fit$intercept, 
                                               fit.scale = fit$ratio,
-                                              spec.start = sf$spec.start, # was changed by opt_specFit_slim()
-                                              spec.end = sf$spec.end,
+                                              spec.start = res$sf$spec.start, # was changed by opt_specFit_slim()
+                                              spec.end = res$sf$spec.end, # but ONLY if using the actual result!
                                               fit.fsa = fit$fraction.spec.accounted,
                                               fit.rval = fit$rval
                                               )
                                    ) 
                   }, 
                   warning = function(cond){
-                    stop('backfit_rfs3: warning in 
-                            chunk$match.info row ', m,', ',
-                            'sfs row ', s)
+                    # stop('backfit_rfs3: warning in 
+                    #         chunk$match.info row ', m,', ',
+                    #         'sfs row ', s)
                     emptyRow()
                   }, 
                   error = function(cond){
                     
-                    stop('backfit_rfs3: error in 
-                            chunk$match.info row ', m,', ',
-                            'sfs row ', s
-                            )
+                    # stop('backfit_rfs3: error in 
+                    #         chunk$match.info row ', m,', ',
+                    #         'sfs row ', s
+                    #         )
                     emptyRow()
                   }
                 )
@@ -275,6 +282,7 @@ backfit_rfs3 <- function(match.info,
       # Undo the feature and ref number changes for each chunk - this is stored 
       # in the match table, and the corrections are different for each chunk.
       # (make sure to put the feature and ref indices back the way they were)
+      # chunk <- chunks[[1]]
       chunk$match.info$feat <- chunk$match.info$feat %>% chunk$feat.numbers[.]
       chunk$match.info$ref <- chunk$match.info$ref %>% chunk$ref.numbers[.]
       

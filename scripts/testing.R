@@ -1172,5 +1172,12 @@ files <- list(
         browse_evidence(results.dir, select.rows = top.n)
         
         
-        
+      browse_evidence('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867')
+      
+# ####
+
+      devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+      pipeline(params_loc = '/Users/mjudge/Documents/ftp_ebi/local_outputs/params.yaml')
+      # pars <- yaml::yaml.load_file('/Users/mjudge/Documents/ftp_ebi/local_outputs/1701207939/params.yaml', eval.expr = TRUE)
+      # score_matches(pars)
       

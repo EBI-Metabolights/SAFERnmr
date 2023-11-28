@@ -10,7 +10,7 @@
 #' @importFrom magrittr %>%
 #'
 #' @export
-score_matches <- function(pars, selection=NULL){
+score_matches <- function(pars, selection=NULL, alt.name = ''){
   
   # Banner ####
   message('-------------------------------------------------------')
@@ -212,7 +212,7 @@ score_matches <- function(pars, selection=NULL){
     data.frame(
       score.metric = 'fsaxrval',
       max.score = max(ss.ref.mat),
-      n.compounds = sum(ann.cmpds),
+      n.compounds = sum(caf.cmpds),
       n.best.bfs = rfs.used$fsaxrval %>% unlist %>% length
     )
   )

@@ -17,8 +17,6 @@
 #' @param rfs.used list of rfs used in each backfit (indices in match.info) 
 #' @param lib.data.processed spectral matrix- interpolated reference data
 #' @param ppm.tolerance max allowed distance for selected ref region and spec region
-#' @param cutoff.residuals.feat unused
-#' @param cutoff.residuals.spec unused
 #' 
 #' @return list containing expanded fit data for each backfit passing the filters
 #' @import yaml
@@ -38,11 +36,7 @@ select_evidence_refmet <- function(ref = NULL,
                                        score.name = 'fsaxrval',
                                      # # Spectral data:
                                      #   xmat,
-                                       ppm,        
-                                     # Filtering thresholds:
-                                       ppm.tolerance = pars$matching$filtering$ppm.tol, 
-                                       cutoff.residuals.feat = .5,
-                                       cutoff.residuals.spec = .5){
+                                       ppm){
     
 ############ Accessory functions ################          
 
@@ -94,7 +88,7 @@ select_evidence_refmet <- function(ref = NULL,
           
           match.info <- match.info[correct.refnum, ]
           backfits <- backfits[correct.refnum ]
-        
+   
           # Add ref start and end as fields for each spec feature (depending on corresponding match info row)
           
             rf.specFits <- lapply(1:length(backfits), function(x) 
@@ -126,7 +120,7 @@ select_evidence_refmet <- function(ref = NULL,
             # close.enough <- spec.dist.from.rf <= ppm.tolerance
             close.enough <- TRUE
             if(!any(close.enough)){
-              message('\n\tOut of ', length(close.enough), ' backfits, none were within ', ppm.tolerance, ' ppm')
+              message('\n\tOut of ', length(close.enough), ' backfits, none were within ppm tolerance')
               message('\n\t(the closest is ', min(spec.dist.from.rf, na.rm = T) %>% round(4), ' ppm away)')
               return(no.evidence(ref, ld))
               }
@@ -144,7 +138,7 @@ select_evidence_refmet <- function(ref = NULL,
         
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
-
+            # x <- 1
             # Get the feature model
               sf <- rf.specFits[x, ]
               
@@ -165,7 +159,7 @@ select_evidence_refmet <- function(ref = NULL,
                 rf[feat.gaps] <- NA
 
             # Calculate the fit feature profile 
-              
+                
                 # plot_fit(list(feat.fit = rf * sf$fit.scale + sf$fit.intercept,
                 #               spec.fit = xmat[sf$ss.spec, sf$spec.start:sf$spec.end]),
                 #               type = 'auc')

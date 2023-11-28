@@ -8,7 +8,13 @@ primarily a means of combining highly similar features to reduce the computation
 burden of pairwise comparisons to reference spectra.
 Taking this part out into its own function to allow reversion upon failure.}
 \usage{
-cluster_features(pars, feature, min.features = 1000, do.clustering = F)
+cluster_features(
+  pars,
+  feature,
+  min.features = 1000,
+  do.clustering = F,
+  max.features = NULL
+)
 }
 \arguments{
 \item{pars}{A list of parameters for the TINA pipeline.}

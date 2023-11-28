@@ -260,13 +260,13 @@ denser_mat_to_df <- function(denser.mat){
 
     # Get x data: ####
         
-        x <- xmat[x.rows, cols.x, drop = F]
-    
+        x <- xmat[x.rows, cols.x, drop = FALSE]
+        
     # Apply the vshifts ####
       
-        vshift <- plt.pars$vshift * sd(x, na.rm = T)
+        vshift <- plt.pars$vshift * sd(x, na.rm = TRUE)
         vshifts <- (1:nrow(x)) * vshift # make vector of shifts, simple row # multiple of vshift.
-        xs <- apply(x, 2, function(r) r + vshifts)
+        xs <- apply(x, 2, function(r) r + vshifts) %>% matrix(nrow = nrow(x))
         # simplePlot(xs)
         
         # Apply the appropriate shift to each bf (according to the row it matches in xs)
@@ -307,13 +307,13 @@ denser_mat_to_df <- function(denser.mat){
             #                               res.increase = res.increase
             #                               
             #                             ) %>% denser_mat_to_df
-            
+        
             df.lines <- 
               addpoints_as_needed(
-                                    mat = xs[, ncol(xs):1],   # must be increasing xvals
-                                    xvals = rev(ppm[cols.x]), # must be increasing xvals
+                                    mat = xs,#[, 1:ncol(xs),drop = FALSE],   # must be increasing xvals
+                                    xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
-                                    target.ratio = 1
+                                    target.ratio = res.ratio
                                     
                                   ) %>% denser_mat_to_df
         
@@ -337,10 +337,11 @@ denser_mat_to_df <- function(denser.mat){
             #                              res.increase = res.increase
             #                             
             #                             ) %>% denser_mat_to_df
+            
             df.feats <- 
               addpoints_as_needed(
-                                    mat = f.stack[, ncol(f.stack):1],   # must be increasing xvals
-                                    xvals = rev(ppm[cols.x]), # must be increasing xvals
+                                    mat = f.stack,#[, 1:ncol(f.stack),drop = FALSE],   # must be increasing xvals
+                                    xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = 1
                                     
@@ -367,10 +368,15 @@ denser_mat_to_df <- function(denser.mat){
         
           # yrange <- range(c(df.lines$int, df.feats$int))
           points.has.feature <- df.lines$ppm %in% df.feats$ppm
-          yrange <- range(c(df.lines$int[points.has.feature], df.feats$int))
+          if(sum(points.has.feature) > 1){
+            yrange <- range(c(df.lines$int[points.has.feature], df.feats$int))
+          } else {
+            yrange <- range(c(df.lines$int, df.feats$int))
+          }
           
           xrange <- range(c(df.lines$ppm)) %>% rev
           
+          # always plot lines
           scattermore::scattermoreplot(
                                         x = df.lines$ppm,
                                         y = df.lines$int,
@@ -385,21 +391,26 @@ denser_mat_to_df <- function(denser.mat){
                                         xaxs = "i", 
                                         yaxs = "i"
                                       ) 
-          par(new=TRUE)
-          scattermore::scattermoreplot(
-                                        x = df.feats$ppm,
-                                        y = df.feats$int,
-                                        xlab = 'ppm',
-                                        ylab = '',
-                                        size = plt.pars$pixels,
-                                        cex = .4,
-                                        ylim = yrange,
-                                        xlim = xrange,
-                                        col = alpha('blue', alpha = .5),
-                                        yaxt="n",
-                                        xaxs = "i", 
-                                        yaxs = "i"
-                                      ) 
+          
+          # only plot features if there are actually points
+          if (sum(points.has.feature) > 1){
+            par(new=TRUE)
+            scattermore::scattermoreplot(
+                                          x = df.feats$ppm,
+                                          y = df.feats$int,
+                                          xlab = 'ppm',
+                                          ylab = '',
+                                          size = plt.pars$pixels,
+                                          cex = .4,
+                                          ylim = yrange,
+                                          xlim = xrange,
+                                          col = alpha('blue', alpha = .5),
+                                          yaxt="n",
+                                          xaxs = "i", 
+                                          yaxs = "i"
+                                        ) 
+              
+          }
           
           # scattermore::scattermoreplot(
           #                           x = df$ppm,

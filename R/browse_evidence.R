@@ -601,11 +601,7 @@ server <- function(input, output, session) {
                                                                  score.name = 'fsaxrval',
                                                                # # Spectral data:
                                                                #   xmat, 
-                                                                 ppm,
-                                                               # Filtering thresholds:
-                                                                 ppm.tolerance = ppm.tolerance,
-                                                                 cutoff.residuals.feat = cutoff.residuals.feat,
-                                                                 cutoff.residuals.spec = cutoff.residuals.spec)
+                                                                 ppm)
   
                       rf.fits <- metab.evidence$rf.fits
                       
@@ -667,7 +663,7 @@ server <- function(input, output, session) {
                                       return(
                                 
                                           fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, 
-                                                                 res.ratio = 1)
+                                                                 res.ratio = .1)
                                         
                                       )
 
