@@ -236,9 +236,6 @@ plt.pars <- list(vshift = 1,
                 fit.positions = matrix(bf$spec.start:bf$spec.end, nrow = 1),#feature$position[mi$feat, mi$feat.start:mi$feat.end,drop = FALSE],
                 fit.xrow = ss.spec)
 
-    # ref.inds <- mi$ref.start:mi$ref.end
-    # spec.inds <- bf$spec.start:bf$spec.end
-    
     fastStack.withFeatures(xmat = xmat, ppm = ppm, raster = TRUE, bfs = bfs, plt.pars = plt.pars)
     
   
