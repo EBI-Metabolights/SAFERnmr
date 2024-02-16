@@ -53,7 +53,7 @@ select_evidence_refmet <- function(ref = NULL,
   
 
 ############ Function body ######################     
-
+# browser()
     # Subset the evidence for annotation of the given ref in all samples: ####
 
       # Pull data for our selected ref ####

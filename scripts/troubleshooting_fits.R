@@ -1,14 +1,11 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
 tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867'
+tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1701255992'
 
 browse_evidence(tmp)
 
 ## Setup ####
-
-  if (is.null(results.dir)) {
-    results.dir <- getwd()
-  }
   
   # for the selectizer:
   sort.choices <- c("Scores - cluster", "Search for compound...") # "Compound names - cluster", 'Compound names - alphabetical', 
@@ -134,8 +131,10 @@ browse_evidence(tmp)
       
       
 ## select evidence ####
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 selectedRow <- which(refs$name %in% 'Glutaric-acid')
-selectedCols <- 21#:24
+region <- c(1.676, 2.273)
+selectedCols <- 59#:24
 ss.spec <- selectedCols %>% samples$id[.]
 metab.evidence <- select_evidence_refmet(ref = selectedRow %>% refs[.,],
                                          sample = selectedCols %>% samples[.,],
@@ -153,18 +152,20 @@ metab.evidence <- select_evidence_refmet(ref = selectedRow %>% refs[.,],
 # Is the correct spectrum being plotted?
 
 rf.fits <- metab.evidence$rf.fits   
-
-in.range <- T
+in.range <- TRUE
 
 bfs <- list(fit.feats = rf.fits$fit.feats[in.range, , drop = F],
             fit.positions = rf.fits$fit.positions[in.range, , drop = F],
             fit.xrow = rf.fits$fit.xrow[in.range],
             pass.fit = T)
-x <- 4
+x <- 6
 mi <- metab.evidence$match.info.ss[x, ]
 bfs$fit.feats <- bfs$fit.feats[x, ,drop = FALSE]
 bfs$fit.positions <- bfs$fit.positions[x, ,drop = FALSE]
 bfs$fit.xrow <- bfs$fit.xrow[x]
+
+simplePlot(rbind(bfs$fit.feats, 
+                 xmat[bfs$fit.xrow, bfs$fit.positions]))
 
 plt.pars <- list(vshift = 1, 
                  pixels = c(512, 512), # inc.res
