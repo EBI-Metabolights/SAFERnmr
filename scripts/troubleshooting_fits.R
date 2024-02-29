@@ -1,9 +1,9 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
-tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867'
+# tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867'
 tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1701255992'
 
-browse_evidence(tmp)
+# browse_evidence(tmp)
 
 ## Setup ####
   
@@ -131,7 +131,7 @@ browse_evidence(tmp)
       
       
 ## select evidence ####
-devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+# devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 selectedRow <- which(refs$name %in% 'Glutaric-acid')
 region <- c(1.676, 2.273)
 selectedCols <- 59#:24
@@ -158,14 +158,16 @@ bfs <- list(fit.feats = rf.fits$fit.feats[in.range, , drop = F],
             fit.positions = rf.fits$fit.positions[in.range, , drop = F],
             fit.xrow = rf.fits$fit.xrow[in.range],
             pass.fit = T)
-x <- 6
-mi <- metab.evidence$match.info.ss[x, ]
-bfs$fit.feats <- bfs$fit.feats[x, ,drop = FALSE]
-bfs$fit.positions <- bfs$fit.positions[x, ,drop = FALSE]
-bfs$fit.xrow <- bfs$fit.xrow[x]
 
-simplePlot(rbind(bfs$fit.feats, 
-                 xmat[bfs$fit.xrow, bfs$fit.positions]))
+# look at one fit
+  x <- 6
+  mi <- metab.evidence$match.info.ss[x, ]
+  bfs$fit.feats <- bfs$fit.feats[x, ,drop = FALSE]
+  bfs$fit.positions <- bfs$fit.positions[x, ,drop = FALSE]
+  bfs$fit.xrow <- bfs$fit.xrow[x]
+
+  simplePlot(rbind(bfs$fit.feats, 
+                   xmat[bfs$fit.xrow, bfs$fit.positions]))
 
 plt.pars <- list(vshift = 1, 
                  pixels = c(512, 512), # inc.res
@@ -174,8 +176,8 @@ plt.pars <- list(vshift = 1,
                  # exp.by = 0.05,
                  xlim = c(2.1,2.2))
 
-# feature_est_plot(reg = plt.pars$xlim, 
-#                  metab.evidence, 
+# feature_est_plot(reg = plt.pars$xlim,
+#                  metab.evidence,
 #                  features.c,
 #                  ppm,
 #                  plt.pars)
@@ -186,8 +188,13 @@ plt.pars <- list(vshift = 1,
  
 # Look at feature match to ref ####
  
+  # we need something that has the same feature (657), 
+  # and the same reference (236 (when using unsorted refs)), 
+  # and the same ss.spec (5)
+ 
   f.nums <- c(477, 478, 591)
   f <- 591
+  # f <- 657
   feature <- features.c %>% expand_features(f)
 
   ref <- selectedRow %>% refs[.,]
@@ -205,17 +212,17 @@ plt.pars <- list(vshift = 1,
   # plot_spec(ref, ppm = ppm[mi$ref.start:mi$ref.end])
   # plot_spec(feat, ppm = feature$position %>% ppm[.])
   
-  plot_fit(list(spec.fit = ref,
-                feat.fit = mi$fit.scale*feat[mi$feat.start:mi$feat.end] + mi$fit.intercept),
+  plot_fit(list(feat.fit = ref,
+                spec.fit = mi$fit.scale*feat[mi$feat.start:mi$feat.end] + mi$fit.intercept),
            type = 'auc')
-  # fit_batman(feat[mi$feat.start:mi$feat.end], ref, exclude.lowest = 0.5) %>% plot_fit(type = 'auc')
-  # fit_leastSquares(feat[mi$feat.start:mi$feat.end], ref, plots = F, scale.v2 = T) %>% plot_fit(type = 'auc')
+  # fit_batman(ref, feat[mi$feat.start:mi$feat.end], exclude.lowest = 0.5) %>% plot_fit(type = 'auc')
+  # fit_leastSquares(ref, feat[mi$feat.start:mi$feat.end], plots = F, scale.v2 = T) %>% plot_fit(type = 'auc')
   
 # Troubleshoot the individual backfit ####
   devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
   refmat.c <- readRDS('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867/temp_data_matching/ref.mat.RDS')
 
-  ss.spec <- 21
+  ss.spec <- 5
   mi.rows <- which(match.info$feat == f)
   mi <- match.info[mi.rows[1], ]
   

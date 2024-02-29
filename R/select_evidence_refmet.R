@@ -71,9 +71,7 @@ select_evidence_refmet <- function(ref = NULL,
           
           if(!any(rfs.selection)){return(no.evidence(ref, ld))}
           
-          # At this point, the match info has been filtered to exclude non-represented refs, 
-          # This would have messed up indexing between it and backfits (therefore rfs.used),
-          # but the match.info was ID'd with backfits list when the latter was created (back
+          # match.info was ID'd with backfits list when the latter was created (back
           # in filter_matches). We know which matches (rfs) were used for the scores in these 
           # reference-sample pairs (rfs.selection). Now we need to know which unlisted backfits
           # (spec-features) belong to those. 

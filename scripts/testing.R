@@ -2,8 +2,9 @@
 # 
 # 
 
-devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
-# tmpdir <- ''
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')1697793655
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1697747670'
+browse_evidence(tmpdir)
 
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
 # scores <- readRDS(paste0(tmpdir,"/scores.RDS"))
