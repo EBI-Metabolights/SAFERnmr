@@ -214,7 +214,7 @@ plt.pars <- list(vshift = 1,
   devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
   refmat.c <- readRDS('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867/temp_data_matching/ref.mat.RDS')
 
-  ss.spec <- 21
+  ss.spec <- 5
   mi.rows <- which(match.info$feat == f)
   mi <- match.info[mi.rows[1], ]
   
