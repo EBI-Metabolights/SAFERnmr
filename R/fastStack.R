@@ -310,8 +310,8 @@ denser_mat_to_df <- function(denser.mat){
         
             df.lines <- 
               addpoints_as_needed(
-                                    mat = xs[, 1:ncol(xs),drop = FALSE],   # must be increasing xvals
-                                    xvals = ppm[cols.x] %>% rev, # must be increasing xvals
+                                    mat = xs[, ncol(xs):1,drop = FALSE],   # must be increasing xvals
+                                    xvals = ppm[cols.x],# %>% rev, # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = res.ratio
                                     
@@ -340,8 +340,8 @@ denser_mat_to_df <- function(denser.mat){
             
             df.feats <- 
               addpoints_as_needed(
-                                    mat = f.stack[, 1:ncol(f.stack),drop = FALSE],   # must be increasing xvals
-                                    xvals = ppm[cols.x] %>% rev, # must be increasing xvals
+                                    mat = f.stack[, ncol(f.stack):1,drop = FALSE],   # must be increasing xvals
+                                    xvals = ppm[cols.x],# %>% rev, # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = 1
                                     
