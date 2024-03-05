@@ -152,7 +152,8 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
     gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/gissmo/gissmo_bmrb2chebi.xlsx')
     
     source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/add_chebiIDs.R')
-    lib.data.600 <- add_chebiIDs(lib.data = lib.data.600, key = gissmo.cmpds)
+    # lib.data.600 <- add_chebiIDs(lib.data = lib.data.600, key = gissmo.cmpds)
+    lib.data.700 <- add_chebiIDs(lib.data = lib.data.700, key = gissmo.cmpds)
       
     
     gissmo.chebis.full <- gissmo.cmpds$database_identifier %>% tolower
@@ -161,53 +162,133 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
     # cmpds <- lapply(lib.data.600, function(x) x$compound.name)
     
     # data.chebis <- cmpds[!grepl('nknown',cmpds)] 
-    data.chebis <- lib.data.600 %>% lapply(function(x) x$chebi.id) %>% unlist
-    data.chebis <- cmpd.list$db.id %>% unique
+    # data.chebis <- lib.data.600 %>% lapply(function(x) x$chebi.id) %>% unlist
+    data.chebis <- lib.data.700 %>% lapply(function(x) x$chebi.id) %>% unlist
+    # data.chebis <- cmpd.list$db.id %>% unique
 
     chebis.needed <- (!(data.chebis %in% gissmo.chebis)) %>% data.chebis[.]
     chebis.matched <- (gissmo.chebis %in% data.chebis) %>% gissmo.chebis[.]
     
-    !(data.chebis %in% gissmo.chebis)
+    matched.names <- (data.chebis %in% gissmo.chebis) %>% lib.data.700[.] %>% lapply(function(x) x$compound.name) %>% unlist %>% unique
     
   # Match to author reported metabolites ####
   
-    intersect(cmpd.list$db.id[cmpd.list$study=='MTBLS1'], chebis.matched) %>% length
+    # cmpd.list$db.id[cmpd.list$study=='MTBLS1'] %>% intersect(chebis.matched)
     
     
   # Match to specific result ####
-    # 
-    # md <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/'
-    # tmpdir <- paste0(md,'MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS_std/')
+    
+    md <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/'
+    tmpdir <- paste0(md,'MTBLS1_nmrML_pulProg_missing_spectralMatrix.RDS_std/')
     # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/1697097481.99655/'
-    # scores <- readRDS(paste0(tmpdir, 'scores.RDS'))
-    # 
-    # scores.mat <- scores$ss.ref.mat
-    # data.cmpds <- scores.mat %>% rowSums %>% order(decreasing = TRUE) %>% scores.mat[., ] %>% rownames %>% unique
-    # dma <- which(data.cmpds %in% cmpd.list$name)
-    #   dma.score <- scores.mat %>% rowSums %>% .[dma]
-    #   dma <- data.frame(name)
-    #   plot(x = )
-    # author.ann.found.in.top.10 <- which(data.cmpds %in% cmpd.list[cmpd.list$study == 'MTBLS424',]$db.id)
-    # 
-    # lapply(gissmo.cmpds$metabolite_identification, function(x){
-    #   rownames(scores.mat)
-    # })
-    # 
-    # matches <- 
-    #   lapply(chebis.matched, function(x){
-    #     
-    #     match.rows <- gissmo.chebis.full %in% 
-    #     names <- c(gissmo.cmpds$metabolite_identification[match.rows],
-    #                gissmo.cmpds$`Compound Name`[match.rows]) %>% unique
-    #     
-    #     match.in.dataset <- 
-    #     scores <- 
-    #     data.frame(names = paste(names, collapse = ', '),
-    #                chebi = x)
-    #     
-    #   }) %>% do.call(rbind,.)
-    # 
-    # scores <- readRDS(paste0(tmpdir, '/scores.RDS'))
-    # scores.mat <- scores$ss.ref.mat
-    # rownums <- 1:nrow(scores.mat)
+    scores <- readRDS(paste0(tmpdir, 'scores.RDS'))
 
+    # What are the gissmo names that match to the author-annotated names (via common ChEBI)
+    
+    scores.mat <- scores$ss.ref.mat
+    # * the rownames have added whitespace
+    data.cmpds <- scores.mat %>% rownames %>% tolower %>% stringr::str_remove_all(pattern = '  ') %>% unique
+    cmpd.list$name <- cmpd.list$name %>% tolower
+    
+    dma <- which(data.cmpds %in% cmpd.list$name)
+      dma.score <- scores.mat %>% rowSums %>% .[dma]
+      dma <- data.frame(name)
+      
+    author.ann.found.in.top.10 <- which(data.cmpds %in% cmpd.list[cmpd.list$study == 'MTBLS424',]$db.id)
+
+    lapply(gissmo.cmpds$metabolite_identification, function(x){
+      rownames(scores.mat)
+    })
+
+    matches <-
+      lapply(chebis.matched, function(x){
+
+        match.rows <- gissmo.chebis.full %in%
+        names <- c(gissmo.cmpds$metabolite_identification[match.rows],
+                   gissmo.cmpds$`Compound Name`[match.rows]) %>% unique
+
+        match.in.dataset <-
+        scores <-
+        data.frame(names = paste(names, collapse = ', '),
+                   chebi = x)
+
+      }) %>% do.call(rbind,.)
+
+    scores <- readRDS(paste0(tmpdir, '/scores.RDS'))
+    scores.mat <- scores$ss.ref.mat
+    rownums <- 1:nrow(scores.mat)
+
+## Which compounds had evidence in MTBLS1? ####
+
+    # What are the gissmo names that match to the author-annotated names (via common ChEBI) ####
+        
+        lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_600MHz.RDS')
+        gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo2chebi_2024.xlsx')
+        
+        source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/add_chebiIDs.R')
+        lib.data.700 <- add_chebiIDs(lib.data = lib.data.700, key = gissmo.cmpds)
+        gissmo <- data.frame(name = lib.data.700 %>% lapply(function(x) x$compound.name) %>% unlist,
+                             chebi = lib.data.700 %>% lapply(function(x) x$chebi) %>% unlist)
+
+    # Get ChEBIs for the run ####
+    
+      # md <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/'
+      tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698599655/'
+      scores <- readRDS(paste0(tmpdir, 'scores.RDS'))
+    
+      scores.mat <- scores$ss.ref.mat
+      
+      score.names <- scores.mat %>% rowSums %>% ">"(.,0) %>% 
+        scores.mat[.,] %>% rownames %>% stringr::str_remove_all(pattern = '  ')
+      # (gissmo.names %in% score.names) %>% sum
+      
+      score.chebis <- score.names %>% lapply(function(x) (gissmo$name %in% x) %>% which %>% gissmo$chebi[.] %>% unique) %>% unlist
+      
+      safer.annots <- data.frame(chebi = score.chebis,
+                                 name = score.names)
+      
+    # Get ChEBIs for the author annotations ####
+    
+      tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/study_metabolites/'
+    
+      # maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS1/download/4ZWHUHHlKR?file=m_MTBLS1_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+      study.dir <- paste0(tmpdir,'mtbls1/')
+      # dir.create(study.dir, warn = FALSE)
+      # download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+                             fill = TRUE, header = TRUE, 
+                             sep = '\t', quote = "")
+      
+      compounds <- data.frame(chebi = maf.data$database_identifier,
+                              name = maf.data$metabolite_identification)# %>% distinct
+      compounds <- compounds %>% filter(chebi != '' & chebi != 'unknown')
+      compounds$study <- 'MTBLS1'
+      auth.annots <- compounds
+    
+    # Intersect them
+      
+      auth.n.safer <- auth.annots$chebi %in% safer.annots$chebi
+      safer.n.auth <- safer.annots$chebi %in% auth.annots$chebi
+        auth.n.safer %>% auth.annots$name[.] %>% unique
+    
+      combined <- data.frame(chebi = safer.annots$chebi %>% c(., auth.annots$chebi) %>% unique)
+      
+        combined$author <- lapply(combined$chebi, function(x) 
+          {
+            (auth.annots$chebi == x) %>% auth.annots$name[.] %>% unique %>% paste(collapse=' | ')
+          }
+        ) %>% unlist
+
+        combined$safer <- lapply(combined$chebi, function(x) 
+          {
+            (safer.annots$chebi == x) %>% safer.annots$name[.] %>% unique %>% paste(collapse=' | ')
+          }
+        ) %>% unlist
+
+              
+    # Print the author annotation name and the name of the run compound name
+      
+      matched.names <- combined %>% filter(author != "" & safer != "")
+      
+    
+    
