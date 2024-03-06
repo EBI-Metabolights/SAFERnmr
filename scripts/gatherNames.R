@@ -246,7 +246,10 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
       
       safer.annots <- data.frame(chebi = score.chebis,
                                  name = score.names)
-      
+      # Add the run.id
+        run.sum <- read.csv(paste0(tmpdir, 'run.summary.csv'))
+        safer.annots$run_id <- run.sum$run_id
+        
     # Get ChEBIs for the author annotations ####
     
       tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/study_metabolites/'
@@ -290,5 +293,66 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
       
       matched.names <- combined %>% filter(author != "" & safer != "")
       
-    
-    
+    # Build annotation comparison file 
+      
+      auth.annots <- auth.annots[, c('study', 'name', 'chebi')]
+      safer.annots <- safer.annots[, c('chebi', 'name', 'run_id')]
+      
+      annot.both <- auth.annots
+      names(annot.both)[which(names(annot.both) == 'name')] <- 'auth_name'
+      annot.both$safer_name <- lapply(annot.both$chebi, function(x) 
+          {
+            (safer.annots$chebi == x) %>% safer.annots$name[.] %>% unique %>% paste(collapse=' | ')
+          }
+        ) %>% unlist
+      
+      annot.both$in_lib_chenomx <- ""
+      annot.both$in_lib_safer <- ""
+      annot.both$evidence_chenomx <- ""
+      annot.both$evidence_safer <- ""
+      
+    # Which compounds are in the Chenomx profiler library?
+      
+      # Selected all compounds in Chenomx library manager, exported to compound pack:
+      #   > /Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/chenomx/All Compounds.pack
+      # This is not readable using R, but BBEdit shows the internal file structure. There
+      # is an internal file for each metabolite in the table. These can be manually selected as
+      # filenames in BBEdit's navigation window, then copied using (Right click > copy path > Copy Name), 
+      # then pasted into a txt file:
+      pack.file.list <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/chenomx/exported_compounds.txt'
+      
+        chenomx.cmpds <- readLines(pack.file.list) %>% 
+            stringr::str_remove("^_-") %>% # remove preceding _-
+            stringr::str_remove(".xcpd$") %>% # remove file extension
+            stringr::str_remove('\\s\\(\\d+\\)$') %>% # remove trailing " (2)", etc.
+            stringr::str_replace_all('-_-', '-') %>% # remove aberrant string combinations
+            stringr::str_replace_all("_", ",") %>% # ""
+            stringr::str_replace_all('-,', '-') %>% # ""
+            stringr::str_replace_all(',-', '-') %>%  # ""
+            unique
+        
+        writeLines(chenomx.cmpds, '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/chenomx/chenomx_compounds.txt')
+        
+      # It appears there aren't actually that many compounds in the library
+      # ... there were duplicates for different field strengths, etc.
+      
+        annot.both$chenomx_name <- lapply(1:nrow(annot.both), function(x){
+          
+          match <- intersect(chenomx.cmpds %>% tolower, 
+                             c(annot.both$auth_name[x], 
+                               annot.both$safer_name[x]) %>% tolower %>% strsplit('\\s\\|\\s', perl = TRUE) %>% unlist
+                             ) %>% paste(collapse = ' | ')
+          
+          if (length(match) == 0){match <- ''}
+          
+          return(match)
+          
+        }) %>% unlist
+        
+    # Rearrange df
+
+        annot.both <- annot.both[, c('study','chebi','auth_name','safer_name','evidence_safer','chenomx_name','evidence_chenomx')]
+        annot.both <- annot.both[order(annot.both$auth_name),] #%>% filter(auth_name != '' & safer_name != '' & chenomx_name != '')
+        
+        
+      
