@@ -95,10 +95,6 @@ unzip_studies <- function(data.dir, exclude = NULL){
 
 ########### Just look at one ######
   
-  res.dir <- run.idx$local_path[nrow(run.idx)]
-  scores <- readRDS(paste0(res.dir, '/scores.RDS'))
-  samples <- colnames(scores$ss.ref.mat)
-    select.sample <- grepl(pattern = 'ADG10003u_007', x = samples) %>% which
   browse_evidence(res.dir, select.sample = select.sample)
     
 ########### Random subset of smrf fits ####
@@ -1031,3 +1027,14 @@ files <- list(
     ss.ref.mat[ss.ref.mat < 0.5] <- 0
   heatmap(ss.ref.mat)
     
+# MTBLS1 comparison to Chenomx for specific samples ####
+  
+  devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+
+  res.dir <- run.idx$local_path[nrow(run.idx)]
+  scores <- readRDS(paste0(res.dir, '/scores.RDS'))
+  samples <- colnames(scores$ss.ref.mat)
+    select.sample <- grepl(pattern = 'ADG10003u_007', x = samples) %>% which
+  browse_evidence(res.dir, select.sample = select.sample)
+
+  
