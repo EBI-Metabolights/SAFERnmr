@@ -93,9 +93,9 @@ unzip_studies <- function(data.dir, exclude = NULL){
     unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
     run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
 
-########### Just look at one ######
+########### Just look at latest one ######
   
-  browse_evidence(res.dir, select.sample = select.sample)
+  browse_evidence(run.idx$local_path[nrow(run.idx)], select.sample = select.sample)
     
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
