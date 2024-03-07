@@ -349,10 +349,16 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
           
         }) %>% unlist
         
-    # Rearrange df
+    # Rearrange and write df
 
         annot.both <- annot.both[, c('study','chebi','auth_name','safer_name','evidence_safer','chenomx_name','evidence_chenomx')]
         annot.both <- annot.both[order(annot.both$auth_name),] #%>% filter(auth_name != '' & safer_name != '' & chenomx_name != '')
         
-        
+        write.csv(annot.both, 
+                  '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/annotations_MTBLS1_auth_safer_chenomx.csv', 
+                  row.names = FALSE)
+
+    annot.both$auth_name %>% unique %>% length
+      safer.cmpds <- lib.data.processed %>% lapply(function(x) x$compound.name) %>% unlist
+      safer.cmpds %>% unique %>% length
       
