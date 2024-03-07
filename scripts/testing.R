@@ -2,8 +2,9 @@
 # 
 # 
 
-devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')1697793655
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1697747670'
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698347163'
 browse_evidence(tmpdir)
 
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
@@ -94,7 +95,11 @@ unzip_studies <- function(data.dir, exclude = NULL){
 
 ########### Just look at one ######
   
-  browse_evidence(run.idx$local_path[11])
+  res.dir <- run.idx$local_path[nrow(run.idx)]
+  scores <- readRDS(paste0(res.dir, '/scores.RDS'))
+  samples <- colnames(scores$ss.ref.mat)
+    select.sample <- grepl(pattern = 'ADG10003u_007', x = samples) %>% which
+  browse_evidence(res.dir, select.sample = select.sample)
     
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####
@@ -987,4 +992,42 @@ files <- list(
         ppm <- fse.result$ppm
 
        
-      
+# Local test run 1MAR2024 ####
+# did fits get fixed?
+  devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+        
+  browse_evidence('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698599655') # MTBLS1 - good
+  # browse_evidence('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1697747670') # MTBLS1 .8 - good
+        
+  # pipeline(params_loc = '/Users/mjudge/Documents/20240229_test_local.yaml') # CE data
+  pipeline(params_loc = '/Users/mjudge/Documents/20240229_test_local.yaml')
+      # -> browser call before sfe in tina
+      #   -> select feature of interest:
+      #     while in browser, do the following to see if we have the same number of features:
+      #     tmpdir <- '/Users/mjudge/Documents/ftp_ebi/local_outputs/1709318713'
+      #     results.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1701255992/'
+      #     features.c <- readRDS(paste0(results.dir, "feature.final.RDS"))
+      #     -> Loop through and compare the feature ranges
+                # currentrngs <- lapply(1:nrow(feature$position), function(x){
+                #   # get the range
+                #    feature$position[x, ] %>% range(na.rm = TRUE)
+                # }) %>% do.call(rbind,.)
+                
+                f.int <- features.c %>% expand_features(657)
+                prevrng <- f.int$position %>% range(na.rm = TRUE)
+                which.min(abs(prevrng[1] - currentrngs[, 1]))
+                which.min(abs(prevrng[2] - currentrngs[, 2]))
+      #     <- [not going to work; different data]
+      #     -> 
+            features <- readRDS(paste0(tmpdir, "/feature.final.RDS"))    
+            length(features$sfe)
+                
+        
+# CAF file ####
+
+  scores <- readRDS('/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1699016942/scores.RDS')
+  ss.ref.mat <- scores$ss.ref.mat %>% t
+    ss.ref.mat[ss.ref.mat >= 0.5] <- 1
+    ss.ref.mat[ss.ref.mat < 0.5] <- 0
+  heatmap(ss.ref.mat)
+    
