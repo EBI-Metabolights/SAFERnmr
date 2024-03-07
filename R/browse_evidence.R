@@ -15,7 +15,7 @@
 #' @import plotly
 #' 
 #' @export
-browse_evidence <- function(results.dir = NULL, select.rows = NULL){
+browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.samples = NULL){
 #######################################################################################
   if (is.null(results.dir)) {
     results.dir <- getwd()
@@ -63,8 +63,12 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
         scores.matrix <- scores$ss.ref.mat
         colnames(scores.matrix) <- 1:ncol(scores.matrix)
         
-          if (is.null(select.rows)) {
-            select.rows <- 1:nrow(scores.matrix)
+          if (is.null(select.compounds)) {
+            select.compounds <- 1:nrow(scores.matrix)
+          }
+        
+          if (is.null(select.samples)){
+            select.samples <- 1:ncol(scores.matrix)
           }
         
     # Read in match data
@@ -90,11 +94,19 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
           
       # Remove all compounds without any scores > 0.5
 
-        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > 0), select.rows)
-        keepsamples <-  apply(scores.matrix, 2, max) > 0
+        score.cutoff <- 0
+        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > score.cutoff), select.compounds)
+        
+        keepsamples <-  which(apply(scores.matrix, 2, max) > score.cutoff)
+          message('Out of ', ncol(scores.matrix), ' samples, ', length(keepsamples), ' passed max score cutoff of ', score.cutoff, '. ')
+          keepsamples <- intersect(keepsamples, select.samples)
+          if (length(keepsamples) == 0){
+            error('The selected sample did not have any scores > ', score.cutoff, '. Quitting.')
+          }
+          
         refs.used <- keeprefs
         compound.names.refmat <- compound.names.refmat[refs.used]
-        samples.used <- which(keepsamples)
+        samples.used <- keepsamples
         
         scores.matrix <- scores.matrix[keeprefs,,drop=F]
         scores.matrix <- scores.matrix[,keepsamples,drop=F]
@@ -120,10 +132,21 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
       sample.order <- 1:ncol(scores.matrix)
       
       if (clust.refs){
+        if (nrow(scores.matrix) > 1){
           ref.order <- hclust(dist(scores.matrix))$order
+        } else {
+          ref.order <- 1
+        }
+          
       }
+      
       if (clust.samples){
+        if (ncol(scores.matrix) > 1){
           sample.order <- hclust(dist(t(scores.matrix)))$order
+        } else {
+          sample.order <- 1
+        }
+          
       }
       
       refs <- data.frame(number = seq_along(refs.used), # this is the initial row number (before sort). lib info matches this. 
