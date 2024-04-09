@@ -5,7 +5,7 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
 # tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867'
-tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1701255992'
+tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1712450825'
 
 # browse_evidence(tmp)
 
