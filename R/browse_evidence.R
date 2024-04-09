@@ -699,10 +699,10 @@ server <- function(input, output, session) {
                                     if (values$plotType == "stackplot"){
                                       
                                       return(
-                                
+                                        # png(filename= '/Users/mjudge/Desktop/out.png')
                                           fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, 
                                                                  res.ratio = .1)
-                                        
+                                        # dev.off()
                                       )
 
                                     } else {
