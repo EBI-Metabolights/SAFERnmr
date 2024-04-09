@@ -61,8 +61,9 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
     # Read in scores matrix 
       scores <- readRDS(paste0(results.dir,"scores.RDS"))
         scores.matrix <- scores$ss.ref.mat
-        colnames(scores.matrix) <- 1:ncol(scores.matrix)
-        
+        # colnames(scores.matrix) <- 1:ncol(scores.matrix)
+        colnames(scores.matrix) <- colnames(scores.matrix) %>% lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] %>% paste(collapse = ' | ')) %>% unlist
+          
           if (is.null(select.compounds)) {
             select.compounds <- 1:nrow(scores.matrix)
           }
@@ -99,7 +100,15 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
         
         keepsamples <-  which(apply(scores.matrix, 2, max) > score.cutoff)
           message('Out of ', ncol(scores.matrix), ' samples, ', length(keepsamples), ' passed max score cutoff of ', score.cutoff, '. ')
-          keepsamples <- intersect(keepsamples, select.samples)
+          
+          # If select.samples is a sample name, then convert to an index
+          if (is.character(select.samples)){
+            select.sample.inds <- grepl(pattern = select.samples, colnames(scores.matrix)) %>% which
+          } else {
+            select.sample.inds <- select.samples
+          }
+          
+          keepsamples <- intersect(keepsamples, select.sample.inds)
           if (length(keepsamples) == 0){
             error('The selected sample did not have any scores > ', score.cutoff, '. Quitting.')
           }
@@ -154,10 +163,15 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
                          name = compound.names.refmat) # name
         refs <- refs[ref.order, ]
         refs$row.mat <- 1:nrow(refs)         # this is the row number in mat
-
+        
+      if (is.null(colnames(scores.matrix))){
+        colnames(scores.matrix) <- samples.used %>% as.numeric
+      }
+      
       samples <- data.frame(number = seq_along(samples.used),              # number is column number upon sort
                             id = samples.used %>% as.numeric,              # id is the sample number upon import
-                            name = 1:ncol(scores.matrix) %>% as.character) # just use column number for now
+                            name = colnames(scores.matrix)) # just use column number for now                            
+                            # name = 1:ncol(scores.matrix) %>% as.character) # just use column number for now
         samples <- samples[sample.order, ]
         samples$col.mat <- 1:nrow(samples)                    
 
@@ -338,7 +352,7 @@ server <- function(input, output, session) {
                 select.box <- event_data("plotly_selected", 
                                          source = "scatter",
                                          priority = "event") # this will reset to null with new ref
-                selectedCols <- select.box$x
+                selectedCols <- select.box$x %>% unique
 
                 # Which samples? - is there a sample selection? ####
     
@@ -610,6 +624,7 @@ server <- function(input, output, session) {
                   message('\tin ', length(values$selectedCols), ' samples...')
                   
               # If all those pieces are in place, go on to selecting evidence: ####
+              
                       # selectedRow <- which(refs$name %in% 'R-Lactate')
                       # selectedCols <- 1:4
                       # if (all(values$selectedCols %in% 1:4) & values$selectedRow == 96){browser()}
@@ -714,7 +729,7 @@ server <- function(input, output, session) {
                   updateSelectizeInput(session,"compound.selection",
                                        "Type/Select metabolite name (first one will be used)",
                                        choices=unique(refs$name), server=T,
-                                       options = list(maxOptions = 5,
+                                       options = list(maxOptions = 15,
                                                       maxItems = 1,
                                                       placeholder = 'Start typing...'))
 
