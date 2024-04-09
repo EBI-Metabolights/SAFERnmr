@@ -682,7 +682,7 @@ server <- function(input, output, session) {
                                   } else {
                                     
                                     if (values$plotType == "stackplot"){
-                                     browser()
+                                     
                                       return(
                                           
                                           # png(filename= '/Users/mjudge/Desktop/out.png')

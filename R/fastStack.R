@@ -1,27 +1,3 @@
-#### fastStack ####################################################################################################
-#' Fast alternative to stackplot(), geom_area-based plots, or the like.
-#' Uses scattermore or ggplot2, but pre-computes points covered by lower spectra
-#' (i.e. lower row #; foreground) and fills with NA to give the appearance of 
-#' being layered. 
-#'
-#' Row 1 is the bottom spectrum in the plot. Note: x is currently  minmax scaled [0,1]. 
-#'
-#' @param x spectral matrix
-#' @param ppm ppm vector
-#' @param raster use scattermore? default FALSE gives geom_line based plot. Both return ggplot obj.
-#' @param vshift how much to shift each consecutive row upwards (% of standard deviation for x)
-#' @param pixels vector of (rows, cols) - used by scattermore (raster = T)
-#' @param pointsize ~ linewidth - used by scattermore (raster = T). 0 is fastest (1 pixel)
-#' @param interpolate - used by scattermore (raster = T). Nicer result if (default) TRUE.
-#' 
-#' @return ggplot object; stackplot of spectra
-#' @importFrom magrittr %>%
-#' @importFrom scales breaks_pretty
-#' @import ggplot2
-#' @importFrom scattermore geom_scattermost
-#' 
-#' @export 
-
 #### fastStack.withFeatures ###############################################################################
 
 # This is a much, much faster version of project_features_stackplot() that offers scattermore-driven
@@ -278,7 +254,7 @@ denser_mat_to_df <- function(denser.mat){
             df.lines <- 
               addpoints_as_needed(
                                     mat = xs[, 1:ncol(xs),drop = FALSE],   # must be increasing xvals
-                                    xvals = ppm[cols.x] %>% rev, # must be increasing xvals
+                                    xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = res.ratio
                                     
@@ -308,7 +284,7 @@ denser_mat_to_df <- function(denser.mat){
             df.feats <- 
               addpoints_as_needed(
                                     mat = f.stack[, 1:ncol(f.stack),drop = FALSE],   # must be increasing xvals
-                                    xvals = ppm[cols.x] %>% rev, # must be increasing xvals
+                                    xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = 1
                                     
@@ -497,6 +473,30 @@ denser_mat_to_df <- function(denser.mat){
         #            linewidth = 0.5,
         #            fill="pink",alpha=0.4)
 
+
+#### fastStack ####################################################################################################
+#' Fast alternative to stackplot(), geom_area-based plots, or the like.
+#' Uses scattermore or ggplot2, but pre-computes points covered by lower spectra
+#' (i.e. lower row #; foreground) and fills with NA to give the appearance of 
+#' being layered. 
+#'
+#' Row 1 is the bottom spectrum in the plot. Note: x is currently  minmax scaled [0,1]. 
+#'
+#' @param x spectral matrix
+#' @param ppm ppm vector
+#' @param raster use scattermore? default FALSE gives geom_line based plot. Both return ggplot obj.
+#' @param vshift how much to shift each consecutive row upwards (% of standard deviation for x)
+#' @param pixels vector of (rows, cols) - used by scattermore (raster = T)
+#' @param pointsize ~ linewidth - used by scattermore (raster = T). 0 is fastest (1 pixel)
+#' @param interpolate - used by scattermore (raster = T). Nicer result if (default) TRUE.
+#' 
+#' @return ggplot object; stackplot of spectra
+#' @importFrom magrittr %>%
+#' @importFrom scales breaks_pretty
+#' @import ggplot2
+#' @importFrom scattermore geom_scattermost
+#' 
+#' @export 
 
 
 fastStack <- function(x, ppm, 
