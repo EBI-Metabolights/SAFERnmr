@@ -150,26 +150,22 @@ score_matches <- function(pars, selection=NULL, alt.name = ''){
         
         # Construct values under sample names ####
                   
-                    ss.ref.mat <- scores$ss.ref.mat %>% t
+                    ss.ref.mat <- scores$ss.ref.mat
                   
                     caf.cmpds <- tryCatch({
-                      Rfast::colMaxs(ss.ref.mat,value = TRUE) > 0.5
+                      Rfast::rowMaxs(ss.ref.mat,value = TRUE) > 0.5
                     }, error = function(cond){
                       FALSE
                     })
-                    
-                    
-                      
-                    caf.mat <- ss.ref.mat[, caf.cmpds, drop = FALSE] %>% t
-        
+                  
+                    caf.mat <- ss.ref.mat[caf.cmpds, , drop = FALSE]
+                    caf.mat[caf.mat < 0.5] <- 0
+                    caf.mat[caf.mat > 0] <- 1
                     caf.df <- caf.mat %>% as.data.frame(row.names = 1:nrow(caf.mat))
-        
                     caf.df <- cbind(data.frame(metabolite_identification = rownames(caf.mat)), caf.df)
                     
-                  
                   # Add chebi_ids and alt_ids (if available) ####
                   
-                    
                     chebi.ids <- tryCatch(
                       {
                         lapply(lib.data.processed[caf.cmpds], function(x) {

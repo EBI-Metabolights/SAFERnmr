@@ -15,7 +15,7 @@
 #' @import plotly
 #' 
 #' @export
-browse_evidence <- function(results.dir = NULL, select.rows = NULL){
+browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.samples = NULL){
 #######################################################################################
   if (is.null(results.dir)) {
     results.dir <- getwd()
@@ -61,10 +61,15 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
     # Read in scores matrix 
       scores <- readRDS(paste0(results.dir,"scores.RDS"))
         scores.matrix <- scores$ss.ref.mat
-        colnames(scores.matrix) <- 1:ncol(scores.matrix)
+        # colnames(scores.matrix) <- 1:ncol(scores.matrix)
+        colnames(scores.matrix) <- colnames(scores.matrix) %>% lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] %>% paste(collapse = ' | ')) %>% unlist
+          
+          if (is.null(select.compounds)) {
+            select.compounds <- 1:nrow(scores.matrix)
+          }
         
-          if (is.null(select.rows)) {
-            select.rows <- 1:nrow(scores.matrix)
+          if (is.null(select.samples)){
+            select.samples <- 1:ncol(scores.matrix)
           }
         
     # Read in match data
@@ -90,11 +95,27 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
           
       # Remove all compounds without any scores > 0.5
 
-        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > 0), select.rows)
-        keepsamples <-  apply(scores.matrix, 2, max) > 0
+        score.cutoff <- 0
+        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > score.cutoff), select.compounds)
+        
+        keepsamples <-  which(apply(scores.matrix, 2, max) > score.cutoff)
+          message('Out of ', ncol(scores.matrix), ' samples, ', length(keepsamples), ' passed max score cutoff of ', score.cutoff, '. ')
+          
+          # If select.samples is a sample name, then convert to an index
+          if (is.character(select.samples)){
+            select.sample.inds <- grepl(pattern = select.samples, colnames(scores.matrix)) %>% which
+          } else {
+            select.sample.inds <- select.samples
+          }
+          
+          keepsamples <- intersect(keepsamples, select.sample.inds)
+          if (length(keepsamples) == 0){
+            error('The selected sample did not have any scores > ', score.cutoff, '. Quitting.')
+          }
+          
         refs.used <- keeprefs
         compound.names.refmat <- compound.names.refmat[refs.used]
-        samples.used <- which(keepsamples)
+        samples.used <- keepsamples
         
         scores.matrix <- scores.matrix[keeprefs,,drop=F]
         scores.matrix <- scores.matrix[,keepsamples,drop=F]
@@ -120,10 +141,21 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
       sample.order <- 1:ncol(scores.matrix)
       
       if (clust.refs){
+        if (nrow(scores.matrix) > 1){
           ref.order <- hclust(dist(scores.matrix))$order
+        } else {
+          ref.order <- 1
+        }
+          
       }
+      
       if (clust.samples){
+        if (ncol(scores.matrix) > 1){
           sample.order <- hclust(dist(t(scores.matrix)))$order
+        } else {
+          sample.order <- 1
+        }
+          
       }
       
       refs <- data.frame(number = seq_along(refs.used), # this is the initial row number (before sort). lib info matches this. 
@@ -131,10 +163,15 @@ browse_evidence <- function(results.dir = NULL, select.rows = NULL){
                          name = compound.names.refmat) # name
         refs <- refs[ref.order, ]
         refs$row.mat <- 1:nrow(refs)         # this is the row number in mat
-
+        
+      if (is.null(colnames(scores.matrix))){
+        colnames(scores.matrix) <- samples.used %>% as.numeric
+      }
+      
       samples <- data.frame(number = seq_along(samples.used),              # number is column number upon sort
                             id = samples.used %>% as.numeric,              # id is the sample number upon import
-                            name = 1:ncol(scores.matrix) %>% as.character) # just use column number for now
+                            name = colnames(scores.matrix)) # just use column number for now                            
+                            # name = 1:ncol(scores.matrix) %>% as.character) # just use column number for now
         samples <- samples[sample.order, ]
         samples$col.mat <- 1:nrow(samples)                    
 
@@ -315,7 +352,7 @@ server <- function(input, output, session) {
                 select.box <- event_data("plotly_selected", 
                                          source = "scatter",
                                          priority = "event") # this will reset to null with new ref
-                selectedCols <- select.box$x
+                selectedCols <- select.box$x %>% unique
 
                 # Which samples? - is there a sample selection? ####
     
@@ -587,6 +624,7 @@ server <- function(input, output, session) {
                   message('\tin ', length(values$selectedCols), ' samples...')
                   
               # If all those pieces are in place, go on to selecting evidence: ####
+              
                       # selectedRow <- which(refs$name %in% 'R-Lactate')
                       # selectedCols <- 1:4
                       # if (all(values$selectedCols %in% 1:4) & values$selectedRow == 96){browser()}
@@ -691,7 +729,7 @@ server <- function(input, output, session) {
                   updateSelectizeInput(session,"compound.selection",
                                        "Type/Select metabolite name (first one will be used)",
                                        choices=unique(refs$name), server=T,
-                                       options = list(maxOptions = 5,
+                                       options = list(maxOptions = 15,
                                                       maxItems = 1,
                                                       placeholder = 'Start typing...'))
 

@@ -85,6 +85,26 @@ valid_pars <- function(pars, quiet = FALSE){
         }
         pars$dirs <- dirs
       
+      # Validate study info ####
+      
+        study <- pars$study
+        if(!is.null(study)){
+          if(!is.null(study$id)){
+            if(!is.character(study$id)){
+              warnings <- c(warnings, paste("'study$id' must be a character string, but it is of type", class(study$id),"."))
+            }
+          }
+          
+          if(!is.null(study$spectrometer.frequency)){
+            if(!is.numeric(study$spectrometer.frequency)){
+              warnings <- c(warnings, paste("'study$spectrometer.frequency' must be a numeric, but it is of type", class(study$spectrometer.frequency)))
+            }
+          } else {
+            warnings <- c(warnings, paste("'study$spectrometer.frequency' appears to be missing from the params file. Remember, it must be a numeric value (spectrometer frequency in MHz)."))
+          }
+        }
+        pars$study <- study
+      
       # Validate files ####
       
         files <- pars$files
