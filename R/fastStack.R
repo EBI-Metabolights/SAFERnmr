@@ -21,40 +21,6 @@
 #' @importFrom scattermore geom_scattermost
 #' 
 #' @export 
-fastStack <- function(x, ppm, 
-                      raster = F, vshift = 1, pixels = c(512, 512), pointsize = 0, interpolate = T){
-    vshift <- vshift * sd(x, na.rm = T)
-    # x <- scale_between(x) # catch coefficients? to apply to features?
-    xs <- apply(x, 2, function(r) r + (1:nrow(x)) * vshift)
-   
-    xs <- rm_covered_points(xs)
-    
-    # Raster or no?
-      
-      if (raster){
-        # xs <- scale_between(xs, 1, nrow(mat))
-  
-        df.lines <- data.frame(ppm = ppm, int = floor(xs) %>% t %>% c) %>% na.omit
-  
-        g <- ggplot() +
-          ggplot2::scale_x_reverse(breaks = scales::breaks_pretty()) + 
-          scattermore::geom_scattermost(xy = df.lines,
-                                        interpolate = interpolate,
-                                        pointsize = pointsize,
-                                        pixels = pixels) +
-          theme_clean_nmr() + 
-          ggplot2::scale_x_reverse(breaks = scales::breaks_pretty())
-        
-      } else {
-        
-        g <- simplePlot(xs, xvect = ppm)
-        
-      }
-    
-    g
-  
-}
-
 
 #### fastStack.withFeatures ###############################################################################
 
@@ -209,7 +175,7 @@ denser_mat_to_df <- function(denser.mat){
   
 # Put features in an x-sized matrix:
   # For each spectrum, put the features in:
-    
+  # browser()  
     # Expand the ranges (better vis, but keep in bounds of ppm axis): ####
       # exp.by <- ceiling(plt.pars$exp.by / ((ppm %>% range %>% diff) / length(ppm)))
       # exp.ranges <- apply(bfs$fit.positions, 1, function(x){x %>% range(na.rm = TRUE) %>% sort})
@@ -222,6 +188,7 @@ denser_mat_to_df <- function(denser.mat){
     # Get the xmat cols of interest ####
       # cols.x <- exp.ranges %>% range(na.rm = T) %>% fillbetween
       # message(paste(plt.pars$xlim, sep = " "))
+      plt.pars$xlim <- sort(plt.pars$xlim) # ensure these are in a predictable order
       cols.x <- plt.pars$xlim %>% vectInds(ppm) %>% fillbetween
       ss.rows <- bfs$fit.xrow
       x.rows <- unique(ss.rows)
@@ -310,7 +277,7 @@ denser_mat_to_df <- function(denser.mat){
         
             df.lines <- 
               addpoints_as_needed(
-                                    mat = xs[, ncol(xs):1,drop = FALSE],   # must be increasing xvals
+                                    mat = xs[, 1:ncol(xs),drop = FALSE],   # must be increasing xvals
                                     xvals = ppm[cols.x] %>% rev, # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = res.ratio
@@ -340,7 +307,7 @@ denser_mat_to_df <- function(denser.mat){
             
             df.feats <- 
               addpoints_as_needed(
-                                    mat = f.stack[, ncol(f.stack):1,drop = FALSE],   # must be increasing xvals
+                                    mat = f.stack[, 1:ncol(f.stack),drop = FALSE],   # must be increasing xvals
                                     xvals = ppm[cols.x] %>% rev, # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = 1
@@ -529,4 +496,40 @@ denser_mat_to_df <- function(denser.mat){
         #            colour = "gray",
         #            linewidth = 0.5,
         #            fill="pink",alpha=0.4)
+
+
+
+fastStack <- function(x, ppm, 
+                      raster = F, vshift = 1, pixels = c(512, 512), pointsize = 0, interpolate = T){
+    vshift <- vshift * sd(x, na.rm = T)
+    # x <- scale_between(x) # catch coefficients? to apply to features?
+    xs <- apply(x, 2, function(r) r + (1:nrow(x)) * vshift)
+   
+    xs <- rm_covered_points(xs)
+    
+    # Raster or no?
+      
+      if (raster){
+        # xs <- scale_between(xs, 1, nrow(mat))
+  
+        df.lines <- data.frame(ppm = ppm, int = floor(xs) %>% t %>% c) %>% na.omit
+  
+        g <- ggplot() +
+          ggplot2::scale_x_reverse(breaks = scales::breaks_pretty()) + 
+          scattermore::geom_scattermost(xy = df.lines,
+                                        interpolate = interpolate,
+                                        pointsize = pointsize,
+                                        pixels = pixels) +
+          theme_clean_nmr() + 
+          ggplot2::scale_x_reverse(breaks = scales::breaks_pretty())
+        
+      } else {
+        
+        g <- simplePlot(xs, xvect = ppm)
+        
+      }
+    
+    g
+  
+}
 

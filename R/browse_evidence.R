@@ -662,7 +662,7 @@ server <- function(input, output, session) {
                                   plt.pars <- list(vshift = values$slider.vshift, 
                                                    pixels = c(512, 512), # inc.res
                                                    pointsize = 0, 
-                                                   interpolate = T, 
+                                                   interpolate = TRUE, 
                                                    # exp.by = 0.05,
                                                    xlim = values$refplot.xlim # this should never arrive here as NULL - screen out beforehand
                                                    )
@@ -682,12 +682,14 @@ server <- function(input, output, session) {
                                   } else {
                                     
                                     if (values$plotType == "stackplot"){
-                                      
+                                     browser()
                                       return(
-                                
+                                          
+                                          # png(filename= '/Users/mjudge/Desktop/out.png')
+                                          
                                           fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, 
                                                                  res.ratio = .1)
-                                        
+                                          # dev.off()
                                       )
 
                                     } else {

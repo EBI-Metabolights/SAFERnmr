@@ -1035,6 +1035,6 @@ files <- list(
   scores <- readRDS(paste0(res.dir, '/scores.RDS'))
   samples <- colnames(scores$ss.ref.mat)
     select.sample <- grepl(pattern = 'ADG10003u_007', x = samples) %>% which
+  browse_evidence(res.dir)
   browse_evidence(res.dir, select.sample = select.sample)
 
-  

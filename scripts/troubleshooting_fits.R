@@ -1,7 +1,6 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
-# tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1700653867'
-tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1701255992'
+tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1712450825'
 
 # browse_evidence(tmp)
 
@@ -134,9 +133,9 @@ tmp <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1701255992'
 # Plot the saved result using browse_evidence() code ####
 # select evidence 
 # devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
-selectedRow <- which(refs$name %in% 'Glutaric-acid')
-region <- c(1.676, 2.273)
-selectedCols <- 59#:24
+selectedRow <- which(refs$name %in% 'L-glutamine')
+region <- c(2.0, 2.9)
+selectedCols <- 35#:24
 ss.spec <- selectedCols %>% samples$id[.]
 metab.evidence <- select_evidence_refmet(ref = selectedRow %>% refs[.,],
                                          sample = selectedCols %>% samples[.,],
@@ -162,7 +161,7 @@ bfs <- list(fit.feats = rf.fits$fit.feats[in.range, , drop = F],
             pass.fit = T)
 
 # look at one fit
-  x <- 6
+  x <- 3
   mi <- metab.evidence$match.info.ss[x, ]
   bfs$fit.feats <- bfs$fit.feats[x, ,drop = FALSE]
   bfs$fit.positions <- bfs$fit.positions[x, ,drop = FALSE]
@@ -176,7 +175,7 @@ plt.pars <- list(vshift = 1,
                  pointsize = 0, 
                  interpolate = T, 
                  # exp.by = 0.05,
-                 xlim = c(2.1,2.2))
+                 xlim = c(2.0,2.6))
 
 # feature_est_plot(reg = plt.pars$xlim,
 #                  metab.evidence,
@@ -312,4 +311,3 @@ plt.pars <- list(vshift = 1,
 # devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
  fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, res.ratio = .1)
  
-    
