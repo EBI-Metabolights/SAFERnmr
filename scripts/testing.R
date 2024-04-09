@@ -5,7 +5,8 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1697747670'
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698347163'
-browse_evidence(tmpdir)
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1711986952/1711986952'
+# browse_evidence(tmpdir)
 
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
 # scores <- readRDS(paste0(tmpdir,"/scores.RDS"))
@@ -46,7 +47,8 @@ index_studies <- function(data.dir, exclude = NULL){
 }
 unzip_studies <- function(data.dir, exclude = NULL){
   
-
+    # If a study fails because of odd zipping, re-zip it in shell with the following:
+      # zip -r -j file/path/output.zip file/path/input
     # Unzip any non-unzipped files ####
       # data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
       data <- dir(data.dir)
@@ -1030,11 +1032,22 @@ files <- list(
 # MTBLS1 comparison to Chenomx for specific samples ####
   
   devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
-
-  res.dir <- run.idx$local_path[nrow(run.idx)]
+  # *** Run the "Accessory" Section
+  res.dir <- run.idx$local_path[nrow(run.idx)] # 1709892382
+  res.dir <- run.idx$local_path[run.idx$local_id == 1709742511] # 1709892382
   scores <- readRDS(paste0(res.dir, '/scores.RDS'))
-  samples <- colnames(scores$ss.ref.mat)
-    select.sample <- grepl(pattern = 'ADG10003u_007', x = samples) %>% which
-  browse_evidence(res.dir, select.sample = select.sample)
+  fse.result <- readRDS(paste0(res.dir, '/fse.result.RDS'))
+    xmat <- fse.result$xmat
+  samples <- colnames(scores$ss.ref.mat) # the 
+    select.sample <- grepl(pattern = 'ADG10003u_007', x = samples) %>% which #%>% samples[.] #%>% strsplit(' | ') %>% .[[1]] %>% .[1] %>% as.numeric()
+  # select.sample <- select.sample - length(samples)
+  select.sample <- '223 | ADG10003u_007'
+  xmat[select.sample,] %>% plot_spec(ppm = fse.result$ppm)
+  browse_evidence(res.dir, select.samples = select.sample)
+  # browse_evidence(res.dir)
 
+  
+  
+  
+  
   

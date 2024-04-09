@@ -234,11 +234,12 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
     
       # md <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs/par_sens_oct_3/std/'
       tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698599655/'
+      tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709892382/'
       scores <- readRDS(paste0(tmpdir, 'scores.RDS'))
     
       scores.mat <- scores$ss.ref.mat
       
-      score.names <- scores.mat %>% rowSums %>% ">"(.,0) %>% 
+      score.names <- scores.mat %>% rowSums %>% ">"(.,0.1) %>% 
         scores.mat[.,] %>% rownames %>% stringr::str_remove_all(pattern = '  ')
       # (gissmo.names %in% score.names) %>% sum
       
@@ -359,6 +360,184 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
                   row.names = FALSE)
 
     annot.both$auth_name %>% unique %>% length
-      safer.cmpds <- lib.data.processed %>% lapply(function(x) x$compound.name) %>% unlist
-      safer.cmpds %>% unique %>% length
+    annot.both$safer_name %>% unique %>% writeLines('/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/safer.matched.names.txt' )
+      # safer.cmpds <- lib.data.processed %>% lapply(function(x) x$compound.name) %>% unlist
+      # safer.cmpds %>% unique %>% length
+    
+    # Score the samples in Chenomx and in SAFER
+    
+    # Read in the scores
+      # The scores and evidence are documented in the following slide decks (instructions on first slides):
+      #   safer_manuscript/data/mtbls1_safer_all_8MAR2024.pptx
+      #   safer_manuscript/data/chenomx/mtbls1_chenomx_fitConcentrations_legacy.pptx
+      #   safer_manuscript/data/chenomx/mtbls1_chenomx_fitConcentrations_noGUI_.pptx
       
+      annot <- read.table('/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_manuscript/data/annotations_MTBLS1_auth_safer_chenomx.scored.csv', header = TRUE, sep = ',', fill = TRUE)
+      
+      annot[is.na(annot)] <- ''
+      annot <- annot %>% distinct
+
+      
+      annot$evidence_chenomx_noGUI.[is.na(annot$evidence_chenomx_noGUI.)] <- 0
+      annot$evidence_chenomx_noGUI.[is.na(annot$evidence_chenomx_noGUI.)] <- 0
+      annot$singlet_dependent_chenomx <- annot$singlet_dependent_chenomx == "TRUE"
+      annot$singlet_dependent_safer <- annot$singlet_dependent_safer == "TRUE"
+      has.chenomx.name <- annot$chenomx_name != ''
+      only.singlets.chenomx <- annot$singlet_dependent_chenomx
+      only.singlets.safer <- annot$singlet_dependent_safer
+      has.evidence.noGUI <- annot$evidence_chenomx_noGUI. > 0
+      has.evidence.legacy <- annot$evidence_chenomx_legacy. > 0
+      common.compounds.all <- annot$auth_name != '' & annot$chenomx_name != '' & annot$safer_name != ''
+      matched.chenomx.names <- annot['chenomx_name'] %>% filter(chenomx_name != '') %>% distinct
+      matched.safer.names <- annot['safer_name'] %>% filter(safer_name != '') %>% distinct
+      
+      annot$evidence_safer[is.na(annot$evidence_safer)] <- 0
+      has.safer.name <- annot$safer_name != ''
+      has.evidence.safer <- annot$evidence_safer > 0
+      
+    # How many chenomx compounds had evidence (out of intersection(author, chenomx))? ####
+      # noGUI option ####
+      
+        # Including singlet-dependent annotations
+        
+          message('Chenomx found reasonable evidence for ', annot[has.evidence.noGUI,] %>% distinct(chenomx_name) %>% nrow, 
+                  ' out of ', matched.chenomx.names %>% nrow, 
+                  ' name-matched compounds using the noGUI option (including singlet-only).')
+      
+        # Excluding singlet-only annotations
+          
+          # *** each fit type needs a separate singlet dependence column
+          message('Chenomx found reasonable evidence for ', annot[has.evidence.noGUI & 
+                                                                  !only.singlets.chenomx,] %>% distinct(chenomx_name) %>% nrow, 
+                  ' out of ', matched.chenomx.names %>% nrow, 
+                  ' name-matched compounds using the noGUI option (excluding singlets).')
+  
+          
+      # legacy option ####
+        # Including singlet-dependent annotations
+        
+          message('Chenomx found reasonable evidence for ', annot[has.evidence.legacy,] %>% distinct(chenomx_name) %>% nrow, 
+                  ' out of ', matched.chenomx.names %>% nrow, 
+                  ' name-matched compounds using the legacy option (including singlet-only).')
+        
+        # Excluding singlet-only annotations
+          
+          message('Chenomx found reasonable evidence for ', annot[has.evidence.legacy & 
+                                                                  !only.singlets.chenomx,] %>% distinct %>% nrow, 
+                  ' out of ', annot[!only.singlets.chenomx & has.chenomx.name,] %>% distinct(chenomx_name) %>% nrow, 
+                  ' name-matched compounds using the legacy option (excluding singlets).')
+                
+      # either option ####
+        # Including singlet-dependent annotations
+        
+          message('Chenomx found reasonable evidence for ', annot[has.evidence.noGUI | 
+                                                                  has.evidence.legacy,] %>% distinct(chenomx_name) %>% nrow, 
+                  ' out of ', matched.chenomx.names %>% nrow, 
+                  ' name-matched compounds using either fitting option (including singlet-only).')
+        
+        # Excluding singlet-only annotations
+          
+          message('Chenomx found reasonable evidence for ', annot[(has.evidence.noGUI | 
+                                                                   has.evidence.legacy) & 
+                                                                  !only.singlets.chenomx,] %>% distinct(chenomx_name) %>% nrow, 
+                  ' out of ', annot[!only.singlets.chenomx & 
+                                      has.chenomx.name,] %>% distinct(chenomx_name) %>% nrow,
+                  ' name-matched compounds using either fitting (excluding singlets).')
+
+    # How many chenomx compounds had evidence (out of intersection(author, chenomx, safer))? ####
+      # noGUI option ####
+        
+        # Including singlet-dependent annotations
+        
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  sum(has.evidence.noGUI & common.compounds.all), ' had reasonable evidence in Chenomx (includes singlet-only).')
+        
+        # Excluding singlet-only annotations
+          
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  sum(has.evidence.noGUI & common.compounds.all & !only.singlets.chenomx), ' had reasonable evidence in Chenomx (excluding singlet-only).')
+          
+      # Legacy option ####
+      
+        # Including singlet-dependent annotations
+        
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  sum(has.evidence.legacy & common.compounds.all), ' had reasonable evidence in Chenomx (including singlet-only).')
+        
+        # Excluding singlet-only annotations
+          
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  sum(has.evidence.legacy & common.compounds.all & !only.singlets.chenomx), ' had reasonable evidence in Chenomx (excluding singlet-only, using legacy fits only).')
+        
+        
+        
+      # Either option ####
+        # Including singlet-dependent annotations
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  sum((has.evidence.legacy | has.evidence.legacy) & common.compounds.all), 
+                  ' had reasonable evidence in Chenomx (including singlet-only).')
+        
+        # Excluding singlet-only annotations
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, 
+                  ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  annot[(has.evidence.legacy | has.evidence.noGUI) & 
+                          common.compounds.all & 
+                          !only.singlets.chenomx, ] %>% distinct %>% nrow, 
+                  ' had reasonable evidence in Chenomx (excluding singlet-only).')
+          
+# SAFER annotations ####
+
+    # How many SAFER compounds had evidence (out of intersection(author, chenomx))? ####
+
+        # Singlet matches are not included by default
+          
+          # *** each fit type needs a separate singlet dependence column
+          message('SAFER found reasonable evidence (for at least one peak) for ', sum(has.evidence.safer), 
+                  ' out of ', matched.safer.names %>% nrow, 
+                  ' name-matched compounds in the author annotations list. ')
+
+      # How many SAFER compounds had evidence (out of intersection(author, chenomx, safer))? ####
+
+        # Singlet matches are not included by default
+          
+          message('Out of ', annot[common.compounds.all,] %>% distinct %>% nrow, ' compounds matched across author, Chenomx, and SAFER annotations, ', 
+                  annot[has.evidence.safer & 
+                        common.compounds.all & 
+                        !only.singlets.safer,] %>% distinct(safer_name) %>% nrow, 
+                  ' had reasonable evidence in SAFER.')
+          
+# Remove obviously incorrect matches ####
+
+        # Singlet matches are not included by default, but creatine got in
+          
+          # *** each fit type needs a separate singlet dependence column
+          message('SAFER found reasonable evidence (for at least one peak) for ', sum(has.evidence.safer), 
+                  ' out of ', annot[!only.singlets.safer & 
+                                    has.safer.name,] %>% distinct(safer_name) %>% nrow, 
+                  ' name-matched compounds in the author annotations list. ')
+
+  no.evidence.chenomx <- !(has.evidence.noGUI | has.evidence.legacy)
+  
+  no.evidence.safer <- !has.evidence.safer
+  
+  annot[has.evidence.safer & common.compounds.all,]
+  annot[!no.evidence.chenomx & common.compounds.all,]
+  
+  safer.but.not.chenomx <- annot[(has.evidence.safer & no.evidence.chenomx & common.compounds.all),] %>% distinct(safer_name)
+  chenomx.but.not.safer <- annot[(no.evidence.safer & !no.evidence.chenomx & common.compounds.all),] %>% distinct(chenomx_name)
+  
+    message('SAFER annotated ', nrow(safer.but.not.chenomx), 
+            ' compounds that Chenomx did not, out of the possible ', annot[common.compounds.all,] %>% distinct %>% nrow)
+    message('Chenomx annotated ', nrow(chenomx.but.not.safer), 
+            ' compounds that SAFER did not, out of the possible ', annot[common.compounds.all,] %>% distinct %>% nrow)
+  
+    
+  (!has.evidence.safer & (has.evidence.noGUI | has.evidence.legacy & !only.singlets.safer)) %>% sum
+  
+  # How do the scores map?
+    which.scores <- rownames(scores.matrix) %in% (annot$safer_name[common.compounds.all] %>% lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[1]) %>% unlist)
+    
+    scores.mat[which.scores, ] %>% apply(1, max) %>% c %>% hist
+    scores.mat[!which.scores, ] %>% apply(1, max) %>% c %>% hist
+    
+    
