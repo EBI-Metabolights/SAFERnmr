@@ -222,6 +222,7 @@ denser_mat_to_df <- function(denser.mat){
     # Get the xmat cols of interest ####
       # cols.x <- exp.ranges %>% range(na.rm = T) %>% fillbetween
       # message(paste(plt.pars$xlim, sep = " "))
+      plt.pars$xlim <- sort(plt.pars$xlim)
       cols.x <- plt.pars$xlim %>% vectInds(ppm) %>% fillbetween
       ss.rows <- bfs$fit.xrow
       x.rows <- unique(ss.rows)
@@ -310,8 +311,8 @@ denser_mat_to_df <- function(denser.mat){
         
             df.lines <- 
               addpoints_as_needed(
-                                    mat = xs[, ncol(xs):1,drop = FALSE],   # must be increasing xvals
-                                    xvals = ppm[cols.x] %>% rev, # must be increasing xvals
+                                    mat = xs[, 1:ncol(xs),drop = FALSE],   # must be increasing xvals
+                                    xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = res.ratio
                                     
@@ -340,8 +341,8 @@ denser_mat_to_df <- function(denser.mat){
             
             df.feats <- 
               addpoints_as_needed(
-                                    mat = f.stack[, ncol(f.stack):1,drop = FALSE],   # must be increasing xvals
-                                    xvals = ppm[cols.x] %>% rev, # must be increasing xvals
+                                    mat = f.stack[, 1:ncol(f.stack),drop = FALSE],   # must be increasing xvals
+                                    xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = 1
                                     
