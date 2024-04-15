@@ -1,68 +1,213 @@
-#' Back-fit reference features to a subset of spectra
-#' 
-#' This has gone through several iterations.
-#' A list of backfits (full fit objects) to each subset spectrum was kept
-#' for each ref feature. The backfit object was really all that was needed to 
-#' estimate a score.
-#' 
-#' Then, I moved to slimming them down by cutting out data - just storing the fit
-#' coefficients instead of fit rfs explicitly. This was a great reduction. However, 
-#' there was still massive data duplication (e.g. ref, feature, match inds apply 
-#' to all subset spectra - nspec times!).
-#' 
-#' So, currently, the match.info contains the data that applies at the rf level - 
-#' feat ind, ref ind, rmse (feature), feat region, refspec region - this would all
-#' have been duplicated. The backfits are a list of nrow(match.info) data frames,
-#' each storing the ss-level information (fit coeffs, ss ind, bff scores) for that
-#' rf. The combination of these two tables contains a truly ridiculous amount of
-#' information, as they describe all the shape relationships between the PRCSs and 
-#' dataset spectra. 
-#' 
-#' The match.info table can be used to filter for rfs which apply to a given
-#' PRCS and/or spectral region, or to a given feature. Once the row (rf) inds are 
-#' obtained, one can easily access the ss-level information for each of the rfs.
-#' This can be used, in combination with xmat and refmat to extract the shapes,
-#' and fits can be applied for plotting, scoring, etc.. Example:
-#'   # 1: select ref
-#'    - this narrows down matches without ref
-#'    - apply to backfits (indexed by match)
-#'    2: select ref region
-#'      - this narrows down matches further
-#'      - still don't need anything from the backfits
-#'      3: select samples
-#'        - now backfits needed
-#'        - plotting can take place. Access:
-#'         - spec region (really just the start)
-#'          - ref region
-#'          - ref spec
-#'          - fit data
-#' 
-#' Alternatively, one can loop through the rfs relevant to a given PRCS, then pull
-#' the ss-level table for each, and use that for scoring.
-#' 
-#' Note: as of 26JUL2023, this function will handle the pct.ref as well (instead of during score_matches().)
-#' Note: v3 of this uses batman_local_opt() to locally optimize the fit position and coefficients. Now doing away
-#' with the bff score.
-#'
-#' @param match.info A data frame containing information about the matches between features and reference spectra
-#' @param feature List containing feature intensities and positions
-#' @param xmat Full spectral matrix from which the features were derived
-#'
-#' @return A list containing the back-fits and back-fit feasibility scores for each spectrum in the subset,
-#'         as well as a grid plot of the fits and back-fit feasibility scores.
-#'
-#' @importFrom ggnewscale new_scale_color
-#' @importFrom magrittr %>%
-#' @importFrom parallel detectCores
-#'
-#'
-#' @export
-backfit_rfs3 <- function(match.info, 
-                         feature.c, 
-                         xmat,
-                         refmat.c,
-                         ncores){
+# Examine the cause of backfit failure for 395 (1710856857)
+# 
+
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1710856857'
+
+# Make sure the tmpdir is actually local
+  pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'))
+    pars$dirs$temp <- tmpdir
+    
+# Simulate backfit function call
+
+  filter_matches(pars)
   
+  feature.c <- readRDS(paste0(tmpdir, "/feature.final.RDS"))
+  fse.result <- readRDS(paste0(tmpdir, "/fse.result.RDS"))
+    xmat <- fse.result$xmat
+    ppm <- fse.result$ppm
+
+  # *** these should be in temp data matching..
+    refmat.c <- readRDS(paste0(tmpdir, "/ref.mat.RDS"))
+    pad.size <- readRDS(paste0(tmpdir, "/pad.size.RDS"))
+  
+# Matches ####
+###########################################################################################        
+     
+  # Weed out empty matches or those which failed
+    matches <- readRDS(paste0(tmpdir, "/matches.RDS"))
+      
+      # if any invalid matches for the feature
+        matches <- matches[!is_nullish(matches)]
+      # per feature, was NA returned, or was ('matches', 'peak.quality')?
+        nomatch <- (lapply(matches, length) %>% unlist) == 1 
+        matches <- matches[!nomatch]
+      
+      # For each feature: 
+        # Check if there was an error message
+          errors <- matches[names(matches) %in% c('call', 'message')]
+        # Check if both of the expected fields are present
+          matches <- matches[names(matches) %in% c('matches', 'peak.quality')]
+      
+    # Format matches ####
+      # At this point, matches have been thoroughly validated and can be rbinded.
+        matches.split <- split(matches, names(matches))
+        rm(matches)
+        
+      match.info <- rbindlist(matches.split$matches)
+        rownames(match.info) <- NULL
+        
+        match.info %>% debug_write("match.info.initial.RDS", pars)
+        # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.initial.RDS"))
+
+      # peak.qualities aligns with match.info now, but feat number does not index it (there are missing features)!
+        pq.featureNumbers <- unique(match.info$feat) # this does not sort (just for good measure)
+        
+      peak.qualities <- matches.split$peak.quality
+        if (length(pq.featureNumbers) != length(peak.qualities)) { stop(' peak qualities not of same length as pq.featureNumbers!')}
+        rm(matches.split)
+        
+######################### Calculate deltappm distance (specppm - featureppm) #############################
+
+        # source('./../span.R')
+        # source('./../filter.matches_shiftDelta.R')
+  printTime()
+        message('\nFiltering out matches > ', pars$matching$filtering$ppm.tol, ' ppm away...')
+        res <- filter_matches_shiftDelta(match.info, feature.c %>% expand_features %>% .[['position']], 
+                                         ppm = ppm, ppm.tol = pars$matching$filtering$ppm.tol)
+        # scattermore::scattermoreplot(x = 1:nrow(res), y = res$ppm.difference %>% sort)
+
+        message('\n\t', nrow(res),' / ', nrow(match.info), ' matches survived (', round(nrow(res)/nrow(match.info)*100), ' %).')
+
+        match.info <- res
+        
+        match.info %>% debug_write("match.info.shiftFiltered.RDS", pars)
+        # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.shiftFiltered.RDS"))
+
+######################### Remove singlets ############################################
+    printTime()
+      # Do the filtering (functionalized)
+          
+        # For each match, how many peaks are contained in the ref and feature match regions
+        # (not including NA gaps)
+        message('Filtering out singlet matches (either ref or feature)...')
+          match.info <- filter_matches_singlets2(match.info, feature.c, refmat.c, 2)
+          
+        match.info %>% debug_write("match.info.filtered.RDS", pars)
+        filtered.matches <- nrow(match.info)
+        # match.info <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/match.info.filtered.RDS"))
+
+  # match.info %>% debug_write("match.info.beforeBackfitting.RDS", pars) # this should go into filter_matches
+#########################################################################################################
+    # Estimate the number of backfits, and jettison matches to keep below computational limit
+    
+      # This requires that the sfe field contains ss information for each feature, and that
+      # the number of features in the features object actually matches the indices listed
+      # in match.info. 
+    
+      ss.lengths <- feature.c$sfe %>% lapply(function(x){
+        x$feat$ss %>% length
+      }) %>% unlist
+      contribution <- ss.lengths[match.info$feat]
+      est.bfs <- contribution %>% sum
+      message('Estimated backfits: ', est.bfs, ' at match rval cutoff of ', pars$matching$r.thresh, '.')
+
+      if (est.bfs > pars$matching$filtering$max.backfits){
+        # limit the number of matches - only take the top n such that they don't exceed max number
+        
+        message('\n\tBackfit limit is set to ', pars$matching$filtering$max.backfits, '.' )
+          pars$matching$filtering$select <- 'random'
+          
+          if (pars$matching$filtering$select == 'rval'){
+            # Sort matches by rval, then take the top n until # estimated backfits < limit
+            
+              sort.order <- order(match.info$rval, decreasing = TRUE)
+
+          } else {
+            # Randomly select matches to satisfy
+              
+              sort.order <- runif(nrow(match.info)) %>% order
+
+          }
+
+        # Figure out what the default bf.limit would be for this set of features (min subset) ####
+          smallest.subset <- which.min(contribution[sort.order])
+          cutoff.msg <- paste0('\n\tmatching$filtering$max.backfits (',
+                               pars$matching$filtering$max.backfits,
+                               ') may be set too low.',
+                               '\n\tAt this setting, no matches would be kept. ',
+                               '\n\tDefaulting to smallest subset (',
+                               contribution[sort.order[smallest.subset]],
+                               ') to preserve at least 1 match.')
+          
+        # Figure out how many matches we can keep, drawn in order from sort.order so we don't exceed max.backfits ####
+          cutoff <- tryCatch({max(which(cumsum(contribution[sort.order]) < pars$matching$filtering$max.backfits))}, 
+                              error = function(cond){message(cutoff.msg); 1}, 
+                              warning = function(cond){message(cutoff.msg); 1})
+              
+              keep <- sort.order[1:cutoff]
+              match.info <- match.info[keep, ]
+              match.info <- match.info[order(keep),] #resort so mi is in same order as before
+              lost <- length(sort.order)-length(keep)
+            
+        message('\n\t', lost, ' matches were jettisoned (', round(lost/length(sort.order)*100),'%)')
+        message('\n\tThe new effective match rval cutoff is ', min(match.info$rval), '.')
+        
+      }
+
+            # At this point, match.info is set. Assign IDs ####
+                          
+       match.info$id <- 1:nrow(match.info)
+       # saveRDS(match.info,paste0(tmpdir,'/match.info.filtered.RDS'))
+       match.info <- readRDS(paste0(tmpdir,'/match.info.filtered.RDS'))
+      
+######################### Back-fit reference to spectra  #############################    
+    
+      message('\n\nBack-fitting ref-feats to each spectrum in the relevant subset...\n')
+      
+      
+    printTime()
+    
+    # Back-fit each matched reference region to the subset spectra
+      # adjusted to account for sfe
+        
+        # backfit.results <- backfit_rfs3(match.info = match.info,
+        #                                 feature.c = feature.c, # has sfe data 
+        #                                 xmat = xmat,
+        #                                 refmat.c = refmat.c, 
+        #                                 ncores = pars$par$ncores)
+      
+# plot_grid_scattermore ####
+# plot_grid_scattermore = function(dataframe) {
+#   plot_list <- list()
+#   n <- nrow(dataframe)
+# 
+#   # Loop through each column in the dataframe
+#   for (var in names(dataframe)) {
+#     print(var)
+#     # Check if the column is numeric
+#     if (any(!sapply(dataframe[[var]], is.numeric))) {
+#       # Find the first non-numeric value
+#       first_non_numeric <- which(!sapply(dataframe[[var]], is.numeric))[1]
+#       # Prepare a message plot
+#       message_plot <- ggplot() +
+#         labs(title = paste("Non-numeric value found in column", var, "at row", first_non_numeric)) +
+#         theme_void()
+#       plot_list[[length(plot_list) + 1]] <- message_plot
+#     } else {
+#       # Ensure the column is numeric and prepare the plot
+#       sorted_values <- sort(dataframe[[var]], na.last = TRUE)
+#       plot <- scattermoreplot(x = 1:length(sorted_values), y = sorted_values, 
+#                               main = paste("Scatter Plot of", var), xlab = "Index", ylab = var)
+#       plot_list[[length(plot_list) + 1]] <- plot
+#     }
+#   }
+# 
+#   # Arrange the plots in a grid
+#   # do.call(grid.arrange, c(plot_list, ncol = 2))
+#   return(plot_list)
+# }
+# 
+# Example usage:
+# Assuming `your_dataframe` is your dataframe
+# plot_grid_scattermore(your_dataframe)
+
+# plotlist <- plot_grid_scattermore(match.info)
+# ####
+
+ncores = 2
+
+# #####
   success = TRUE
   emptyRow <- function(){
     data.frame(ss.spec = NA,
@@ -71,7 +216,7 @@ backfit_rfs3 <- function(match.info,
               spec.start = NA,
               spec.end = NA,
               fit.fsa = NA,
-              fit.rval = NA
+              fit.rval = NA,
     )
   }
   
@@ -142,8 +287,9 @@ backfit_rfs3 <- function(match.info,
       ############# For each chunk (in parallel): ###############
         # chunk <- chunks[[1]]
         
-        backfits.chunk <- lapply(1:nrow(chunk$match.info),
+        backfits.chunk <- lapply(seq(1,1000,100),#nrow(chunk$match.info),
                            function(m) {
+          
           tryCatch({
             
           #############        For each match:         ###############
@@ -187,11 +333,15 @@ backfit_rfs3 <- function(match.info,
             # Calculate rf fit for each spec-feature: ####
               
               fits <- lapply(1:nrow(sfs), function(s){
+                # end result of this loop will always be in the form: emptyRow()
                 tryCatch(
                   {
                     # Get the ref region and spec data: ####
                       # s <- 21
-                      
+                      if (s>10 & s < 15){
+                        # print('triggered on s =',s,' in row ',m)
+                        warning()
+                      }
                       sf <- sfs[s,]
                           
                     # Back-fit the ref region to the filled spec data using the feature ####
@@ -261,16 +411,12 @@ backfit_rfs3 <- function(match.info,
             
             # stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
             # If the whole match fails, return an NA fits df row
-            fits <- emptyRow()
-            fits$pct.ref <- NA
-            return(fits)
+            return(emptyRow())
           }, error = function(cond){
             
             # stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
             # If the whole match fails, return an NA fits df row
-            fits <- emptyRow()
-            fits$pct.ref <- NA
-            return(fits)
+            return(emptyRow())
           })
         })
         
@@ -333,76 +479,38 @@ backfit_rfs3 <- function(match.info,
       
       bfs <- backfits_valid(backfits)
       backfits <- bfs$cleaned[bfs$inds.good]
-    if (length(backfits)==0){
-      
-      warning('backfit_rfs3: All backfits failed validation.')
-    }
-      
+    
     # matches
-      match.info <- match.info[bfs$inds.good,]      
-      
+      match.info <- match.info[bfs$inds.good,]
     
     message('\tbackfitting completed on ', length(backfits), ' ref-features.')
     # message('\thopefully your lunch was nice and you are now properly caffeinated...\n')
     if(length(backfits) != nrow(match.info)){
       success = FALSE
-      no.bfs <- match.info$id[-bfs$inds.good]
-      warning('not all matches had backfits, including IDs:\n', paste(no.bfs,collapse = ' '))
+      warning('not all matches had backfits')
     }
 
   # Return list ####
     return(list(match.info = match.info,
                 backfits = backfits,
                 all.succeeded = success))
-}
 
-  # Data format criteria ####
-  # We want to be able to quickly filter each of these for: 
-  # - ref spec region - comes from match.info
-  # - ref number - comes from match.info 
-  # - ss sample number - need to access backfits.chunk$ss.spec
-  
-  # Will need the ability to make this table (or just make it now):
-  # Fast way (should be fine) 
-          # fit <- bf$fits[[1]]
-   
-   # fastest if the ref regions are lumped, so only calc. pct.ref once
-   # even though it's duplicated a bunch, it only adds one column, and it also
-   # allows essentially vectorized ss x ref access
-   # - what really matters is organization at the following levels:
-   #    - by ss x ref
-   #      - rf region in ref
-   #      - region in spec
-   #    - by rf:
-   #    
-          #   pct.ref <- sum(fit$ref.region %>% as.numeric %>% fillbetween %>% refmat[fit$ref, .], na.rm = T)
-          #     # no need to sum the whole spectrum again; already sums to 1.
-          #   
-          # # return df (expanded this score to all ss.spec x rf combinations) 
-          #   data.frame(match = fit$match, # match # = backfit #
-          #              ref.start = fit$ref.region[1],
-          #              ref.end = fit$ref.region[2],
-          #              ref = fit$ref,
-          #              feat = fit$feat,
-          #              ss.spec = lapply(bf$fits, function(f) f$ss.spec) %>% unlist,
-          #              pct.ref = pct.ref,
-          #              + fit scores)
-  
-  # 1: select ref
-  #   - this narrows down matches without ref
-  #   - apply to backfits (indexed by match)
-  #   2: select ref region
-  #     - this narrows down matches further
-  #     - still don't need anything from the backfits
-  #     3: select samples
-  #       - now backfits needed
-  #       - plotting can take place. Access:
-  #         - spec region (really just the start)
-  #         - ref region
-  #         - ref spec
-  #         - fit data
-   
-   
+    
+    
+    
+    
     
      
+#############################        
+        message('Saving backfits...\n\n\n')
+        saveRDS(backfit.results, paste0(tmpdir,"/smrf.RDS"))
+ 
+  devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
+  backfit.results <- backfit_rfs3(match.info = match.info[seq(1,nrow(match.info), 1000),],
+                                        feature.c = feature.c, # has sfe data 
+                                        xmat = xmat,
+                                        refmat.c = refmat.c, 
+                                        ncores = 2)
+  
+  
