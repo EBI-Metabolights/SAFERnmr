@@ -1,14 +1,16 @@
 # Generate param files
   devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
       
-      template <- '/Users/mjudge/Downloads/backfit_limit_gradient_3/MTBLS1_bf_1E08_params.yaml'
+      # template <- '/Users/mjudge/Downloads/backfit_limit_gradient_3/MTBLS1_bf_1E08_params.yaml'
+      template <- '/Users/mjudge/Documents/GitHub/SAFERnmr/files/params.yaml'
       pars <- yaml::yaml.load_file(template, eval.expr = TRUE)
       
       mat.loc <- '/nfs/production/odonovan/nmr_staging/spectral_matrices/'
       end.loc <- '/nfs/production/odonovan/nmr_staging/safer_runs/'
       # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/try_4/'
       # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/backfit_limit_gradient_1/'
-      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/storm_gradient_1E7/'
+      # out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/storm_gradient_1E7/'
+      out.dir <- '/Users/mjudge/Documents/ftp_ebi/param_templates_sensitivity_testing/storm_gradient_2/'
       
       studies <- list(
                       list(
@@ -66,11 +68,12 @@
           parset$storm$correlation.r.cutoff <- 0.6
           
           parset$tina$min.subset <- 5
+          parset$tina$nfeats <- 20000
           
           parset$matching$r.thresh <- .8
           parset$matching$filtering$ppm.tol <- .1
           parset$matching$filtering$max.backfits <- 5E7
-          parset$par$ncores <- 48
+          parset$par$ncores <- 24
           
       pars.6 <- parset
       pars.7 <- parset
@@ -128,7 +131,7 @@
       names(par.df) <- names(par.df) %>% stringr::str_replace_all('\\.', '_')
       
       dir_pop <- function(d, times=1){d %>% strsplit('/') %>% .[[1]] %>% rev %>% .[-(1:times)] %>% rev %>% paste(collapse = '/')}
-      write.csv(par.df, file = paste0(out.dir %>% dir_pop, '/par.table.csv'))
+      write.csv(par.df, file = paste0(out.dir, '/par.table.csv'))
 
 
   # Read base set

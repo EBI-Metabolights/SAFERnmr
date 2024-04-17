@@ -338,9 +338,9 @@ ncores = 2
                   {
                     # Get the ref region and spec data: ####
                       # s <- 21
-                      if (s>10 & s < 15){
+                      if (s==3){
                         # print('triggered on s =',s,' in row ',m)
-                        warning()
+                        stop("Simulated error")
                       }
                       sf <- sfs[s,]
                           
@@ -414,7 +414,7 @@ ncores = 2
             return(emptyRow())
           }, error = function(cond){
             
-            # stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
+            stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
             # If the whole match fails, return an NA fits df row
             return(emptyRow())
           })
@@ -433,6 +433,7 @@ ncores = 2
   
   # Unchunk match.info ####
   
+  
     match.info <- lapply(chunks, function(chunk) {
       # Undo the feature and ref number changes for each chunk - this is stored 
       # in the match table, and the corrections are different for each chunk.
@@ -447,7 +448,7 @@ ncores = 2
   
   # Unlist the backfit tables so each one matches a row in match.info ####
   # (they are currently split across chunks): ####
-    # saveRDS(backfits.by.chunk, paste0(pars$dirs$temp, '/backfits.init.RDS'))
+    saveRDS(backfits.by.chunk, paste0(pars$dirs$temp, '/backfits.init.RDS'))
       # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
     backfits <- backfits.by.chunk %>% unlist(recursive = F)
   
@@ -507,7 +508,8 @@ ncores = 2
  
   devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
-  backfit.results <- backfit_rfs3(match.info = match.info[seq(1,nrow(match.info), 1000),],
+  
+  backfit.results <- backfit_rfs3(match.info = match.info[seq(1,nrow(match.info), 100000),],
                                         feature.c = feature.c, # has sfe data 
                                         xmat = xmat,
                                         refmat.c = refmat.c, 

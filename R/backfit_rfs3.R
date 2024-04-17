@@ -75,7 +75,14 @@ backfit_rfs3 <- function(match.info,
     )
   }
   
-
+  log_error <- function(message, chunk.num, m, error_cond) {
+  
+  
+  cat(sprintf("%s - chunk$number: %d', chunk$match.info row: %d, Error: %s\n",
+              Sys.time(), chunk.num, m, conditionMessage(error_cond)),
+      file = "error_log.txt", append = TRUE)
+  }
+  
   # Chunk the data by ref (more or less) ####
     message('\tchunking match.info table, features objects, and ref spectra for distribution to cores...')
     # Sort by ref, so we can group chunks by ref
@@ -87,7 +94,7 @@ backfit_rfs3 <- function(match.info,
       chunk.size <- max(1, nrow(match.info) / ncores)
       m.grp <- ceiling((1:nrow(match.info)) / chunk.size)
       refsums <- Rfast::rowsums(refmat.c %>% cstack_expandRows, na.rm = TRUE) # needed for normalizing ref features by total spectral signal
-        
+    
     # Assign feature, ref.mat, and match.info subsets to each chunk ####
       chunks <- lapply(unique(m.grp), function(x) 
       {
@@ -110,7 +117,8 @@ backfit_rfs3 <- function(match.info,
              ref.sums = refsums[ref.numbers],
              feat.numbers = feat.numbers,
              feature = list(stack = fcss$stack, position = fcss$position),
-             sfe = feature.c$sfe[feat.numbers])
+             sfe = feature.c$sfe[feat.numbers],
+             number = x)
              # Could keep feature object together and just subset, but for now just split sfe and stack info
              # feature = list(stack = feature$stack[feat.numbers, , drop=F],
              #                position = feature$position[feat.numbers, , drop=F],
@@ -146,6 +154,10 @@ backfit_rfs3 <- function(match.info,
                            function(m) {
           tryCatch({
             
+                      if (m==1){
+                        # print('triggered on s =',s,' in row ',m)
+                        stop("Simulated error")
+                      }
           #############        For each match:         ###############
               # m <- 1
               
@@ -191,7 +203,7 @@ backfit_rfs3 <- function(match.info,
                   {
                     # Get the ref region and spec data: ####
                       # s <- 21
-                      
+
                       sf <- sfs[s,]
                           
                     # Back-fit the ref region to the filled spec data using the feature ####
@@ -233,14 +245,15 @@ backfit_rfs3 <- function(match.info,
                                    ) 
                   }, 
                   warning = function(cond){
-                    # stop('backfit_rfs3: warning in 
+                    ## Fit-level warning
+                    # stop('backfit_rfs3: warning in
                     #         chunk$match.info row ', m,', ',
                     #         'sfs row ', s)
                     emptyRow()
                   }, 
                   error = function(cond){
                     
-                    # stop('backfit_rfs3: error in 
+                    # stop('backfit_rfs3: error in
                     #         chunk$match.info row ', m,', ',
                     #         'sfs row ', s
                     #         )
@@ -250,27 +263,34 @@ backfit_rfs3 <- function(match.info,
                 
               }) %>% do.call(rbind,.)
               
-              fits <- fits[!is.na(rowSums(fits)),] # get rid of NA rows
+              # fits <- fits[!is.na(rowSums(fits)),] # get rid of NA rows # potential failure point; all NA rows removed means empty df
               
               fits$pct.ref <- pct.ref
               
             # Return the fits dataframe rows (minimal data)  ####
               return(fits)
               
-          }, warning = function(cond){
+          }, warning = function(w){
+            ## Match-level warning
+            # 
+            # stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
+            # If the whole match fails, return an NA fits df row
+            fits <- emptyRow()
+            fits$pct.ref <- NA
+            log_error("backfit_rfs3 warning: ", chunk$number, m, w)
+      
+            return(fits)
+            
+          }, error = function(e){
             
             # stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
             # If the whole match fails, return an NA fits df row
             fits <- emptyRow()
             fits$pct.ref <- NA
-            return(fits)
-          }, error = function(cond){
+            log_error("backfit_rfs3 error: ", chunk$number, m, e)
             
-            # stop('backfit_rfs3: error in second layer loop, iteration: chunk$match.info row ', m)
-            # If the whole match fails, return an NA fits df row
-            fits <- emptyRow()
-            fits$pct.ref <- NA
             return(fits)
+            
           })
         })
         
@@ -279,8 +299,6 @@ backfit_rfs3 <- function(match.info,
       }, mc.cores = ncores
       )
       
-     
-    
   message('\tbackfit calculations finished. \n')
   print(round(Sys.time()-t1))
   message('\tun-chunking and formatting results...\n')
@@ -312,6 +330,8 @@ backfit_rfs3 <- function(match.info,
 
   # Remove NA rows and validate data frames
     # backfits
+    browser()
+    message('\tcleaning backfits data...\n')
       backfits_valid <- function(backfits) {
         # backfits <- list(data.frame(a = c(1, NA, 3), b = c(NA, 2, 3)),
         #          data.frame(a = c(4, 5, 6), b = c(7, 8, 9)),
