@@ -154,10 +154,6 @@ backfit_rfs3 <- function(match.info,
                            function(m) {
           tryCatch({
             
-                      if (m==1){
-                        # print('triggered on s =',s,' in row ',m)
-                        stop("Simulated error")
-                      }
           #############        For each match:         ###############
               # m <- 1
               
@@ -319,7 +315,8 @@ backfit_rfs3 <- function(match.info,
   
   # Unlist the backfit tables so each one matches a row in match.info ####
   # (they are currently split across chunks): ####
-    # saveRDS(backfits.by.chunk, paste0(pars$dirs$temp, '/backfits.init.RDS'))
+    saveRDS(chunks, paste0(pars$dirs$temp, '/backfit.chunks.RDS'))
+    saveRDS(backfits.by.chunk, paste0(pars$dirs$temp, '/backfits.init.RDS'))
       # backfits.by.chunk <- readRDS(paste0(tmpdir, '/backfits.init.RDS'))
     backfits <- backfits.by.chunk %>% unlist(recursive = F)
   
@@ -330,7 +327,7 @@ backfit_rfs3 <- function(match.info,
 
   # Remove NA rows and validate data frames
     # backfits
-    browser()
+    
     message('\tcleaning backfits data...\n')
       backfits_valid <- function(backfits) {
         # backfits <- list(data.frame(a = c(1, NA, 3), b = c(NA, 2, 3)),
