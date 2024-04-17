@@ -70,7 +70,18 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
         
         if (is.character(colnames(scores.matrix))){
           colnames(scores.matrix) <- colnames(scores.matrix) %>% 
-            lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] %>% paste(collapse = ' | ')) %>% unlist
+            lapply(function(x){
+              
+              sample.name <- strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] # just take the sample and study names
+              # If study name is NA, don't include it
+              if (is.na(sample.name[2])){
+                paste0('Sample ',sample.name[1])
+              } else {
+                # Otherwise, combine the two names
+                sample.name %>% paste(collapse = " | ")
+              }
+            
+            }) %>% unlist
         }
         
       # Default selections (all compounds and samples)
