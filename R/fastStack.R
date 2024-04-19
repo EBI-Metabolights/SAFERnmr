@@ -232,9 +232,11 @@ denser_mat_to_df <- function(denser.mat){
         # from.ss <- ss.rows[1]
 
           # Line the rfs up with cols.x
-            pos <-  bfs$fit.positions[from.ss, ]
+            pos <-  bfs$fit.positions[from.ss, ] 
             val <-  bfs$fit.feats[from.ss, ]
 
+            # which(!is.na(pos)) %>% pos[.] %>% .[c(1,2)] %>% ppm[.]
+            
             # Make the matrix
             ss.vals <- rep(NA, length(cols.x))
 
@@ -268,7 +270,7 @@ denser_mat_to_df <- function(denser.mat){
         vshift <- plt.pars$vshift * sd(x, na.rm = TRUE)
         vshifts <- (1:nrow(x)) * vshift # make vector of shifts, simple row # multiple of vshift.
         xs <- apply(x, 2, function(r) r + vshifts) %>% matrix(nrow = nrow(x))
-        # simplePlot(xs)
+        # simplePlot(xs,xvect = ppm[cols.x])
         
         # Apply the appropriate shift to each bf (according to the row it matches in xs)
           # they're all currently at 0. Not necessarily ordered. But all belonging 
@@ -288,7 +290,7 @@ denser_mat_to_df <- function(denser.mat){
         #   - for features, don't compute (if they overlap, we may want to show that)
         
         xs <- rm_covered_points(xs)
-          # simplePlot(xs)
+          # simplePlot(xs, xvect=ppm[cols.x])
         # f.stack <- rm_covered_points(xs, f.stack, f.rows.in.x)
           # simplePlot(f.stack)
           # use this for features?
@@ -339,9 +341,15 @@ denser_mat_to_df <- function(denser.mat){
             #                             
             #                             ) %>% denser_mat_to_df
             
+            if (ppm[1]>ppm[2]){
+              f.cols <- ncol(f.stack):1
+            } else {
+              f.cols <- 1:ncol(f.stack)
+            }
+              
             df.feats <- 
               addpoints_as_needed(
-                                    mat = f.stack[, 1:ncol(f.stack),drop = FALSE],   # must be increasing xvals
+                                    mat = f.stack[, f.cols, drop = FALSE],   # must be increasing xvals
                                     xvals = ppm[cols.x], # must be increasing xvals
                                     plt.pars = plt.pars,
                                     target.ratio = 1

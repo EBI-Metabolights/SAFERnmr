@@ -62,29 +62,8 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
       scores <- readRDS(paste0(results.dir,"scores.RDS"))
         scores.matrix <- scores$ss.ref.mat
         # colnames(scores.matrix) <- 1:ncol(scores.matrix)
-                
-      # Validate sample names
-        if (is.null(colnames(scores.matrix))){
-          colnames(scores.matrix) <- 1:ncol(scores.matrix)
-        }
-        
-        if (is.character(colnames(scores.matrix))){
-          colnames(scores.matrix) <- colnames(scores.matrix) %>% 
-            lapply(function(x){
-              
-              sample.name <- strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] # just take the sample and study names
-              # If study name is NA, don't include it
-              if (is.na(sample.name[2])){
-                paste0('Sample ',sample.name[1])
-              } else {
-                # Otherwise, combine the two names
-                sample.name %>% paste(collapse = " | ")
-              }
-            
-            }) %>% unlist
-        }
-        
-      # Default selections (all compounds and samples)
+        colnames(scores.matrix) <- colnames(scores.matrix) %>% lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] %>% paste(collapse = ' | ')) %>% unlist
+          
           if (is.null(select.compounds)) {
             select.compounds <- 1:nrow(scores.matrix)
           }
@@ -184,6 +163,10 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
                          name = compound.names.refmat) # name
         refs <- refs[ref.order, ]
         refs$row.mat <- 1:nrow(refs)         # this is the row number in mat
+        
+      if (is.null(colnames(scores.matrix))){
+        colnames(scores.matrix) <- samples.used %>% as.numeric
+      }
       
       samples <- data.frame(number = seq_along(samples.used),              # number is column number upon sort
                             id = samples.used %>% as.numeric,              # id is the sample number upon import
@@ -714,7 +697,7 @@ server <- function(input, output, session) {
                                   } else {
                                     
                                     if (values$plotType == "stackplot"){
-                                      
+                                      # browser()
                                       return(
                                         # png(filename= '/Users/mjudge/Desktop/out.png')
                                           fastStack.withFeatures(xmat, ppm, raster = T, bfs = bfs, plt.pars, 
