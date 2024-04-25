@@ -62,7 +62,7 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
       scores <- readRDS(paste0(results.dir,"scores.RDS"))
         scores.matrix <- scores$ss.ref.mat
         
-     browser()
+     
      # Validate sample names
         if (is.null(colnames(scores.matrix))){
           colnames(scores.matrix) <- 1:ncol(scores.matrix)
