@@ -77,12 +77,24 @@ backfit_rfs3 <- function(match.info,
   
   log.location <- paste0(pars$dirs$temp, "/error_log.txt")
   print(paste0('Error log location: ', log.location))
-  log_error <- function(message, chunk.num, m, error_cond) {
   
+  log_error <- function(message, chunk.num, m, mi.ind, error_cond, log.location) {
+  # Test:
+  # tryCatch({
+  #   log(-1)
+  # }, warning = function(w){
+  #   log_error('message: ', chunk.num = 1, m = 2, mi = 12, error_cond = w, log.location = log.location)
+  # })
   
-  cat(sprintf("%s - chunk$number: %d', chunk$match.info row: %d, Error: %s\n",
-              Sys.time(), chunk.num, m, conditionMessage(error_cond)),
-      file = , append = TRUE)
+  cat(sprintf("%s \n%s \nchunk$number: %d \nchunk$match.info row: %d \nmatch.index: %d \nError: %s \n",
+              Sys.time(), 
+              message,
+              chunk.num, 
+              m, 
+              mi.ind, 
+              conditionMessage(error_cond)),
+      file = log.location, append = TRUE)
+
   }
   
   # Chunk the data by ref (more or less) ####
@@ -275,7 +287,7 @@ backfit_rfs3 <- function(match.info,
             # If the whole match fails, return an NA fits df row
             fits <- emptyRow()
             fits$pct.ref <- NA
-            log_error("backfit_rfs3 warning: ", chunk$number, m, w)
+            log_error("backfit_rfs3 warning: ", chunk$number, m, mi, w)
       
             return(fits)
             
