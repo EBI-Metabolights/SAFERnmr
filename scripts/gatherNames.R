@@ -21,74 +21,74 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
       
       cmpd.list <- list(compounds)
       
-    # Load MTBLS395 ####
-    
-      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS395/download/92353320-750c-40e8-a9af-031af8d7f8f4?file=m_MTBLS395_amiflorenceii_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
-      study.dir <- paste0(tmpdir,'mtbls395/')
-      dir.create(study.dir)
-      download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
-      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
-                             fill = TRUE, header = TRUE,
-                             sep = '\t')
-      compounds <- data.frame(db.id = maf.data$database_identifier,
-                              name = maf.data$metabolite_identification) %>% distinct
-      compounds$study <- 'MTBLS395'
-      
-      # Get Pantelis' annotations 
-        pt.ids <- readxl::read_excel(paste0(tmpdir,'pt/List_of_metabolites.xlsx'),col_names = FALSE)
-        cmpd.names <- lapply(1:nrow(pt.ids), function(x) pt.ids[x,1] %>% as.character) %>% unlist
-        pt.cmpds <- lapply(1:nrow(pt.ids), function(x) {
-          chebis <- pt.ids[x,-1] %>% as.character()
-          
-          # If any of the chebis for the pt annotation match, just use that
-          matched <- chebis %in% compounds$db.id
-          if (any(matched)){
-            # Already present, use that one
-            chebis <- chebis[matched]
-          } else {
-            # If no match, use the first chebi (not L or R; NA if no chebi)
-            chebis <- chebis[1]
-          }
-          
-          data.frame(db.id = chebis,
-                     name = cmpd.names[x],
-                     study = 'MTBLS395')
-
-        }) %>% do.call(rbind,.)
-        
-        
-        compounds <- rbind(compounds, pt.cmpds)
-        compounds <- compounds[!duplicated(compounds$db.id),]
-        
-      cmpd.list[[2]] <- compounds
-      
-    # Load MTBLS424 ####
-    
-      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS424/download/3ca6dc8a-0f60-421a-b0af-0d49bd12420c?file=m_MTBLS424_breast_cancer_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
-      study.dir <- paste0(tmpdir,'mtbls424/')
-      dir.create(study.dir)
-      download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
-      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
-                             fill = TRUE, header = TRUE,
-                             sep = '\t')
-      compounds <- data.frame(db.id = maf.data$database_identifier,
-                              name = maf.data$metabolite_identification) %>% distinct
-      compounds$study <- 'MTBLS424'
-      cmpd.list[[3]] <- compounds
-      
-    # Load MTBLS430 ####
-    
-      maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS430/download/9d17bf2d-18b7-41ce-9446-ee600aef4f5a?file=m_MTBLS430_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
-      study.dir <- paste0(tmpdir,'mtbls430/')
-      dir.create(study.dir)
-      download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
-      maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
-                             fill = TRUE, header = TRUE,
-                             sep = '\t')
-      compounds <- data.frame(db.id = maf.data$database_identifier,
-                              name = maf.data$metabolite_identification) %>% distinct
-      compounds$study <- 'MTBLS430'
-      cmpd.list[[4]] <- compounds
+    # # Load MTBLS395 ####
+    # 
+    #   maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS395/download/92353320-750c-40e8-a9af-031af8d7f8f4?file=m_MTBLS395_amiflorenceii_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+    #   study.dir <- paste0(tmpdir,'mtbls395/')
+    #   dir.create(study.dir)
+    #   download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+    #   maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+    #                          fill = TRUE, header = TRUE,
+    #                          sep = '\t')
+    #   compounds <- data.frame(db.id = maf.data$database_identifier,
+    #                           name = maf.data$metabolite_identification) %>% distinct
+    #   compounds$study <- 'MTBLS395'
+    #   
+    #   # Get Pantelis' annotations 
+    #     pt.ids <- readxl::read_excel(paste0(tmpdir,'pt/List_of_metabolites.xlsx'),col_names = FALSE)
+    #     cmpd.names <- lapply(1:nrow(pt.ids), function(x) pt.ids[x,1] %>% as.character) %>% unlist
+    #     pt.cmpds <- lapply(1:nrow(pt.ids), function(x) {
+    #       chebis <- pt.ids[x,-1] %>% as.character()
+    #       
+    #       # If any of the chebis for the pt annotation match, just use that
+    #       matched <- chebis %in% compounds$db.id
+    #       if (any(matched)){
+    #         # Already present, use that one
+    #         chebis <- chebis[matched]
+    #       } else {
+    #         # If no match, use the first chebi (not L or R; NA if no chebi)
+    #         chebis <- chebis[1]
+    #       }
+    #       
+    #       data.frame(db.id = chebis,
+    #                  name = cmpd.names[x],
+    #                  study = 'MTBLS395')
+    # 
+    #     }) %>% do.call(rbind,.)
+    #     
+    #     
+    #     compounds <- rbind(compounds, pt.cmpds)
+    #     compounds <- compounds[!duplicated(compounds$db.id),]
+    #     
+    #   cmpd.list[[2]] <- compounds
+    #   
+    # # Load MTBLS424 ####
+    # 
+    #   maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS424/download/3ca6dc8a-0f60-421a-b0af-0d49bd12420c?file=m_MTBLS424_breast_cancer_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+    #   study.dir <- paste0(tmpdir,'mtbls424/')
+    #   dir.create(study.dir)
+    #   download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+    #   maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+    #                          fill = TRUE, header = TRUE,
+    #                          sep = '\t')
+    #   compounds <- data.frame(db.id = maf.data$database_identifier,
+    #                           name = maf.data$metabolite_identification) %>% distinct
+    #   compounds$study <- 'MTBLS424'
+    #   cmpd.list[[3]] <- compounds
+    #   
+    # # Load MTBLS430 ####
+    # 
+    #   maf.link <- 'https://www.ebi.ac.uk/metabolights/ws/studies/MTBLS430/download/9d17bf2d-18b7-41ce-9446-ee600aef4f5a?file=m_MTBLS430_metabolite_profiling_NMR_spectroscopy_v2_maf.tsv'
+    #   study.dir <- paste0(tmpdir,'mtbls430/')
+    #   dir.create(study.dir)
+    #   download.file(maf.link, destfile = paste0(study.dir,'maf.tsv'))
+    #   maf.data <- read.table(paste0(study.dir,'maf.tsv'), 
+    #                          fill = TRUE, header = TRUE,
+    #                          sep = '\t')
+    #   compounds <- data.frame(db.id = maf.data$database_identifier,
+    #                           name = maf.data$metabolite_identification) %>% distinct
+    #   compounds$study <- 'MTBLS430'
+    #   cmpd.list[[4]] <- compounds
       
         
     
@@ -100,50 +100,50 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
       # cmpd.list$name[!duplicated(cmpd.list$db.id)] 
       saveRDS(cmpd.list, file = paste0(tmpdir,'all.metabolites.RDS'))
       
-    # Make venn diagram ####
-    # Load library
-    library(VennDiagram)
-     
-    # Prepare palette:
-    library(RColorBrewer)
-    myCol <- brewer.pal(length(unique(cmpd.list$study)), "Pastel2")
-    
-    venn.diagram(
-            x = cmpd.list$db.id %>% split(cmpd.list$study),
-            category.names = unique(cmpd.list$study),
-            filename = paste0(tmpdir,'cmpds_venn_diagramm.png'),
-            output=TRUE,
-            
-            # Output features
-            imagetype="png" ,
-            height = 480*2 , 
-            width = 480*2 , 
-            resolution = 300,
-            compression = "lzw",
-            
-            # Circles
-            lwd = 2,
-            lty = 'blank',
-            fill = myCol,
-            
-            # Numbers
-            cex = .6,
-            fontface = "bold",
-            fontfamily = "sans",
-            
-            # Set names
-            cat.cex = 0.6,
-            cat.fontface = "bold",
-            cat.default.pos = "outer",
-            # cat.pos = c(-27, 27, 135),
-            # cat.dist = c(0.055, 0.055, 0.085),
-            cat.fontfamily = "sans",
-            # rotation = 1
-    )
-        
-          
-          
-
+    # # Make venn diagram ####
+    # # Load library
+    # library(VennDiagram)
+    #  
+    # # Prepare palette:
+    # library(RColorBrewer)
+    # myCol <- brewer.pal(length(unique(cmpd.list$study)), "Pastel2")
+    # 
+    # venn.diagram(
+    #         x = cmpd.list$db.id %>% split(cmpd.list$study),
+    #         category.names = unique(cmpd.list$study),
+    #         filename = paste0(tmpdir,'cmpds_venn_diagramm.png'),
+    #         output=TRUE,
+    #         
+    #         # Output features
+    #         imagetype="png" ,
+    #         height = 480*2 , 
+    #         width = 480*2 , 
+    #         resolution = 300,
+    #         compression = "lzw",
+    #         
+    #         # Circles
+    #         lwd = 2,
+    #         lty = 'blank',
+    #         fill = myCol,
+    #         
+    #         # Numbers
+    #         cex = .6,
+    #         fontface = "bold",
+    #         fontfamily = "sans",
+    #         
+    #         # Set names
+    #         cat.cex = 0.6,
+    #         cat.fontface = "bold",
+    #         cat.default.pos = "outer",
+    #         # cat.pos = c(-27, 27, 135),
+    #         # cat.dist = c(0.055, 0.055, 0.085),
+    #         cat.fontfamily = "sans",
+    #         # rotation = 1
+    # )
+    #     
+    #       
+    #       
+    # 
   # Which compounds are in the 600 and 700 MHz Gissmo data? #####
   
     lib.data.600 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS')
@@ -222,10 +222,10 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
 
     # What are the gissmo names that match to the author-annotated names (via common ChEBI) ####
         
-        lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_600MHz.RDS')
+        lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS')
         gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo2chebi_2024.xlsx')
         
-        source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/add_chebiIDs.R')
+        source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/add_chebiIDs.R') # on "no-zip" branch
         lib.data.700 <- add_chebiIDs(lib.data = lib.data.700, key = gissmo.cmpds)
         gissmo <- data.frame(name = lib.data.700 %>% lapply(function(x) x$compound.name) %>% unlist,
                              chebi = lib.data.700 %>% lapply(function(x) x$chebi) %>% unlist)
@@ -534,6 +534,137 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
     
   (!has.evidence.safer & (has.evidence.noGUI | has.evidence.legacy & !only.singlets.safer)) %>% sum
   
+    # Make plot to see if author annot is associated with score ####
+      author <- annot$chebi
+      safer <- annot$
+      
+      # Plot SAFER scores and highlight author annotations
+        
+        # Remake scores df
+        # * re-run "# What are the gissmo names that match to the author-annotated names (via common ChEBI)"
+        
+        tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709892382/'
+        scores <- readRDS(paste0(tmpdir, 'scores.RDS'))
+      
+        scores.mat <- scores$ss.ref.mat
+        
+        score.names <- scores.mat %>% rownames %>% stringr::str_remove_all(pattern = '  ')
+  
+        score.chebis <- score.names %>% lapply(function(x) (gissmo$name %in% x) %>% which %>% gissmo$chebi[.] %>% unique) %>% unlist
+        
+        top_n_meds <- function(mat,n,pct){
+          # samples on cols
+          if (pct){
+            n <- ceiling(n/100*ncol(mat))
+          } else {
+            if (n>ncol(mat) & !pct){
+              n <- ncol(mat)
+            }
+          }
+          
+          # mat <- scores.mat
+          lapply(1:nrow(mat), function(x){
+            mat[x, ] %>% sort(decreasing = TRUE) %>% .[1:n] %>% median(na.rm = TRUE)
+          }) %>% unlist 
+          
+        }
+        
+        
+        safer <- data.frame(chebi = score.chebis,
+                             name = score.names,
+                             score.mean = scores.mat %>% rowMeans(na.rm = TRUE) %>% as.numeric,
+                             score.med = scores.mat %>% Rfast::rowMedians(na.rm = TRUE) %>% as.numeric,
+                             score.max = scores.mat %>% Rfast::rowMaxs(value = TRUE) %>% as.numeric,
+                             score.mean.top10 = scores.mat %>% top_n_meds(10, pct = TRUE)
+                           )
+        
+        author <- annot$chebi[has.evidence.safer]
+        safer$in.author <- lapply(safer$chebi, function(x) any(x %in% author)) %>% unlist
+        safer$score <- safer$score.mean.top10
+        
+        safer <- safer[order(safer$score),]
+        
+        plot(1:nrow(safer), xlab = 'Rank', safer$score, ylab = 'Median Score (top 10%)', col = 'grey')
+        points(which(safer$in.author), safer[safer$in.author, 'score'],col = 'blue', pch = 19)
+        
+        library(ggplot2)
+        # Add a consistent x-coordinate for each point in the dataset
+        safer$Rank <- seq_len(nrow(safer))
+        
+        # Create a new variable in the dataframe for color grouping
+        safer$group <- ifelse(safer$in.author, "author-submitted", "all scores")
+        
+        # Create the ggplot
+        plot_gg <- ggplot() +
+          geom_point(data = subset(safer, group == "all scores"), aes(x = Rank, y = score, color = group), size = 3) + # Grey points first
+          geom_point(data = subset(safer, group == "author-submitted"), aes(x = Rank, y = score, color = group), size = 3) + # Blue points on top
+          scale_color_manual(values = c("all scores" = "grey", "author-submitted" = "blue")) + # Define custom colors
+          labs(x = 'Rank', y = 'Median Score (top 10%)', color = "Score Type") + # Labels including legend title
+          theme_minimal() + # Apply a minimal theme
+          guides(color = guide_legend(override.aes = list(size = 5))) # Customizing legend appearance
+        
+        # View the plot
+        print(plot_gg)
+        
+        # Save the plot to a PDF file
+        ggsave("plot_gg.pdf", plot = plot_gg, device = "pdf", width = 4, height = 3)        
+    # Make venn diagram ####
+    # Load library
+    library(VennDiagram)
+     
+    # Prepare palette:
+    library(RColorBrewer)
+    
+      
+      # Add the run.id
+        run.sum <- read.csv(paste0(tmpdir, 'run.summary.csv'))
+        safer.annots$run_id <- run.sum$run_id
+        
+    # 
+      
+    all.chebis <- c(gissmo$chebi, 
+                    chenomx.cmpds,
+                    )
+    
+    myCol <- brewer.pal(length(unique(annot$)), "Pastel2")
+    
+    venn.diagram(
+            x = cmpd.list$db.id %>% split(cmpd.list$study),
+            category.names = unique(cmpd.list$study),
+            filename = paste0(tmpdir,'cmpds_venn_diagramm.png'),
+            output=TRUE,
+            
+            # Output features
+            imagetype="png" ,
+            height = 480*2 , 
+            width = 480*2 , 
+            resolution = 300,
+            compression = "lzw",
+            
+            # Circles
+            lwd = 2,
+            lty = 'blank',
+            fill = myCol,
+            
+            # Numbers
+            cex = .6,
+            fontface = "bold",
+            fontfamily = "sans",
+            
+            # Set names
+            cat.cex = 0.6,
+            cat.fontface = "bold",
+            cat.default.pos = "outer",
+            # cat.pos = c(-27, 27, 135),
+            # cat.dist = c(0.055, 0.055, 0.085),
+            cat.fontfamily = "sans",
+            # rotation = 1
+    )
+        
+          
+          
+
+     
   # How do the scores map?
     which.scores <- rownames(scores.matrix) %in% (annot$safer_name[common.compounds.all] %>% lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[1]) %>% unlist)
     

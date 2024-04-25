@@ -3,10 +3,11 @@
 # 
 
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
-# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1697747670'
-# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698347163'
-# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1712450825'
-# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709892382'
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1710856767' # latest 424
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698408936' # latest 430
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1710856438' # latest 395
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1712450825' # ncrassa
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709892382' # latest mtbls1
 # browse_evidence(tmpdir)
 
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
