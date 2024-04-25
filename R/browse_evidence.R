@@ -61,9 +61,29 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
     # Read in scores matrix 
       scores <- readRDS(paste0(results.dir,"scores.RDS"))
         scores.matrix <- scores$ss.ref.mat
-        # colnames(scores.matrix) <- 1:ncol(scores.matrix)
-        colnames(scores.matrix) <- colnames(scores.matrix) %>% lapply(function(x) strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] %>% paste(collapse = ' | ')) %>% unlist
-          
+        
+     browser()
+     # Validate sample names
+        if (is.null(colnames(scores.matrix))){
+          colnames(scores.matrix) <- 1:ncol(scores.matrix)
+        }
+        
+        if (is.character(colnames(scores.matrix))){
+          colnames(scores.matrix) <- colnames(scores.matrix) %>% 
+            lapply(function(x){
+              
+              sample.name <- strsplit(x, '\\s\\|\\s') %>% .[[1]] %>% .[c(1,3)] # just take the sample and study names
+              # If study name is NA, don't include it
+              if (is.na(sample.name[2])){
+                paste0('Sample ',sample.name[1])
+              } else {
+                # Otherwise, combine the two names
+                sample.name %>% paste(collapse = " | ")
+              }
+            
+            }) %>% unlist
+        }
+           
           if (is.null(select.compounds)) {
             select.compounds <- 1:nrow(scores.matrix)
           }
