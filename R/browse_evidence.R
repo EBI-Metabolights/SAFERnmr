@@ -695,7 +695,7 @@ server <- function(input, output, session) {
                                 # Compute the feature stackplots ####
   
                                   plt.pars <- list(vshift = values$slider.vshift, 
-                                                   pixels = c(512, 512), # inc.res
+                                                   pixels = c(1080, 1080), # inc.res
                                                    pointsize = 0, 
                                                    interpolate = T, 
                                                    # exp.by = 0.05,
