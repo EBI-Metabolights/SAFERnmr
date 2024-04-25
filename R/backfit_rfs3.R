@@ -75,12 +75,14 @@ backfit_rfs3 <- function(match.info,
     )
   }
   
+  log.location <- paste0(pars$dirs$temp, "/error_log.txt")
+  print(paste0('Error log location: ', log.location))
   log_error <- function(message, chunk.num, m, error_cond) {
   
   
   cat(sprintf("%s - chunk$number: %d', chunk$match.info row: %d, Error: %s\n",
               Sys.time(), chunk.num, m, conditionMessage(error_cond)),
-      file = paste0(pars$dirs$temp, "/error_log.txt", append = TRUE)
+      file = , append = TRUE)
   }
   
   # Chunk the data by ref (more or less) ####
