@@ -76,7 +76,7 @@ backfit_rfs3 <- function(match.info,
   }
   
   log.location <- paste0(pars$dirs$temp, "/error_log.txt")
-  print(paste0('Error log location: ', log.location))
+  message(paste0('Error log location: ', log.location))
   
   log_error <- function(message, chunk.num, m, mi.ind, error_cond, log.location) {
   # Test:
