@@ -142,9 +142,10 @@ pipeline <- function(params_loc, params_obj) {
 ## Feature Shape Extraction
 
   ## <<<<<<<< TESTING CODE <<<<<<<<<<<< ##
-  log.location <- paste0(pars$dirs$temp, "/error_log.txt")
-  message(paste0('Error log location: ', log.location))
+  # log.location <- paste0(pars$dirs$temp, "/error_log.txt")
+  message("HELLO")
   ## >>>>>>>> TESTING CODE >>>>>>>>>>>>##
+  ## 
   fse.summary <- tryCatch({
     
      run.sum <- fse(pars)
