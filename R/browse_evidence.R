@@ -15,7 +15,7 @@
 #' @import plotly
 #' 
 #' @export
-browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.samples = NULL){
+browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.samples = NULL, clusterSamples = T){
 #######################################################################################
   if (is.null(results.dir)) {
     results.dir <- getwd()
@@ -156,6 +156,12 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
         clust.samples <- T
       }
 
+      if (clusterSamples & clust.samples){
+        clust.samples <- T
+      } else {
+        clust.samples <- F
+      }
+      
       # hclust: column subsetting doesn't work when names are used. ### #
       ref.order <- 1:nrow(scores.matrix)
       sample.order <- 1:ncol(scores.matrix)
