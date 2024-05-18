@@ -290,7 +290,7 @@ backfit_rfs3 <- function(match.info,
             # If the whole match fails, return an NA fits df row
             fits <- emptyRow()
             fits$pct.ref <- NA
-            log_error("backfit_rfs3 warning: ", chunk$number, m, mi, w)
+            log_error("backfit_rfs3 warning: ", chunk$number, m, mi, w, log.location)
       
             return(fits)
             
@@ -300,7 +300,7 @@ backfit_rfs3 <- function(match.info,
             # If the whole match fails, return an NA fits df row
             fits <- emptyRow()
             fits$pct.ref <- NA
-            log_error("backfit_rfs3 error: ", chunk$number, m, e)
+            log_error("backfit_rfs3 error: ", chunk$number, m, e, log.location)
             
             return(fits)
             
