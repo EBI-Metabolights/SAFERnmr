@@ -96,7 +96,7 @@ unzip_studies <- function(data.dir, exclude = NULL){
 }
 
     unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
-    run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
+    run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923','1713439191',''))
 
 ########### Just look at latest one ######
   
