@@ -85,7 +85,18 @@ fse <- function(pars){
                                   # doesn't require alignment. normalization ok
                                   # but not necessary. scaling, no.)
       ppm <- X_raw[1,]            # ppm vector (corresponding to cols of xmat)
+      digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
+      
+      message('digital resolution of xmat is ', digital.res, ' ppm.')
+      if (digital.res > 30000){message('- you might consider setting opts:resolution to a lower value (~ 32000) to save compute -')}
+      if (is.numeric(pars$opts$resolution) & pars$opts$resolution < length(ppm)){
         digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
+        message('Using opts:resolution @ ',pars$opts$resolution, ' points. 
+                \nNew xmat digital resolution: ', digital.res)
+        # Re-interpolate dataset spectra to a lower number of points to save compute
+          
+      }
+        
         
         
 ################ Set up parameters ##################
