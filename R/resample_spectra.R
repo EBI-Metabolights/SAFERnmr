@@ -12,7 +12,7 @@
 #'
 #' @return spectral matrix and ppm value linearly interpolated to new number of points
 #'
-#' @import mclapplys
+#' @import mclapply
 #' @importFrom stats approx
 #' @importFrom magrittr %>%
 #'
