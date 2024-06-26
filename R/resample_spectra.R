@@ -12,9 +12,9 @@
 #'
 #' @return spectral matrix and ppm value linearly interpolated to new number of points
 #'
-#' @import mclapply
 #' @importFrom stats approx
 #' @importFrom magrittr %>%
+#' @importFrom parallel mclapply
 #'
 #' @export
 resample_spectra <- function(xmat, ppm, npoints, cores = 1){

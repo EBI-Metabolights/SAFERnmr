@@ -1,5 +1,5 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
-
+pipeline('/Users/mjudge/Downloads/params.yaml')
 
 # For each study, note the metabolites id'd ####
     
