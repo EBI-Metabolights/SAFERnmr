@@ -88,17 +88,25 @@ fse <- function(pars){
       digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
       
       message('digital resolution of xmat is ', digital.res, ' ppm.')
-      if (digital.res > 30000){message('- you might consider setting opts:resolution to a lower value (~ 32000) to save compute -')}
-      if (is.numeric(pars$opts$resolution) & pars$opts$resolution < length(ppm)){
-        digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
-        message('Using opts:resolution @ ',pars$opts$resolution, ' points. 
-                \nNew xmat digital resolution: ', digital.res)
-        # Re-interpolate dataset spectra to a lower number of points to save compute
+      if (!is.null(pars$opts$npoints)){
+        if (pars$opts$npoints < length(ppm)){
           
+          # Re-interpolate dataset spectra to a lower number of points to save compute
+            rs <- resample_spectra(xmat, ppm, npoints = pars$opts$npoints, cores = pars$par$ncores)
+            ppm <- rs$ppm
+            xmat <- rs$spectra
+            
+            rm(rs)
+          
+          digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
+          message('Using opts:npoints @ ',pars$opts$npoints, ' points. 
+                  \nNew xmat digital resolution: ', digital.res)
+
+        }
       }
-        
-        
-        
+      # if not set, do nothing (warning is printed)
+      
+      
 ################ Set up parameters ##################
     
   # Corr Pocket Pairs 

@@ -98,6 +98,7 @@ pipeline <- function(params_loc, params_obj) {
                
   # Validate parameters before beginning
     
+    message('Validating parameters...')
     par.val <- valid_pars(pars)
     pars <- par.val$pars
     pars.passed.checks <- par.val$validation.pass
