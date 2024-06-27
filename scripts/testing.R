@@ -3,6 +3,7 @@
 # 
 
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
+pipeline('/Users/mjudge/Documents/ftp_ebi/params/params_1709742511.yaml')
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1710856767' # latest 424
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1698408936' # latest 430
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1710856438' # latest 395
@@ -24,76 +25,6 @@ pars$matching$filtering$max.backfits <- 1E5
 # Accessory ####
 
 data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
-index_studies <- function(data.dir, exclude = NULL){
-  
-  # Extract out run summary data ####
-  
-      data <- dir(data.dir)
-        dontuse <- grepl(paste('.zip$','.csv$','.pdf$','.xlsx$',exclude %>% paste(collapse = "|"), sep = "|"), data)
-        unzipped <- !dontuse
-      data.unzipped <- paste0(data.dir,data[unzipped])
-
-
-    df <- lapply(data.unzipped, function(x){
-        dat <- read.csv(paste0(x, '/run.summary.csv'))
-        names(dat) <- names(dat) %>% stringr::str_replace_all('\\.', '_')
-        dat$local_id <- dat$run_id
-        dat
-    }) %>% bind_rows
-    
-    # df$total_time[df$total_time > 10]  <- df$total_time[df$total_time > 10] / 60
-    # df$matching_elapsed_time[df$matching_elapsed_time > 10]  <- df$matching_elapsed_time[df$matching_elapsed_time > 10] / 60
-    df$local_path <- data.unzipped
-    df <- df[,!(names(df) == 'X')]
-    df$start <- df$run_id %>% as.POSIXct(origin = "1970-01-01")
-    df
-}
-unzip_studies <- function(data.dir, exclude = NULL){
-  
-    # If a study fails because of odd zipping, re-zip it in shell with the following:
-      # zip -r -j file/path/output.zip file/path/input
-    # Unzip any non-unzipped files ####
-      # data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
-      data <- dir(data.dir)
-        excluded <- which(grepl(exclude %>% paste(collapse = "|"), data))
-        zipped <- grepl('.zip', data)
-        not.zip <- which(!zipped)
-        zipped <- which(zipped)
-          zip.names <- data[zipped] %>% stringr::str_remove_all('.zip')
-        already.unzipped <- (zip.names %in% data[not.zip]) %>% zipped[.]
-        dont.unzip <- c(already.unzipped, excluded, not.zip)
-        do.unzip <- data[-dont.unzip]
-          
-      if (length(do.unzip) > 0){
-        fail <- lapply(do.unzip, function(d){
-          # d <- data[-dont.unzip] %>% .[1]
-          message('Unzipping ', d, ' ...')
-          
-          # New ####
-            tryCatch({
-              run.id <- d %>% stringr::str_remove('.zip$')
-              out <- paste0(data.dir, '/',run.id) %>% stringr::str_replace_all('//','/')
-              unzip(paste0(data.dir, '/',d) %>% stringr::str_replace_all('//','/'), junkpaths = FALSE, exdir = out)
-              check_heatmap_html_output(out)
-              return(0)
-              
-            }, error = function(cond){
-              1
-            })
-        })
-        
-      } else {
-        
-        fail <- list('There are no zipped studies which need to be unzipped.')
-      }
-
-  if (is.numeric(fail)){
-    return(fail %>% unlist)
-  } else {
-    return("nothing to unzip")
-  }
-  
-}
 
     unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
     run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923','1713439191',''))
