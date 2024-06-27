@@ -297,23 +297,23 @@ fse <- function(pars){
 
   # THIS DOESN'T WORK WHEN XDATA ARE TOO BIG
   
-    # plot.filename <- paste0('features_',
-    #                         pars$study$id,
-    #                         "_np_",noise.percentile,
-    #                         "_r_",correlation.r.cutoff,
-    #                         "_b_",b,".pdf")     # what to name the plot file
+    plot.filename <- paste0('features_',
+                            pars$study$id,
+                            "_np_",noise.percentile,
+                            "_r_",correlation.r.cutoff,
+                            "_b_",b,".pdf")     # what to name the plot file
 
         # # Plot all the storm results in grid (postage stamp) format
         # 
           
-            # everyNth <- every_nth(select = number.of.plots, 
-            #                       from = sum(succeeded))
-            # 
-            # plot_stormRefRegions_grid(xmat, ppm,
-            #                           storm_rnd1[succeeded %>% which %>% .[everyNth]], # if not doing a small region
-            #                           plotLoc = plot.location,
-            #                           filename = plot.filename,
-            #                           calcStocsy = FALSE, n_xticks = 4)
+            everyNth <- every_nth(select = number.of.plots,
+                                  from = sum(succeeded))
+
+            plot_stormRefRegions_grid(xmat, ppm,
+                                      storm_rnd1[succeeded %>% which %>% .[everyNth]], # if not doing a small region
+                                      plotLoc = plot.location,
+                                      filename = plot.filename,
+                                      calcStocsy = FALSE, n_xticks = 4)
        # Plot all in region
           # use <- seq(12810, 12972)
             # plot_stormRefRegions_grid(xmat,ppm,
