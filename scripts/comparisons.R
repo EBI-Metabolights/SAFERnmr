@@ -67,26 +67,31 @@ cmpd = 'Citrate'
     author$chenomx.name <- chenomx$names[cna]
 
   # ####
-  best_samples <- function(cmpd, key, top = 5){
+  best_samples <- function(cmpd, maf.data, key = NULL, top = 1, pause = 2){
   
-        # Find metabolite in annotation table (names chebi-matched)
       
-      key[is.na(key)] <- ''
-        
     # Identify the sample cols (quant data cols)
       maf.samples <- maf.data %>% colnames %>% .[19:ncol(maf.data)]
-        
+      message('Pulling best ', top, ' sample(s) for ', cmpd, '...')
+      
     # Get the data for the rows
-      cmpd.chebi <- key$chebi[key$name == cmpd %>% tolower] %>% .[1]
+      if (stringr::str_detect(cmpd, 'CHEBI')){
+        # Use chebi
+        cmpd.chebi <- cmpd
+        
+      } else {
+        # Find metabolite in annotation table (names chebi-matched)
+          key[is.na(key)] <- ''
+          cmpd.chebi <- key$chebi[key$name == cmpd %>% tolower] %>% .[1]
+      }
+      
+      
       quants <- maf.data[maf.data$database_identifier == cmpd.chebi, maf.samples] %>% colMeans(na.rm = TRUE)
         # plot(sort(quants))
         
     # Find the sample with the best average concentration
       q.order <- order(quants, decreasing = TRUE)
       sample.ids <- maf.samples[q.order[1:top]] # %>% paste(collapse = ' | ')
-      
-    # Record in index which sample was used
-      
       
     # Pull sample from the web
     
@@ -96,34 +101,46 @@ cmpd = 'Citrate'
       downloads <- lapply(sample.ids, function(sample.id){
         file.name <- paste0(sample.id,'.zip')
         sample.url <- paste0('https://ftp.ebi.ac.uk/pub/databases/metabolights/studies/public/',study,'/FILES/',file.name)
-        download.file(sample.url, destfile = paste0(sample.dir,'/',file.name))
+        if (!(file.name %in% dir(sample.dir, '*.zip'))){
+          Sys.sleep(pause)
+          download.file(sample.url, destfile = paste0(sample.dir,'/',file.name))
+        }
         unzip(paste0(sample.dir,file.name), exdir = sample.dir)
-        Sys.sleep(1)
         return(sample.id)
       }) %>% unlist
       
       r.files <- lapply(sample.ids, function(sample.id){
         sample.data <- paste0(sample.dir,sample.id)
-        dir(sample.data, pattern = '1r', recursive = TRUE, full.names = TRUE)
-      })
-      
-      message('The following samples were downloaded to ', sample.dir, ':')
-      message(downloads %>% paste(collapse = '\n'))
-      message('If 1r files were found for the samples, their paths are listed in the output. To use in Chenomx:')
-      message('\t Copy the 1r path.')
-      message('\t Chenomx > Profiler > ["No" to sample spectrum] > \n
-              Cmd-O > Cmd-Shift-G > [Right click, paste, hit Enter, hit Enter]')
+        dir(sample.data, pattern = '1r$', recursive = TRUE, full.names = TRUE) %>% paste(collapse = ' | ')
+      }) %>% do.call(rbind,.)
+
+      message('The following samples are in ', sample.dir, ':')
+      message('\t',downloads %>% paste(collapse = '\n\t'))
+      # message('If 1r files were found for the samples, their paths are listed in the output. To use in Chenomx:')
+      # message('\t Copy the 1r path.')
+      # message('\t Chenomx > Profiler > ["No" to sample spectrum] > \n
+      #         Cmd-O > Cmd-Shift-G > [Right click, paste, hit Enter, hit Enter]')
       # system2("open", c("-a", "Chenomx\\ Profiler", shQuote(r.files[[1]])))
       # system2("open", c("-a", "Chenomx\\ NMR\\ Suite", shQuote(r.files[[1]])))
+      df <- data.frame(samples = downloads %>% unlist)
+      df <- cbind(df, r.files)
+      return(df)
       
-      return(list(samples = downloads, 
-                  r.files = r.files))
-    
   }
   
-  best <- best_samples(cmpd = 'Citrate', key = author, top = 2)
-  # For each 
+  best <- best_samples(cmpd = 'Citrate', key = author, top = 1, pause = 2)
+  
+  # Loop through each compound
       
+    sample.tab <- pblapply(1:nrow(author), function(x){
+      cmpd.row <- author[x, ]
+      bs <- best_samples(cmpd = cmpd.row$chebi, maf.data = maf.data, top = 1, pause = 2)
+      cmpd.row$sample <- bs$samples[1]
+      cmpd.row$spectrum <- bs$r.files[1]
+      cmpd.row
+    }) %>% do.call(rbind,.)
+
+  
 # Pick [random] samples
 
 # do chenomx annotation
