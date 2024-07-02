@@ -27,7 +27,7 @@ pars$matching$filtering$max.backfits <- 1E5
 data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
 
     unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
-    run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923','1713439191',''))
+    run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923','1713439191'))
 
 ########### Just look at latest one ######
   
