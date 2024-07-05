@@ -4,20 +4,20 @@
 # Get the 10 top-scoring browser samples
 
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
-tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709742511' # fits mtbls1
+res.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709742511' # fits mtbls1
 
 study <- 'MTBLS1'
-smrf <- readRDS(paste0(tmpdir, "/smrf.RDS"))
+smrf <- readRDS(paste0(res.dir, "/smrf.RDS"))
 head(smrf$match.info, 100) %>% .[c(1,2,3,8),c(1,2,4,8,10)] %>% rbind(tail(smrf$match.info, 1) %>% .[,c(1,2,4,8,10)]) %>% write.csv('matches.1709742511.csv', col.names = TRUE)
 
 cmpd = 'Citrate'
 
-# browse_evidence(tmpdir, clusterSamples = F)
+# browse_evidence(res.dir, clusterSamples = F)
 # 
 # 
 # # Get the sample names
 # 
-#   fse.result <- readRDS(paste0(tmpdir, "/fse.result.RDS"))
+#   fse.result <- readRDS(paste0(res.dir, "/fse.result.RDS"))
 #     xmat <- fse.result$xmat
 #     ppm <- fse.result$ppm
 #   
@@ -138,13 +138,65 @@ cmpd = 'Citrate'
       cmpd.row$sample <- bs$samples[1]
       cmpd.row$spectrum <- bs$r.files[1]
       cmpd.row
-    }) %>% do.call(rbind,.)
+    }) %>% do.call(rbind,.) %>% arrange(desc(sample))
 
+    write.csv(sample.tab, 
+              '/Users/mjudge/Edison_Lab@UGA Dropbox/Michael Judge/MJ_UGA_Root/Scheduling/safer_manuscript/data/study_metabolites/mtbls1/best_samples.csv',
+              row.names = FALSE)
   
-# Pick [random] samples
-
 # do chenomx annotation
+  # Instructions in safer_manuscript/data/chenomx comparison/mtbls1 annotation evidence/chenomx/mtbls1_chenomx_fitConcentrations_legacy_rnd2_clean.pptx
+  # Read in scoring 
+    chenomx.scores <- read.csv('/Users/mjudge/Edison_Lab@UGA Dropbox/Michael Judge/MJ_UGA_Root/Scheduling/safer_manuscript/data/chenomx comparison/mtbls1 annotation evidence/chenomx/scoring_noGUI.csv', header = TRUE, sep = ",")
+    
+## Which compounds had evidence in MTBLS1? ####
 
-# do SAFER annotation
+    # What are the gissmo names that match to the author-annotated names (via common ChEBI) ####
+        
+        lib.data.700 <- readRDS('/Users/mjudge/Documents/ftp_ebi/gissmo/data.list_700MHz.RDS')
+        gissmo.cmpds <- readxl::read_xlsx('/Users/mjudge/Documents/ftp_ebi/gissmo/gissmo2chebi_2024.xlsx')
+        
+        source('/Users/mjudge/Documents/GitHub/MARIANA_setup_chron/R/add_chebiIDs.R') # on "no-zip" branch
+        lib.data.700 <- add_chebiIDs(lib.data = lib.data.700, key = gissmo.cmpds)
+        gissmo <- data.frame(name = lib.data.700 %>% lapply(function(x) x$compound.name) %>% unlist,
+                             chebi = lib.data.700 %>% lapply(function(x) x$chebi) %>% unlist)
 
-# 
+    # Get ChEBIs for the run ####
+    
+      scores <- readRDS(paste0(res.dir, '/scores.RDS'))
+    
+      scores.mat <- scores$ss.ref.mat
+      
+      score.names <- scores.mat %>% rowSums %>% ">"(.,0.1) %>% 
+        scores.mat[.,] %>% rownames %>% stringr::str_remove_all(pattern = '  ')
+      # (gissmo.names %in% score.names) %>% sum
+      
+      score.chebis <- score.names %>% lapply(function(x) (gissmo$name %in% x) %>% which %>% gissmo$chebi[.] %>% unique) %>% unlist
+      
+      safer.annots <- data.frame(chebi = score.chebis,
+                                 name = score.names)
+      # Add the run.id
+        run.sum <- read.csv(paste0(res.dir, '/run.summary.csv'))
+        safer.annots$run_id <- run.sum$run_id
+        
+      # Add SAFER info to scores table
+  
+      lapply(1:nrow(chenomx.scores), function(x){
+        any(safer.annots$chebi %in% chenomx.scores$chebi[x]) # chenomx.scores is 'author' with extra columns
+      }) %>% unlist %>% sum
+        
+    # for each metabolite, and each sample, generate a call to browse_evidence():
+      i <- 0
+      chenomx.scores$
+      browse_evidence(res.dir, clusterSamples = F)
+        
+# How well does SAFER caf file correlate with MAF file?
+  # (For overlapping metabolites)
+    scores <- readRDS(paste0(res.dir, "/scores.RDS"))
+    maf.quants <- maf.data[, maf.samples]
+    caf.scores <- 
+    
+    colnames(scores$ss.ref.mat)
+    
+      
+    
