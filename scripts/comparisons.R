@@ -181,15 +181,25 @@ cmpd = 'Citrate'
         
       # Add SAFER info to scores table
   
-      lapply(1:nrow(chenomx.scores), function(x){
-        any(safer.annots$chebi %in% chenomx.scores$chebi[x]) # chenomx.scores is 'author' with extra columns
-      }) %>% unlist %>% sum
-        
+      auth.safer <- match(chenomx.scores$chebi, safer.annots$chebi)
+      chenomx.scores$safer.name <- safer.annots$name[auth.safer]
+      chenomx.scores$safer.runid <- safer.annots$run_id[auth.safer]
+      
     # for each metabolite, and each sample, generate a call to browse_evidence():
       i <- 0
-      chenomx.scores$
-      browse_evidence(res.dir, clusterSamples = F)
-        
+      
+      i <- i+1
+      current.cmpd <- chenomx.scores[i, ]
+      if (!is.na(current.cmpd$safer.name)){
+        browse_evidence(results.dir = res.dir, 
+                        select.compounds = current.cmpd$safer.name, 
+                        select.samples = current.cmpd$sample,
+                        clusterSamples = F)
+      }
+      
+       
+      
+      
 # How well does SAFER caf file correlate with MAF file?
   # (For overlapping metabolites)
     scores <- readRDS(paste0(res.dir, "/scores.RDS"))
