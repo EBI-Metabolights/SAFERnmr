@@ -30,7 +30,8 @@
     fse.result <- readRDS(paste0(tmpdir,"/fse.result.RDS"))
           xmat <- fse.result$xmat
           ppm <- fse.result$ppm
-    feature <- readRDS(paste0(tmpdir,"/feature.final.RDS")) %>% expand_features()
+    features.c <- readRDS(paste0(tmpdir,"/feature.final.RDS"))
+      feature <- features.c %>% expand_features()
 
     # match.info <- readRDS(paste0(tmpdir,"/match.info.RDS"))
 
@@ -99,6 +100,8 @@
                          ref.start = mi$ref.start,
                          ref.end = mi$ref.end,
                          ss.spec = bf$ss.spec,
+                         fit.scale = bf$fit.scale,
+                         fit.intercept = bf$fit.intercept,
                          fit.fsa = bf$fit.fsa,
                          fit.rval = bf$fit.rval,
                          match.rval = mi$rval,
@@ -106,11 +109,16 @@
                          # rmse.biased = bf$rmse.biased,
                          pct.ref = bf$pct.ref)
             
+        }) %>% do.call(rbind,.)
+
 ##############                  
-                  
-        f.nums <- rf.specFits$feat %>% unique
-        f.models <- features.c %>% expand_features(f.nums) %>% .[["position"]]
+               
+        # Get the backfits relevant to a given ref
         
+        rps <- ref.pairs[rp.rows,]
+        rfs.selection <- rps$match %>% unique
+
+        f.nums <- rps$feat %>% unique
         
         # Unlist all the ref feats into spectrum-fit ref feats, and expand their spectrum positions: ####  
           fit.feats <- lapply(1:nrow(rf.specFits), function(x) {
@@ -155,9 +163,8 @@
                 return(pos)
             }) 
 ##############            
-            
-        }) %>% do.call(rbind,.)
 
+      
       scores <- pair_scores(pars, refmat)jfffjjj
       
       

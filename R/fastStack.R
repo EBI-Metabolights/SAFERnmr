@@ -69,6 +69,7 @@ fastStack.withFeatures <- function(xmat, ppm,
   
 addpoints_as_needed <- function(mat, xvals, plt.pars, target.ratio = 1)
 {
+  
   # Note: xvals must be increasing 
   mat.list <- lapply(1:nrow(mat), function(r){
               mat[r,]
@@ -223,9 +224,11 @@ denser_mat_to_df <- function(denser.mat){
       # cols.x <- exp.ranges %>% range(na.rm = T) %>% fillbetween
       # message(paste(plt.pars$xlim, sep = " "))
       plt.pars$xlim <- sort(plt.pars$xlim)
+      
       cols.x <- plt.pars$xlim %>% vectInds(ppm) %>% fillbetween
       ss.rows <- bfs$fit.xrow
       x.rows <- unique(ss.rows)
+    
     
     # If simply getting a row for each fit. ####
       f.stack <- lapply(1:length(ss.rows), function(from.ss) {
@@ -277,7 +280,7 @@ denser_mat_to_df <- function(denser.mat){
           # to row 3 in xmat, for instance, will jump up that amount. Likewise with each
           # of the other rows in xs the bf.fits could belong to (and share vshift with).
           # nrow(f.stack) == length(ss.rows)
-          
+        
         f.rows.in.x <- lapply(ss.rows, function(ssr) which(x.rows %in% ssr)) %>% unlist
         f.stack <- f.stack + vshifts[f.rows.in.x]
         
@@ -300,7 +303,7 @@ denser_mat_to_df <- function(denser.mat){
   # Plotting ####
       if (raster){ 
         
-        # browser()
+        
         
         # Interpolate more x points in for spectra as needed
           
@@ -310,7 +313,8 @@ denser_mat_to_df <- function(denser.mat){
             #                               res.increase = res.increase
             #                               
             #                             ) %>% denser_mat_to_df
-        
+            apply(xs, 1, function(x) all(is.na(x))) %>% any
+            
             df.lines <- 
               addpoints_as_needed(
                                     mat = xs[, 1:ncol(xs),drop = FALSE],   # must be increasing xvals
@@ -346,7 +350,7 @@ denser_mat_to_df <- function(denser.mat){
             } else {
               f.cols <- 1:ncol(f.stack)
             }
-              
+            
             df.feats <- 
               addpoints_as_needed(
                                     mat = f.stack[, f.cols, drop = FALSE],   # must be increasing xvals

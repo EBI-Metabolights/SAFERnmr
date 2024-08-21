@@ -32,6 +32,7 @@ data.dir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/'
 ########### Just look at latest one ######
   
   browse_evidence(run.idx$local_path[nrow(run.idx)], select.sample = select.sample)
+  browse_evidence(run.idx$local_path[5])
     
 ########### Random subset of smrf fits ####
 # First, we would like to see a random subset of ref-features -> spectra, at each bff score level, for a given study ####

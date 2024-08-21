@@ -88,10 +88,10 @@ emptyScore <-
       # report as pairs with coords in matrix
       
         ss.ref.pairs <- readRDS(paste0(tmpdir, "/ss.ref.pairs.RDS"))
-        # refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) %>% t
+        # refmat <- readRDS(paste0(tmpdir, "/temp_data_matching/ref.mat.RDS")) %>% cstack_expandRows()
       
       # # Normalize refs 
-        refmat <- refmat / Rfast::rowsums(refmat, na.rm = T)
+        # refmat <- refmat / Rfast::rowsums(refmat, na.rm = TRUE)
         
       # Read in feature data and compress
         feature <- readRDS(paste0(tmpdir, "/feature.final.RDS")) %>% expand_features
@@ -134,6 +134,7 @@ emptyScore <-
       
       # Look for specific compound in iterations
       cmpd <- 'R-Lactate'
+      cmpd <- 'Citrate'
 
       refnum <- which(cmpd.names %in% cmpd) %>% .[1]
       lapply(chonks, function(chonk){
@@ -156,7 +157,7 @@ emptyScore <-
             score.list <- mclapply(chonks, mc.cores = pars$par$ncores, 
                                            FUN = function(chonk)                             
             {
-              # chonk <- chonks[[1]]                               
+              # chonk <- chonks[[4]]                               
               # Go through this list of by.refs
                                                                    
               # pblapply(chonk[1:5], function(r.list){
@@ -165,16 +166,19 @@ emptyScore <-
                   {
                         
                         # For each ref:
-                        # r.list <- chonk[[219]]
+                        # r.list <- chonk[[276]]
                         
+                    
                         # Make sure there are actually spectra in the interactions list ####
                           if(nrow(r.list$ref.pairs) < 1){return(emptyScore)}
                         
                         # Extract the interactions info from the r.list object for this ref ####
                           r.num <- r.list$ref.num
                           refspec <- r.list$refspec #/sum(r.list$refspec, na.rm = T) # already normed
+                          refspec <- lib.data.processed[[r.list$ref.num]]$mapped$data.compressed %>% expand_ref(ppm)
                           ref.pairs <- r.list$ref.pairs
                           feat.models <- cstack_expandRows(r.list$feat.models) %>% is.na %>% "!"()
+                          # apply(feat.models, MARGIN = 1, FUN = which)
                           
                           # how to use feat.num to index feat.models?
                             ref.pairs$feat <- ref.pairs$feat %>% factor(levels = r.list$feat.nums) %>% as.integer
@@ -189,21 +193,24 @@ emptyScore <-
         
                         # Set up cumulative score vector objs (will be recycled each sample iteration) ####
                       
-                          fsa <- list(score.name = 'fit.fsa',
-                                          scores = rep(0, length(refspec)),
-                                          rf.ids = rep(0, length(refspec)))
-                          rval <- fsa
-                            rval$score.name = 'match.rval'
-                          fsaxrval <- fsa
-                            fsaxrval$score.name = 'fsaxrval'
-                          min.score <- fsa
-                            min.score$score.name = 'min.score'
-        
-                          ref.pairs$fsaxrval <- (ref.pairs$fit.fsa + ref.pairs$match.rval)/2
-                          ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fit.fsa,
-                                                                      ref.pairs$match.rval,
-                                                                      ref.pairs$fsaxrval),
-                                                                value = TRUE)
+                          # fsa <- list(score.name = 'fit.fsa',
+                          #                 scores = rep(0, length(refspec)),
+                          #                 rf.ids = rep(0, length(refspec)))
+                          # rval <- fsa
+                          #   rval$score.name = 'match.rval'
+                          # fsaxrval <- fsa
+                          #   fsaxrval$score.name = 'fsaxrval'
+                          # min.score <- fsa
+                          #   min.score$score.name = 'min.score'
+                          # 
+                          # ref.pairs$fsaxrval <- (ref.pairs$fit.fsa + ref.pairs$match.rval)/2
+                          # ref.pairs$min.score <- Rfast::rowMins(cbind(ref.pairs$fit.fsa,
+                          #                                             ref.pairs$match.rval,
+                          #                                             ref.pairs$fsaxrval),
+                          #                                       value = TRUE)
+                          
+                          
+                          
                           
                         # Loop through ref-ss.spec combinations and calculate scores ####
                         # - score objects will be re-copied for each lapply iteration, so 
@@ -218,15 +225,28 @@ emptyScore <-
                             ref <- comb$ref[i]
                             ss.spec <- comb$ss.spec[i]   
                             
+                            
                             # Compute the scores for this combination
                             tryCatch(
                               {
-                                  
-                                # Select relevant backfits and matches ####
+                                
+                                # This function assumes that feature quants in spec and ref are linear.
+                                # It iteratively find the best-fit line between them, then identifies 
+                                # and removes high-leverage points until the r^2 value of the fit line 
+                                # is above the cutoff. Then, a whole-signauture correlation is calculated. 
+                                # Assumes refspec, xmat, ppm. 
+                                
                                   rp.rows <- which(ref.pairs$ss.spec == ss.spec)
+                                  rp <- ref.pairs[rp.rows,]
                                   
-                                  currentscores <- ref.pairs[rp.rows,]
-                                  
+                                    refspec <- lapply(lib.data.processed[ref], function(x)
+                                      {
+                                        x$mapped$data.compressed %>% expand_stacklist(which.stacks = 'data') %>% .[[1]]
+                                      }
+                                    ) %>% do.call(rbind, .)
+                                
+                                  res = signature_similarity_multifeature(rp, cutoff.r2 = 0.9)
+                                
                                 # Loop through the matches associated with this ref - ss.spec pair ####
                                 # Update the score values in v with any higher score at that point ####
                                         ## Plotting to show in action: ####
@@ -299,7 +319,7 @@ emptyScore <-
                                   
                                   # fsaxrval <- fsaxrval
                                   # score.rf.ids <- fsaxrval$rf.ids
-                                  
+                                 
                                   
                                 # Calculate summed score and report as data.frame of ss.spec-reference pairs ####
                                 
