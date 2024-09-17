@@ -15,7 +15,7 @@
       rp.rows <- which(ref.pairs$ss.spec == ss.spec)
       rp <- ref.pairs[rp.rows,]
       
-      
+      }
       res <- signature_similarity_multifeature(rp, cutoff.r2 = 0.9)
       
       model <- mblm(y ~ x, data = data)
@@ -358,7 +358,7 @@ lqs_features <- function(sd_tol = 1, show = FALSE)
                   sd = stdv,
                   within_sds = within_sds))
 }
-    
+  
   itfit <- function(df, cutoff.r2 = 0.9, show = FALSE){
       df.copy <- df
       n <- nrow(df)
