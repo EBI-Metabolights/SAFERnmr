@@ -22,8 +22,15 @@
 
 # Read in some data pre-scoring:
 
+    devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
+
     tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1722972385'
-    pars<-list(par=list(ncores = 4))
+    pars <- yaml::yaml.load_file(paste0(tmpdir,'/params.yaml'), eval.expr = TRUE)
+      pars$dirs$temp <- tmpdir
+      pars$debug$enabled <- TRUE
+      pars$par$ncores <- 4
+      pars$debug$all.outputs <- TRUE
+      pars$matching$filtering$max.backfits <- 1E5
     selection <- NULL; alt.name <- ''
     message("Loading data from files...")
 
@@ -165,6 +172,6 @@
 ##############            
 
       
-      scores <- pair_scores(pars, refmat)jfffjjj
+      scores <- pair_scores(pars, refmat)
       
       
