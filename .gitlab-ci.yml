@@ -1,0 +1,29 @@
+
+variables:
+  DATE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d%H%M')"
+  BUILD_SCRIPTS_ROOT_PATH: "/home/gitlab-runner/ci_cd/standalone/SAFERnmr"
+workflow:
+    rules:
+        - if: $CI_COMMIT_BRANCH == "main"
+stages:
+    - build
+    - push
+
+build_safer_image:
+    stage: build
+    script:
+    - bash "$BUILD_SCRIPTS_ROOT_PATH/build_container.sh"
+    rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
+
+push_safer_image:
+    stage: push
+    script:
+    - bash "$BUILD_SCRIPTS_ROOT_PATH/push_container.sh"
+    rules:
+    - if: $CI_COMMIT_BRANCH
+      exists:
+        - Dockerfile
+    
