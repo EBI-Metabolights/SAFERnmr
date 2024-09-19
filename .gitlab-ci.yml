@@ -1,6 +1,6 @@
 
 variables:
-  DATE_TAG: "${CI_COMMIT_REF_NAME}-${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d%H%M')"
+  DATE_TAG: "${CI_COMMIT_SHORT_SHA}"
   BUILD_SCRIPTS_ROOT_PATH: "/home/gitlab-runner/ci_cd/standalone/SAFERnmr"
 workflow:
     rules:
@@ -12,6 +12,7 @@ stages:
 build_safer_image:
     stage: build
     script:
+    - DATE_TAG="${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d%H%M')" 
     - bash "$BUILD_SCRIPTS_ROOT_PATH/build_container.sh"
     rules:
     - if: $CI_COMMIT_BRANCH
@@ -21,6 +22,7 @@ build_safer_image:
 push_safer_image:
     stage: push
     script:
+    - DATE_TAG="${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d%H%M')"
     - bash "$BUILD_SCRIPTS_ROOT_PATH/push_container.sh"
     rules:
     - if: $CI_COMMIT_BRANCH
