@@ -85,9 +85,28 @@ fse <- function(pars){
                                   # doesn't require alignment. normalization ok
                                   # but not necessary. scaling, no.)
       ppm <- X_raw[1,]            # ppm vector (corresponding to cols of xmat)
-        digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
-        
-        
+      digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
+      
+      message('digital resolution of xmat is ', digital.res, ' ppm.')
+      if (!is.null(pars$opts$npoints)){
+        if (pars$opts$npoints < length(ppm)){
+          
+          # Re-interpolate dataset spectra to a lower number of points to save compute
+            rs <- resample_spectra(xmat, ppm, npoints = pars$opts$npoints, cores = pars$par$ncores)
+            ppm <- rs$ppm
+            xmat <- rs$spectra
+            
+            rm(rs)
+          
+          digital.res <- ppm %>% diff %>% mean %>% abs # ppm per element
+          message('Using opts:npoints @ ',pars$opts$npoints, ' points. 
+                  \nNew xmat digital resolution: ', digital.res)
+
+        }
+      }
+      # if not set, do nothing (warning is printed)
+      
+      
 ################ Set up parameters ##################
     
   # Corr Pocket Pairs 
