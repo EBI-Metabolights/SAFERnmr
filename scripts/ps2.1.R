@@ -36,13 +36,12 @@ signature_similarity_multifeature <- function(rp, sd_tol = 2, cutoff.r2 = 0.9){
 
   # Functions: 
 
-  df <- data.frame(x = rp$pct.ref %>% scale_between(0,1),
-                   y = (rp$pct.ref * rp$fit.scale) %>% scale_between(0,1))
-  
-  if (nrow(df %>% unique) > 2){
-    # res <- itfit(df, cutoff.r2 = 0.9)#, show = TRUE)
-    model <- MASS::lqs(y ~ x, data = df)
-      model$residuals
+  if (nrow(rp %>% unique) > 2){
+
+    model <- lqs_features(rp)
+    
+    # plot_features(rp, backfits, match.info)
+    # plot_features(rp, backfits, match.info, selectrows = !model$outliers)
     
     return(list(excluded = res$excluded,
             stats = res$stats))
@@ -186,16 +185,25 @@ plot_features <- function(rp, backfits, match.info, selectrows = NULL, plt.rng =
 
 }
 
-lqs_features <- function(sd_tol = 1, show = FALSE)
+lqs_features <- function(rp, do.scale=TRUE, sd_tol = 1, show = FALSE){
     
-    df <- data.frame(x = rp$pct.ref,# %>% scale_between(0,1),
-                     y = (rp$pct.ref * rp$fit.scale))# %>% scale_between(0,1))
+  # Make the dataframe using the rp object
+    if (do.scale){
+      df <- data.frame(x = rp$pct.ref %>% scale_between(0,1),
+                       y = (rp$pct.ref * rp$fit.scale) %>% scale_between(0,1))
+    } else {
+      df <- data.frame(x = rp$pct.ref,
+                       y = (rp$pct.ref * rp$fit.scale))
+      
+    }
     
+  # Model the data using least quantile of squared residuals
     model <- MASS::lqs(y ~ x, data = df)
       absr <- abs(model$residuals)
       rsd <- sd(absr)
       outliers <- absr > rsd * sd_tol
       r2 <- 1-(sum(model$residuals^2) / sum((df$y - mean(df$y))^2))
+      rval <- cor(df$x[!outliers], df$y[!outliers]) 
       
       if (show){
         plot(df$x, df$y)
@@ -206,34 +214,16 @@ lqs_features <- function(sd_tol = 1, show = FALSE)
         abline(b = model$coefficients[2], a = model$coefficients[1] - rsd, col = 'blue', lty=2)
       }
       
+    return(
       list(coefficients = model$coefficients,
            outliers = outliers,
            residuals = model$residuals,
            sd.residuals = rsd,
-           r2 = r2)
-
-    return(list(stats = res$stats,
-                exclude = res$excluded))
+           r2 = r2,
+           rval = rval)
+           )
 }
       
-    # model$coefficients
-    # model$crit
-    # model$fitted.values
-    # model$residuals
-    # model$model
-    
-    # model <- mblm(y ~ x, data = df)
-    #           summary(model)
-    #           plot(df$x, df$y)
-    #           abline(model, col = "orange")
-    #
-    # model$coefficients
-    # model$residuals
-    # model$fitted.values
-    # model$slopes
-    # model$intercepts
-    # model$model
-    # model$effects          
     
     # res <- itfit(df, cutoff.r2 = 0.9)#, show = TRUE)
     
@@ -292,9 +282,6 @@ lqs_features <- function(sd_tol = 1, show = FALSE)
                 fit = res,
                 corr = corr))
   })
-  
-  
-}
 
 
 
@@ -326,118 +313,3 @@ lqs_features <- function(sd_tol = 1, show = FALSE)
       
       # ref.pairs$feat
     
-}
-
-  fit_unit_line <- function(rp, sds, show = FALSE){
-    
-    df <- data.frame(x = rp$pct.ref %>% scale_between(0,1),
-                     y = (rp$pct.ref * rp$fit.scale) %>% scale_between(0,1))
-    
-    # model <- lm(df$y ~ df$x, data = df)
-      # abline(model, col="blue")
-      # ms <- summary(model)
-      stdv <- sd(residuals)
-      cutoff <- stdv*sds
-      within_sds <- abs(residuals) <= cutoff
-        # these are the rows of rp that would give a good whole-signature fit
-      
-    # Plot feature quants
-    
-      if(show){
-      plot(df$x, xlab = 'feature in ref', df$y, ylab = 'feature in spec')
-        abline(a = 0, b = 1, col = "blue")
-        residuals <- df$x - df$y
-        
-        points(df$x[within_sds], df$y[within_sds], pch=19, col="blue")
-        abline(a = -cutoff, b = 1, col = "blue", lty = 2)
-        abline(a = cutoff, b = 1, col = "blue", lty = 2)
-        
-      }
-  
-      return(list(residuals = residuals,
-                  sd = stdv,
-                  within_sds = within_sds))
-}
-  
-  itfit <- function(df, cutoff.r2 = 0.9, show = FALSE){
-      df.copy <- df
-      n <- nrow(df)
-      df$id = 1:nrow(df)
-      r2 <- 0
-      
-      record <- data.frame(high_leverage_points = NA,
-                           r2 = NA,
-                           m = NA,
-                           b = NA,
-                           iteration = NA,
-                           corr = NA)
-      j <- 1
-      while(r2 < cutoff.r2 & 
-            nrow(df %>% unique) > 1 & # don't want to end up with a single point (or duplicates thereof)
-            j < n){
-        
-          model <- lm(y ~ x, data = df) # recompute model
-          r2 <- 1 - sum((model$residuals)^2)/sum((df$y-mean(df$y))^2)
-          leverage <- hatvalues(model)
-          threshold <- 2 * (length(coef(model)) / nrow(df))
-          hlp <- which(leverage > threshold)
-  
-          if (any(hlp)){
-            
-            # plot(df$x, xlab = 'feature in ref', df$y, ylab = 'feature in spec')
-            #   abline(a = model$coefficients[1], b = model$coefficients[2], col = "blue")
-            #   points(df$x[hlp], df$y[hlp], pch=19, col="blue")
-            
-            record <- rbind(record, 
-                            data.frame(high_leverage_points = df$id[hlp],
-                                       r2 = r2,
-                                       m = model$coefficients[2] %>% as.numeric,
-                                       b = model$coefficients[1] %>% as.numeric,
-                                       iteration = j,
-                                       corr = cor(df$x, df$y)
-                                       )
-                            )
-            df <- df[-hlp,]
-          }
-          j <- j + 1
-  
-      }
-      
-      record <- record[-1,] # remove NA init row
-      
-      if (nrow(record)>0){
-        iters <- max(record$iteration)-1
-        hlps <- record$high_leverage_points[record$iteration <= iters]
-      } else {
-        iters <- 1
-        hlps <- NULL
-      }
-      
-      corr <- cor(df$x[-hlps], df$y[-hlps])
-      
-      if (show){
-        
-        plot(df.copy$x, xlab = 'feature in ref', df.copy$y, ylab = 'feature in spec')
-          abline(a = model$coefficients[1], b = model$coefficients[2], col = "blue")
-          if (nrow(record)>0){
-            points(df.copy$x[hlps], df.copy$y[hlps], pch=19, col="blue")
-          }
-          
-          text(x = .6, y=.7, paste0('Slope = ', model$coefficients[2] %>% round(4), 
-                                    '\nIntercept = ', model$coefficients[1] %>% round(4),
-                                    '\nR^2 = ', r2 %>% round(4),
-                                    '\nCorr = ', corr %>% round(4)))
-      }
-      
-      res <- data.frame(r2 = r2,
-                 corr = corr,
-                 slope = model$coefficients[2],
-                 intercept = model$coefficients[1])
-      
-      return(
-              list(model = model,
-                    stats = res,
-                    record = record,
-                    excluded = hlps)
-                   )
-}
