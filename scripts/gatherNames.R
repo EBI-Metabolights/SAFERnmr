@@ -1,5 +1,5 @@
 devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
-
+pipeline('/Users/mjudge/Downloads/params.yaml')
 
 # For each study, note the metabolites id'd ####
     
@@ -607,7 +607,8 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
         print(plot_gg)
         
         # Save the plot to a PDF file
-        ggsave("plot_gg.pdf", plot = plot_gg, device = "pdf", width = 4, height = 3)        
+        ggsave("plot_gg.pdf", plot = plot_gg, device = "pdf", width = 4, height = 3)  
+        
     # Make venn diagram ####
     # Load library
     library(VennDiagram)
@@ -615,7 +616,9 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
     # Prepare palette:
     library(RColorBrewer)
     
-      
+      # Load table
+        # annot
+        
       # Add the run.id
         run.sum <- read.csv(paste0(tmpdir, 'run.summary.csv'))
         safer.annots$run_id <- run.sum$run_id
@@ -623,8 +626,8 @@ tmpdir <- '/Users/mjudge/Dropbox (Edison_Lab@UGA)/MJ_UGA_Root/Scheduling/safer_m
     # 
       
     all.chebis <- c(gissmo$chebi, 
-                    chenomx.cmpds,
-                    )
+                    chenomx.chebi,
+                    author.chebi)
     
     myCol <- brewer.pal(length(unique(annot$)), "Pastel2")
     

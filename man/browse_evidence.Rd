@@ -7,7 +7,8 @@
 browse_evidence(
   results.dir = NULL,
   select.compounds = NULL,
-  select.samples = NULL
+  select.samples = NULL,
+  clusterSamples = T
 )
 }
 \arguments{
