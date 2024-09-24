@@ -12,7 +12,7 @@ stages:
 build_safer_image:
     stage: build
     script:
-    - DATE_TAG="${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d%H%M')" 
+    - DATE_TAG="${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d')" 
     - bash "$BUILD_SCRIPTS_ROOT_PATH/build_container.sh"
     rules:
     - if: $CI_COMMIT_BRANCH
@@ -22,7 +22,7 @@ build_safer_image:
 push_safer_image:
     stage: push
     script:
-    - DATE_TAG="${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d%H%M')"
+    - DATE_TAG="${CI_COMMIT_SHORT_SHA}-$(date +'%Y%m%d')"
     - bash "$BUILD_SCRIPTS_ROOT_PATH/push_container.sh"
     rules:
     - if: $CI_COMMIT_BRANCH
