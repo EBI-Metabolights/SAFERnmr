@@ -52,8 +52,11 @@ unzip_studies <- function(data.dir, exclude = NULL){
           # New ####
             tryCatch({
               run.id <- d %>% stringr::str_remove('.zip$')
+              
               out <- paste0(data.dir, '/',run.id) %>% stringr::str_replace_all('//','/')
               unzip(paste0(data.dir, '/',d) %>% stringr::str_replace_all('//','/'), junkpaths = FALSE, exdir = out)
+              out <- unrecurse(out)
+              
               check_heatmap_html_output(out)
               return(0)
               
@@ -117,5 +120,61 @@ index_studies <- function(data.dir, exclude = NULL){
     df <- df[,!(names(df) == 'X')]
     df$start <- df$run_id %>% as.POSIXct(origin = "1970-01-01")
     df
+}
+
+dig <- function(top.dir) {
+  # Extract the name of the top directory
+  dir.name <- basename(top.dir)
+  
+  # Get the contents of the top directory
+  contents <- dir(top.dir)
+  
+  # Check if the directory contains exactly one item
+  if (length(contents) == 1) {
+    next.dir <- file.path(top.dir, contents)  # Build the next directory path
+    
+    # Recursively check if the contained directory has the same name as the current one
+    if (contents == dir.name && file.info(next.dir)$isdir) {
+      return(dig(next.dir))  # Recurse if it matches and is a directory
+    } 
+    
+    # If not, return the next directory (which is not recursive)
+    return(next.dir)
+  }
+  
+  # If there are multiple items or no matching directory, return the current directory
+  return(top.dir)
+}
+
+# Example usage:
+# deepest_dir <- dig("/path/to/your/root/directory")
+# print(deepest_dir)
+
+unrecurse <- function(top.dir){
+  # Create a temporary directory to hold the files
+  temp_dir <- tempdir()  # This will use R's temporary directory
+  
+  # Find the deepest directory containing files
+  true.dir <- dig(top.dir)
+  
+  # If true.dir is the same as top.dir, no recursion, nothing to move
+  if (normalizePath(true.dir) == normalizePath(top.dir)) {
+    message("No nested recursion detected.")
+    return(NULL)
+  }
+  
+  # Move the true dir to temp 
+  file.rename(true.dir, file.path(temp_dir, basename(true.dir)))
+  message(paste("Moved true directory '", true.dir, "' to temp: ", temp_dir))
+  
+  # Delete the top.dir
+  unlink(top.dir, recursive = TRUE)
+  message(paste("Deleted original directory:", top.dir))
+  
+  # Move the temp to top.dir
+  file.rename(file.path(temp_dir, basename(true.dir)), top.dir)
+  message(paste("Reassigned true directory back to :", top.dir))
+  
+  return(top.dir)
 }
 

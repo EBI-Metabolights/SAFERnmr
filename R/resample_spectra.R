@@ -18,10 +18,12 @@
 #'
 #' @export
 resample_spectra <- function(xmat, ppm, npoints, cores = 1){
-   
-  ppm <- sort(ppm)
   
-  ppm.resampled <- seq(from = min(ppm), to = max(ppm), length.out = npoints)
+  if (ppm[2] < ppm[1]){
+    ppm.resampled <- seq(from = max(ppm), to = min(ppm), length.out = npoints)
+  } else {
+    ppm.resampled <- seq(from = min(ppm), to = max(ppm), length.out = npoints)
+  }
     
   xl <- split(xmat, row(xmat))
   
@@ -29,8 +31,8 @@ resample_spectra <- function(xmat, ppm, npoints, cores = 1){
     {
       
       # Linear interpolation to dataset ppm axis ####
-        # spec <- l[[1]]
-        # roi <- c(2.4,2.8) %>% sort
+        # spec <- xl[[1]]
+        # roi <- c(2.4,6.8) %>% sort
         # inds <-  vectInds(roi, ppm) %>% fillbetween
         #  simplePlot(spec[inds], xvect = ppm[inds])
         
@@ -40,6 +42,7 @@ resample_spectra <- function(xmat, ppm, npoints, cores = 1){
         
         # inds <-  vectInds(roi, ppm.resampled) %>% fillbetween
         # simplePlot(spec.resampled[inds], xvect = ppm.resampled[inds])
+        # simplePlot(spec[inds], xvect = ppm.resampled[inds])
         
       # Return a copy of the list element with mapped data added ####
         return(spec.resampled)
