@@ -804,6 +804,14 @@ server <- function(input, output, session) {
 # Run app ####
 
 
+message('\n\n\t Welcome to the Evidence Browser.')
+message('\n\n\t if the browser does not open, you should see a link, e.g.')
+message('\n\n\t\t "Listening on http://127.0.0.1:3611"')
+message('\n\n\t "right click the link and select "Open Link".')
+message('\n\n\t optional arguments:')
+message('\n\n\t - select.compounds')
+message('\n\n\t - select.samples')
+message('\n\n\t - clusterSamples')
 
 shinyApp(ui, server)
   
