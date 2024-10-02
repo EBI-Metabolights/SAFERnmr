@@ -95,6 +95,7 @@ fse <- function(pars){
             rs <- resample_spectra(xmat, ppm, npoints = pars$opts$npoints, cores = pars$par$ncores)
             ppm <- rs$ppm
             xmat <- rs$spectra
+            if (nrow(rs$spectra) < pars$tina$min.subset){stop('The minimum number of spectra is: ', pars$tina$min.subset,'. The submitted dataset only has ', nrow(rs$spectra),'. SAFER terminated.')}
             
             rm(rs)
           
