@@ -115,8 +115,15 @@ browse_evidence <- function(results.dir = NULL, select.compounds = NULL, select.
           
       # Remove all compounds without any scores > 0.5
 
+        # If select.compounds is a name, then convert to an index
+          if (is.character(select.compounds)){
+            select.compound.inds <- grepl(pattern = select.compounds, rownames(scores.matrix)) %>% which
+          } else {
+            select.compound.inds <- select.compounds
+          }
+
         score.cutoff <- 0
-        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > score.cutoff), select.compounds)
+        keeprefs <-  intersect(which(apply(scores.matrix, 1, max) > score.cutoff), select.compound.inds)
         
         keepsamples <-  which(apply(scores.matrix, 2, max) > score.cutoff)
           message('Out of ', ncol(scores.matrix), ' samples, ', length(keepsamples), ' passed max score cutoff of ', score.cutoff, '. ')
