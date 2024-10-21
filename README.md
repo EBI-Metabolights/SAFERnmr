@@ -1,5 +1,6 @@
 <img width="364" alt="image" src="https://github.com/user-attachments/assets/7a12cd62-04f7-4cd4-a21c-6e52c54f6686">
-## SAFER
+
+## SAFER-NMR
 (Spectral Annotation by Feature Extraction and Reference matching)
 
 [![DOI](https://zenodo.org/badge/531570333.svg)](https://zenodo.org/doi/10.5281/zenodo.10022482)
