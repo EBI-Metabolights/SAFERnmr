@@ -1,3 +1,4 @@
+<img width="364" alt="image" src="https://github.com/user-attachments/assets/7a12cd62-04f7-4cd4-a21c-6e52c54f6686">
 ## SAFER
 (Spectral Annotation by Feature Extraction and Reference matching)
 
