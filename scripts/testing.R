@@ -8,6 +8,7 @@ devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')#1697793655
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1710856438' # latest 395
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1712450825' # ncrassa
 # tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709892382' # latest mtbls1
+# tmpdir <- '/Users/mjudge/Documents/ftp_ebi/pipeline_runs_new/1709742511' # fits mtbls1
 # browse_evidence(tmpdir)
 
 # backfit.results <- readRDS(paste0(tmpdir, "/smrf.RDS"))
@@ -95,7 +96,7 @@ unzip_studies <- function(data.dir, exclude = NULL){
 }
 
     unzip_studies(data.dir, exclude = c('1697751863','1697759923'))
-    run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923'))
+    run.idx <- index_studies(data.dir, exclude = c('1697751863','1697759923','1713439191',''))
 
 ########### Just look at latest one ######
   

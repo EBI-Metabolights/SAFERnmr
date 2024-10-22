@@ -517,6 +517,31 @@ valid_pars <- function(pars, quiet = FALSE){
       }
         pars$debug <- debug
         
+      # Validate opts ####
+        
+        
+        if(!is.null(pars$opts)){
+          opts <- pars$opts
+          
+          if(!is.null(opts$npoints)){
+            if (!is.integer(opts$npoints)) {
+              warnings <- c(warnings, paste("opts$npoints should be an integer. Current value:", opts$npoints))
+            } else {
+              if (opts$npoints > 33000){
+                warnings <- c(warnings, paste("Consider setting opts$npoints lower (~32k) for efficiency. Current value:", opts$npoints))
+              }
+            }
+          } else {
+            warnings <- c(warnings, paste("opts$npoints was not set in params file. Defaulting to matrix size."))
+          }
+          
+        } else {
+          warnings <- c(warnings, paste("opts was not set in params file. Using default options fo opts$npoints. Consider getting the newest params.yaml template."))
+          pars$opts <- list(npoints = NULL)
+        }
+          
+        pars$debug <- debug
+        
       # ####
       
       return(list(pars = pars, 

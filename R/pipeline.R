@@ -98,6 +98,7 @@ pipeline <- function(params_loc, params_obj) {
                
   # Validate parameters before beginning
     
+    message('Validating parameters...')
     par.val <- valid_pars(pars)
     pars <- par.val$pars
     pars.passed.checks <- par.val$validation.pass
@@ -354,6 +355,9 @@ pipeline <- function(params_loc, params_obj) {
   
   message('Saving session info...')
   saveRDS(sessionInfo(), paste0(pars$dirs$temp, "/session.info.RDS"))
-  
+  message('\nTo view results interactively on this machine, run the following: \n',
+        "\tbrowse_evidence('",pars$dirs$temp,"')\n\n",
+        "You may need to copy/right-click the address generated and open in your browser if it doesn't open automatically.\n",
+        "Thanks for using SAFER! Feel free to reach out @ https://github.com/EBI-Metabolights/SAFERnmr\n\n")
   return(run.summary$status)
 }

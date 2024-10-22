@@ -1,0 +1,56 @@
+dirs:
+  temp: /home/nmrbox/<your_username>/Documents/safer/results
+study:
+  id: MTBLS1
+  spectrometer.frequency: 700.0
+files:
+  spectral.matrix: /home/nmrbox/<your_username>/Documents/safer/matrices/liverpool_mats/MTBLS541_1r_NA_spectralMatrix.RDS
+  lib.data: /home/nmrbox/<your_username>/Documents/safer/libraries/data.list_700MHz.RDS
+corrpockets:
+  half.window: 0.06
+  noise.percentile: 0.99
+  only.region.between: ~
+  rcutoff: 0.5
+storm:
+  correlation.r.cutoff: 0.8
+  q: 0.01
+  b: 1.5
+  number.of.plots: 250
+tina:
+  bounds:
+  - -1.0
+  - 11.0
+  min.subset: 5.0
+  prom.ratio: 0.3
+  do.clustering: no
+  clustering:
+    max.eps: 50
+    minPts: 2
+    eps.stepsize: 0.01
+  nfeats: 10000
+  plots:
+    max.plots: 600
+    filtered.out: yes
+    filtered.features: yes
+    cleaned.clusters: yes
+matching:
+  cluster.profile: representative.feature
+  ref.sig.SD.cutoff: 0.01
+  max.hits: 5
+  r.thresh: 0.8
+  p.thresh: 0.01
+  filtering:
+    res.area.threshold: 0.25
+    ppm.tol: 0.1
+    max.backfits: 1E7
+par:
+  ncores: 16
+  type: FORK
+galaxy:
+  enabled: no
+opts:
+  npoints: 32000
+debug:
+  enabled: no
+  throttle_features: 100
+  all.outputs: yes
