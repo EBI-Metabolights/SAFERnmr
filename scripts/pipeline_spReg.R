@@ -20,7 +20,7 @@ pars$files$lib.data <- '/Users/mjudge/Downloads/safer/libraries/data.list_700MHz
 # pars$files$lib.data <- '/Users/mjudge/Downloads/safer/libraries/data.list_700MHz.RDS'
 pars$corrpockets$only.region.between <- c(1,10)
  
-pipeline(params_obj = pars)
+# pipeline(params_obj = pars)
 
 pars$dirs$temp <- '/Users/mjudge/Downloads/safer/results/1739774749'
 pars$matching$ref.sig.SD.cutoff <- 0.01
