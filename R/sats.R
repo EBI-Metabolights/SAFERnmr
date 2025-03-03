@@ -6,7 +6,9 @@
 # - protofeatures
 
 # Parameter setup ####
-    only.region.between <- pars$corrpockets$only.region.between
+    # Override for now:
+    only.region.between <- c(-0.5, 10.5)
+    # only.region.between <- pars$corrpockets$only.region.between
       if (is.null(only.region.between))                       # which ppms to run fse between
         {only.region.between <- range(ppm)}                   #   (default is all)
     correlation.r.cutoff <- pars$storm$correlation.r.cutoff   # rvalue cutoff for both subset selection (ref shape) and ref update (STOCSY)

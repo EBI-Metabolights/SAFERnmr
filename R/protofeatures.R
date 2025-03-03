@@ -70,5 +70,6 @@
       # actual signal (using their actual bounds) captured by the n% cutoff bounds.
 
       # ####
-
+    protofeatures = list(pocketPairs = pocketPairs,
+                         numPairs = numPairs)
   return(protofeatures)

@@ -1,4 +1,4 @@
-#' log_storm: 
+#' log_storm_core: 
 #' Locally Optimized Global STORM
 #' 
 #' Run modified STORM on the provided spectral region and ref shape.
@@ -45,11 +45,11 @@
 #' containing the reconstructed metabolite concentrations (rows are samples, columns are metabolites).
 #' "status" is a character string indicating whether the method converged successfully or failed.
 #'
-#' @export log_storm
+#' @export log_storm_core
 #' @importFrom magrittr %>%
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
-log_storm=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
+log_storm_core=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
                         q=0.05, minpeak = 10, refSpec=NULL, ref.idx=NULL,
                         driver = NULL, range.limit=400){
 
