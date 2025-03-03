@@ -70,10 +70,7 @@ corrPocketPairs_al <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALSE, wdl
         # Pull vect and peaks
           peaks <- extractPeaks_corr(cc[,i], plots = FALSE)
           notcenter <- which(!(peaks$peaks %in% res$center))
-          # bigEnough <- lapply(notcenter, function(x) peaks$bounds[[x]] %>% 
-          #                       unlist %>% 
-          #                       diff) %>% unlist >= noiseWidth
-          
+
           bigEnough <- lapply(notcenter, function(x) peaks$bounds[[x]] %>% 
                                 unlist %>% fillbetween %>% 
                                  cc[.,i] %>% ">" (.,rcutoff) %>% sum) %>% unlist >= noiseWidth
