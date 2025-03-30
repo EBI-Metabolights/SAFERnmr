@@ -6,7 +6,7 @@
 #' @param extractPockets If \code{TRUE}, calculate correlation pockets for each column of \code{x} within each sliding window.
 #' @param plotting If \code{TRUE}, produce a stackplot of the correlation matrix with pockets highlighted.
 #' @param vshift Vertical shift in plot.
-#' @param ppm X-axis values for plot. If not specified, uses column numbers of \code{x}.
+#' @param ppm X-axis values for plot - only used for plotting. If not specified, uses column numbers of \code{x}.
 #'
 #' @return A list containing the following items:
 #' \item{corr_compact}{The compact form of the sliding correlation matrix.}
@@ -54,26 +54,15 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
   # Calc corr pocket for each
     if (extractPockets){
       pockets <- rep(FALSE, length(in.bounds)) %>% pracma::Reshape(., nrow(in.bounds), ncol(in.bounds))
-
+      # corrmat.split <- lapply(1:ncol(corrmat), function(x) corrmat[,x])
       
+      # mclapply()
       for (j in 1:ncol(corrmat)){
         use <- in.bounds[,j] %>% which
         bounds <- corr_expand(peak = (use %in% os) %>% which,
                               localMinima(corrmat[use,j]),
                               vRange = c(1,length(use))) %>% unlist %>% use[.]
         pockets[bounds[1]:bounds[2],j] <- TRUE
-        
-        
-        
-        # # Align within the center peak region
-        #   
-        #     corrmat[use,j]
-        #     pockets[,j]
-        #     
-        #     # Get the data from the external shift regions of 
-        #       x[, indsmat[use,j]]
-        #       
-
         
       }
       
@@ -83,29 +72,6 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
       pockets <- NULL
     }
   
-  # Calculate alignment for each 
-    # if (extractPockets){
-    #   pockets <- rep(FALSE, length(in.bounds)) %>% pracma::Reshape(., nrow(in.bounds), ncol(in.bounds))
-    #   
-    #   for (j in 1:ncol(corrmat)){
-    #     use <- in.bounds[,j] %>% which
-    #     bounds <- corr_expand(peak = (use %in% os) %>% which,
-    #                           localMinima(corrmat[use,j]),
-    #                           vRange = c(1,length(use))) %>% unlist %>% use[.]
-    #     pockets[bounds[2]:bounds[1],j] <- TRUE
-    #   }
-    # } else {
-    #   pockets <- NULL
-    # }
-  
-    # in.bounds 2 is the correlation pockets
-      
-            # a[a < 0] <- 0
-      
-          # corrs <- a %>% t %>% rowSums(., na.rm = TRUE) %>% t
-          # lengths <- filt2 %>% t %>% rowSums %>% t
-          
-          # Debug using b, a small subset of a
 #######################################################################################################    
     g <- NULL
     if (plotting){
@@ -136,10 +102,6 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
         
           g <- stackplot(cmat, vshift = vshift, hshift = 0, xvect = ppm)
     }
-  
-    # How to define the corr pocket bounds and scores using this info???
-    # scores <- 
-      # stackStocsys?
       
   return(list(corr_compact = corrmat,
               indsmat = indsmat,
