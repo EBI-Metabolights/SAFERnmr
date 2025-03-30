@@ -24,7 +24,7 @@ slidingCorr(
 
 \item{vshift}{Vertical shift in plot.}
 
-\item{ppm}{X-axis values for plot. If not specified, uses column numbers of \code{x}.}
+\item{ppm}{X-axis values for plot - only used for plotting. If not specified, uses column numbers of \code{x}.}
 }
 \value{
 A list containing the following items:
