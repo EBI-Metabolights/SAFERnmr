@@ -28,49 +28,91 @@
 #' @importFrom magrittr %>%
 #'
 #' @export
-slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 20, ppm = NULL){
+slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 20, ppm = NULL, n.cores = 10){
   #ws <- 250
-  
-  if (is.null(ppm)){ppm <- 1:ncol(x)}
+  ppm.inds <- 1:ncol(x)
+  if (is.null(ppm)){ppm <- ppm.inds}
   
   wind <- -ws:ws
   os <- ws+1
   
-  corrmat <- matrix(data = NA, nrow = 2*ws+1, ncol = ncol(x))
+  # Just use a vector as a template, will combine into a matrix later
+  corrmat <- matrix(data = NA, nrow = 2*ws+1, ncol=1)
   covmat <- corrmat
+  
+  # Map for keeping calculations in bounds of edges
   indsmat <- outer(wind, 1:ncol(x), "+")
     oob <- indsmat < 1 | indsmat > ncol(x)
     indsmat[oob] <- NA
     
   in.bounds <- (indsmat %>% is.na %>% "!"(.)) %>% pracma::Reshape(., nrow(indsmat), ncol(indsmat))
+   
+  # Set up multicore
     
+    # split up the ppm vector into chunks
+    # but first, randomize it so certain cores don't get stuck with no 
+    ppm.rand <- sample(ppm.inds)
+      unrand <- order(ppm.rand, decreasing = FALSE)
+    groups <- cut(ppm.rand, breaks = n.cores, labels = FALSE)
+    ppm.chunks <- split(ppm.rand,groups)
     
-    for (j in 1:ncol(x)){
-      use <- in.bounds[,j] %>% which
-      corrmat[use, j] <- a<-cor(x[, j], x[, indsmat[use,j]])
-      covmat[use, j] <- a<-cov(x[, j], x[, indsmat[use,j]])
-    }
-  
-  # Calc corr pocket for each
-    if (extractPockets){
-      pockets <- rep(FALSE, length(in.bounds)) %>% pracma::Reshape(., nrow(in.bounds), ncol(in.bounds))
-      # corrmat.split <- lapply(1:ncol(corrmat), function(x) corrmat[,x])
+    results <- mclapply(ppm.chunks, function(ppm.segment){
+      # ppm.segment <- ppm.chunks[[1]]
       
-      # mclapply()
-      for (j in 1:ncol(corrmat)){
+      lapply(ppm.segment, function(j){
+        # j <- ppm.segment[[1]]
+        
+        use <- in.bounds[,j] %>% which
+        corrmat[use] <- cor(x[, j], x[, indsmat[use,j]])
+        covmat[use] <- cov(x[, j], x[, indsmat[use,j]])
+        
+        return(list(cors = corrmat,
+                    covs = covmat,
+                    j = j))
+      })
+      
+    }, mc.cores = n.cores) %>% unlist(recursive = FALSE)
+  
+    cors <- lapply(results, function(result){
+      list(cors = result$cors,
+           j = result$j)
+    })
+    
+    covs <- lapply(results, function(result){
+      list(covs = result$covs,
+           j = result$j)
+    })
+    
+  # Now we have a list containing the local covariance and correlation calcultation for each spectral point.
+    
+  # Calculate the primary correlation peak for each
+    if (extractPockets){
+      
+      is.pocket <- rep(FALSE, nrow(in.bounds))
+      
+      pockets.unsorted <- mclapply(cors, function(result){
+        # result <- cors[[1]]
+        j <- result$j
+        
         use <- in.bounds[,j] %>% which
         bounds <- corr_expand(peak = (use %in% os) %>% which,
-                              localMinima(corrmat[use,j]),
+                              localMinima(result$cors[use]),
                               vRange = c(1,length(use))) %>% unlist %>% use[.]
-        pockets[bounds[1]:bounds[2],j] <- TRUE
+        is.pocket[bounds[1]:bounds[2]] <- TRUE
         
-      }
-      
-      
-      
+        return(is.pocket)
+      }, mc.cores = n.cores) %>% do.call(cbind,.)
+    
+      pockets <- pockets.unsorted[, unrand]
+
     } else {
       pockets <- NULL
     }
+    
+    # Unrandomize the results
+    
+    corrmat <- cors[unrand] %>% do.call(cbind,.)
+    covmat <- covs[unrand] %>% do.call(cbind,.)
   
 #######################################################################################################    
     g <- NULL
