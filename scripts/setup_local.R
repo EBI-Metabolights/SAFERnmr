@@ -1,5 +1,7 @@
 # Setup Dirs
 
+devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
+
 parent <- "/Users/mjudge/Downloads"
 dirs <- c("results", "params", "matrices", "libraries")
 args <- paste("-p", file.path(parent, "safer", dirs), collapse = " ")

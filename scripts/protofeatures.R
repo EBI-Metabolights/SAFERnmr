@@ -8,7 +8,9 @@
 # Get correlation pockets (protofeatures)
 
 ################ Set up parameters ##################
-    
+  
+  plot.location <- pars$dirs$temp
+
   # Corr Pocket Pairs 
 
     half.window <- (pars$corrpockets$half.window / digital.res) %>% ceiling  
@@ -40,18 +42,77 @@
  
     # Run corrpocketPairs on everything
       
-      pocketPairs <- corrPocketPairs_al(xmat, ppm, ws = half.window, plotHeatmap = FALSE,
+      pocketPairs <- correlation_pocket_pairs(xmat, ppm, ws = half.window, plotHeatmap = FALSE,
                                         wdlimit = noise.percentile, # **** **** **** #
+                                        noise.width.multiple = 2,
                                         rcutoff = cpp.rcutoff)
     
+      
       pocketPairs %>% debug_write("pocketPairs.RDS", pars)
       # pocketPairs <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/pocketPairs.RDS"))
+
+      
+    # Clean up the result
+      # Remove nulls
+      pocketPairs$peakBounds <- pocketPairs$peakBounds[!is.null(pocketPairs$peakBounds)]
+      
+      
+    # Unlist into protofeatures
     
+      protofeatures <- mclapply(pocketPairs$peakBounds, function(x) {
+        
+          null.ones <- is.null(x$secondary)
+          
+          lapply(x$secondary[!null.ones], function(y) {
+            
+            if (!is.null(y)){
+              data.frame(primary.lower = x$primary['lower'],
+                         primary.upper = x$primary['upper'],
+                         secondary.lower = y[['lower']],
+                         secondary.upper = y[['upper']],
+                         res.center = x$res.center, 
+                         index = x$index,
+                         row.names = NULL)
+            }
+            else {
+              NULL
+            }
+          }) %>% do.call(rbind,.)
+
+      }, mc.cores = 10) %>% do.call(rbind,.)
+    
+    # Expand protofeature
+    
+        # Re-compute 
+        
+        protofeatures.split <- lapply(1:nrow(protofeatures), function(x) protofeatures[x,])
+        
+        blank <- rep(FALSE, half.window*2+3) # 1:half.window in each direction, inclusive, plus 0
+        
+          i <- 0
+          
+          i <- i + 1
+          p <- protofeatures.split[[i]]
+          driver <- p$index
+          # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
+          peak.inds <- c(p$secondary.lower:p$secondary.upper)
+          
+          shape <- pocketPairs$corr[, driver]
+          plot(x = 1:length(shape), y = shape, type = 'l')
+            lines(x = peak.inds, shape[peak.inds], col='blue', lwd=2)
+            
+        simplePlot(shape)
+        shape[-peak.inds] <- 0
+
+        shape <- pocketPairs$cov[,
+                                 driver] %>% simplePlot()
+        
+        # Using existing cov corr mats
+      
     # Report number of pairs
       
-      numPairs <- pocketPairs$peakMap %>% is.na %>% "!"(.) %>% t %>% rowSums(na.rm = TRUE) %>% ">"(.,0) %>% sum
-      message("Got ", numPairs, " corrpocket pairs from dataset.")
-      window.index <- -half.window:half.window
+      numPairs <- nrow(protofeatures)
+      window.index <- (-half.window-1):(half.window+1)
       
       pdf(file = paste0(plot.location, "corrpeak_distribution.pdf"),   # The directory you want to save the file in
           width = 4, # The width of the plot in inches

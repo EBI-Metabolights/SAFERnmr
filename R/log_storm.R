@@ -49,327 +49,157 @@
 #' @importFrom magrittr %>%
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
-log_storm_core=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
+log_storm=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
                         q=0.05, minpeak = 10, refSpec=NULL, ref.idx=NULL,
                         driver = NULL, range.limit=400){
 
 ############ Setup ##################################################  
     
-  # Window cannot exceed ppm region
-    
-    if (is.null(ppm)){ppm <- 1:ncol(xmat)}
-    indLimits <- c(1,length(ppm))
-  
-  # Set ref based on refSpec index and ref.idx
-  
-    if (length(refSpec) == 1){
-      # Assume this is a row index of xmat
-        ref.init <- xmat[refSpec, ref.idx]
-    } else {
-      # Assume this is a ref shape, use as-is (but without NAs)
-        ref.init <- refSpec[!is.na(refSpec)]
-    }
-    
-    ref <- ref.init
-    
-    # For the first driver, use pkMax
-    if (is.null(driver)){
-      driver.init <- next_driver(ref.profile = ref, current.driver = NULL, 
-                                 ref.idx = ref.idx, behavior = 'maxPk') %>% .$idx 
-      
-    } else {driver.init <- driver}
-      ref.max <- driver.init
+    only.region.between <- pars$corrpockets$only.region.between
+    if (is.null(only.region.between))                       # which ppms to run fse between
+      {only.region.between <- range(ppm)}                   #   (default is all)
+    correlation.r.cutoff <- pars$storm$correlation.r.cutoff   # rvalue cutoff for both subset selection (ref shape) and ref update (STOCSY)
+    q <- pars$storm$q                                         # q param from storm (pval cutoff after mhtc)
+    b <- pars$storm$b                                         # number of peak widths to expand ref by on each side
 
 ############ Initialize for the loop ########################################
-  
-    fullstack <- 1:nrow(xmat)
-    subset.current= fullstack # cannot be same as .previous or loop won't run
-    subset.previous <- 0
- 
-    corr <- rep(1,length(ref))
-    covar <- ref
-    ref.pass <- rep(TRUE,length(ref))
-     
+
+    bounds <- vectInds(only.region.between, ppm)
+    testregion <- bounds[2]:bounds[1]
     
-    # Make a ref.expanded object to hold ref information for extractPeaks #####
-      
-      ref.expanded <- list(wind = ref.idx %>% range %>% fillbetween)
-      ref.pass <- rep(FALSE, length(ref.expanded$wind) )
-      ref.pass[ref.expanded$wind %in% ref.idx] <- TRUE
-      
-      
-    # Calculate the default expansion param based on the ref peak width #####
-      # Recalculate corr if using peak extraction to estimate expansion param
-        # corr <- cor(xmat[subset.current, ref.expanded$wind],
-        #             xmat[subset.current,  which.max(ref) %>% ref.idx[.] ])
-        # 
-      # Get the correlation profile peak boundaries ... or covar?
-        
-        # pks <- extractPeaks_corr(corr, mask = ref.pass, plots = TRUE)
-        # ref.max <- climb(pt = which.max(ref), pks = pks)
-        # simplePlot(rbind(corr, covar/max(covar, na.rm = TRUE)))
-      # Don't allow ref pieces of length < than that of smallest starting peak
-      # (if using covar of corrpeaks)
-        # runs <- ref.pass %>% as.integer %>% rle
-          # minpeak <- runs$lengths[as.logical(runs$values)] %>% min
+    cc.col <- cc.peaks[[1]]
+    
+    # Derive the inds for the storm seeds
+      protofeatures <- unlist_ccpeaks(cc.peaks)
+   
+      unlist_ccpeaks <- function(cc.peaks){
+        peak.list.all <- lapply(cc.peaks, function(cc.col){
           
-        # pkws <- lapply(1:length(pks$peaks), function(x) pks$bounds[[x]] %>% unlist %>% diff) %>% unlist
-        
-          # order(pkws)
-          # simplePlot(covar %>% t)
-
-      # Calculate the default expansion param based on the ref peak width
-        # defwidth <- lapply(1:length(pks$peaks), function(x) pks$bounds[[x]] %>% unlist %>% diff) %>% unlist %>% max
-        defwidth <- b
-      
-        
-    # Set up exit status modes #####
-      status <- "succeeded"
-      fail.opts <- list("empty subset",          # empty subset
-                        "subset degenerated",    # 1-3 spectra in the subset
-                        "reference degenerated", # reference < 3 points
-                        "did not converge")      # itlimit hit
-    
-    i=1        
-    itlimit = 25
-    
-    
-    
-############ Run storm loop ###################################################################
-
-  # Run storm loop until the subset contains exactly the same spectra as the previous one.
-  # Or, run while not all previous subset spectra are included in the current subset.
-  # - usually, this means that, in the previous iteration, subset.current did not change 
-  #   from subset.previous
-  #   subset.current is always smaller unless subset.previous is reset to fullstack
-    # original: while(length(which(!(subset.previous %in% subset.current)))>0){
-    
-    while( !all(subset.previous %in% subset.current) & i < itlimit){ 
-      
-  ## Update the subset ########################################################################
-        
-    # Update subset.previous to keep track of this loop's starting point #########
-      
-      subset.previous <- subset.current
-      
-    # Pull out the data for ref points in the previous subset #############
-      
-        # xmat[, ref.idx %>% range %>% fillbetween] %>% simplePlot
-      xmatr=xmat[fullstack, ref.idx]
-      
-    # Pull out the subset of spectra which appear to contain the ref ##########################
-    
-      
-          # Calculate similarity between ref shape and shapes in previous subset #####
-            
-            r=cor(t(xmatr), ref)     # try correlating ref shape to spectra
-              # this may help with the stats...
-              #   use = "pairwise.complete.obs", method = "pearson"
-            
-            
-            
-          # Get the inds of the significantly positively correlated spectra to the ref #####
-
-            a=-abs(r * sqrt((length(r)-2)/(1-r^2)))
-            pval=2*pt(a,(length(r)-2))
-            
-            # A pval AND rval threshold is used. The rval threshold is necessary 
-            # to make sure the ref shape is represented faithfully in the subset
-            # spectra. If this value increases, the ref shape will be more faithfully
-            # preserved through the iterations (although it can grow; points not
-            # incorporated into the ref before won't be used in the subset selection).
-            
-            sspass <- (pval<q & r>corrthresh) %>% which
-            
-            
-              if(length(sspass) < 3) # Failure modes 1 and 2
-              {
-                  plotrng <- c(min(ref.idx),max(ref.idx))
-                  plotreg <- c(min(ref.idx)-length(ref.idx)*1,max(ref.idx)+length(ref.idx)*1)
-                  ref.max <- NA
-                  corr <- rep(NA, length(plotrng %>% fillbetween))
-                  covar <- corr
-                  covar[(plotrng %>% fillbetween) %in% ref.idx] <- ref
-                  ref.pass <- rep(TRUE, length(corr))
-                  status <- fail.opts[[length(sspass)+1]]
-                break
-              }
-            
-            
-            
-          # Subset from the full spectral matrix stack #####
-            # subset.current = subset.previous[sspass] # keep the subset of spectra positively correlated with the ref
-            subset.current = fullstack[sspass] # keep the subset of spectra positively correlated with the ref
-            # xmat[subset.current, ref.idx %>% range %>% fillbetween] %>% simplePlot(xvect = ref.idx %>% range %>% fillbetween)
-            # ref %>% simplePlot(xvect = ref.idx)
-            
-            
-            
-  ## Update the ref ###########################################################################          
-      
-    # Identify the new driver ########
-        # if (is.na(ref.max) | is.null(ref.max)){browser()}
-        ref.max <- next_driver(ref.profile = ref, current.driver = ref.max, 
-                               ref.idx = ref.idx, behavior = 'samePk') %>% .$idx 
-            
-        # ref %>% simplePlot(xvect = ref.idx) + geom_vline(xintercept = ref.max) + geom_vline(xintercept = c(min(ref.expanded$wind), max(ref.expanded$wind)))
-        # xmat[subset.current, ref.idx %>% range %>% fillbetween] %>% simplePlot(xvect = ref.idx %>% range %>% fillbetween) + geom_vline(xintercept = ref.max) #+ geom_vline(xintercept = c(min(ref.expanded$wind), max(ref.expanded$wind)))
-        
-    # Old expansion methods: ####
-                                # # Using b parameter (standard)
-                                # 
-                                #   # Identify the ref center (center of correlation mass or actual center)
-                                #     index <- center_of_mass(corr[ref.pass]) %>% ceiling # center of correlation 
-                                #     mass (only positives; slight right bias)
-                                #     #index <- ref %>% seq_along %>% mean %>% ceiling # actual center (slight right bias)
-                                #     
-                                #   # Expand window from center (will not usually grow)
-                                #     ref.expanded <- list(newWind = ((ref.idx[index]-(b+1)):(ref.idx[index]+(b+1))) %>% 
-                                #                     keep_inds_in_bounds(indLimits))
-                                #     ref.expanded$wind <- ref.expanded$newWind # "newWind" = window, but 
-                                #     re-centered (as below in original storm)
-                                #       ref.expanded$corrLbound <- 1
-                                #       ref.expanded$corrRbound <- length(ref.expanded$wind)
-            
-            
-    # Determine the peak expansion parameter based on existing peaks in ref ##############
-    #   * The purpose of this is to allow just enough expansion to start including
-    #   any remaining resonances in the hypothesized multiplet. It's assumed the distances
-    #   between resonances in a multiplet are relatively consistent. We DON'T want
-    #   to grow this feature to include other peaks in the signature, however. Try
-    #   to maintain independence between features to allow for flexibility. 
-      
-       # # Get the correlation profile peak boundaries ... or covar? (use from last cycle)
-       #    pks <- extractPeaks_corr(corr, mask = ref.pass, plots = TRUE)
-       #  
-       #  # Find expansion parameter maxwidth. If there are actual peaks, use the corr 
-       #  # peak expansion approach. If not, then use the default width. 
-       #  
-       #    if (length(pks$peaks) > 0){
-       #      # New bounds are the range of all the new corr minima
-       #        bounds.sig.new <- pks$bounds %>% unlist %>% range %>% ref.expanded$wind[.]
-       #      
-       #      # The region will be expanded by span, or b
-       #        pkwidths <- lapply(1:length(pks$peaks), function(x) pks$bounds[[x]] %>% unlist %>% diff)
-       #        maxwidth <- pkwidths %>% unlist %>% mean %>% floor +1
-       #      
-       #    }else{
-       #      # Just use the default width (b)
-       #        bounds.sig.new <- ref.expanded$wind %>% range
-       #        maxwidth <- defwidth
-       #    }
-       #  
-    
-            
-      # Alt: Use Static maxwidth (expansion amount, number of points = peak width in initial corrpocketpair) #######           
-          maxwidth <- b
-          bounds.sig.new <- ref.expanded$wind %>% range    # consider region = current region span +/- maxwidth points
-
-    # Expand the window for reference identification ##############
-        
-        ref.expanded$newWind <- expand_window(window = bounds.sig.new,  # (bounds or vect are okay)
-                                              within = seq_along(ppm),  # by = b+1) # other option; comment out lower line
-                                              by = maxwidth*2,            # allow expansion by at least 1, 
-                                              keep.nas = F)             # don't keep NAs
-
-        ref.expanded$wind <- ref.expanded$newWind # "newWind" = window, but re-centered (as below in original storm)
-        
-        
-    # STOCSY the new driver within subset.current and the widened window to get new ref ##############
-      
-        corr<-cor(xmat[subset.current, ref.expanded$wind], xmat[subset.current,ref.max])
-        covar=cov(xmat[subset.current, ref.expanded$wind], xmat[subset.current,ref.max])
-        # simplePlot(xmat[subset.current, ref.expanded$wind], xvect = ref.expanded$wind) + geom_vline(xintercept = ref.max)
-        # plot(corr); abline(h = corrthresh); abline(v = which((ref.idx %>% range %>% fillbetween) == ref.max))
-        # plot(covar); abline(v = which((ref.idx %>% range %>% fillbetween) == ref.max))
-        
-    # Clean up the ref with pval, rval, and runlength filtering #######################
-      
-      # Determine which corrs are significant 
-      
-        a=-abs(corr * sqrt((length(corr)-2)/(1-corr^2)))
-        pval=2*pt(a,(length(corr)-2))
-
-        # The new reference becomes the covariance of the new subset derived above. 
-        # This entails thresholding the correlation profile, extracting the 
-        # corresponding covariance profile points, and updating the ref inds. The
-        # STOCSY correlation to max doesn't have to be super high - just positive. 
-        
-      # Filter using pval and correlation 
-      
-        ref.pass <- (pval<q & corr>corrthresh)
-        # plot(ref.pass %>% as.integer)
-        
-      # Remove any runs that are < minpeak. This helps control for expansion
-      # by a bunch of noise peaks.
-       
-        ref.pass <- (ref.pass %>% as.integer %>% runs.labelBy.lengths) > minpeak
-        # plot(ref.pass %>% as.integer)
-        
-      # Check to make sure the ref is valid
-      # - contains at least 3 valid points (absolute minimum for a meaningful peak shape)
-      # - should there be a contiguous point requirement here?
-        
-          if ((ref.pass %>% sum(na.rm = TRUE)) < 3){
-            plotrng <- c(min(ref.idx),max(ref.idx))
-            plotreg <- c(min(ref.idx)-length(ref.idx)*1,max(ref.idx)+length(ref.idx)*1)
-            ref.max <- NA
-            corr <- rep(NA, length(plotrng %>% fillbetween))
-            covar <- corr
-            ref.pass <- rep(TRUE, length(corr))
-            status <- fail.opts[[3]]
-            break
-          } # Failure mode 3
-        
-    # Extract the new ref shape from the thresholded covariance profile #################
-       
-        ref=covar[ref.pass]
-        
-      # Also update the ref indices to match new ref
-        
-        ref.idx= ref.expanded$wind # the below all stems from this, which are ppm inds
-        ref.idx=ref.idx[ref.pass]
-        ref.expanded$wind <- ref.idx %>% range %>% fillbetween
-        
-    # (Plotting) #################
-        plotrng <- range(ref.idx)
-        plotreg <- c(min(ref.idx)-length(ref.idx)*1,max(ref.idx)+length(ref.idx)*1)
-      
-      # Finish the loop by updating the counter
-        i <- i+1
-    }
+          peak.list.col <- lapply(cc.col$secondary, function(secondary.peak){
+          # These are currently window indices, but will be converted to "reg" indices
+          # (indices of ppm vector/xmat provided to correlation_pocket_pairs())
   
-############ Finish up and return results ########################################################
-# Finish up and return results
-     # Set variables relevant to output
-    # - handle failure mode cases
-    # - ensure index ranges match up
-      # if (is.na(ref.max) | is.null(ref.max)){browser()}
-      ref.max = next_driver(ref.profile = ref, current.driver = ref.max, 
-                               ref.idx = ref.idx, behavior = 'samePk') %>% .$idx
+            list(driver.index = cc.col$index,
+                 primary.peak = cc.col$index - (cc.col$res.center-cc.col$primary%>%unlist),
+                 secondary.peak = cc.col$index - (cc.col$res.center-secondary.peak%>%unlist))
+          }) 
+        }) %>% unlist(recursive = FALSE)
+        
+      }
+             
       
-      finalreg <- plotrng %>% fillbetween
-      corr <- corr[ref.pass %>% which %>% range %>% fillbetween]
-      covar <- covar[ref.pass %>% which %>% range %>% fillbetween]
+    # Batch the mclapply so each core gets only one copy of xmat. 
+    
+    # Feat data is split between nodes:
+        message('\nSplitting feature matrices for distribution across nodes...')
+        pars$par$ncores <- 10
+        chunk.size <- max(1, length(protofeatures) / pars$par$ncores)
+        f.grp <- ceiling((1:nfeats) / chunk.size)
+        split.scheme <- lapply(unique(f.grp), function(g) {
+            list(
+                f.inds = which(f.grp == g),
+                f.subset = which(f.grp == g) %>% f.subset[.] 
+            )
+        })
+          split.scheme %>% test_nullish
+        f.stack.split <- lapply(unique(f.grp), function(x) f.stack[, f.grp == x, drop = F])
+          f.stack.split %>% test_nullish
+          rm(f.stack)
+      
+    
+    storm_rnd1 = list()
+    message("Running storm on ",length(regions_subset), " provided protofeatures between ",ppm[bounds[1]]," and ",ppm[bounds[2]]," ppm.")
+   
+#################################################
+        storm_rnd1 <- 
+              mclapply(protofeatures,
+              # pblapply(regions_subset,
+                  function (x) {
+                    # TryCatch will 
+                    tryCatch(
+                      expr = {
+                              # Set up the region
+                              
+                              # We'll limit the STORM operation to a small region of the xmat. No need to allow gratuitous expansion.
+                              
+                              # We'll also derive the covariance signal for the protofeature individually. A function to spin up the 
+                              # protofeature profile given xmat would be helpful. 
+                              
+                                protofeature_profile <- function(protofeature, xmat){
+                                  
+                                  # return: NA-filled covariance intensity values for the protofeature
+                                }
+                                
+                        
+                                
+                                # x <- regions_subset[1793]
+                                
+                                driver <- colwithPair[x]
+                                peakPos <- pocketPairs$peakMap[,driver] %>% is.na %>% "!"(.) %>% which
+                                pair.region <- pocketPairs$regions[peakPos,driver]
+          
+                              # Do storm_pairplay
+                    
+                                # Set params
+                                  pw <- span(peakPos)/2 %>% ceiling
+                                  wind <- pair.region
+                                  shift <- range(ppm[pair.region])
+                                  
+                                # Use original covariance signal within corr bounds as shape seed
+                                # (could also use best spectrum index)
+                                  shape <- pocketPairs$cov[peakPos,driver]
+                                  bestSpec = cor( xmat[ ,wind] %>% t, shape ) %>% which.max
+                                  
+                                # Do the storm
+                                  
+                                  res <- storm_pairplay(xmat, ppm,
+                                                              b = (pw * b) %>% ceiling, corrthresh = correlation.r.cutoff, q = q,
+                                                              minpeak = noisewidth, refSpec = shape, ref.idx = pair.region,
+                                                              driver = driver)
+                                  res$cpp.driver <- driver
+                                  
+                                  return(res)
+                        
+                      },
+                      error = function(cond){
+                        return('setup error')
+                        }
+                      )
+                  }, mc.cores = pars$par$ncores
+              )
+        # Note: errors in the loop are captured and passed out as strings.
+        # NULL elements are not possible, although parts of an element could be.
+        # Those are checked below.  
+          
+################ Report run stats  ######
+        
+          fmodes <- lapply(storm_rnd1, 
+                           function(x) {
+                             if (is.character(x)){return(x)} # this will get any errors from setup or storm
+                             if (x$status == 'succeeded'){
+                               if (any(is_nullish(x))){
+                                 # Even if STORM succeeded, it may contain NULLs in some return value elements. 
+                                 return(  paste0(  is_nullish(x) %>% which %>% names, " contains NULL")) 
+                               }
+                             }
+                             return(x$status)
+                           })
+          
+          succeeded <- lapply(fmodes, function(x) x == 'succeeded') %>% unlist
+          failed <- !succeeded
+          
+          message(str_c("Failed iterations (count): ", sum(failed), " (",
+                        (sum(failed)/length(regions_subset) * 100) %>% round, " %)"))
+          
+          message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
+                        (sum(succeeded)/length(regions_subset) * 100) %>% round, " %)"))
+          
+          # Print out breakdown of statuses
+            fm <- fmodes %>% plyr::ldply(rbind)
+            colnames(fm) <- 'status'
+            fm <- fm %>% group_by(status) %>% count %>% as.data.frame
+            
+            print(fm)
 
-      if(i == (itlimit-1)){status <- fail.opts[[4]]}
-      
-    # Extract peaks for final ref adjustment
-      # If expanding in the loop, this should already be settled.
-      # print(i-1)
-      
-  return(list(subset = subset.current,
-              finalRegion = finalreg,
-              plotRegion = plotreg %>% fillbetween,
-              ref.idx = ref.idx,
-              ref.vals = ref,
-              corr = corr,
-              covar = covar,
-              peak = ref.max,   # index in ref.expanded$wind
-              pass = ref.pass,  # indices in ref.expanded$wind
-              driver.initial = driver.init,
-              status = status,  # see fail.opts
-              iterations = i-1) # (completed iterations only) 
-         )
- #################################################
+################################################
 }

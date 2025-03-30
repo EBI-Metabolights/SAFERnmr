@@ -5,7 +5,7 @@
 #' @param ws an integer specifying half the size of the sliding window used to calculate correlations.
 #' @param reg an optional vector specifying the column indices to consider in \code{x}.
 #' @param plotHeatmap a logical indicating whether to plot a heatmap of the correlation matrix.
-#' @param wdlimit a numeric (0,1) specifying the minimum fraction of sliding windows that need to contain a pocket to consider a point noise.
+#' @param wdlimit a numeric (0,1) specifying the minimum fraction of sliding windows that need to contain a pocket to consider a point noise. Like asking "what 1-the minimum fraction of points you think might be noise?". If at least 5% of the points are noise, choose 0.95 
 #' @param rcutoff a numeric (0,1) specifying the correlation coefficient cutoff to use when extracting significant peaks.
 #'
 #' @return a list with the following elements:
@@ -19,7 +19,21 @@
 #'
 #' @export
 correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALSE, wdlimit = 0.99,
-                             rcutoff = 0.75){
+                                      noise.width.multiple = 2, top.n.peaks = 5, rcutoff = 0.5){
+  
+  # assuming that the matrix is the full matrix, and ppm inds are the columns
+  x <- xmat
+  ppm <- ppm
+  ws <- 100
+  reg <- NULL # indices of ppm
+  plotHeatmap <- FALSE
+  wdlimit <- 0.95
+  plotHeatmap <- FALSE
+  rcutoff <- 0.5
+  pars$corrpockets$only.region.between <- c(-0.5,10.5)
+  noise.width.multiple = 2
+  top.n.peaks = 5
+  # include upper and lower bounds for peak width?
   
   if (is.null(reg)) {reg <- seq_along(ppm)}
 
@@ -31,18 +45,16 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                      ws = ws,
                      extractPockets = TRUE, 
                      plotting = FALSE, vshift = 10,
-                     ppm = ppm[reg])
+                     ppm = ppm[reg]) # ppm only used for plotting
  
 ##############################################################################################################     
   # Peak Extraction
   
   message("Extracting peaks from local correlations...")
   cc <- res$corr_compact
-  pts <- matrix(data = FALSE, nrow = nrow(cc), ncol = ncol(cc))
-  pks <- pts
-  iscenter <- pts
-  pkID <- matrix(NA, nrow = nrow(cc), ncol = ncol(cc))
-  
+  colnames(cc) <- reg
+  colnames(res$cov_compact) <- reg
+  cc[cc<=0] <- 0
   
   # Use center peak for each column ####
     centers <- res$isPocket
@@ -50,138 +62,110 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
     noiseWidth <- sum(windowDist > wdlimit)
     
   # We can exclude columns altogether which don't pass this threshold
-    notNoise <- which(colSums(centers, na.rm = TRUE) >= noiseWidth)
-  
-  
-  
-  # Now get the highest non-center peak that passes the noiseWidth threshold
-    for (i in notNoise){
-        pkID[centers[,i],i] <- i
-    }
+    notNoise <- which(colSums(centers, na.rm = TRUE) >= noise.width.multiple*noiseWidth)
     
+    # Pull out the n highest non-center peaks that pass the noiseWidth threshold ####
     
-    iscenter <- !is.na(pkID)
-    
-    # Next id will be one more than the max in pkID
-      pid <- max(notNoise) + 1
-      browser()
-    # Pull out the highest non-center peak that passes the noiseWidth threshold
-      for (i in notNoise){
-        # Pull vect and peaks
-          peaks <- extractPeaks_corr(cc[,i], plots = FALSE)
-          notcenter <- which(!(peaks$peaks %in% res$center))
+    # Only want the correlations that have >= noiseWidth correlation
+    cc.split <- lapply(notNoise, function(i) list(corrs = cc[,i],
+                                                  col = i))
+    res.center <- res$center
 
-          bigEnough <- lapply(notcenter, function(x) peaks$bounds[[x]] %>% 
-                                unlist %>% fillbetween %>% 
-                                 cc[.,i] %>% ">" (.,rcutoff) %>% sum) %>% unlist >= noiseWidth
+    cc.peaks <- parallel::mclapply(cc.split, function(col.info){
+    # cc.peaks <- lapply(cc.split, function(col.info){
+        
+        # col.info <- cc.split[[1]]
+        cc.col <- col.info$corrs
+
+        # NOTE: Everything in here is in window indices
+        
+        # Pull vect and peaks
+          peaks <- extractPeaks_corr(cc.col, plots = FALSE)
+          primary.peak <- (peaks$peaks %in% res.center)
+          secondary.peaks <- which(!primary.peak)
+          useful.points <- cc.col > rcutoff
+          
+          bigEnough <- lapply(secondary.peaks, function(x) peaks$bounds[[x]] %>% 
+                                unlist %>% fillbetween %>% useful.points[.] %>% sum) %>% unlist >= noiseWidth*noise.width.multiple
           
           # If no peaks worth extracting, then skip this column
-            if (!any(bigEnough)){next}
+            if (!any(bigEnough)){return(NULL)}
+          browser()
           
-          bestPeak <- which.max( cc[peaks$peaks[notcenter[bigEnough]],i] ) %>% notcenter[.]
-          inds <- peaks$bounds[bestPeak] %>% unlist %>% fillbetween
-          # pks[inds,i] <- TRUE
-          pkID[inds,i] <- pid
-          # iscenter[inds, i] <- TRUE
-      }
-      
-      pks <- !is.na(pkID)
-      
-      
+          # Which secondary peaks are wide enough?
+            pk.idxs <- secondary.peaks[bigEnough]
+            pk.locs.cc.col <- peaks$peaks[pk.idxs]
+            
+          # Pick the tallest n of those
+            pk.maxima <- cc.col[pk.locs.cc.col]
+            pk.ranks <- order(pk.maxima, decreasing = TRUE)
+            bestPeaks.idx <- pk.ranks[1:min(top.n.peaks, length(pk.ranks))] %>% secondary.peaks[.]
+          # bounds <- peaks$bounds[bestPeaks.idx] %>% do.call(cbind,.)
+          
+          # Package up:
+          result <- list(primary = peaks$bounds[primary.peak]%>%unlist,
+                      secondary = bestPeaks.idx %>% secondary.peaks[.] %>% pk.idxs[.] %>% peaks$bounds[.],
+                      index = col.info$col,
+                      res.center = res.center)
+        
+          # If any secondary peaks were null, remove them. Not sure why this happens yet.
+            result$secondary <- result$secondary[!is.null(result$secondary)] # need to follow up on these cases!
+            
+          # Development/Debugging:
+            # i <- 0
+            # 
+            # i <- i + 1
+            # 
+            # p <- result
+            # driver <- p$index
+            # # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
+            # primary.peak.inds <- c(p$primary %>% fillbetween)
+            # secondary.peak.inds <- c(p$secondary[[i]] %>% unlist %>% fillbetween)
+            # 
+            # shape <- cc[, driver]
+            # plot(x = 1:length(shape), y = shape, type = 'l')
+            #   lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
+            #   lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
+            #   abline(v=p$secondary[[i]]%>%unlist)
+            ## ---------
+            # Track down the cases where secondary appears
+            # if (any(is.null(result$secondary))){
+            #   browser()
+            # }
+            # 
+          return(result) # index = index in "reg", which indexes cc.corr
+                # This way of storing the peaks allows us to use:
+                # cc.peak <- cc.peaks[[1]]
+                # bounds <- cc.peak$index - (res.center-cc.peak$primary)
+                # but remember - these are mainly to index the corr and cov mats.
+# })
+    }, mc.cores = 10)
+    # }, mc.cores = pars$par$ncores)
+    
+    
 ##############################################################################################################     
   # Filtering
   
   message("Filtering results (no peaks < size of noise; only bidirectional relationships)...")
   
-  # At this point, we need to remove peaks that don't have a partner...
-        # In other words, remove column if there is no center + noncenter peak
-        nonCenterPks <- pks & (!iscenter)
-        
-        rmcols <- !apply(nonCenterPks, 2, any)
-        pkID[,rmcols] <- NA
-        pks[,rmcols] <- FALSE
+  # # At this point, we need to remove peaks that don't have a partner...
+  # # This enforces complete connectivity in a correlation cluster. This 
+  # # may not make sense for 1' and 2' correlation peaks, however, because of the
+  # # 'love triangle' that could exist within a multiplet.
 
   # Get the inds of the non-NA elements, convert to ppm inds
     # indsmat (from slidingCorr()) is just the column of reg.
-      regions <- res$indsmat - 1 + min(reg)
-      regions[!pks] <- NA
-    
-  # For each column, record the interactions as a pairs of spectral points between the center and its best peak
-        # Interactions between spectral points means for each noncenter peak,
-        # - the ppm index of each one (xmat column number) is derived from the regions inds
-        # - the column number in cc gives the xmat column number of the center peak it belongs to
-        # because the inds of cc correspond to the relative ind in regions, no need to translate
-        # indices. 
-
-        # Get column number in ppm (driver index) 
-            
-            colInPPM <- regions[nonCenterPks]
-            
-        # Use ind2sub to get the column number in cc (interaction with that )
-            ccind <- nonCenterPks %>% which
-            subs <- ind2subR(ccind, m = nrow(cc)) # get the columns
-            colInCC <- subs$cols
         
-        # Bind into pairs (associating ppms with ppms) and sort each one, convert into df
-          
-          prs <- sortPairs(rbind(colInCC, colInPPM)) %>% matrix(., ncol = 2) %>% data.frame
-          prs <- cbind(prs, ccind) # keep track of the pos in cc explicitly.
-                                   # if this gets a count of 1 later, we'll simply
-                                   # remove that ind from the peak mask later. It 
-                                   # may be that we want to remove the col altogether. 
-                                   
-            colnames(prs) <- c("pt1","pt2", "ccind")
-            
-        # Find the pairs which are found at least twice (necessary condition for bi-directionality of the correlation)
-          uniquePairs <-prs %>%
-            dplyr::group_by(pt1,pt2) %>%
-            dplyr::mutate(Count = n()) %>%
-            dplyr::ungroup() %>%
-            dplyr::distinct() %>%
-            dplyr::filter(., Count < 2)
-
-        # Remove peaks with only majority unidirectional associations
-        
-          # cp <- matrix(0, nrow(cc), ncol(cc))
-          # cp[nonCenterPks] <- 2
-          # cp[uniquePairs$ccind] <- 5
-          
-          # heatmap(cp, Colv = NA, Rowv = NA, scale="none")
-          
-          # For each column of the filter, determine the ratio of unique points to bidirectional points
-            f <- matrix(NA, nrow(cc), ncol(cc))
-              f[nonCenterPks] <- 1
-              f[uniquePairs$ccind] <- 0
-            bidirs <- f %>% t %>% rowSums(na.rm = TRUE)
-            allassoc <- nonCenterPks %>% t %>% rowSums(na.rm = TRUE)
-            
-            ratios <- bidirs/allassoc
-            
-         # Filter out columns whose responder peaks are mostly unidirectional points.
-         # This effectively symmetrizes the matrix without transforming it/modifying data.  
-         
-            fpks <- pks
-            fpks[,ratios < 0.5] <- FALSE 
-        
-       
-            # fpks <- pks
-            # fpks[uniquePairs$ccind] <- FALSE
-            
-            pkID[!fpks] <- NA
+      # regions = lapply(1:ncol(res$indsmat), function(j) (res$indsmat[,j]- 1 + min(reg)) %>% range(na.rm = TRUE) )
+      # regions <- res$indsmat - 1 + min(reg)
+      # regions[!pks] <- NA
       
-      # Plot result
-            if (plotHeatmap){
-              message("Plotting heatmap...")
-              cp <- cc
-              cp[is.na(pkID)] <- NA
-              heatmap(cp, Colv = NA, Rowv = NA, scale="none")
-            }
-          
+      # *** You need: the peak bounds (assume first peak is primary) and the inds for the window.
+      
        message("corrPocketPairs() finished.")
         
-    return(list(regions = regions,     # these are unfiltered
-                corr = cc,
+    return(list(corr = cc,
                 cov = res$cov_compact,
-                peakMap = pkID,        # %>% is.na can be used as a filter for all other outputs. 
+                peakBounds = cc.peaks,
                 noiseDist = windowDist)) # % of pockets containing each windowInd
 }
