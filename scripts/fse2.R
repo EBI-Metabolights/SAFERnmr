@@ -1,5 +1,6 @@
 # fse2
-pars <- '/Users/mjudge/Downloads/safer/results/1739774749/params.yaml' %>% yaml::yaml.load_file()
+params_loc <- '/Users/mjudge/Downloads/safer/results/1739774749/params.yaml'
+pars <- yaml::yaml.load_file(params_loc, eval.expr = TRUE)
 
 fse <- function(pars){
   
@@ -84,36 +85,18 @@ fse <- function(pars){
     
 ################ Use corrPocketPairs to extract likely j-pairs ##################
  
-    # Run corrpocketPairs on everything
-      
-      pocketPairs <- corrPocketPairs_al(xmat, ppm, ws = half.window, plotHeatmap = FALSE,
-                                        wdlimit = noise.percentile, # **** **** **** #
-                                        rcutoff = cpp.rcutoff)
-    
-      pocketPairs %>% debug_write("pocketPairs.RDS", pars)
-      # pocketPairs <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/pocketPairs.RDS"))
-    
-    # Report number of pairs
-      
-      numPairs <- pocketPairs$peakMap %>% is.na %>% "!"(.) %>% t %>% rowSums(na.rm = TRUE) %>% ">"(.,0) %>% sum
-      message("Got ", numPairs, " corrpocket pairs from dataset.")
-      window.index <- -half.window:half.window
-      
-      pdf(file = paste0(plot.location, "corrpeak_distribution.pdf"),   # The directory you want to save the file in
-          width = 4, # The width of the plot in inches
-          height = 4) # The height of the plot in inches
-      
-        pocketPairs$noiseDist %>% plot(x = window.index, ylab="Fraction of peaks including index", xlab="Window index")
-        noisewidth <- sum(pocketPairs$noiseDist >= noise.percentile)
-        abline(h = noise.percentile, col="red")
-        title(ylab = , main = "Average Extracted Diagonal Peak Shape (pre-filtering)")
-      
-      dev.off()
-      # here's a thought: if you filter all peaks based on the noise feature shape,
-      # the relative prominence of true signal using those boundaries is going to be
-      # minimal because signal is locally pretty flat, while noise will mostly be
-      # captured within those bounds. Peaks could be classified based on the % of their
-      # actual signal (using their actual bounds) captured by the n% cutoff bounds.
+correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALSE, wdlimit = 0.99,
+                             rcutoff = 0.5){
+  
+  x <- xmat
+  ppm <- ppm
+  ws <- 100
+  reg <- NULL # indices of ppm
+  plotHeatmap <- FALSE
+  wdlimit <- 0.95
+  plotHeatmap <- FALSE
+  rcutoff <- 0.5
+  pars$corrpockets$only.region.between <- c(-0.5,10.5)   
       
       
       # ####
