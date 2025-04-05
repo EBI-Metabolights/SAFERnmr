@@ -114,9 +114,6 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
     
     corrmat <- sapply(cors[unrand], `[[`, "cors")
     covmat  <- sapply(covs[unrand], `[[`, "covs")
-  
-    i <- i + 1
-    corrmat[, i] %>% simplePlot()
     
 #######################################################################################################    
     g <- NULL
