@@ -30,16 +30,16 @@
 #' @export
 slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 20, ppm = NULL, n.cores = 10){
   #ws <- 250
+  
   ppm.inds <- 1:ncol(x)
   if (is.null(ppm)){ppm <- ppm.inds}
   
   wind <- -ws:ws
-  os <- ws+1
+  driver_pos <- ws+1
   
   # Just use a vector as a template, will combine into a matrix later
-  corrmat <- matrix(data = NA, nrow = 2*ws+1, ncol=1)
-  covmat <- corrmat
-  
+  corr_template <- matrix(data = NA, nrow = 2*ws+1, ncol=1)
+
   # Map for keeping calculations in bounds of edges
   indsmat <- outer(wind, 1:ncol(x), "+")
     oob <- indsmat < 1 | indsmat > ncol(x)
@@ -53,15 +53,15 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
     # but first, randomize it so certain cores don't get stuck with no 
     ppm.rand <- sample(ppm.inds)
       unrand <- order(ppm.rand, decreasing = FALSE)
-    groups <- cut(ppm.rand, breaks = n.cores, labels = FALSE)
-    ppm.chunks <- split(ppm.rand,groups)
-    
+    chunk.size <- ceiling(length(ppm.rand) / n.cores)
+    ppm.chunks <- split(ppm.rand, ceiling(seq_along(ppm.rand) / chunk.size))
+
     results <- mclapply(ppm.chunks, function(ppm.segment){
       # ppm.segment <- ppm.chunks[[1]]
       
       lapply(ppm.segment, function(j){
         # j <- ppm.segment[[1]]
-        
+        corrmat <- covmat <- corr_template
         use <- in.bounds[,j] %>% which
         corrmat[use] <- cor(x[, j], x[, indsmat[use,j]])
         covmat[use] <- cov(x[, j], x[, indsmat[use,j]])
@@ -88,16 +88,17 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
   # Calculate the primary correlation peak for each
     if (extractPockets){
       
-      is.pocket <- rep(FALSE, nrow(in.bounds))
+      is.pocket.template <- rep(FALSE, nrow(in.bounds))
       
       pockets.unsorted <- mclapply(cors, function(result){
         # result <- cors[[1]]
         j <- result$j
         
         use <- in.bounds[,j] %>% which
-        bounds <- corr_expand(peak = (use %in% os) %>% which,
+        bounds <- corr_expand(peak = (use %in% driver_pos) %>% which,
                               localMinima(result$cors[use]),
                               vRange = c(1,length(use))) %>% unlist %>% use[.]
+        is.pocket <- is.pocket.template
         is.pocket[bounds[1]:bounds[2]] <- TRUE
         
         return(is.pocket)
@@ -111,9 +112,12 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
     
     # Unrandomize the results
     
-    corrmat <- cors[unrand] %>% do.call(cbind,.)
-    covmat <- covs[unrand] %>% do.call(cbind,.)
+    corrmat <- sapply(cors[unrand], `[[`, "cors")
+    covmat  <- sapply(covs[unrand], `[[`, "covs")
   
+    i <- i + 1
+    corrmat[, i] %>% simplePlot()
+    
 #######################################################################################################    
     g <- NULL
     if (plotting){
@@ -151,5 +155,5 @@ slidingCorr <- function(x,ws, extractPockets = FALSE, plotting = TRUE, vshift = 
               isPocket = pockets,
               plot = g,
               window = wind,
-              center = os))
+              center = driver_pos))
 }
