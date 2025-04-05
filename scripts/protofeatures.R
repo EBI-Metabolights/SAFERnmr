@@ -45,9 +45,9 @@
       pocketPairs <- correlation_pocket_pairs(xmat, ppm, ws = half.window, plotHeatmap = FALSE,
                                         wdlimit = noise.percentile, # **** **** **** #
                                         noise.width.multiple = 2,
-                                        rcutoff = cpp.rcutoff)
+                                        top.n.peaks = 5,
+                                        rcutoff = cpp.rcutoff, n.cores = 10)
     
-      
       pocketPairs %>% debug_write("pocketPairs.RDS", pars)
       # pocketPairs <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/pocketPairs.RDS"))
 
