@@ -19,7 +19,7 @@
 #'
 #' @export
 correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALSE, wdlimit = 0.99,
-                                      noise.width.multiple = 2, top.n.peaks = 5, rcutoff = 0.5){
+                                      noise.width.multiple = 2, top.n.peaks = 5, rcutoff = 0.5, n.cores = 10){
   
   # assuming that the matrix is the full matrix, and ppm inds are the columns
   x <- xmat
@@ -45,7 +45,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                      ws = ws,
                      extractPockets = TRUE, 
                      plotting = FALSE, vshift = 10,
-                     ppm = ppm[reg]) # ppm only used for plotting
+                     ppm = ppm[reg], n.cores = 5) # ppm only used for plotting
  
 ##############################################################################################################     
   # Peak Extraction
@@ -63,6 +63,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
     
   # We can exclude columns altogether which don't pass this threshold
     notNoise <- which(colSums(centers, na.rm = TRUE) >= noise.width.multiple*noiseWidth)
+    # these are the inds of cc columns that pass
     
     # Pull out the n highest non-center peaks that pass the noiseWidth threshold ####
     
@@ -71,8 +72,8 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                                                   col = i))
     res.center <- res$center
 
-    cc.peaks <- parallel::mclapply(cc.split, function(col.info){
-    # cc.peaks <- lapply(cc.split, function(col.info){
+    # cc.peaks <- parallel::mclapply(cc.split, function(col.info){
+    cc.peaks <- lapply(cc.split, function(col.info){
         
         # col.info <- cc.split[[1]]
         cc.col <- col.info$corrs
@@ -90,8 +91,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
           
           # If no peaks worth extracting, then skip this column
             if (!any(bigEnough)){return(NULL)}
-          browser()
-          
+            
           # Which secondary peaks are wide enough?
             pk.idxs <- secondary.peaks[bigEnough]
             pk.locs.cc.col <- peaks$peaks[pk.idxs]
@@ -112,21 +112,60 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
             result$secondary <- result$secondary[!is.null(result$secondary)] # need to follow up on these cases!
             
           # Development/Debugging:
-            # i <- 0
-            # 
-            # i <- i + 1
-            # 
-            # p <- result
-            # driver <- p$index
-            # # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
-            # primary.peak.inds <- c(p$primary %>% fillbetween)
-            # secondary.peak.inds <- c(p$secondary[[i]] %>% unlist %>% fillbetween)
-            # 
-            # shape <- cc[, driver]
-            # plot(x = 1:length(shape), y = shape, type = 'l')
-            #   lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
-            #   lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
-            #   abline(v=p$secondary[[i]]%>%unlist)
+            i <- 0
+
+            i <- i + 1
+
+            p <- result
+            driver <- p$index
+            # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
+            primary.peak.inds <- c(p$primary %>% fillbetween)
+            secondary.peak.inds <- c(p$secondary[[i]] %>% unlist %>% fillbetween)
+
+            shape <- cc[, driver]
+            # shape <- res$cov_compact[, driver]
+            plot(x = 1:length(shape), y = shape, type = 'l')
+              lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
+              lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
+              abline(v=p$secondary[[i]]%>%unlist)
+
+            ####
+
+specreg.inds <- keep_inds_in_bounds(check = (driver - ws):(driver + ws),
+                    against = seq_along(ppm))
+
+specRegion = xmat[,
+                  specreg.inds]
+ppmRegion = ppm[specreg.inds]
+
+corr <- res$cov_compact[specreg.inds,driver]
+stocsyLine <- cc[specreg.inds, driver+]
+bounds <- p$secondary[[i]]%>%unlist
+
+if (bgplot == "overlayed"){
+  g <- simplePlot(specRegion, ppmRegion, n_xticks = 5)
+}
+
+if (bgplot == "stack"){
+  g <- stackplot(specRegion, ppmRegion, vshift = 10, hshift = 0)
+}
+
+g <- simplePlot(specRegion, ppmRegion, n_xticks = 5)
+
+# Correlation as color
+
+df <- data.frame(
+  ppms = seq_along(stocsyLine),
+  covariance = res$cov_compact[, driver],
+  correlation = cc[, driver]
+)
+
+g2 <- ggplot() + geom_line(data = df, aes(x = ppms, y = covariance, colour = correlation),
+            linewidth = 1.25) +
+  scale_colour_gradientn(colours = matlab.like2(10), limits = c(-1, 1)) +
+  geom_vline(xintercept = bounds, linetype = 2, col = "grey")
+g2
+
             ## ---------
             # Track down the cases where secondary appears
             # if (any(is.null(result$secondary))){
@@ -138,8 +177,8 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                 # cc.peak <- cc.peaks[[1]]
                 # bounds <- cc.peak$index - (res.center-cc.peak$primary)
                 # but remember - these are mainly to index the corr and cov mats.
-# })
-    }, mc.cores = 10)
+})
+    # }, mc.cores = 10)
     # }, mc.cores = pars$par$ncores)
     
     
