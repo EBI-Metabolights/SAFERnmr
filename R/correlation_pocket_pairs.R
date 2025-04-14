@@ -52,6 +52,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
   
   message("Extracting peaks from local correlations...")
   cc <- res$corr_compact
+  cv <- res$cov_compact
   colnames(cc) <- reg
   colnames(res$cov_compact) <- reg
   cc[cc<=0] <- 0
@@ -69,16 +70,26 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
     
     # Only want the correlations that have >= noiseWidth correlation
     cc.split <- lapply(notNoise, function(i) list(corrs = cc[,i],
+                                                  covar = cv[,i],
                                                   col = i))
     res.center <- res$center
 
     # cc.peaks <- parallel::mclapply(cc.split, function(col.info){
     cc.peaks <- lapply(cc.split, function(col.info){
         
-        # col.info <- cc.split[[1]]
+        # j <- lapply(cc.split, function(ci) {ci$col == 18501}) %>% unlist %>% which
+        # col.info <- cc.split[[1765]]
         cc.col <- col.info$corrs
-
+        cv.col <- col.info$covar
         # NOTE: Everything in here is in window indices
+        
+        
+        # It might be better to get covariance peaks whose maxima also have correlation > r.thresh
+        # Or the covariance peak which contains the highest corr
+        # Really, we don't know if we can trust the covariance to provide good peakshape
+        # A sufficiently wide correlation peak is an indication that there is something underneath in at least a subset of the data
+        # but the shape of the correlation profile does not preserve the relative intensities of the peaks.
+        # What if the correlation peak shapes were used, but were scaled by their respective covariance profiles (batman fit or mean-match)
         
         # Pull vect and peaks
           peaks <- extractPeaks_corr(cc.col, plots = FALSE)
@@ -91,7 +102,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
           
           # If no peaks worth extracting, then skip this column
             if (!any(bigEnough)){return(NULL)}
-            
+            browser()
           # Which secondary peaks are wide enough?
             pk.idxs <- secondary.peaks[bigEnough]
             pk.locs.cc.col <- peaks$peaks[pk.idxs]
@@ -122,7 +133,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
             primary.peak.inds <- c(p$primary %>% fillbetween)
             secondary.peak.inds <- c(p$secondary[[i]] %>% unlist %>% fillbetween)
 
-            shape <- cc[, driver]
+            shape <- cc.col
             # shape <- res$cov_compact[, driver]
             plot(x = 1:length(shape), y = shape, type = 'l')
               lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
@@ -131,41 +142,31 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
 
             ####
 
-specreg.inds <- keep_inds_in_bounds(check = (driver - ws):(driver + ws),
-                    against = seq_along(ppm))
-
-specRegion = xmat[,
-                  specreg.inds]
-ppmRegion = ppm[specreg.inds]
-
-corr <- res$cov_compact[specreg.inds,driver]
-stocsyLine <- cc[specreg.inds, driver+]
-bounds <- p$secondary[[i]]%>%unlist
-
-if (bgplot == "overlayed"){
-  g <- simplePlot(specRegion, ppmRegion, n_xticks = 5)
-}
-
-if (bgplot == "stack"){
-  g <- stackplot(specRegion, ppmRegion, vshift = 10, hshift = 0)
-}
-
-g <- simplePlot(specRegion, ppmRegion, n_xticks = 5)
-
-# Correlation as color
-
-df <- data.frame(
-  ppms = seq_along(stocsyLine),
-  covariance = res$cov_compact[, driver],
-  correlation = cc[, driver]
-)
-
-g2 <- ggplot() + geom_line(data = df, aes(x = ppms, y = covariance, colour = correlation),
-            linewidth = 1.25) +
-  scale_colour_gradientn(colours = matlab.like2(10), limits = c(-1, 1)) +
-  geom_vline(xintercept = bounds, linetype = 2, col = "grey")
-g2
-
+            shape <- cv.col
+            plot(x = 1:length(shape), y = shape, type = 'l')
+              lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
+              lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
+              abline(v=p$secondary[[i]]%>%unlist)
+              
+            ####
+            
+            shape <- rep(NA, length(cc.col))
+              
+            # Scale primary peak
+            
+              primary.peak.scaled <- fit_batman(feat = cc.col[primary.peak.inds],
+                         spec = cv.col[primary.peak.inds],
+                         exclude.lowest = 0.5, plots = FALSE) #TRUE
+              shape[primary.peak.inds] <- primary.peak.scaled$feat.fit
+              
+            # Scale secondary peak
+            
+              secondary.peak.scaled <- fit_batman(feat = cc.col[secondary.peak.inds],
+                         spec = cv.col[secondary.peak.inds],
+                         exclude.lowest = 0.5, plots = FALSE) #TRUE
+              shape[secondary.peak.inds] <- secondary.peak.scaled$feat.fit
+              
+              
             ## ---------
             # Track down the cases where secondary appears
             # if (any(is.null(result$secondary))){
