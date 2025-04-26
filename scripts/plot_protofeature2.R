@@ -2,8 +2,13 @@ library(ggplot2)
 library(patchwork)
 
 # input must be individual peaks (given in protofeatures table)
+# recalculates the correlation and covar between driver and xmat for +/- ws
+# ws could be larger than ws used in protofeature, but should not be smaller or else peak bounds may not fit.
+# If larger, only the peaks in protofeature are reported. 
 
-  # p <- protofeatures.split[[i]]
+  # p <- protofeatures.split[[i]] 
+  ## or
+  # p <- protofeatures[i, ]
   # plot_protofeature(p, ws, ppm, xmat, bgplot='overlayed')
 
 plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr'){
@@ -11,44 +16,46 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
   driver <- p$index
   # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
   
-  shape <- switch(line.shape,
-                  covar = pocketPairs$cov[, driver],
-                  corr = pocketPairs$corr[, driver])
-
-  color.vect <- switch(line.color,
-                       covar = pocketPairs$cov[, driver],
-                       corr = pocketPairs$corr[, driver])
-  # if not dealing with correlations, make sure colors are mapped to range instead of [-1, 1]
-  if (any(color.vect < -1 | color.vect > 1)){
-    cvals.range <- range(color.vect)
-  } else {
-    cvals.range <- c(-1,1)
-  }
-
+  # Driver locates the index, everything else can be built around it
 
   fullView <- (driver - ws+1):(driver + ws-1)
   
-  specreg.inds <- keep_inds_in_bounds(check = fullView, 
-                      against = seq_along(ppm))
+  in.bounds <- !(fullView < 1 | fullView > length(ppm))
   
-  # specRegion = matrix(NA, nrow=nrow(xmat), ncol=length(specreg.inds))
-  
-  outside_ppms <- fullView[!(fullView %in% specreg.inds)]
-  
-  if (length(outside_ppms)>0){
-    
-  }
+  specreg.inds <- fullView[in.bounds]
   
   specRegion = xmat[,
                     specreg.inds]
   
   ppmRegion = ppm[specreg.inds]
   
-  n.colors <- 10
-  cmap <- matlab.like2(n.colors)
-  darkRed <- cmap[n.colors]
-
+  blank <- rep(NA, length(fullView))
+  cv <- cr <- blank
+  cv[in.bounds] <- cov(xmat[,driver], specRegion)
+  cr[in.bounds] <- cor(xmat[,driver], specRegion)
   
+  # Set up line shape and colors
+  
+    shape <- switch(line.shape,
+                    covar = cv,
+                    corr = cr)
+    
+    n.colors <- 10
+    cmap <- matlab.like2(n.colors)
+    darkRed <- cmap[n.colors]
+  
+    color.vect <- switch(line.color,
+                         covar = cv,
+                         corr = cr)
+  
+      # if not dealing with correlations, make sure colors are mapped to range instead of [-1, 1]
+      if (any(color.vect < -1 | color.vect > 1)){
+        cvals.range <- range(color.vect)
+      } else {
+        cvals.range <- c(-1,1)
+      }
+  
+    
   # 1. Original stackplot
   
     primary.bounds <- c(p$primary.lower,p$primary.upper)

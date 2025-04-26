@@ -85,7 +85,7 @@
     
         # Re-compute 
         
-        protofeatures.split <- lapply(1:nrow(protofeatures), function(x) protofeatures[x,])
+        # protofeatures.split <- lapply(1:nrow(protofeatures), function(x) protofeatures[x,])
         
           # i <- 0
           # 
