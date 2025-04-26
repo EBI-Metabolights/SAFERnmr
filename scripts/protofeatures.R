@@ -46,8 +46,8 @@
                                         wdlimit = noise.percentile, # **** **** **** #
                                         noise.width.multiple = 2,
                                         top.n.peaks = 5,
-                                        rcutoff = cpp.rcutoff, n.cores = 10)
-    
+                                        rcutoff = cpp.rcutoff, n.cores = 6)
+      
       pocketPairs %>% debug_write("pocketPairs.RDS", pars)
       # pocketPairs <- readRDS(paste0(pars$dirs$temp, "/debug_extra.outputs", "/pocketPairs.RDS"))
 
@@ -79,7 +79,7 @@
             }
           }) %>% do.call(rbind,.)
 
-      }, mc.cores = 10) %>% do.call(rbind,.)
+      }, mc.cores = 6) %>% do.call(rbind,.)
     
     # Expand protofeature
     
@@ -87,28 +87,13 @@
         
         protofeatures.split <- lapply(1:nrow(protofeatures), function(x) protofeatures[x,])
         
-        blank <- rep(FALSE, half.window*2+3) # 1:half.window in each direction, inclusive, plus 0
-        
-          i <- 0
+          # i <- 0
+          # 
+          # i <- i + 1
+          # p <- protofeatures.split[[i]]
+          # i
+          # plot_protofeature(p, ws, ppm, xmat, bgplot='stack', line.shape = 'covar', line.color = 'corr')
           
-          i <- i + 1
-          p <- protofeatures.split[[i]]
-          driver <- p$index
-          # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
-          peak.inds <- c(p$secondary.lower:p$secondary.upper)
-          
-          shape <- pocketPairs$corr[, driver]
-          plot(x = 1:length(shape), y = shape, type = 'l')
-            lines(x = peak.inds, shape[peak.inds], col='blue', lwd=2)
-            
-        simplePlot(shape)
-        shape[-peak.inds] <- 0
-
-        shape <- pocketPairs$cov[,
-                                 driver] %>% simplePlot()
-        
-        # Using existing cov corr mats
-      
     # Report number of pairs
       
       numPairs <- nrow(protofeatures)

@@ -22,17 +22,17 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                                       noise.width.multiple = 2, top.n.peaks = 5, rcutoff = 0.5, n.cores = 10){
   
   # assuming that the matrix is the full matrix, and ppm inds are the columns
-  x <- xmat
-  ppm <- ppm
-  ws <- 100
-  reg <- NULL # indices of ppm
-  plotHeatmap <- FALSE
-  wdlimit <- 0.95
-  plotHeatmap <- FALSE
-  rcutoff <- 0.5
-  pars$corrpockets$only.region.between <- c(-0.5,10.5)
-  noise.width.multiple = 2
-  top.n.peaks = 5
+  # x <- xmat
+  # ppm <- ppm
+  # ws <- 100
+  # reg <- NULL # indices of ppm
+  # plotHeatmap <- FALSE
+  # wdlimit <- 0.95
+  # plotHeatmap <- FALSE
+  # rcutoff <- 0.5
+  # pars$corrpockets$only.region.between <- c(-0.5,10.5)
+  # noise.width.multiple = 2
+  # top.n.peaks = 5
   # include upper and lower bounds for peak width?
   
   if (is.null(reg)) {reg <- seq_along(ppm)}
@@ -74,13 +74,13 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                                                   col = i))
     res.center <- res$center
 
-    # cc.peaks <- parallel::mclapply(cc.split, function(col.info){
-    cc.peaks <- lapply(cc.split, function(col.info){
+    cc.peaks <- parallel::mclapply(cc.split, function(col.info){
+    # cc.peaks <- lapply(cc.split, function(col.info){
         
         # j <- lapply(cc.split, function(ci) {ci$col == 18501}) %>% unlist %>% which
         # col.info <- cc.split[[1765]]
         cc.col <- col.info$corrs
-        cv.col <- col.info$covar
+        # cv.col <- col.info$covar
         # NOTE: Everything in here is in window indices
         
         
@@ -102,7 +102,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
           
           # If no peaks worth extracting, then skip this column
             if (!any(bigEnough)){return(NULL)}
-            browser()
+            # browser()
           # Which secondary peaks are wide enough?
             pk.idxs <- secondary.peaks[bigEnough]
             pk.locs.cc.col <- peaks$peaks[pk.idxs]
@@ -123,49 +123,50 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
             result$secondary <- result$secondary[!is.null(result$secondary)] # need to follow up on these cases!
             
           # Development/Debugging:
-            i <- 0
-
-            i <- i + 1
-
-            p <- result
-            driver <- p$index
-            # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
-            primary.peak.inds <- c(p$primary %>% fillbetween)
-            secondary.peak.inds <- c(p$secondary[[i]] %>% unlist %>% fillbetween)
-
-            shape <- cc.col
-            # shape <- res$cov_compact[, driver]
-            plot(x = 1:length(shape), y = shape, type = 'l')
-              lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
-              lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
-              abline(v=p$secondary[[i]]%>%unlist)
-
+            # i <- 0
+            # 
+            # i <- i + 1
+            # 
+            # p <- result
+            # driver <- p$index
+            # # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
+            # primary.peak.inds <- c(p$primary %>% fillbetween)
+            # secondary.peak.inds <- c(p$secondary[[i]] %>% unlist %>% fillbetween)
+            # 
+            # shape <- cv.col
+            # plot(x = 1:length(shape), y = shape, type = 'l')
+            #   lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
+            #   lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
+            #   abline(v=p$secondary[[i]]%>%unlist)
+            # 
+            # plot_protofeature(driver, ws, ppm, xmat, res, bgplot='overlayed')
+            
             ####
 
-            shape <- cv.col
-            plot(x = 1:length(shape), y = shape, type = 'l')
-              lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
-              lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
-              abline(v=p$secondary[[i]]%>%unlist)
-              
+            # shape <- cv.col
+            # plot(x = 1:length(shape), y = shape, type = 'l')
+            #   lines(x = primary.peak.inds, shape[primary.peak.inds], col='blue', lwd=2)
+            #   lines(x = secondary.peak.inds, shape[secondary.peak.inds], col='blue', lwd=2)
+            #   abline(v=p$secondary[[i]]%>%unlist)
+
             ####
             
-            shape <- rep(NA, length(cc.col))
-              
-            # Scale primary peak
-            
-              primary.peak.scaled <- fit_batman(feat = cc.col[primary.peak.inds],
-                         spec = cv.col[primary.peak.inds],
-                         exclude.lowest = 0.5, plots = FALSE) #TRUE
-              shape[primary.peak.inds] <- primary.peak.scaled$feat.fit
-              
-            # Scale secondary peak
-            
-              secondary.peak.scaled <- fit_batman(feat = cc.col[secondary.peak.inds],
-                         spec = cv.col[secondary.peak.inds],
-                         exclude.lowest = 0.5, plots = FALSE) #TRUE
-              shape[secondary.peak.inds] <- secondary.peak.scaled$feat.fit
-              
+            # shape <- rep(NA, length(cc.col))
+            #   
+            # # Scale primary peak
+            # 
+            #   primary.peak.scaled <- fit_batman(feat = cc.col[primary.peak.inds],
+            #              spec = cv.col[primary.peak.inds],
+            #              exclude.lowest = 0.5, plots = FALSE) #TRUE
+            #   shape[primary.peak.inds] <- primary.peak.scaled$feat.fit
+            #   
+            # # Scale secondary peak
+            # 
+            #   secondary.peak.scaled <- fit_batman(feat = cc.col[secondary.peak.inds],
+            #              spec = cv.col[secondary.peak.inds],
+            #              exclude.lowest = 0.5, plots = FALSE) #TRUE
+            #   shape[secondary.peak.inds] <- secondary.peak.scaled$feat.fit
+            #   
               
             ## ---------
             # Track down the cases where secondary appears
@@ -178,15 +179,20 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
                 # cc.peak <- cc.peaks[[1]]
                 # bounds <- cc.peak$index - (res.center-cc.peak$primary)
                 # but remember - these are mainly to index the corr and cov mats.
-})
-    # }, mc.cores = 10)
+# })
+    }, mc.cores = n.cores)
     # }, mc.cores = pars$par$ncores)
     
+  
+  # non.null <- cc.peaks %>% lapply(function(x) !is.null(x)) %>% unlist %>% which
+  # cc.peaks <- cc.peaks[non.null]
+  # 
+  # cc.peaks[[1]]
     
 ##############################################################################################################     
   # Filtering
   
-  message("Filtering results (no peaks < size of noise; only bidirectional relationships)...")
+  # message("Filtering results (no peaks < size of noise; only bidirectional relationships)...")
   
   # # At this point, we need to remove peaks that don't have a partner...
   # # This enforces complete connectivity in a correlation cluster. This 

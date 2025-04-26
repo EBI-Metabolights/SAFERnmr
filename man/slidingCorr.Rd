@@ -10,7 +10,8 @@ slidingCorr(
   extractPockets = FALSE,
   plotting = TRUE,
   vshift = 20,
-  ppm = NULL
+  ppm = NULL,
+  n.cores = 10
 )
 }
 \arguments{

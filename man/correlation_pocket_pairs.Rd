@@ -13,7 +13,8 @@ correlation_pocket_pairs(
   wdlimit = 0.99,
   noise.width.multiple = 2,
   top.n.peaks = 5,
-  rcutoff = 0.5
+  rcutoff = 0.5,
+  n.cores = 10
 )
 }
 \arguments{
