@@ -3,41 +3,56 @@
 # Follows:
 # - setup
 # - load data
-# 
-# 
-# Get correlation pockets (protofeatures)
+# For surviving protofeatures:
+# data.frame(primary.lower,
+#            primary.upper,
+#            secondary.lower,
+#            secondary.upper,   # relative driver position
+#            res.center,        # relative driver position
+#            index = x$index,
+#            row.names = NULL)
+# Viewing protofeatures:
+  # p <- protofeatures.split[[i]] 
+  ## or
+  # p <- protofeatures[i, ]
+  # plot_protofeature(p, ws, ppm, xmat, bgplot='overlayed')
 
-################ Set up parameters ##################
+
+protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6){
   
-  plot.location <- pars$dirs$temp
-
-  # Corr Pocket Pairs 
-
-    half.window <- (pars$corrpockets$half.window / digital.res) %>% ceiling  
-        if (half.window > 1000){stop('Window size is too large. Please keep to < 1000 points (~ ', round(1000 * digital.res, 4),' ppm for this dataset).')}
-                                # Window for the sliding correlation calculation. 
-                                # This x 2 should capture any 2 adjacent resonances
-                                # in a multiplet. 
-                                # Provided in ppm, converted here to (column) elements
-
-    noise.percentile <- pars$corrpockets$noise.percentile     
-                                # noise characterization... For every spectral
-                                # point, we calculate a correlation peak. If you
-                                # average all of the resulting peak shapes, 99%
-                                # of them will be at least n points wide. All of 
-                                # the peaks have a width of at least 3 (one point
-                                # on either side of the driver, due to the way
-                                # a peak is defined). What fraction contain 5
-                                # points? 30 points? This parameter determines the 
-                                # fraction of all spectral corr peaks that noise
-                                # should fit within, and sets the noise width 
-                                # accordingly. Higher is more permissive.
-                                
-     cpp.rcutoff <- pars$corrpockets$rcutoff
-                                # correlation cutoff for picking highest secondary
-                                # peak in corrpocket pair extraction. Generally
-                                # ~ 0.75 should do fine.
-       
+  # Get correlation pockets (protofeatures)
+  
+  ################ Set up parameters ##################
+    
+    plot.location <- pars$dirs$temp
+  
+    # Corr Pocket Pairs 
+  
+      half.window <- (pars$corrpockets$half.window / digital.res) %>% ceiling  
+          if (half.window > 1000){stop('Window size is too large. Please keep to < 1000 points (~ ', round(1000 * digital.res, 4),' ppm for this dataset).')}
+                                  # Window for the sliding correlation calculation. 
+                                  # This x 2 should capture any 2 adjacent resonances
+                                  # in a multiplet. 
+                                  # Provided in ppm, converted here to (column) elements
+  
+      noise.percentile <- pars$corrpockets$noise.percentile     
+                                  # noise characterization... For every spectral
+                                  # point, we calculate a correlation peak. If you
+                                  # average all of the resulting peak shapes, 99%
+                                  # of them will be at least n points wide. All of 
+                                  # the peaks have a width of at least 3 (one point
+                                  # on either side of the driver, due to the way
+                                  # a peak is defined). What fraction contain 5
+                                  # points? 30 points? This parameter determines the 
+                                  # fraction of all spectral corr peaks that noise
+                                  # should fit within, and sets the noise width 
+                                  # accordingly. Higher is more permissive.
+                                  
+       cpp.rcutoff <- pars$corrpockets$rcutoff
+                                  # correlation cutoff for picking highest secondary
+                                  # peak in corrpocket pair extraction. Generally
+                                  # ~ 0.75 should do fine.
+         
 ################ Use corrPocketPairs to extract likely j-pairs ##################
  
     # Run corrpocketPairs on everything
@@ -57,7 +72,7 @@
       pocketPairs$peakBounds <- pocketPairs$peakBounds[!is.null(pocketPairs$peakBounds)]
       
       
-    # Unlist into protofeatures
+    # Unlist into individual pairs
     
       protofeatures <- mclapply(pocketPairs$peakBounds, function(x) {
         
@@ -81,6 +96,13 @@
 
       }, mc.cores = 6) %>% do.call(rbind,.)
     
+    # Convert to relative inds
+      drivers <- protofeatures$index
+      protofeatures <- protofeatures$res.center - protofeatures
+      protofeatures$driver <- drivers
+      protofeatures$index <- NULL
+      protofeatures$res.center <- NULL
+      
     # Expand protofeature
     
         # Re-compute 
@@ -92,12 +114,12 @@
           # i <- i + 1
           # p <- protofeatures.split[[i]]
           # i
-          # plot_protofeature(p, ws, ppm, xmat, bgplot='stack', line.shape = 'covar', line.color = 'corr')
+          # plot_protofeature(p, 200, ppm, xmat, bgplot='stack', line.shape = 'covar', line.color = 'corr')
           
     # Report number of pairs
       
       numPairs <- nrow(protofeatures)
-      window.index <- (-half.window-1):(half.window+1)
+      window.index <- (-half.window):(half.window)
       
       pdf(file = paste0(plot.location, "corrpeak_distribution.pdf"),   # The directory you want to save the file in
           width = 4, # The width of the plot in inches
@@ -106,7 +128,7 @@
         pocketPairs$noiseDist %>% plot(x = window.index, ylab="Fraction of peaks including index", xlab="Window index")
         noisewidth <- sum(pocketPairs$noiseDist >= noise.percentile)
         abline(h = noise.percentile, col="red")
-        title(ylab = , main = "Average Extracted Diagonal Peak Shape (pre-filtering)")
+        title(ylab = "", main = "Average Extracted Diagonal Peak Shape (pre-filtering)")
       
       dev.off()
       # here's a thought: if you filter all peaks based on the noise feature shape,
@@ -116,6 +138,6 @@
       # actual signal (using their actual bounds) captured by the n% cutoff bounds.
 
       # ####
-    protofeatures = list(pocketPairs = pocketPairs,
-                         numPairs = numPairs)
+    
   return(protofeatures)
+}

@@ -13,26 +13,30 @@ library(patchwork)
 
 plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr'){
   
-  driver <- p$index
+  driver <- p$driver
   # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
   
   # Driver locates the index, everything else can be built around it
-
-  fullView <- (driver - ws+1):(driver + ws-1)
+    
+    p.abs <- driver - p
+    
+    fullView <- (driver - ws+1):(driver + ws-1)
+    
+    in.bounds <- !(fullView < 1 | fullView > length(ppm))
+    
+    specreg.inds <- fullView[in.bounds]
+    
+    specRegion = xmat[,
+                      specreg.inds]
+    
+    ppmRegion = ppm[specreg.inds]
   
-  in.bounds <- !(fullView < 1 | fullView > length(ppm))
+  # Recalculate cov and corr
   
-  specreg.inds <- fullView[in.bounds]
-  
-  specRegion = xmat[,
-                    specreg.inds]
-  
-  ppmRegion = ppm[specreg.inds]
-  
-  blank <- rep(NA, length(fullView))
-  cv <- cr <- blank
-  cv[in.bounds] <- cov(xmat[,driver], specRegion)
-  cr[in.bounds] <- cor(xmat[,driver], specRegion)
+    blank <- rep(NA, length(fullView))
+    cv <- cr <- blank
+    cv[in.bounds] <- cov(xmat[,driver], specRegion)
+    cr[in.bounds] <- cor(xmat[,driver], specRegion)
   
   # Set up line shape and colors
   
@@ -58,8 +62,8 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
     
   # 1. Original stackplot
   
-    primary.bounds <- c(p$primary.lower,p$primary.upper)
-    secondary.bounds <- c(p$secondary.lower,p$secondary.upper)
+    primary.bounds <- c(p.abs$primary.lower,p.abs$primary.upper)
+    secondary.bounds <- c(p.abs$secondary.lower,p.abs$secondary.upper)
     
     g1 <- switch(bgplot,
                  overlayed = simplePlot(specRegion, ppmRegion, n_xticks = 5),
@@ -68,8 +72,8 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
   # Add the peak bounds
   
   g1 <- g1 + 
-    geom_vline(xintercept = ppmRegion[secondary.bounds], linetype = 2, col = "black") +
-    geom_vline(xintercept = ppmRegion[primary.bounds], linetype = 2, col = "black") +
+    geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
+    geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
     geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed)
     
   
@@ -83,8 +87,8 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
   g2 <- ggplot(df, aes(x = ppms, y = shape, colour = color.vect)) +
     geom_line(linewidth = 1.25) +
     scale_colour_gradientn(colours = cmap, limits = cvals.range) +
-    geom_vline(xintercept = ppmRegion[secondary.bounds], linetype = 2, col = "black") +
-    geom_vline(xintercept = ppmRegion[primary.bounds], linetype = 2, col = "black") +
+    geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
+    geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
     geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed) + 
     scale_x_reverse() + 
     ggplot2::theme_bw() +
