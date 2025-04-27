@@ -54,6 +54,41 @@ log_storm_core=function(xmat=NULL, ppm=NULL, b=30, corrthresh = .8,
                         driver = NULL, range.limit=400){
 
 ############ Setup ##################################################  
+
+  # Select protofeature
+  
+    i <- 1
+    p <- protofeatures[i,]
+
+  
+########################################################################################################################
+    # Expand protofeature
+    
+    driver <- p$driver
+    p.abs <- driver - p
+    
+    fullView <- (driver - ws+1):(driver + ws-1)
+    
+    in.bounds <- !(fullView < 1 | fullView > length(ppm))
+    
+    specreg.inds <- fullView[in.bounds]
+    
+    specRegion = xmat[,
+                      specreg.inds]
+    
+    ppmRegion = ppm[specreg.inds]
+  
+  # Recalculate cov and corr
+  
+    blank <- rep(NA, length(fullView))
+    cv <- cr <- blank
+    cv[in.bounds] <- cov(xmat[,driver], specRegion)
+    cr[in.bounds] <- cor(xmat[,driver], specRegion)
+
+    refSpec <- cv
+    ref.idx <- fullView
+    
+########################################################################################################################
     
   # Window cannot exceed ppm region
     
