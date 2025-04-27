@@ -105,17 +105,15 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
       
     # Expand protofeature
     
-        # Re-compute 
-        
-        # protofeatures.split <- lapply(1:nrow(protofeatures), function(x) protofeatures[x,])
-        
           # i <- 0
           # 
           # i <- i + 1
-          # p <- protofeatures.split[[i]]
+          # p <- protofeatures[i,]
           # i
           # plot_protofeature(p, 200, ppm, xmat, bgplot='stack', line.shape = 'covar', line.color = 'corr')
-          
+          # 
+          # debug_write(protofeatures, 'protofeatures.RDS', pars)
+          # 
     # Report number of pairs
       
       numPairs <- nrow(protofeatures)
