@@ -213,5 +213,7 @@ correlation_pocket_pairs <-  function(x, ppm, ws, reg = NULL, plotHeatmap = FALS
     return(list(corr = cc,
                 cov = res$cov_compact,
                 peakBounds = cc.peaks,
-                noiseDist = windowDist)) # % of pockets containing each windowInd
+                noiseDist = windowDist,
+                noiseWidth = noiseWidth,
+                noise.width.multiple = noise.width.multiple)) # % of pockets containing each windowInd
 }
