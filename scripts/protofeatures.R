@@ -14,8 +14,9 @@
 # Viewing protofeatures:
   # p <- protofeatures.split[[i]] 
   ## or
-  # p <- protofeatures[i, ]
-  # plot_protofeature(p, ws, ppm, xmat, bgplot='overlayed')
+  i <- i + 10
+  p <- protofeatures[i, ]
+  plot_protofeature(p, 301, ppm, xmat, bgplot='overlayed')
 
 
 protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6){
@@ -137,5 +138,7 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
 
       # ####
     
-  return(protofeatures)
+  return(list(protofeatures = protofeatures,
+              noiseWidth = noiseWidth,
+              noise.width.multiple = noise.width.multiple))
 }
