@@ -11,16 +11,15 @@ library(patchwork)
   # p <- protofeatures[i, ]
   # plot_protofeature(p, ws, ppm, xmat, bgplot='overlayed')
 
-plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr'){
+plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE){
   
   driver <- p$driver
-  # peak.inds <- c(p$primary.lower:p$primary.upper, p$secondary.lower:p$secondary.upper)
-  
+
   # Driver locates the index, everything else can be built around it
     
     p.abs <- driver - p
     
-    fullView <- (driver - ws+1):(driver + ws-1)
+    fullView <- (driver - ws):(driver + ws)
     
     in.bounds <- !(fullView < 1 | fullView > length(ppm))
     
@@ -62,20 +61,20 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
     
   # 1. Original stackplot
   
-    primary.bounds <- c(p.abs$primary.lower,p.abs$primary.upper)
-    secondary.bounds <- c(p.abs$secondary.lower,p.abs$secondary.upper)
-    
     g1 <- switch(bgplot,
                  overlayed = simplePlot(specRegion, ppmRegion, n_xticks = 5),
                  stack = stackplot(specRegion, ppmRegion, vshift = 10, hshift = 0))
     
+  if (showPeaks){
   # Add the peak bounds
+    primary.bounds <- c(p.abs$primary.lower,p.abs$primary.upper)
+    secondary.bounds <- c(p.abs$secondary.lower,p.abs$secondary.upper)
   
-  g1 <- g1 + 
-    geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
-    geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
-    geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed)
-    
+    g1 <- g1 + 
+      geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
+      geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
+      geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed)
+  }
   
   # 2. Correlation-colored plot
   df <- data.frame(
@@ -87,9 +86,6 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
   g2 <- ggplot(df, aes(x = ppms, y = shape, colour = color.vect)) +
     geom_line(linewidth = 1.25) +
     scale_colour_gradientn(colours = cmap, limits = cvals.range) +
-    geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
-    geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
-    geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed) + 
     scale_x_reverse() + 
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text = element_text(colour = "black",size = 12), 
@@ -106,6 +102,14 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
                   #                                         size = 0.1,
                   #                                         linetype = 1),
                   panel.grid.major = ggplot2::element_blank())
+
+  if (showPeaks){
+    g2 <- g2 +
+      geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
+      geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
+      geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed)
+  }
+
   
   # 3. Stack them vertically
   combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
