@@ -2,6 +2,7 @@
 # The actual shapes, xmat segment,nad 
 
 expand_protofeature <- function(p, xmat, ppm, half.window){
+  
     driver <- p$driver
 
   # Driver locates the index, everything else can be built around it
@@ -29,6 +30,14 @@ expand_protofeature <- function(p, xmat, ppm, half.window){
 
   # Apply peaks
   
+    # If this isn't a protofeature, but just a driver: let "peak" bounds = spec Region
+    if (is.null(p.abs$primary.lower)){
+      p.abs$primary.lower <- min(specreg.inds)
+      p.abs$primary.upper <- max(specreg.inds)
+      p.abs$secondary.lower <- p.abs$primary.lower
+      p.abs$secondary.upper <- p.abs$primary.upper
+    }
+    
     primary.bounds <- c(p.abs$primary.lower, p.abs$primary.upper) %>% sort
     secondary.bounds <- c(p.abs$secondary.lower, p.abs$secondary.upper) %>% sort
     

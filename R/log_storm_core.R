@@ -68,7 +68,7 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
     pexp <- expand_protofeature(p, xmat, ppm, half.window)
     driver <- pexp$driver
     
-    specreg.inds <- pexp$specRegion.inds
+    wind <- pexp$specRegion.inds
       
       specRegion = pexp$specRegion
       ppmRegion = pexp$ppmRegion
@@ -76,7 +76,8 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
       
     # Why is the plot reversing the peaks?
     mask <- pexp$peak.mask>0
-    ref.idx <- pexp$specRegion.inds[mask]
+    
+    ref.idx <- wind[mask]
     refSpec <- pexp$cv[mask]
 
 ########################################################################################################################
@@ -112,12 +113,11 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
     subset.current= fullstack # cannot be same as .previous or loop won't run
     subset.previous <- 0
  
-    corr <- cr
-    covar <- cv
+    corr <- NULL
+    covar <- NULL
 
     # The wind (window) vect hold the full spectral region inds, but ref.idx is just for passing vals #####
       
-      wind <- specreg.inds
       ref.pass <- rep(FALSE, length(wind))
       ref.pass[wind %in% ref.idx] <- TRUE
 
@@ -147,7 +147,7 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
     # original: while(length(which(!(subset.previous %in% subset.current)))>0){
     
     while( !all(subset.previous %in% subset.current) & i < itlimit){ 
-      i
+      
   ## Update the subset ########################################################################
         
     # Update subset.previous to keep track of this loop's starting point #########
@@ -223,9 +223,6 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
         #   geom_vline(xintercept = ref.max) + 
         #   geom_vline(xintercept = c(min(wind), max(wind)))
 
-      # Alt: Use Static maxwidth (expansion amount, number of points = peak width in initial corrpocketpair) #######           
-          maxwidth <- hws
-
     # Expand the window for reference identification ##############
           # Center on new max, hws points in either direction
           
@@ -236,10 +233,11 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
         corr<-cor(xmat[subset.current, wind], xmat[subset.current,ref.max])
         covar=cov(xmat[subset.current, wind], xmat[subset.current,ref.max])
         
-        # plot_protofeature(p = data.frame(driver = ref.max), 
-        #                   half.window = hws, ppm = ppm, 
-        #                   xmat = xmat[subset.current,], 
-        #                   bgplot = 'stack', line.shape = 'covar', line.color = "corr", showPeaks = FALSE)
+        # plot_protofeature(p = data.frame(driver = ref.max),
+        #                   half.window = hws, ppm = ppm,
+        #                   xmat = xmat[subset.current,],
+        #                   bgplot = 'stack', line.shape = 'covar', line.color = "corr",
+        #                   showPeaks = FALSE, ref.mask = ref.idx)
         
         # plot(corr); abline(h = corrthresh); abline(v = which((wind %>% range %>% fillbetween) == ref.max))
         
@@ -284,12 +282,9 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
     # Extract the new ref shape from the thresholded covariance profile #################
        
         ref <- covar[ref.pass] # Update the ref shape using passing ref vals
-        ref.idx <- ref.idx[ref.pass] # Also update the ref indices to match new ref
+        ref.idx <- wind[ref.pass] # Also update the ref indices to match new ref
         
       # Make a full NA-filled version for plotting
-        ref.full <- ref.full.idx <- rep(NA, length(wind))
-        ref.full[ref.pass] <- ref
-        ref.full.idx[ref.pass] <- ref.idx
         
         plot_protofeature(p = data.frame(driver = ref.max),
                           half.window = hws, ppm = ppm,

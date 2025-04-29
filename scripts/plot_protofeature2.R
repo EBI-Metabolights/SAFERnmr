@@ -13,6 +13,8 @@ library(patchwork)
 
 plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL){
     
+  
+  # Decide if the 
     pexp <- expand_protofeature(p, xmat, ppm, half.window)
     
   # Set up line shape and colors
