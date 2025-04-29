@@ -57,7 +57,7 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
 
   # Select protofeature
   
-    i <- 1
+    i <- 11
     p <- protofeatures[i,]
     minpeak <- noiseWidth * noise.width.multiple
     hws <- half.window
