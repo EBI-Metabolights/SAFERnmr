@@ -7,7 +7,7 @@ expand_protofeature <- function(p, xmat, ppm, half.window){
 
   # Driver locates the index, everything else can be built around it
     
-    p.abs <- driver + p
+    p.abs <- driver - p
     
     fullView <- (driver - half.window):(driver + half.window)
     
@@ -27,7 +27,7 @@ expand_protofeature <- function(p, xmat, ppm, half.window){
     cv <- cr <- rep(NA, length(fullView))
     cv[in.bounds] <- cov(xmat[,driver], specRegion)
     cr[in.bounds] <- cor(xmat[,driver], specRegion)
-
+    
   # Apply peaks
   
     # If this isn't a protofeature, but just a driver: let "peak" bounds = spec Region
@@ -37,7 +37,7 @@ expand_protofeature <- function(p, xmat, ppm, half.window){
       p.abs$secondary.lower <- p.abs$primary.lower
       p.abs$secondary.upper <- p.abs$primary.upper
     }
-    
+    # browser()
     primary.bounds <- c(p.abs$primary.lower, p.abs$primary.upper) %>% sort
     secondary.bounds <- c(p.abs$secondary.lower, p.abs$secondary.upper) %>% sort
     
@@ -45,7 +45,12 @@ expand_protofeature <- function(p, xmat, ppm, half.window){
     pk.mask <- rep(0, length(fullView))
     pk.mask[which(fullView %in% primary.bounds) %>% fillbetween] <- 1
     pk.mask[which(fullView %in% secondary.bounds) %>% fillbetween] <- 2
+      # plot(specreg.inds, cr)
+      # abline(v = c(driver, primary.bounds, secondary.bounds))
+      # par(new=TRUE)
+      # plot(specreg.inds, pk.mask)
     peak.inds <- specreg.inds[pexp$peak.mask > 0]
+    
     
     return(list(driver = driver,
                 cv = cv, # covariance between driver and specRegion.inds - mask with [peak.mask>0] for ref.idx in log_storm
