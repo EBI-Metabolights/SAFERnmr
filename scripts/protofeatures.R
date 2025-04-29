@@ -97,6 +97,8 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
 
       }, mc.cores = 6) %>% do.call(rbind,.)
     
+    # Why are the primary peaks not lower?
+      
     # Convert to relative inds
       drivers <- protofeatures$index
       protofeatures <- protofeatures$res.center - protofeatures

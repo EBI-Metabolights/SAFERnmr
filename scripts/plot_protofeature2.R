@@ -2,54 +2,32 @@ library(ggplot2)
 library(patchwork)
 
 # input must be individual peaks (given in protofeatures table)
-# recalculates the correlation and covar between driver and xmat for +/- ws
-# ws could be larger than ws used in protofeature, but should not be smaller or else peak bounds may not fit.
+# recalculates the correlation and covar between driver and xmat for +/- half.window
+# half.window could be larger than half.window used in protofeature, but should not be smaller or else peak bounds may not fit.
 # If larger, only the peaks in protofeature are reported. 
 
   # p <- protofeatures.split[[i]] 
   ## or
   # p <- protofeatures[i, ]
-  # plot_protofeature(p, ws, ppm, xmat, bgplot='overlayed')
+  # plot_protofeature(p, half.window, ppm, xmat, bgplot='overlayed')
 
-plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE){
-  
-  driver <- p$driver
-
-  # Driver locates the index, everything else can be built around it
+plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL){
     
-    p.abs <- driver - p
+    pexp <- expand_protofeature(p, xmat, ppm, half.window)
     
-    fullView <- (driver - ws):(driver + ws)
-    
-    in.bounds <- !(fullView < 1 | fullView > length(ppm))
-    
-    specreg.inds <- fullView[in.bounds]
-    
-    specRegion = xmat[,
-                      specreg.inds]
-    
-    ppmRegion = ppm[specreg.inds]
-  
-  # Recalculate cov and corr
-  
-    blank <- rep(NA, length(fullView))
-    cv <- cr <- blank
-    cv[in.bounds] <- cov(xmat[,driver], specRegion)
-    cr[in.bounds] <- cor(xmat[,driver], specRegion)
-  
   # Set up line shape and colors
   
     shape <- switch(line.shape,
-                    covar = cv,
-                    corr = cr)
+                    covar = pexp$cv,
+                    corr = pexp$cr)
     
     n.colors <- 10
     cmap <- matlab.like2(n.colors)
     darkRed <- cmap[n.colors]
   
     color.vect <- switch(line.color,
-                         covar = cv,
-                         corr = cr)
+                         covar = pexp$cv,
+                         corr = pexp$cr)
   
       # if not dealing with correlations, make sure colors are mapped to range instead of [-1, 1]
       if (any(color.vect < -1 | color.vect > 1)){
@@ -62,30 +40,39 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
   # 1. Original stackplot
   
     g1 <- switch(bgplot,
-                 overlayed = simplePlot(specRegion, ppmRegion, n_xticks = 5),
-                 stack = stackplot(specRegion, ppmRegion, vshift = 10, hshift = 0))
+                 overlay = simplePlot(pexp$specRegion, pexp$ppmRegion, n_xticks = 5),
+                 stack = stackplot(pexp$specRegion, pexp$ppmRegion, vshift = 10, hshift = 0))
     
   if (showPeaks){
   # Add the peak bounds
-    primary.bounds <- c(p.abs$primary.lower,p.abs$primary.upper)
-    secondary.bounds <- c(p.abs$secondary.lower,p.abs$secondary.upper)
-  
     g1 <- g1 + 
-      geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
-      geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
-      geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed)
+      geom_vline(xintercept = ppm[pexp$primary.bounds], linetype = 2, col = "black") +
+      geom_vline(xintercept = ppm[pexp$secondary.bounds], linetype = 2, col = "black")
   }
+    
+  # add driver
   
+    g1 <- g1 + geom_vline(xintercept = ppm[pexp$driver], linetype = 2, col = darkRed)
+    
   # 2. Correlation-colored plot
   df <- data.frame(
-    ppms = ppmRegion,
+    ppms = pexp$ppmRegion,
     shape = shape,
     color.vect = color.vect
   )
   
-  g2 <- ggplot(df, aes(x = ppms, y = shape, colour = color.vect)) +
+  # Set up to have gray where line == ref.mask points
+  if (!is.null(ref.mask)) {
+    # ref.mask <- pexp$specRegion.inds[pexp$peak.mask>0]
+    ref.mask.region <- pexp$specRegion.inds %in% ref.mask
+    df$final_color <- ifelse(ref.mask.region, df$color.vect, NA)
+  } else {
+    df$final_color <- df$color.vect
+  }
+  
+  g2 <- ggplot(df, aes(x = ppms, y = shape, colour = final_color)) +
     geom_line(linewidth = 1.25) +
-    scale_colour_gradientn(colours = cmap, limits = cvals.range) +
+    scale_colour_gradientn(colours = cmap, limits = cvals.range, na.value = 'gray') +
     scale_x_reverse() + 
     ggplot2::theme_bw() +
     ggplot2::theme(axis.text = element_text(colour = "black",size = 12), 
@@ -105,11 +92,13 @@ plot_protofeature <- function(p, ws, ppm, xmat, bgplot='overlayed', line.shape='
 
   if (showPeaks){
     g2 <- g2 +
-      geom_vline(xintercept = ppm[secondary.bounds], linetype = 2, col = "black") +
-      geom_vline(xintercept = ppm[primary.bounds], linetype = 2, col = "black") +
-      geom_vline(xintercept = ppm[driver], linetype = 2, col = darkRed)
+      geom_vline(xintercept = ppm[pexp$secondary.bounds], linetype = 2, col = "black") +
+      geom_vline(xintercept = ppm[pexp$primary.bounds], linetype = 2, col = "black")
   }
-
+  
+  # Add driver
+    
+    g2 <- g2 + geom_vline(xintercept = ppm[pexp$driver], linetype = 2, col = darkRed)
   
   # 3. Stack them vertically
   combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
