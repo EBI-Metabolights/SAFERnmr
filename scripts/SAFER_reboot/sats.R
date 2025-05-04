@@ -59,9 +59,16 @@
       lapply(pfs, function(pf){
         # pf <- pfs[[1]]
         
-        log_storm_core(xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
+        log_storm_core(pf, xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
                         q=0.05, minpeak = 10, range.limit=400, plots=FALSE)
         
+        
+        plot_protofeature(p = data.frame(driver = ref.max),
+                  half.window = hws, ppm = ppm,
+                  xmat = xmat[subset.current,],
+                  bgplot = 'stack', line.shape = 'covar', line.color = "corr",
+                  showPeaks = FALSE, ref.mask = ref.idx, show.mask.bounds = TRUE)
+
       })
       
     }, mc.cores = n.cores)

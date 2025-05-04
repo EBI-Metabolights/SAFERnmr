@@ -147,8 +147,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
   #   from subset.previous
   #   subset.current is always smaller unless subset.previous is reset to fullstack
     # original: while(length(which(!(subset.previous %in% subset.current)))>0){
-    browser()
-    ref.max
+    
     while( !all(subset.previous %in% subset.current) & i < itlimit){ 
       
   ## Update the subset ########################################################################
@@ -213,7 +212,10 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
   ## Update the ref ###########################################################################          
       
     # Identify the new driver ########
-        # if (is.na(ref.max) | is.null(ref.max)){brohwser()}
+        # if (is.na(ref.max) | is.null(ref.max)){browser()}
+        
+        plot(x = ref.idx, y = ref)
+        abline(v = ref.max)
         ref.max <- next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx 
             
@@ -228,7 +230,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
 
     # Expand the window for reference identification ##############
           # Center on new max, hws points in either direction
-        browser()
+        
         wind <- expandRef_simple(wind, ref.max, hws, ppm)
         
     # STOCSY the new driver within subset.current and the widened window to get new ref ##############
@@ -329,8 +331,8 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
       }
       
   return(list(subset = subset.current,
-              finalRegion = finalreg,
-              plotRegion = plotreg %>% fillbetween,
+              finalRegion = wind,
+              plotRegion = wind,
               ref.idx = ref.idx,
               ref.vals = ref,
               corr = corr,

@@ -100,11 +100,11 @@ next_driver <- function(current.driver,
        
       }
     
-      
     # Check results, and return list:
       if (length(new.driver) == 0 | length(driver.bounds) == 0){
-        new.driver <- NULL
-        driver.bounds <- NULL
+        # if this failed, just reuse the current driver
+        # to get bounds, recycle_driver uses the driver's non-NA run boundaries
+        return(recycle_driver(current.driver, ref.idx))
       }
       
       return(list(idx = new.driver,
@@ -112,6 +112,20 @@ next_driver <- function(current.driver,
       
 }
 
+recycle_driver <- function(current.driver, ref.idx){
+  new.driver <- current.driver
+  # Get the bounds of the run that contains current driver
+    run.vect <- ref.idx
+    run.vect[is.na(run.vect)] <- 0
+    run.vect[run.vect > 0] <- 1
+      labs <- run.vect %>% run.labels
+      driver.run.idx <- labs[ref.idx %in% current.driver]
+      ref.idx.driver <- ref.idx[labs == driver.run.idx]
+      
+  driver.bounds <- ref.idx.driver %>% range
+  return(list(idx = new.driver,
+              bounds = driver.bounds))
+}
 
 # Other approaches I've tried
         # Allow ref center to travel to the nearest uphill local maximum
