@@ -5,6 +5,7 @@
 # Follows:
 # - setup
 
+load_data_local <- function(pars){
 ################ Read parameters file ##################
   
   tmpdir <- pars$dirs$temp
@@ -38,4 +39,7 @@
         }
       }
       # if not set, do nothing (warning is printed)
-
+  return(list(xmat = xmat,
+              ppm = ppm,
+              digital.res = digital.res))
+}

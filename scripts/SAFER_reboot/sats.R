@@ -7,6 +7,8 @@
 
 # 
 
+#   protofeatures
+
 # Parameter setup ####
     # Override for now:
     only.region.between <- pars$corrpockets$only.region.between
@@ -30,16 +32,40 @@
 
      
         bounds <- vectInds(only.region.between, ppm)
-        testregion <- bounds[2]:bounds[1]
-        
-        colwithPair <- pocketPairs$peakMap %>% is.na %>% "!"(.) %>% 
-          t %>% rowSums(na.rm = TRUE) %>% ">"(.,0) %>% which
-        regions_subset <- (colwithPair %in% testregion) %>% which
+
         storm_rnd1 = list()
         
-        ncores <- pars$par$ncores
-        chunks <- lapply()
+        n.cores <- pars$par$ncores
         
+  # Set up multicore
+    
+    # split up the ppm vector into chunks
+    # but first, randomize it for load balancing 
+    
+    pfs.in.region <- (protofeatures$table$driver <= bounds[1] & protofeatures$table$driver <= bounds[2] ) %>% protofeatures$table[.,]
+        
+    pfs.rand <- sample(seq_along(rownames(pfs.in.region)))
+      unrand <- order(pfs.rand, decreasing = FALSE)
+    chunk.size <- ceiling(length(pfs.rand) / n.cores)
+    pf.chunk.assignments <- split(pfs.rand, ceiling(seq_along(pfs.rand) / chunk.size))
+    
+    pfs.split <- pfs.in.region %>% split(seq_along(pfs.rand))
+      
+    pf.chunks <- lapply(pf.chunk.assignments, function(x) pfs.split[x])
+
+    results <- mclapply(pf.chunks, function(pfs){
+      # pfs <- pf.chunks[[1]]
+      # 
+      lapply(pfs, function(pf){
+        # pf <- pfs[[1]]
+        
+        log_storm_core(xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
+                        q=0.05, minpeak = 10, range.limit=400, plots=FALSE)
+        
+      })
+      
+    }, mc.cores = n.cores)
+      
         message("Running storm on ",length(regions_subset), " provided protofeatures between ",ppm[bounds[1]]," and ",ppm[bounds[2]]," ppm.")
         
         storm_rnd1 <- 
@@ -50,30 +76,9 @@
                     tryCatch(
                       expr = {
                               # Set up the region
-                                # x <- regions_subset[1793]
-                                
-                                driver <- colwithPair[x]
-                                peakPos <- pocketPairs$peakMap[,driver] %>% is.na %>% "!"(.) %>% which
-                                pair.region <- pocketPairs$regions[peakPos,driver]
-          
+
                               # Do storm_pairplay
                     
-                                # Set params
-                                  pw <- span(peakPos)/2 %>% ceiling
-                                  wind <- pair.region
-                                  shift <- range(ppm[pair.region])
-                                  
-                                # Use original covariance signal within corr bounds as shape seed
-                                # (could also use best spectrum index)
-                                  shape <- pocketPairs$cov[peakPos,driver]
-                                  bestSpec = cor( xmat[ ,wind] %>% t, shape ) %>% which.max
-                                  
-                                # Do the storm
-                                  
-                                  res <- storm_pairplay(xmat, ppm,
-                                                              b = (pw * b) %>% ceiling, corrthresh = correlation.r.cutoff, q = q,
-                                                              minpeak = noisewidth, refSpec = shape, ref.idx = pair.region,
-                                                              driver = driver)
                                   res$cpp.driver <- driver
                                   
                                   return(res)

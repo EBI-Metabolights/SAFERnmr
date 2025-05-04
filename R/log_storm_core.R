@@ -49,17 +49,16 @@
 #' @importFrom magrittr %>%
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
-log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
-                        q=0.05, minpeak = 10, refSpec=NULL, ref.idx=NULL,
-                        driver = NULL, range.limit=400){
+log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
+                        q=0.05, minpeak = 10, range.limit=400, plots=FALSE){
 
 ############ Setup ##################################################  
 
   # Select protofeature
   
-    i <- 11
-    p <- protofeatures[i,]
-    minpeak <- noiseWidth * noise.width.multiple
+    # i <- 11
+    # p <- protofeatures[i,]
+    # minpeak <- noiseWidth * noise.width.multiple
     hws <- half.window
     
 ########################################################################################################################
@@ -131,11 +130,14 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
     i=1        
     itlimit = 25
     
-        
+    plots.baseName <- 'sat_evolution_'
+    
+    if (plots){
       plot_protofeature(p, 
-                        half.window = hws, ppm = ppm, xmat, 
+                        half.window = half.window, ppm = ppm, xmat=xmat, 
                         bgplot = 'stack', line.shape = 'covar', line.color = "corr", 
-                        showPeaks = TRUE, ref.mask = ref.idx)
+                        showPeaks = TRUE, ref.mask = ref.idx, show.mask.bounds = TRUE)
+    }
 
 ############ Run storm loop ###################################################################
 
@@ -145,7 +147,8 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
   #   from subset.previous
   #   subset.current is always smaller unless subset.previous is reset to fullstack
     # original: while(length(which(!(subset.previous %in% subset.current)))>0){
-    
+    browser()
+    ref.max
     while( !all(subset.previous %in% subset.current) & i < itlimit){ 
       
   ## Update the subset ########################################################################
@@ -225,7 +228,7 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
 
     # Expand the window for reference identification ##############
           # Center on new max, hws points in either direction
-          
+        browser()
         wind <- expandRef_simple(wind, ref.max, hws, ppm)
         
     # STOCSY the new driver within subset.current and the widened window to get new ref ##############
@@ -284,33 +287,46 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
         ref <- covar[ref.pass] # Update the ref shape using passing ref vals
         ref.idx <- wind[ref.pass] # Also update the ref indices to match new ref
         
-      # Make a full NA-filled version for plotting
-        
+      # Plot
+      if (plots){
         plot_protofeature(p = data.frame(driver = ref.max),
                           half.window = hws, ppm = ppm,
                           xmat = xmat[subset.current,],
                           bgplot = 'stack', line.shape = 'covar', line.color = "corr",
-                          showPeaks = FALSE, ref.mask = ref.idx)
+                          showPeaks = FALSE, ref.mask = ref.idx, show.mask.bounds = TRUE)
         # simplePlot(ref, xvect = ref.idx)
-        
+      }
       # Finish the loop by updating the counter
         i <- i+1
     }
   
 ############ Finish up and return results ########################################################
 # Finish up and return results
-     # Set variables relevant to output
+    # Set variables relevant to output
     # - handle failure mode cases
-    # - ensure index ranges match up
-    
+    # - Use case of SATs is 
+    #   - plotting (needs to be indexable on xmat)
+    #   - matching (shapes available without use of xmat)
+    #     - ppms are important
+    #     - gaps are important - assuming that NAs are handled in matching
+      last.driver <- ref.max
       ref.max = next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx
       
-      finalreg <- plotrng %>% fillbetween
-      corr <- corr[ref.pass %>% which %>% range %>% fillbetween]
-      covar <- covar[ref.pass %>% which %>% range %>% fillbetween]
-
+      wind <- wind %>% range # undo with wind %>% fillbetween
+      # Just keep the whole corr and covar
+      corr <- corr # [ref.pass %>% which %>% range %>% fillbetween]
+      covar <- covar # [ref.pass %>% which %>% range %>% fillbetween]
+      ref.pass <- which(ref.pass) # in wind; undo with wind %>% fillbetween %>% .[ref.pass]
+      peak <- ref.max # not a driver, but peak
+      last.driver
+      
       if(i == (itlimit-1)){status <- fail.opts[[4]]}
+      
+      if (plots){
+        # Print into video or grid
+        # 
+      }
       
   return(list(subset = subset.current,
               finalRegion = finalreg,
@@ -329,6 +345,7 @@ log_storm_core=function(xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
 }
 
 expandRef_simple <- function(wind, ref.max, hws, ppm){
+    
     wind <- (ref.max - hws):(ref.max + hws)
   
     # On the ends of the spectra, adjust back in frame

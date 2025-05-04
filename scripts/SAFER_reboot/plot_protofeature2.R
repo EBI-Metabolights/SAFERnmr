@@ -11,9 +11,9 @@ library(patchwork)
   # p <- protofeatures[i, ]
   # plot_protofeature(p, half.window, ppm, xmat, bgplot='overlayed')
 
-plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL){
-    
+plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL, show.mask.bounds=FALSE){
   
+
   # Decide if the 
     pexp <- expand_protofeature(p, xmat, ppm, half.window)
     
@@ -63,7 +63,7 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
     color.vect = color.vect
   )
   
-  # Set up to have gray where line == ref.mask points
+  # Set up to have gray where line != ref.mask points
   if (!is.null(ref.mask)) {
     # ref.mask <- pexp$specRegion.inds[pexp$peak.mask>0]
     ref.mask.region <- pexp$specRegion.inds %in% ref.mask
@@ -73,7 +73,7 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
   }
   
   g2 <- ggplot(df, aes(x = ppms, y = shape, colour = final_color)) +
-    geom_line(linewidth = 1.25) +
+    geom_line(linewidth = 2) +
     scale_colour_gradientn(colours = cmap, limits = cvals.range, na.value = 'gray') +
     scale_x_reverse() + 
     ggplot2::theme_bw() +
@@ -101,6 +101,15 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
   # Add driver
     
     g2 <- g2 + geom_vline(xintercept = ppm[pexp$driver], linetype = 2, col = darkRed)
+    
+  if (!is.null(ref.mask) & show.mask.bounds){
+    mask <- pexp$specRegion.inds %in% ref.mask
+    diffMask <- mask %>% diff
+        maskBounds <- diffMask %>% "!="(.,0) %>% which 
+          maskBounds <- pexp$specRegion.inds[maskBounds + as.integer(diffMask[maskBounds] > 0)]
+    
+    g2 <- g2 + geom_vline(xintercept = ppm[maskBounds], linetype = 1, col = "gray")
+  }
   
   # 3. Stack them vertically
   combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed

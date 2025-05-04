@@ -2,7 +2,7 @@
 # The actual shapes, xmat segment,nad 
 
 expand_protofeature <- function(p, xmat, ppm, half.window){
-  
+    
     driver <- p$driver
 
   # Driver locates the index, everything else can be built around it
@@ -46,10 +46,11 @@ expand_protofeature <- function(p, xmat, ppm, half.window){
     pk.mask[which(fullView %in% primary.bounds) %>% fillbetween] <- 1
     pk.mask[which(fullView %in% secondary.bounds) %>% fillbetween] <- 2
       # plot(specreg.inds, cr)
-      # abline(v = c(driver, primary.bounds, secondary.bounds))
+      # abline(v = c(driver), col='red')
+      # abline(v = c(primary.bounds, secondary.bounds))
       # par(new=TRUE)
       # plot(specreg.inds, pk.mask)
-    peak.inds <- specreg.inds[pexp$peak.mask > 0]
+    # peak.inds <- specreg.inds[pexp$peak.mask > 0]
     
     
     return(list(driver = driver,

@@ -8,7 +8,7 @@ Locally Optimized Global STORM}
 log_storm_core(
   xmat = NULL,
   ppm = NULL,
-  b = 30,
+  half.window = 200,
   corrthresh = 0.8,
   q = 0.05,
   minpeak = 10,
@@ -19,11 +19,9 @@ log_storm_core(
 )
 }
 \arguments{
-\item{xmat}{A matrix of spectral data (rows are spectra, columns are spectral points)}
+\item{xmat}{A matrix of spectral data (rohws are spectra, columns are spectral points)}
 
 \item{ppm}{A vector of the spectral points in ppm (optional, default is all columns of xmat)}
-
-\item{b}{An integer giving the expansion parameter for the reference peak}
 
 \item{corrthresh}{A numeric giving the minimum correlation value to be considered for inclusion (for both subset AND reference optimization)}
 
@@ -36,10 +34,12 @@ log_storm_core(
 \item{ref.idx}{A vector of the spectral points (columns of xmat) to use as the initial reference}
 
 \item{range.limit}{A vector of the spectral points (columns of xmat) to use as the initial reference}
+
+\item{b}{An integer giving the expansion parameter for the reference peak}
 }
 \value{
 A list with components "reconstructed" and "status". "reconstructed" is a matrix
-containing the reconstructed metabolite concentrations (rows are samples, columns are metabolites).
+containing the reconstructed metabolite concentrations (rohws are samples, columns are metabolites).
 "status" is a character string indicating whether the method converged successfully or failed.
 }
 \description{

@@ -14,12 +14,13 @@
 # Viewing protofeatures:
   # p <- protofeatures.split[[i]] 
   ## or
-  i <- i + 10
-  p <- protofeatures[i, ]
-  plot_protofeature(p, 301, ppm, xmat, bgplot='overlayed')
+  # i <- i + 10
+  # p <- protofeatures[i, ]
+  # plot_protofeature(p, 301, ppm, xmat, bgplot='overlayed')
 
+# protofeatures <- compute_protofeatures(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6)
 
-protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6){
+compute_protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6){
   
   # Get correlation pockets (protofeatures)
   
@@ -74,7 +75,7 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
       
       
     # Unlist into individual pairs
-    
+      message('Compiling protofeature table...')
       protofeatures <- mclapply(pocketPairs$peakBounds, function(x) {
         
           null.ones <- is.null(x$secondary)
@@ -105,6 +106,7 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
       protofeatures$driver <- drivers
       protofeatures$index <- NULL
       protofeatures$res.center <- NULL
+      noisewidth <- sum(pocketPairs$noiseDist >= noise.percentile)
       
     # Expand protofeature
     
@@ -127,7 +129,6 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
           height = 4) # The height of the plot in inches
       
         pocketPairs$noiseDist %>% plot(x = window.index, ylab="Fraction of peaks including index", xlab="Window index")
-        noisewidth <- sum(pocketPairs$noiseDist >= noise.percentile)
         abline(h = noise.percentile, col="red")
         title(ylab = "", main = "Average Extracted Diagonal Peak Shape (pre-filtering)")
       
@@ -139,8 +140,8 @@ protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5,
       # actual signal (using their actual bounds) captured by the n% cutoff bounds.
 
       # ####
-    
-  return(list(protofeatures = protofeatures,
-              noiseWidth = noiseWidth,
+      message('compute_protofeatures finished.')
+  return(list(table = protofeatures,
+              noiseWidth = noisewidth,
               noise.width.multiple = noise.width.multiple))
 }
