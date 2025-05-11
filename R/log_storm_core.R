@@ -54,6 +54,14 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
 
 ############ Setup ##################################################  
 
+    p <- pf
+    half.window = 200
+    corrthresh = .8
+    q=0.05
+    minpeak = 10
+    range.limit=400
+    plots=TRUE
+                        
   # Select protofeature
   
     # i <- 11
@@ -330,13 +338,13 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
         # 
       }
       
-  return(list(subset = subset.current,
+  return(list(protofeature = p,
+              subset = subset.current,
               finalRegion = wind,
-              plotRegion = wind,
-              ref.idx = ref.idx,
-              ref.vals = ref,
-              corr = corr,
-              covar = covar,
+              ref.idx = ref.idx, # ppm inds for ref
+              ref.vals = ref,    # ref covariance shape with NAs
+              corr = corr,      # passed from last update
+              covar = covar,    # passed from last update
               peak = ref.max,   # index in wind
               pass = ref.pass,  # indices in wind
               driver.initial = driver.init,
@@ -346,16 +354,18 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
  #################################################
 }
 
-expandRef_simple <- function(wind, ref.max, hws, ppm){
+expandRef_simple <- function(wind, ref.max, hws, ppm, recenter = FALSE){
+    # Default is just return the same window - no expansion/recentering
+    if (recenter){
+      wind <- (ref.max - hws):(ref.max + hws)
     
-    wind <- (ref.max - hws):(ref.max + hws)
-  
-    # On the ends of the spectra, adjust back in frame
-    if (any(wind < 1)){
-      wind <- 1:hws
-    } else {
-      if (any(wind > length(ppm))){
-        wind <- (length(ppm)-hws):length(ppm)
+      # On the ends of the spectra, adjust back in frame
+      if (any(wind < 1)){
+        wind <- 1:hws
+      } else {
+        if (any(wind > length(ppm))){
+          wind <- (length(ppm)-hws):length(ppm)
+        }
       }
     }
     return(wind)

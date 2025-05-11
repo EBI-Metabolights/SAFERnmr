@@ -10,24 +10,32 @@
 #   protofeatures
 
 # Parameter setup ####
+
+    # Passing from previous functions ####
+    
+    xmat <- data$xmat
+    ppm <- data$ppm
+    tmpdir <- pars$dirs$temp
+    
     # Override for now:
-    only.region.between <- pars$corrpockets$only.region.between
-    # only.region.between <- pars$corrpockets$only.region.between
-      if (is.null(only.region.between))                       # which ppms to run fse between
-        {only.region.between <- range(ppm)}                   #   (default is all)
-    correlation.r.cutoff <- pars$storm$correlation.r.cutoff   # rvalue cutoff for both subset selection (ref shape) and ref update (STOCSY)
-    q <- pars$storm$q                                         # q param from storm (pval cutoff after mhtc)
-    b <- pars$storm$b                                         # number of peak widths to expand ref by on each side
+    
+      only.region.between <- pars$corrpockets$only.region.between
+      # only.region.between <- pars$corrpockets$only.region.between
+        if (is.null(only.region.between))                       # which ppms to run fse between
+          {only.region.between <- range(ppm)}                   #   (default is all)
+      correlation.r.cutoff <- pars$storm$correlation.r.cutoff   # rvalue cutoff for both subset selection (ref shape) and ref update (STOCSY)
+      q <- pars$storm$q                                         # q param from storm (pval cutoff after mhtc)
+      b <- pars$storm$b                                         # number of peak widths to expand ref by on each side
 
-  # Plotting
-    number.of.plots <- pars$storm$number.of.plots             # pdf of all extracted features will be plotted. Choose
-                                                              # only 150 of these (evenly spaced) or suffer the
-                                                              # consequences...
-                                                    
-    plot.location <- paste0(tmpdir,"/plots/")                     # where to put the plot (just dump into run folder)
-    dir.create(plot.location, showWarnings = FALSE)
-
- 
+    # Plotting ####
+      number.of.plots <- pars$storm$number.of.plots             # pdf of all extracted features will be plotted. Choose
+                                                                # only 150 of these (evenly spaced) or suffer the
+                                                                # consequences...
+                                                      
+      plot.location <- paste0(tmpdir,"/plots/")                     # where to put the plot (just dump into run folder)
+      dir.create(plot.location, showWarnings = FALSE)
+  
+   
 # Run code ####
 
      
@@ -59,10 +67,15 @@
       lapply(pfs, function(pf){
         # pf <- pfs[[1]]
         
-        log_storm_core(pf, xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
+        s <- log_storm_core(pf, xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
                         q=0.05, minpeak = 10, range.limit=400, plots=FALSE)
         
-        
+        s$subset
+        s$finalRegion
+        s$ref.idx
+        s$ref.vals
+        s$covar
+
         plot_protofeature(p = data.frame(driver = ref.max),
                   half.window = hws, ppm = ppm,
                   xmat = xmat[subset.current,],

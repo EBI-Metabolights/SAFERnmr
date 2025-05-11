@@ -20,18 +20,21 @@
 
 # protofeatures <- compute_protofeatures(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6)
 
-compute_protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6){
+compute_protofeatures <- function(pars, data, noise.width.multiple = 2, top.n.peaks = 5, n.cores = 6){
   
   # Get correlation pockets (protofeatures)
   
   ################ Set up parameters ##################
     
     plot.location <- pars$dirs$temp
-  
+    
     # Corr Pocket Pairs 
   
-      half.window <- (pars$corrpockets$half.window / digital.res) %>% ceiling  
-          if (half.window > 1000){stop('Window size is too large. Please keep to < 1000 points (~ ', round(1000 * digital.res, 4),' ppm for this dataset).')}
+      xmat <- data$xmat
+      ppm <- data$ppm
+      
+      half.window <- (pars$corrpockets$half.window / data$digital.res) %>% ceiling  
+          if (half.window > 1000){stop('Window size is too large. Please keep to < 1000 points (~ ', round(1000 * data$digital.res, 4),' ppm for this dataset).')}
                                   # Window for the sliding correlation calculation. 
                                   # This x 2 should capture any 2 adjacent resonances
                                   # in a multiplet. 
@@ -107,6 +110,7 @@ compute_protofeatures <- function(pars, xmat, noise.width.multiple = 2, top.n.pe
       protofeatures$index <- NULL
       protofeatures$res.center <- NULL
       noisewidth <- sum(pocketPairs$noiseDist >= noise.percentile)
+      protofeatures$index <- seq_along(1:nrow(protofeatures))
       
     # Expand protofeature
     

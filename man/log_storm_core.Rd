@@ -6,16 +6,15 @@
 Locally Optimized Global STORM}
 \usage{
 log_storm_core(
+  p = NULL,
   xmat = NULL,
   ppm = NULL,
   half.window = 200,
   corrthresh = 0.8,
   q = 0.05,
   minpeak = 10,
-  refSpec = NULL,
-  ref.idx = NULL,
-  driver = NULL,
-  range.limit = 400
+  range.limit = 400,
+  plots = FALSE
 )
 }
 \arguments{
@@ -29,13 +28,13 @@ log_storm_core(
 
 \item{minpeak}{An integer giving the minimum number of points allowed in a run of significant points in the reference}
 
-\item{refSpec}{A vector of spectral data to use as the initial reference}
-
-\item{ref.idx}{A vector of the spectral points (columns of xmat) to use as the initial reference}
-
 \item{range.limit}{A vector of the spectral points (columns of xmat) to use as the initial reference}
 
 \item{b}{An integer giving the expansion parameter for the reference peak}
+
+\item{refSpec}{A vector of spectral data to use as the initial reference}
+
+\item{ref.idx}{A vector of the spectral points (columns of xmat) to use as the initial reference}
 }
 \value{
 A list with components "reconstructed" and "status". "reconstructed" is a matrix
