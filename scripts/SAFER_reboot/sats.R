@@ -64,25 +64,48 @@
     results <- mclapply(pf.chunks, function(pfs){
       # pfs <- pf.chunks[[1]]
       # 
-      lapply(pfs, function(pf){
-        # pf <- pfs[[1]]
+      statuses <- lapply(pfs, function(pf){
+        # pf <- pfs[[143]]
+        message(pf$driver)
+        s <- 
+        tryCatch(
+          expr = {
+          
+          log_storm_core(p = pf, xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
+                        q=0.05, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple, 
+                        min.subset = 6,
+                        plots=FALSE)
+            # p = pf
+            # half.window = 200
+            # corrthresh = .8
+            # q=0.05
+            # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple
+            # min.subset = 6
+            # plots=TRUE
+            
+        },warning = function(w){
+          message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
+          browser()
+        }, error = function(e){
+          browser()
+        })
         
-        s <- log_storm_core(pf, xmat=xmat, ppm=ppm, half.window = 200, corrthresh = .8,
-                        q=0.05, minpeak = 10, range.limit=400, plots=FALSE)
         
-        s$subset
-        s$finalRegion
-        s$ref.idx
-        s$ref.vals
-        s$covar
+        return(s$status)
+        # s$subset
+        # s$finalRegion
+        # s$ref.idx
+        # s$ref.vals
+        # s$covar
 
-        plot_protofeature(p = data.frame(driver = ref.max),
-                  half.window = hws, ppm = ppm,
-                  xmat = xmat[subset.current,],
-                  bgplot = 'stack', line.shape = 'covar', line.color = "corr",
-                  showPeaks = FALSE, ref.mask = ref.idx, show.mask.bounds = TRUE)
+        # plot_protofeature(p = data.frame(driver = ref.max),
+        #           half.window = hws, ppm = ppm,
+        #           xmat = xmat[subset.current,],
+        #           bgplot = 'stack', line.shape = 'covar', line.color = "corr",
+        #           showPeaks = FALSE, ref.mask = ref.idx, show.mask.bounds = TRUE)
 
       })
+      
       
     }, mc.cores = n.cores)
       
@@ -113,3 +136,34 @@
         # Note: errors in the loop are captured and passed out as strings.
         # NULL elements are not possible, although parts of an element could be.
         # Those are checked below.  
+
+        
+fmodes <- lapply(statuses, 
+                           function(x) {
+                             if (is.character(x)){return(x)} # this will get any errors from setup or storm
+                             if (x$status == 'succeeded'){
+                               if (any(is_nullish(x))){
+                                 # Even if STORM succeeded, it may contain NULLs in some return value elements. 
+                                 return(  paste0(  is_nullish(x) %>% which %>% names, " contains NULL")) 
+                               }
+                             }
+                             return(x$status)
+                           })
+          
+succeeded <- lapply(fmodes, function(x) x == 'succeeded') %>% unlist
+failed <- !succeeded
+
+message(str_c("Failed iterations (count): ", sum(failed), " (",
+              (sum(failed)/length(pfs) * 100) %>% round, " %)"))
+
+message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
+              (sum(succeeded)/length(pfs) * 100) %>% round, " %)"))
+
+# Print out breakdown of statuses
+  fm <- fmodes %>% plyr::ldply(rbind)
+  fm$.id <- NULL
+  colnames(fm) <- 'status'
+  fm <- fm %>% group_by(status) %>% count %>% as.data.frame
+  
+  print(fm)
+  

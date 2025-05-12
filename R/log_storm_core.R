@@ -39,7 +39,6 @@
 #' @param minpeak An integer giving the minimum number of points allowed in a run of significant points in the reference
 #' @param refSpec A vector of spectral data to use as the initial reference
 #' @param ref.idx A vector of the spectral points (columns of xmat) to use as the initial reference
-#' @param range.limit A vector of the spectral points (columns of xmat) to use as the initial reference
 #'
 #' @return A list with components "reconstructed" and "status". "reconstructed" is a matrix
 #' containing the reconstructed metabolite concentrations (rohws are samples, columns are metabolites).
@@ -50,22 +49,19 @@
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
 log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
-                        q=0.05, minpeak = 10, range.limit=400, plots=FALSE){
+                        q=0.05, minpeak = 10, min.subset=3, plots=FALSE){
 
 ############ Setup ##################################################  
 
-    p <- pf
-    half.window = 200
-    corrthresh = .8
-    q=0.05
-    minpeak = 10
-    range.limit=400
-    plots=TRUE
+    # p <- pf
+    # half.window = 200
+    # corrthresh = .8
+    # q=0.05
+    # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple # 10
+    # plots=TRUE
                         
   # Select protofeature
   
-    # i <- 11
-    # p <- protofeatures[i,]
     # minpeak <- noiseWidth * noise.width.multiple
     hws <- half.window
     
@@ -133,7 +129,8 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
       fail.opts <- list("empty subset",          # empty subset
                         "subset degenerated",    # 1-3 spectra in the subset
                         "reference degenerated", # reference < 3 points
-                        "did not converge")      # itlimit hit
+                        "did not converge",
+                        "driver degenerated")      # itlimit hit
     
     i=1        
     itlimit = 25
@@ -194,39 +191,43 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
             sspass <- (pval<q & r>corrthresh) %>% which
             
             
-              if(length(sspass) < 3) # Failure modes 1 and 2
-              {
-                  plotrng <- c(min(ref.idx),max(ref.idx))
-                  plotreg <- c(min(ref.idx)-length(ref.idx)*1,max(ref.idx)+length(ref.idx)*1)
-                  ref.max <- NA
-                  corr <- rep(NA, length(plotrng %>% fillbetween))
-                  covar <- corr
-                  covar[(plotrng %>% fillbetween) %in% ref.idx] <- ref
-                  ref.pass <- rep(TRUE, length(corr))
-                  status <- fail.opts[[length(sspass)+1]]
-                break
-              }
-            
-            
-            
           # Subset from the full spectral matrix stack #####
             # subset.current = subset.previous[sspass] # keep the subset of spectra positively correlated with the ref
             subset.current = fullstack[sspass] # keep the subset of spectra positively correlated with the ref
-            # xmat[subset.current, ref.idx %>% range %>% fillbetween] %>% simplePlot(xvect = ref.idx %>% range %>% fillbetween)
+            # xmat[subset.current, ref.idx %>% range %>% fillbetween] %>% simplePlot(xvect = ref.idx %>% range %>% fillbetween %>% ppm[.]) + geom_vline(xintercept=ppm[ref.max], colour='red')
             # ref %>% simplePlot(xvect = ref.idx)
-            # xmat[subset.current, ref.idx %>% range %>% fillbetween] %>% stackplot(xvect = ref.idx %>% range %>% fillbetween)
-            
+            # xmat[subset.current, ref.idx %>% range %>% fillbetween] %>% stackplot(xvect = ref.idx %>% range %>% fillbetween %>% ppm[.]) + geom_vline(xintercept=ppm[ref.max], colour='red')
+
+              if(length(subset.current) < min.subset) # Failure modes 1 and 2
+              {
+                return(
+                list(protofeature = p,
+                  subset = subset.current,
+                  finalRegion = wind,
+                  ref.idx = ref.idx, # ppm inds for ref
+                  ref.vals = ref,    # ref covariance shape with NAs
+                  corr = corr,      # passed from last update
+                  covar = covar,    # passed from last update
+                  peak = ref.max,   # index in wind
+                  pass = ref.pass,  # indices in wind
+                  driver.initial = driver.init,
+                  status = fail.opts[[2]],  # see fail.opts
+                  iterations = i-1) # (completed iterations only) 
+                )
+              }
+                      
           
   ## Update the ref ###########################################################################          
       
     # Identify the new driver ########
         # if (is.na(ref.max) | is.null(ref.max)){browser()}
         
-        plot(x = ref.idx, y = ref)
-        abline(v = ref.max)
+        # plot(x = ppm[ref.idx], y = ref)
+        # abline(v = ppm[ref.max])
         ref.max <- next_driver(ref.profile = ref, current.driver = ref.max, 
                                ref.idx = ref.idx, behavior = 'samePk') %>% .$idx 
-            
+        
+        # simplePlot(xmat[subset.current, wind], xvect = ppm[wind], linecolor='darkgray') + geom_vline(xintercept = ppm[ref.max], colour = 'red')
         # ref %>% 
         #   simplePlot(xvect = ref.idx) + 
         #   geom_vline(xintercept = ref.max) + 
@@ -273,30 +274,50 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
         
       # Remove any runs that are < minpeak. This helps control for expansion
       # by a bunch of noise peaks.
-       
-        ref.pass <- (ref.pass %>% as.integer %>% runs.labelBy.lengths) > minpeak
-        # plot(ref.pass %>% as.integer)
+      
+        # plot(ref.pass %>% as.integer %>% runs.labelBy.lengths)
+        ref.max.rel <- which(wind == ref.max)
+        # abline(v=ref.max.rel, col='red') # see if driver pk is too small
         
+        ref.pass <- (ref.pass %>% as.integer %>% runs.labelBy.lengths) > minpeak
+        
+        # Ensure driver is still in ref
+          
+          driver.in.ref <- ref.pass[ref.max.rel]
+          if (!driver.in.ref){
+            status = fail.opts[[5]]
+          } else if ((ref.pass %>% sum(na.rm = TRUE)) < 3){
+            status = fail.opts[[3]]
+          }
+          
+        # plot(ref.pass %>% as.integer)
+           
       # Check to make sure the ref is valid
       # - contains at least 3 valid points (absolute minimum for a meaningful peak shape)
       # - should there be a contiguous point requirement here?
         
-          if ((ref.pass %>% sum(na.rm = TRUE)) < 3){
-            plotrng <- c(min(ref.idx),max(ref.idx))
-            plotreg <- c(min(ref.idx)-length(ref.idx)*1,max(ref.idx)+length(ref.idx)*1)
-            ref.max <- NA
-            corr <- rep(NA, length(plotrng %>% fillbetween))
-            covar <- corr
-            ref.pass <- rep(TRUE, length(corr))
-            status <- fail.opts[[3]]
-            break
+          if (status != "succeeded"){
+            return(
+              list(protofeature = p,
+                subset = subset.current,
+                finalRegion = wind,
+                ref.idx = ref.idx, # ppm inds for ref
+                ref.vals = ref,    # ref covariance shape with NAs
+                corr = corr,      # passed from last update
+                covar = covar,    # passed from last update
+                peak = ref.max,   # index in wind
+                pass = ref.pass,  # indices in wind
+                driver.initial = driver.init,
+                status = status,  # see fail.opts
+                iterations = i-1) # (completed iterations only) 
+            )
           } # Failure mode 3
         
     # Extract the new ref shape from the thresholded covariance profile #################
        
         ref <- covar[ref.pass] # Update the ref shape using passing ref vals
         ref.idx <- wind[ref.pass] # Also update the ref indices to match new ref
-        
+         
       # Plot
       if (plots){
         plot_protofeature(p = data.frame(driver = ref.max),
@@ -304,7 +325,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
                           xmat = xmat[subset.current,],
                           bgplot = 'stack', line.shape = 'covar', line.color = "corr",
                           showPeaks = FALSE, ref.mask = ref.idx, show.mask.bounds = TRUE)
-        # simplePlot(ref, xvect = ref.idx)
+        # simplePlot(ref, xvect = ppm[ref.idx])
       }
       # Finish the loop by updating the counter
         i <- i+1
