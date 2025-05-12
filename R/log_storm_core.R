@@ -49,7 +49,7 @@
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
 log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
-                        q=0.05, minpeak = 10, min.subset=3, plots=FALSE){
+                        q=0.05, minpeak = 10, min.subset=3, plots=FALSE, local.fits =NULL){
 
 ############ Setup ##################################################  
 
@@ -59,6 +59,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
     # q=0.05
     # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple # 10
     # plots=TRUE
+    # local.fits=fits
                         
   # Select protofeature
   
@@ -72,10 +73,19 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
     driver <- pexp$driver
     
     wind <- pexp$specRegion.inds
+
+    specRegion = pexp$specRegion
+    ppmRegion = pexp$ppmRegion
+
+    if (!is.null(local.fits)){
       
-      specRegion = pexp$specRegion
-      ppmRegion = pexp$ppmRegion
-  
+      specRegion <- lapply(1:nrow(xmat), function(m){
+        specRegion[m, ] *  local.fits[[m]][2] + local.fits[[m]][1]
+      }) %>% do.call(rbind,.)
+      
+      xmat[, wind] <- specRegion
+    }
+    
       
     # Why is the plot reversing the peaks?
     mask <- pexp$peak.mask>0
