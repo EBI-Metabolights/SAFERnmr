@@ -48,18 +48,19 @@
 #' @importFrom magrittr %>%
 #' @importFrom ggplot2 ggplot aes geom_path geom_line geom_vline geom_hline ggtitle xlab ylab scale_y_continuous scale_x_continuous
 #' @importFrom stringr str_pad
-log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthresh = .8,
+log_storm_core=function(p=NULL, data=data, half.window = 200, corrthresh = .8,
                         q=0.05, minpeak = 10, min.subset=3, plots=FALSE, local.fits =NULL){
 
 ############ Setup ##################################################  
 
-    # p <- pf
-    # half.window = 200
-    # corrthresh = .8
-    # q=0.05
-    # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple # 10
-    # plots=TRUE
-    # local.fits=fits
+    p <- p
+    half.window = half.window
+    corrthresh = .8
+    q=0.05
+    minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple # 10
+    plots=TRUE
+    local.fits=fits
+    min.subset=6
                         
   # Select protofeature
   
@@ -69,6 +70,8 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
 ########################################################################################################################
     # Expand protofeature
     
+    xmat=data$xmat
+    ppm=data$ppm
     pexp <- expand_protofeature(p, xmat, ppm, half.window)
     driver <- pexp$driver
     
@@ -78,15 +81,14 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
     ppmRegion = pexp$ppmRegion
 
     if (!is.null(local.fits)){
-      
+
       specRegion <- lapply(1:nrow(xmat), function(m){
         specRegion[m, ] *  local.fits[[m]][2] + local.fits[[m]][1]
       }) %>% do.call(rbind,.)
-      
+      # simplePlot(specRegion, ppm[wind])
       xmat[, wind] <- specRegion
     }
     
-      
     # Why is the plot reversing the peaks?
     mask <- pexp$peak.mask>0
     
@@ -150,7 +152,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
     if (plots){
       plot_protofeature(p, 
                         half.window = half.window, ppm = ppm, xmat=xmat, 
-                        bgplot = 'stack', line.shape = 'covar', line.color = "corr", 
+                        bgplot = 'overlay', line.shape = 'covar', line.color = "corr", 
                         showPeaks = TRUE, ref.mask = ref.idx, show.mask.bounds = TRUE)
     }
 
@@ -260,7 +262,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
         # plot_protofeature(p = data.frame(driver = ref.max),
         #                   half.window = hws, ppm = ppm,
         #                   xmat = xmat[subset.current,],
-        #                   bgplot = 'stack', line.shape = 'covar', line.color = "corr",
+        #                   bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
         #                   showPeaks = FALSE, ref.mask = ref.idx)
         
         # plot(corr); abline(h = corrthresh); abline(v = which((wind %>% range %>% fillbetween) == ref.max))
@@ -290,7 +292,7 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
         # abline(v=ref.max.rel, col='red') # see if driver pk is too small
         
         ref.pass <- (ref.pass %>% as.integer %>% runs.labelBy.lengths) > minpeak
-        
+          
         # Ensure driver is still in ref
           
           driver.in.ref <- ref.pass[ref.max.rel]
@@ -360,14 +362,8 @@ log_storm_core=function(p=NULL, xmat=NULL, ppm=NULL, half.window = 200, corrthre
       covar <- covar # [ref.pass %>% which %>% range %>% fillbetween]
       ref.pass <- which(ref.pass) # in wind; undo with wind %>% fillbetween %>% .[ref.pass]
       peak <- ref.max # not a driver, but peak
-      last.driver
-      
+
       if(i == (itlimit-1)){status <- fail.opts[[4]]}
-      
-      if (plots){
-        # Print into video or grid
-        # 
-      }
       
   return(list(protofeature = p,
               subset = subset.current,

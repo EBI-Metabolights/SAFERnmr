@@ -20,7 +20,7 @@
     # Override for now:
     
       only.region.between <- pars$corrpockets$only.region.between
-      # only.region.between <- pars$corrpockets$only.region.between
+      only.region.between <- c(4.5,5)
         if (is.null(only.region.between))                       # which ppms to run fse between
           {only.region.between <- range(ppm)}                   #   (default is all)
       correlation.r.cutoff <- pars$storm$correlation.r.cutoff   # rvalue cutoff for both subset selection (ref shape) and ref update (STOCSY)
@@ -107,8 +107,8 @@
         tryCatch(
           expr = {
 
-            i <- i + 10
-            i
+            # i <- i + 10
+            i<- 70
             
             p <- pfs[[i]]
             plot_protofeature(p,
@@ -124,21 +124,23 @@
             x <- wind
             specRegion = pexp$specRegion
             
+            simplePlot(xmat[,wind], ppm[wind])
+            simplePlot(specRegion, ppm[wind])
+            
             mean.spec <- colMeans(specRegion)
             
-            fittedSpecs <- lapply(1:nrow(specRegion), function(m){
+            local.fits <- lapply(1:nrow(specRegion), function(m){
               # m <- m + 1
               fit <- fit_leastSquares(specRegion[m, ] %>% c, mean.spec, plots = FALSE)
+              fit$fit
               # fit$plot
             })
             
-            
-            simplePlot(y)
-
-          log_storm_core(p = pf, xmat=xmat, ppm=ppm, half.window = half.window, corrthresh = .8,
+          s <- log_storm_core(p = p, data=data, half.window = half.window, corrthresh = .8,
                         q=0.05, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple, 
                         min.subset = 6,
-                        plots=FALSE)
+                        plots=FALSE, local.fits = fits)
+          
             # p = pf
             # half.window = 200
             # corrthresh = .8
@@ -146,6 +148,11 @@
             # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple
             # min.subset = 6
             # plots=TRUE
+            plot_protofeature(p = data.frame(driver = s$peak),
+                      half.window = half.window, ppm = data$ppm,
+                      xmat = xmat[s$subset,],
+                      bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
+                      showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
             
         },warning = function(w){
           # message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))

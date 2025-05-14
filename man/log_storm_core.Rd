@@ -13,8 +13,9 @@ log_storm_core(
   corrthresh = 0.8,
   q = 0.05,
   minpeak = 10,
-  range.limit = 400,
-  plots = FALSE
+  min.subset = 3,
+  plots = FALSE,
+  local.fits = NULL
 )
 }
 \arguments{
@@ -27,8 +28,6 @@ log_storm_core(
 \item{q}{A numeric giving the p-value threshold for correlation significance (both subset AND reference optimization)}
 
 \item{minpeak}{An integer giving the minimum number of points allowed in a run of significant points in the reference}
-
-\item{range.limit}{A vector of the spectral points (columns of xmat) to use as the initial reference}
 
 \item{b}{An integer giving the expansion parameter for the reference peak}
 
