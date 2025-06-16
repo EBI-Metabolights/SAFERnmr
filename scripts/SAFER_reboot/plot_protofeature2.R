@@ -38,6 +38,8 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
         cvals.range <- c(-1,1)
       }
   
+  # Fix x-axis limits for both plots to ensure alignment
+      xlim_fixed <- range(pexp$ppmRegion, na.rm = TRUE) %>% rev
     
   # 1. Original stackplot
   
@@ -56,6 +58,13 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
   
     g1 <- g1 + geom_vline(xintercept = ppm[pexp$driver], linetype = 2, col = darkRed)
     
+    g1 <- g1 + 
+          theme(
+            axis.title.x = element_blank(),
+            axis.text.x  = element_blank(),
+            axis.ticks.x = element_blank()
+          )
+    
   # 2. Correlation-colored plot
   df <- data.frame(
     ppms = pexp$ppmRegion,
@@ -72,31 +81,33 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
     df$final_color <- df$color.vect
   }
   
-  g2 <- ggplot(df, aes(x = ppms, y = shape, colour = final_color)) +
-    geom_line(linewidth = 2) +
-    scale_colour_gradientn(colours = cmap, limits = cvals.range, na.value = 'gray') +
-    scale_x_reverse() + 
-    ggplot2::theme_bw() +
-    ggplot2::theme(axis.text = element_text(colour = "black",size = 12), 
-                  legend.position = "none",
-                  axis.text.y = ggplot2::element_blank(),
-                  # axis.title.x = element_text(size = 16,vjust = -0.5),
-                  axis.title.x = ggplot2::element_blank(),
-                  axis.title.y = ggplot2::element_blank(),
-                  axis.ticks = ggplot2::element_blank(),
-                  # axis.title = ggplot2::element_text(size = 12,vjust = 0.5),
-                  panel.border =  ggplot2::element_blank(),
-                  panel.grid.minor = ggplot2::element_blank(),
-                  # panel.grid.major = ggplot2::element_line(color = "gray",
-                  #                                         size = 0.1,
-                  #                                         linetype = 1),
-                  panel.grid.major = ggplot2::element_blank())
+df_lines <- df %>%
+  mutate(
+    xend = lead(ppms),
+    yend = lead(shape),
+    color_start = final_color,
+    color_end = lead(final_color)
+  ) %>%
+  filter(!is.na(xend), !is.na(yend), !is.na(color_start), !is.na(color_end)) %>%
+  mutate(color_avg = (color_start + color_end) / 2)
 
-  if (showPeaks){
-    g2 <- g2 +
-      geom_vline(xintercept = ppm[pexp$secondary.bounds], linetype = 2, col = "black") +
-      geom_vline(xintercept = ppm[pexp$primary.bounds], linetype = 2, col = "black")
-  }
+g2 <- ggplot(df_lines) +
+  geom_segment(aes(x = ppms, xend = xend, y = shape, yend = yend, color = color_avg),
+               linewidth = 1.25, lineend = "round") +
+  scale_color_gradientn(colours = cmap, limits = cvals.range, na.value = "gray") +
+  scale_x_reverse(limits = xlim_fixed, expand = c(0, 0), oob = scales::oob_keep) +
+  theme_bw() +
+  theme(
+    axis.text = element_text(colour = "black", size = 12),
+    legend.position = "none",
+    axis.text.y = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank(),
+    axis.ticks = element_blank(),
+    panel.border = element_blank(),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_blank()
+  )
   
   # Add driver
     
@@ -112,8 +123,12 @@ plot_protofeature <- function(p, half.window, ppm, xmat, bgplot='overlayed', lin
   }
   
   # 3. Stack them vertically
-  combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
+  # combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
+  combined_plot <- g1 / g2 + 
+                    plot_layout(ncol = 1, heights = c(5, 1)) & 
+                    theme(plot.margin = margin(0, 0, 0, 0), panel.spacing = unit(0, "pt"))
+
   
   # 4. Display
-  print(combined_plot)
+  return(combined_plot)
 }

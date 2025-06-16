@@ -113,7 +113,7 @@ plot_sat <- function(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='
   
   # 3. Stack them vertically
   combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
-  
+  return(combined_plot)
   # 4. Display
-  print(combined_plot)
+  # print(combined_plot)
 }

@@ -1,6 +1,7 @@
 ## SAFER Reboot
 ## Local Pipeline 
 ## MTJ MAY2025
+## devtools::document('/Users/mjudge/Documents/GitHub/SAFERnmr')
 
 pars <- setup_local()
 data <- load_data_local(pars)

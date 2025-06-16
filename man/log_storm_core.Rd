@@ -7,8 +7,7 @@ Locally Optimized Global STORM}
 \usage{
 log_storm_core(
   p = NULL,
-  xmat = NULL,
-  ppm = NULL,
+  data = data,
   half.window = 200,
   corrthresh = 0.8,
   q = 0.05,
@@ -19,15 +18,15 @@ log_storm_core(
 )
 }
 \arguments{
-\item{xmat}{A matrix of spectral data (rohws are spectra, columns are spectral points)}
-
-\item{ppm}{A vector of the spectral points in ppm (optional, default is all columns of xmat)}
-
 \item{corrthresh}{A numeric giving the minimum correlation value to be considered for inclusion (for both subset AND reference optimization)}
 
 \item{q}{A numeric giving the p-value threshold for correlation significance (both subset AND reference optimization)}
 
 \item{minpeak}{An integer giving the minimum number of points allowed in a run of significant points in the reference}
+
+\item{xmat}{A matrix of spectral data (rohws are spectra, columns are spectral points)}
+
+\item{ppm}{A vector of the spectral points in ppm (optional, default is all columns of xmat)}
 
 \item{b}{An integer giving the expansion parameter for the reference peak}
 

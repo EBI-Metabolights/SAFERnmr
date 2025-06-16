@@ -63,17 +63,19 @@
       
     pf.chunks <- lapply(pf.chunk.assignments, function(x) pfs.split[x])
 
-    results <- mclapply(pf.chunks, function(pfs){
+    results.all.cores <- mclapply(pf.chunks, function(pfs){
       # pfs <- pf.chunks[[1]]
       # 
-      statuses <- lapply(pfs, function(pf){
+      results.core <- lapply(pfs, function(pf){
         # pf <- pfs[[143]]
+        # pf <- pfs[[1]]
         # message(pf$driver)
         s <- 
         tryCatch(
           expr = {
-          
-          log_storm_core(p = pf, xmat=xmat, ppm=ppm, half.window = half.window, corrthresh = .8,
+          data <- list(xmat = xmat,
+                       ppm = ppm)
+          log_storm_core(p = pf, data = data, half.window = half.window, corrthresh = .8,
                         q=0.05, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple, 
                         min.subset = 6,
                         plots=FALSE)
@@ -84,76 +86,7 @@
             # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple
             # min.subset = 6
             # plots=TRUE
-            
-        },warning = function(w){
-          # message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
-          return(list(protofeature = pf,
-                      warning = w,
-                      status = 'warning',
-                      details = str_c('pf iteration: ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
-                      )
-                 )
-        }, error = function(e){
-          # message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
-          return(list(protofeature = pf,
-                      warning = e,
-                      status = 'error',
-                      details = str_c('pf iteration: ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
-                      )
-                 )
-        })
-        
-        s2 <- 
-        tryCatch(
-          expr = {
 
-            # i <- i + 10
-            i<- 70
-            
-            p <- pfs[[i]]
-            plot_protofeature(p,
-                      half.window = half.window, ppm = data$ppm,
-                      xmat = data$xmat,
-                      bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
-                      showPeaks = TRUE, show.mask.bounds = FALSE)
-                        
-            pexp <- expand_protofeature(p, xmat, ppm, half.window)
-            driver <- pexp$driver
-            
-            wind <- pexp$specRegion.inds
-            x <- wind
-            specRegion = pexp$specRegion
-            
-            simplePlot(xmat[,wind], ppm[wind])
-            simplePlot(specRegion, ppm[wind])
-            
-            mean.spec <- colMeans(specRegion)
-            
-            local.fits <- lapply(1:nrow(specRegion), function(m){
-              # m <- m + 1
-              fit <- fit_leastSquares(specRegion[m, ] %>% c, mean.spec, plots = FALSE)
-              fit$fit
-              # fit$plot
-            })
-            
-          s <- log_storm_core(p = p, data=data, half.window = half.window, corrthresh = .8,
-                        q=0.05, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple, 
-                        min.subset = 6,
-                        plots=FALSE, local.fits = fits)
-          
-            # p = pf
-            # half.window = 200
-            # corrthresh = .8
-            # q=0.05
-            # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple
-            # min.subset = 6
-            # plots=TRUE
-            plot_protofeature(p = data.frame(driver = s$peak),
-                      half.window = half.window, ppm = data$ppm,
-                      xmat = xmat[s$subset,],
-                      bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
-                      showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
-            
         },warning = function(w){
           # message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
           return(list(protofeature = pf,
@@ -171,47 +104,84 @@
                       )
                  )
         })
+        # ####
+        # s2 <-
+        # tryCatch(
+        #   expr = {
+        # 
+        #     # i <- i + 10
+        #     i<- 70
+        # 
+        #     p <- pfs[[i]]
+        #     plot_protofeature(p,
+        #               half.window = half.window, ppm = data$ppm,
+        #               xmat = data$xmat,
+        #               bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
+        #               showPeaks = TRUE, show.mask.bounds = FALSE)
+        # 
+        #     pexp <- expand_protofeature(p, xmat, ppm, half.window)
+        #     driver <- pexp$driver
+        # 
+        #     wind <- pexp$specRegion.inds
+        #     x <- wind
+        #     specRegion = pexp$specRegion
+        # 
+        #     simplePlot(xmat[,wind], ppm[wind])
+        #     simplePlot(specRegion, ppm[wind])
+        # 
+        # 
+        #   s <- log_storm_core(p = p, data=data, half.window = half.window, corrthresh = .8,
+        #                 q=0.05, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple,
+        #                 min.subset = 6,
+        #                 plots=FALSE, local.fits = fits)
+        # 
+        #     # p = pf
+        #     # half.window = 200
+        #     # corrthresh = .8
+        #     # q=0.05
+        #     # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple
+        #     # min.subset = 6
+        #     # plots=TRUE
+        #     plot_protofeature(p = data.frame(driver = s$peak),
+        #               half.window = half.window, ppm = data$ppm,
+        #               xmat = xmat[s$subset,],
+        #               bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
+        #               showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
+        # 
+        # },warning = function(w){
+        #   # message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
+        #   return(list(protofeature = pf,
+        #               warning = w,
+        #               status = 'warning',
+        #               details = str_c('pf iteration: ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
+        #               )
+        #          )
+        # }, error = function(e){
+        #   # message('iteration ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
+        #   return(list(protofeature = pf,
+        #               warning = e,
+        #               status = 'error',
+        #               details = str_c('pf iteration: ', which(lapply(pfs, function(x) x$driver) %>% unlist == pf$driver))
+        #               )
+        #          )
+        # })
         
         return(s)
 
       })
       
+      return(results.core)
       
     }, mc.cores = n.cores) %>% unlist(recursive = FALSE)
       
     ## Recombine into one list
+    # results.all.cores <- results.core
+    statuses <- results.all.cores %>% lapply(function(x) x$status)
     
-    statuses <- results %>% lapply(function(x) x$status)
     
-    
-##  ####
-        # message("Running storm on ",length(regions_subset), " provided protofeatures between ",ppm[bounds[1]]," and ",ppm[bounds[2]]," ppm.")
-        # 
-        # storm_rnd1 <- 
-        #       mclapply(regions_subset,
-        #       # pblapply(regions_subset,
-        #           function (x) {
-        #             # TryCatch will 
-        #             tryCatch(
-        #               expr = {
-        #                       # Set up the region
-        # 
-        #                       # Do storm_pairplay
-        #             
-        #                           res$cpp.driver <- driver
-        #                           
-        #                           return(res)
-        #                 
-        #               },
-        #               error = function(cond){
-        #                 return('setup error')
-        #                 }
-        #               )
-        #           }, mc.cores = pars$par$ncores
-        #       )
-        # # Note: errors in the loop are captured and passed out as strings.
-        # # NULL elements are not possible, although parts of an element could be.
-        # # Those are checked below.  
+    # # Note: errors in the loop are captured and passed out as strings.
+    # # NULL elements are not possible, although parts of an element could be.
+    # # Those are checked below.  
 
 ## Report ####
 fmodes <- lapply(statuses, 
@@ -253,11 +223,13 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
   # s$ref.vals
   # s$covar
   
-  simplePlot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
-  sat.list %>% lapply(function(x) x$peak) %>% unlist %>% sort %>% plot(y = 1:length(sat.list), x=.)
-  
   sat.list <- results[succeeded]
   
+  simplePlot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
+  # stackplot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
+  sat.list %>% lapply(function(x) x$peak) %>% unlist %>% sort %>% plot(y = 1:length(sat.list), x=.)
+  
+  i <- 5
   i <- i + 1
   s <- sat.list[[i]]
   
@@ -267,7 +239,6 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
             bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
             showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
 
-  
   i <- i + 10
   i
   plot_protofeature(pfs.in.region[i, ],
@@ -275,4 +246,6 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
             xmat = data$xmat,
             bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
             showPeaks = TRUE, show.mask.bounds = FALSE)
+  
+  plot_sat(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL, show.mask.bounds=FALSE)
   

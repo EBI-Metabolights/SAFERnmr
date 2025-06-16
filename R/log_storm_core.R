@@ -53,14 +53,14 @@ log_storm_core=function(p=NULL, data=data, half.window = 200, corrthresh = .8,
 
 ############ Setup ##################################################  
 
-    p <- p
-    half.window = half.window
-    corrthresh = .8
-    q=0.05
-    minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple # 10
-    plots=TRUE
-    local.fits=fits
-    min.subset=6
+    # p <- p
+    # half.window = half.window
+    # corrthresh = .8
+    # q=0.05
+    # minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple # 10
+    # plots=TRUE
+    # local.fits=fits
+    # min.subset=6
                         
   # Select protofeature
   

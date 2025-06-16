@@ -33,12 +33,14 @@ i <- 0
 i <- i + 1
 
 level <- i
+big.wind <- only.region.between %>% vectInds(ppm) %>% fillbetween
+y <- xmat[1,big.wind]
 dwt_result <- dwt(y, filter = "la8", n.levels = level)
 
 # Step 2: Zero out low-frequency components (broad background)
 # You can experiment with this! For example:
 dwt_result@V[[level]] <- dwt_result@V[[level]] * 0  # zeros, same class and dimensions  # Remove approximation (baseline)
-dwt_result@W[[level]] <- dwt_result@W[[level]] * 0  # Remove broadest detail (optional)
+# dwt_result@W[[level]] <- dwt_result@W[[level]] * 0  # Remove broadest detail (optional)
 # Leave W1–W4 intact for fine structure
 
 # Step 3: Reconstruct the signal
