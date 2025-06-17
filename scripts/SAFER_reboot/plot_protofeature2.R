@@ -95,7 +95,7 @@ g2 <- ggplot(df_lines) +
   geom_segment(aes(x = ppms, xend = xend, y = shape, yend = yend, color = color_avg),
                linewidth = 1.25, lineend = "round") +
   scale_color_gradientn(colours = cmap, limits = cvals.range, na.value = "gray") +
-  scale_x_reverse(limits = xlim_fixed, expand = c(0, 0), oob = scales::oob_keep) +
+  scale_x_reverse(breaks=breaks_pretty(), limits = xlim_fixed, expand = c(0, 0), oob = scales::oob_keep) +
   theme_bw() +
   theme(
     axis.text = element_text(colour = "black", size = 12),
@@ -113,6 +113,14 @@ g2 <- ggplot(df_lines) +
     
     g2 <- g2 + geom_vline(xintercept = ppm[pexp$driver], linetype = 2, col = darkRed)
     
+  # Set tick labels 
+    g2 <- g2 + theme(
+                      axis.text.x = element_text(size = 12),
+                      axis.ticks.x = element_line(),
+                      axis.title.x = element_blank(),
+                      plot.margin = margin(0, 0, 0, 0)
+                    )
+    
   if (!is.null(ref.mask) & show.mask.bounds){
     mask <- pexp$specRegion.inds %in% ref.mask
     diffMask <- mask %>% diff
@@ -122,13 +130,28 @@ g2 <- ggplot(df_lines) +
     g2 <- g2 + geom_vline(xintercept = ppm[maskBounds], linetype = 1, col = "gray")
   }
   
-  # 3. Stack them vertically
-  # combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
-  combined_plot <- g1 / g2 + 
-                    plot_layout(ncol = 1, heights = c(5, 1)) & 
-                    theme(plot.margin = margin(0, 0, 0, 0), panel.spacing = unit(0, "pt"))
+  # Align x axes manually
+    g1grob <- ggplotGrob(g1)
+    g2grob <- ggplotGrob(g2)
+    browser()
+    
+    # Force their widths to be equal (this is the key fix)
+    max_widths <- grid::unit.pmax(g1grob$widths, g2grob$widths)
+    g1grob$widths <- max_widths
+    g2grob$widths <- max_widths
+    
+    gridExtra::grid.arrange(g1grob, g2grob, heights = c(5, 1))
+    
+  # # 3. Stack them vertically
+  # # combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
+  #   combined_plot <- g1 / g2 +
+  #     plot_layout(heights = c(5, 1)) &
+  #     theme(
+  #       plot.margin = margin(0, 0, 0, 0),
+  #       panel.spacing = unit(0, "pt")
+  #     )
 
   
   # 4. Display
-  return(combined_plot)
+  # return(combined_plot)
 }

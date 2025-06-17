@@ -3,6 +3,8 @@
 #' This function plots stacked spectra using ggplot2 and ggridges, which
 #' creates a density plot of the spectra that can help to visualize overlaps
 #' and peaks.
+#' 
+#' Note: this uses specific settings for the x-axis: breaks=breaks_pretty(), limits = xlim_fixed, expand = c(0, 0), oob = scales::oob_keep
 #'
 #' @param ymat A numeric matrix of spectral intensities.
 #' @param xvect A numeric vector of ppm values.
@@ -81,6 +83,7 @@ stackplot <- function(ymat = NULL, xvect = NULL,
 
 ##################################################################################
     library(ggridges)
+      
     g <- ggplot(d, 
               
               aes(x = `ppm`, 
@@ -90,7 +93,10 @@ stackplot <- function(ymat = NULL, xvect = NULL,
     
         ggridges::geom_ridgeline(na.rm = TRUE)
     
-    if (xdir == "reverse"){g <- g + scale_x_reverse(breaks = breaks_pretty())}
+    if (xdir == "reverse"){g <- g + scale_x_reverse(breaks = breaks_pretty(), 
+                                                    limits = xlim_fixed, 
+                                                    expand = c(0, 0), 
+                                                    oob = scales::oob_keep)}
     else {g <- g + scale_x_continuous(breaks = breaks_pretty())}
 
     g <- g +
