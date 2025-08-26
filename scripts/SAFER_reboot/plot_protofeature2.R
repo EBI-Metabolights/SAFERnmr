@@ -131,19 +131,19 @@ g2 <- ggplot(df_lines) +
   }
   
   # Align x axes manually
-    g1grob <- ggplotGrob(g1)
-    g2grob <- ggplotGrob(g2)
-    browser()
+    # library(grid)
     
-    # Force their widths to be equal (this is the key fix)
-    max_widths <- grid::unit.pmax(g1grob$widths, g2grob$widths)
-    g1grob$widths <- max_widths
-    g2grob$widths <- max_widths
-    
-    gridExtra::grid.arrange(g1grob, g2grob, heights = c(5, 1))
-    
+    # Align widths
+    # max_widths <- grid::unit.pmax(g1$widths, g2$widths)
+    # g1grob$widths <- max_widths
+    # g2grob$widths <- max_widths
+    # 
+    # # New page and draw manually
+    # grid.newpage()
+    # grid.draw(rbind(g1grob, g2grob, size = "last"))
+    # 
   # # 3. Stack them vertically
-  # # combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
+  combined_plot <- g1 / g2 + plot_layout(ncol = 1, heights = c(5, 1))  # Adjust heights if needed
   #   combined_plot <- g1 / g2 +
   #     plot_layout(heights = c(5, 1)) &
   #     theme(
@@ -153,5 +153,5 @@ g2 <- ggplot(df_lines) +
 
   
   # 4. Display
-  # return(combined_plot)
+  return(combined_plot)
 }

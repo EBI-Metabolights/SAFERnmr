@@ -21,6 +21,8 @@
     
       only.region.between <- pars$corrpockets$only.region.between
       only.region.between <- c(4.5,5)
+      only.region.between <- c(2,3)
+      only.region.between <- c(0,10)
         if (is.null(only.region.between))                       # which ppms to run fse between
           {only.region.between <- range(ppm)}                   #   (default is all)
       correlation.r.cutoff <- pars$storm$correlation.r.cutoff   # rvalue cutoff for both subset selection (ref shape) and ref update (STOCSY)
@@ -45,7 +47,7 @@
         
         n.cores <- pars$par$ncores
         
-        half.window = half.window <- (pars$corrpockets$half.window / data$digital.res) %>% ceiling
+        half.window <- (pars$corrpockets$half.window / data$digital.res) %>% ceiling
         
   # Set up multicore
     
@@ -62,7 +64,14 @@
     pfs.split <- pfs.in.region %>% split(seq_along(pfs.rand))
       
     pf.chunks <- lapply(pf.chunk.assignments, function(x) pfs.split[x])
-
+            # p = pf
+            half.window = 200
+            corrthresh = .9
+            q=0.05
+            minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple
+            min.subset = 6
+            plots=FALSE
+    
     results.all.cores <- mclapply(pf.chunks, function(pfs){
       # pfs <- pf.chunks[[1]]
       # 
@@ -73,11 +82,10 @@
         s <- 
         tryCatch(
           expr = {
-          data <- list(xmat = xmat,
-                       ppm = ppm)
-          log_storm_core(p = pf, data = data, half.window = half.window, corrthresh = .8,
-                        q=0.05, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple, 
-                        min.subset = 6,
+
+          log_storm_core(p = pf, data = data, half.window = half.window, corrthresh = corrthresh,
+                        q=q, minpeak = protofeatures$noiseWidth * protofeatures$noise.width.multiple, 
+                        min.subset = min.subset,
                         plots=FALSE)
             # p = pf
             # half.window = 200
@@ -223,29 +231,39 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
   # s$ref.vals
   # s$covar
   
-  sat.list <- results[succeeded]
+  sat.list <- results.all.cores[succeeded]
   
-  simplePlot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
+  # simplePlot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
   # stackplot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
   sat.list %>% lapply(function(x) x$peak) %>% unlist %>% sort %>% plot(y = 1:length(sat.list), x=.)
+  sortOrder <- sat.list %>% lapply(function(x) x$peak) %>% unlist %>% order()
+  sat.list <- sat.list[sortOrder]
   
-  i <- 5
-  i <- i + 1
+  i <- 0
+  i <- i + 100
   s <- sat.list[[i]]
   
   plot_protofeature(p = data.frame(driver = s$peak),
             half.window = half.window, ppm = data$ppm,
             xmat = xmat[s$subset,],
+            # bgplot = 'stack', line.shape = 'covar', line.color = "corr",
             bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
             showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
 
-  i <- i + 10
-  i
-  plot_protofeature(pfs.in.region[i, ],
-            half.window = half.window, ppm = data$ppm,
-            xmat = data$xmat,
-            bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
-            showPeaks = TRUE, show.mask.bounds = FALSE)
-  
+  # i <- i + 100
+  # i
+  # plot_protofeature(pfs.in.region[i, ],
+  #           half.window = half.window, ppm = data$ppm,
+  #           xmat = data$xmat,
+  #           bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
+  #           showPeaks = TRUE, show.mask.bounds = FALSE)
+  # 
   plot_sat(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL, show.mask.bounds=FALSE)
+  
+  # Imagine that you scroll across, seeing the feature shapes that correspond to the spectral point you're on.
+  # When you find the shape, you click or press enter to trigger matching, etc. for it. 
+  #
+  
+  
+  
   

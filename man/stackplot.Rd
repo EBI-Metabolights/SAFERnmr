@@ -37,6 +37,9 @@ This function plots stacked spectra using ggplot2 and ggridges, which
 creates a density plot of the spectra that can help to visualize overlaps
 and peaks.
 }
+\details{
+Note: this uses specific settings for the x-axis: breaks=breaks_pretty(), limits = xlim_fixed, expand = c(0, 0), oob = scales::oob_keep
+}
 \examples{
 data(metab)
 stackplot(metab[, 1:10], xvect = metab[, 11])

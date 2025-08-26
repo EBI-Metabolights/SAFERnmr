@@ -94,7 +94,7 @@ stackplot <- function(ymat = NULL, xvect = NULL,
         ggridges::geom_ridgeline(na.rm = TRUE)
     
     if (xdir == "reverse"){g <- g + scale_x_reverse(breaks = breaks_pretty(), 
-                                                    limits = xlim_fixed, 
+                                                    #limits = xlim_fixed, 
                                                     expand = c(0, 0), 
                                                     oob = scales::oob_keep)}
     else {g <- g + scale_x_continuous(breaks = breaks_pretty())}
