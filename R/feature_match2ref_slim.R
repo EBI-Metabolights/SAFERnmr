@@ -42,11 +42,14 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
       r <- (feat.ft.c*ref.ft) %>% fftw::FFT(.,inverse = TRUE) %>% Re %>% c
 
     # Get maxima (candidate lags) ####
-     
+      
       lmxs <- localMaxima(r)
-  
+
     # Sort maxima
       lags <- lmxs[order(r[lmxs], decreasing = T)] # sort by xcorr peak height
+      # plot(r)
+      # points(lmxs,r[lmxs], col='red')
+      # plotly::plot_ly(data.frame(x=1:length(r), y=r), x = ~x, y= ~y)
       
     # Restrict lags to those not inside padding (padding is really just for end 
     # effects in the FT, not for actual comparison. Perhaps it's necessary to 

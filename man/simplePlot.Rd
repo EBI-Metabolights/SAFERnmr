@@ -23,7 +23,7 @@ simplePlot(
 
 \item{xdir}{A character string indicating the direction of the x-axis, either "reverse" or "forward".}
 
-\item{linecolor}{A character string indicating the color of the plotted lines.}
+\item{linecolor}{A character string indicating the color of the plotted lines. If defining color for each line, pass a vector of strings.}
 
 \item{opacity}{A numeric value specifying the opacity of the plotted lines.}
 

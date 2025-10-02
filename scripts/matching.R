@@ -15,13 +15,8 @@
     message("\n\n\n")
     
     ##################################################################################################################
-    message("")
-    message("Loading data from files...\n\n\n")
-
-      ppm <- fse.result$ppm
-      rm(fse.result)
-      
-    # Put features in a matrix ####
+    
+    # Put SINGLE feature in a matrix ####
       
       message('Building feature matrix...')
       
@@ -32,6 +27,7 @@
           
       nfeats <- nrow(featureStack)
       f.stack <- featureStack
+      f.subset <- pexp$driver
       
     ##################################################################################################################
     ## Ref data import ####
@@ -53,21 +49,28 @@
             error = function(cond){NULL}
           )
           
+      # Limit the search to +/- 1 ppm near the feature of interest
+      
+        ppm.range <- range(pexp$ppmRegion)
+        ppm.tol <- 1
+        ref.range <- c(ppm.range[1]-ppm.tol, ppm.range[2]+ppm.tol)
     
       # If lib.data was read, process it. Default is always reprocess: ####
         if (!is.null(lib.data)){
              
             # Process the data for the dataset: ####
-              reg <- pars$corrpockets$only.region.between
-              ppm.reg <- c(min(reg) - pars$matching$filtering$ppm.tol, max(reg) + pars$matching$filtering$ppm.tol)
+              # reg <- pars$corrpockets$only.region.between
+              # ppm.reg <- c(min(reg) - pars$matching$filtering$ppm.tol, max(reg) + pars$matching$filtering$ppm.tol)
+              
               message(" - interpolating ref data to study ppm axis...\n\n")
               lib.data.processed <- prepRefs_for_dataset(lib.data,
                                                          ppm.dataset = ppm,
                                                          ref.sig.SD.cutoff = pars$matching$ref.sig.SD.cutoff,
-                                                         ppm.range = pars$corrpockets$only.region.between,
+                                                         ppm.range = ref.range,
                                                          n.cores = pars$par$ncores
               )
-            
+            # *** Note: if no signal is found in the region, the spectrum will be excluded. 
+              
             message('\nsaving processed ref library to file...')
             saveRDS(lib.data.processed, paste0(tmpdir, "/lib.data.processed.RDS"))
         
@@ -96,7 +99,8 @@
       
     ##################################################################################################################
 
-      
+    
+        
     # Scale the feature matrix rows ####
       message('\tscaling feature matrix...\n') 
       f.stack <- f.stack %>% apply(1, scale_between) # this will also transpose it, so no need to do later
@@ -154,8 +158,8 @@
       saveRDS(r.mat, paste0(tmpdir, "/temp_data_matching/rmat.RDS"))
       
         
-        rm(r.mat)
-        rm(ref.mat)
+        # rm(r.mat)
+        # rm(ref.mat)
 
 ##################################################################################################################
 # Split the feature matrices for distribution across nodes ####
@@ -188,11 +192,7 @@
   message('-------------------  Parallel Matching Setup complete. -------------------')
   message('--------------------------------------------------------------------------')
   
+
+
   
-  
-  
-  
-  
-  
-feat_align_to(align = xmat.ss, to = profile.exp, max.hits = 1)
-feat_align_to(align = , to = , max.hits = 5, max.lag = 100)
+

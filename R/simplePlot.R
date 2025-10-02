@@ -8,7 +8,7 @@
 #' @param xvect A numeric vector for the x-axis values.
 #' @param n_xticks An integer specifying the number of x-axis ticks to generate.
 #' @param xdir A character string indicating the direction of the x-axis, either "reverse" or "forward".
-#' @param linecolor A character string indicating the color of the plotted lines.
+#' @param linecolor A character string indicating the color of the plotted lines. If defining color for each line, pass a vector of strings.
 #' @param opacity A numeric value specifying the opacity of the plotted lines.
 #' @param linewidth A numeric value specifying the width of the plotted lines.
 #'
@@ -49,7 +49,12 @@ simplePlot <- function(ymat = NULL, xvect = NULL, n_xticks = NULL, xdir = "rever
     d <- reshape2::melt(df, id.vars="ppm")
     colnames(d) <- c("ppm", "specNumber", "Spectral Intensity")
     # d <- d %>% filter(!is.na(`Spectral Intensity`))
-    d$color <- rep(alpha(linecolor, opacity))
+    if (length(linecolor)>1 && length(linecolor) == nrow(ymat)){
+      d$color <- linecolor
+    } else {
+      d$color <- rep(alpha(linecolor, opacity))
+    }
+      
   
   ##############    
   g <- ggplot2::ggplot(d) + 

@@ -70,7 +70,8 @@ prepRefs_for_dataset <- function(data.list,                 # list of gissmo (or
               #   ref.data[-ppm.in.ref] <- 0
                 
               # Set anything below threshold to NA to avoid extraneous comparisons ####
-                ncutoff <- median(ref.data, na.rm = TRUE) + sd(ref.data, na.rm = TRUE) * ref.sig.SD.cutoff
+                # ncutoff <- median(ref.data, na.rm = TRUE) + sd(ref.data, na.rm = TRUE) * ref.sig.SD.cutoff\
+                ncutoff <- 0
                 ref.data[ref.data < ncutoff] <- NA
                 ref.data <- ref.data - min(ref.data, na.rm = TRUE)
                 # ref.data <- ref.data %>% scale_between(0,1)

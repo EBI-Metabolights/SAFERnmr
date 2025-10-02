@@ -258,11 +258,74 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
   #           bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
   #           showPeaks = TRUE, show.mask.bounds = FALSE)
   # 
-  plot_sat(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL, show.mask.bounds=FALSE)
+  # plot_sat(p, half.window, ppm, xmat, bgplot='overlayed', line.shape='covar', line.color='corr', showPeaks=TRUE, ref.mask = NULL, show.mask.bounds=FALSE)
   
   # Imagine that you scroll across, seeing the feature shapes that correspond to the spectral point you're on.
   # When you find the shape, you click or press enter to trigger matching, etc. for it. 
-  #
+  
+  
+  selected <- seq(from=1, to=length(sat.list), by = 50)
+  plots <- pbapply::pblapply(selected, function(sat.index){
+    sat.index <- 100
+    s <- sat.list[[sat.index]]
+    
+    pexp <- expand_protofeature(p = data.frame(driver = s$peak), 
+                                xmat[s$subset,], data$ppm, half.window)
+    cv <- pexp$cv
+    ppms <- pexp$ppmRegion
+    ref.mask <- s$ref.idx
+    ref.mask.region <- pexp$specRegion.inds %in% ref.mask
+    
+    g1 <- simplePlot(cv, xvect=ppms,linecolor = 'gray')
+    
+    cv[!ref.mask.region] <- NA
+    ppms[!ref.mask.region] <- NA
+    
+    colors.lines <- c(rep("gray", nrow(pexp$specRegion)), 'red')
+    
+    cv.fit <- fit_leastSquares(cv, colMeans(pexp$specRegion), plots = TRUE)
+      # cv.fit$plot
+      
+    simplePlot(rbind(pexp$specRegion, cv.fit$feat.fit), 
+               pexp$ppmRegion, 
+               linecolor = colors.lines)
+    
+    
+    # g2 <- simplePlot(cv, xvect=ppms,linecolor = 'red')
+    
+    # g <- g1+g2
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    g1 <- simplePlot(covar.filtered, xvect = ppm.vals.filtered, n_xticks = 4)
+    # Add the peak bounds
+      g1 <- g1 + 
+        geom_vline(xintercept = ppm[pexp$primary.bounds], linetype = 2, col = "black") +
+        geom_vline(xintercept = ppm[pexp$secondary.bounds], linetype = 2, col = "black")
+    
+    # plot_protofeature(p = data.frame(driver = s$peak),
+    #           half.window = half.window, ppm = data$ppm,
+    #           xmat = xmat[s$subset,],
+    #           # bgplot = 'stack', line.shape = 'covar', line.color = "corr",
+    #           bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
+    #           showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
+    
+  }) 
+  
+  plots %>% grid_pdf(plotLoc=tmpdir, filename="/sats.pdf")
+  
+  # UX Idea:
+    # Look at grid plot
+    
+    # When feature is selected, display its plot_protofeature(overlay)
+    # if switch is flipped, display its plot_protofeature(stackplot)                                                                                     
   
   
   
