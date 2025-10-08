@@ -379,15 +379,15 @@ g2 <- ggplot(df_lines) +
 #                 covar = pexp$cv,
 #                 corr = pexp$cr)
 
-profile <- pexp$cv
+# profile <- pexp$cv
 
 # color.vect <- switch(line.color,
 #                      covar = pexp$cv,
 #                      corr = pexp$cr)
 
-color.vect <- pexp$cr
-
-ppms <- pexp$ppmRegion
+# color.vect <- pexp$cr
+# 
+# ppms <- pexp$ppmRegion
 
 
 # 1. Original plot
@@ -396,7 +396,7 @@ ppms <- pexp$ppmRegion
 #                    overlay = simplePlot(pexp$specRegion, pexp$ppmRegion, n_xticks = 5),
 #                    stack = stackplot(pexp$specRegion, pexp$ppmRegion, vshift = 10, hshift = 0))
 
-basePlot <- simplePlot(pexp$specRegion, pexp$ppmRegion, n_xticks = 5)
+# basePlot <- simplePlot(pexp$specRegion, pexp$ppmRegion, n_xticks = 5)
 
 # What I'm building is a suite of plotting functions which 
 # 1) produce a base plot (e.g. stackplot or overlay)
@@ -518,5 +518,5 @@ plot_addProfile <- function(profile, color.vect, ppms, basePlot){
   # return(combined_plot)
 }
 
-plot_addProfile(profile, color.vect, ppms, basePlot)
+# plot_addProfile(profile, color.vect, ppms, basePlot)
 
