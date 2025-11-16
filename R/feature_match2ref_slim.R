@@ -35,8 +35,16 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
                                    feat.ft.c, ref.ft, 
                                    pad.size,
                                    max.hits = 5, 
-                                   r.thresh = 0.8, p.thresh = 0.01){
+                                   r.thresh = 0.8, p.thresh = 0.01,
+                                   trim = FALSE){
   
+                                  # f.num, r.num,feat, ref,
+                                  pad.size <- length(feat)-1
+                                  feat.ft.c <- feat.padded.ft.c
+                                  # ref.ft,
+                                  # max.hits = 5,#pars$matching$max.hits,
+                                  # r.thresh = .6,#pars$matching$r.thresh,
+                                  # p.thresh = .01
     # Do the FFT-based conv/xcorr ####
       
       r <- (feat.ft.c*ref.ft) %>% fftw::FFT(.,inverse = TRUE) %>% Re %>% c
@@ -47,8 +55,8 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
 
     # Sort maxima
       lags <- lmxs[order(r[lmxs], decreasing = T)] # sort by xcorr peak height
-      # plot(r)
-      # points(lmxs,r[lmxs], col='red')
+      # plot(r, type='l')
+      # points(lmxs,r[lmxs], col='blue')
       # plotly::plot_ly(data.frame(x=1:length(r), y=r), x = ~x, y= ~y)
       
     # Restrict lags to those not inside padding (padding is really just for end 
@@ -57,34 +65,49 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
     # reasonable).
     
       lags <- lags[lags>=pad.size] %>% .[1:max.hits] 
+      # plot(r, type='l')
+      # points(lags,r[lags], col='red')
       
     # Loop though candidate lags and evaluate fit at each one ####
       
       # inds.trim.feat <- trim_sides(feat, out = "inds")
-      feat <- t(c(feat))
+      feat.inds <- 1:length(feat)
+      feat <- t(c(feat)) %>% rev # *** must reverse
       ref <- t(c(ref))
-      inds.trim.feat <- trim_sides(feat, out = "inds")
+      # if (trim){
+        # inds.trim.feat <- 0
+      # } else {
+      #   # Fill external NAs with zeros?
+      #   inds.trim.feat 
+      # }
+      
       # simplePlot(feat[inds.trim.feat])
-      # simplePlot(r[ref.pos-round(0.5*length(feat))])
-
       
       fits <- lapply(lags, function(lag){
         # Calculate corr at each shift
             # lag<- lags[1]
-            ref.pos <- lag - pad.size + inds.trim.feat 
+            ref.pos <- lag - pad.size - feat.inds
+            # ref.pos <- lag - pad.size + inds.trim.feat 
             # Fit (for checking - don't calc here in loop!)
-            # fit <- fit_leastSquares(feat[inds.trim.feat], ref[ref.pos], plots = T)
-            # fit$plot
-            use <- !is.na(feat[inds.trim.feat] + ref[ref.pos])
+            # fit <- fit_leastSquares(feat, ref[ref.pos], plots = T); fit$plot
+            # fit <- fit_leastSquares(feat[inds.trim.feat], ref[ref.pos], plots = T); fit$plot
+            
+            use <- !is.na(feat + ref[ref.pos])
+            # use <- !is.na(feat[inds.trim.feat] + ref[ref.pos])
             
             # Make sure there are enough points to do a correlation:
             if (sum(use) < 3){return(NULL)}
-            
             r <- suppressWarnings( 
-                                   cor(feat[inds.trim.feat[use]], 
+                                   cor(feat[use], 
                                        ref[ref.pos[use]],
                                        use = "pairwise.complete.obs",
                                        method = "pearson")            
+                                   )            
+            # r <- suppressWarnings( 
+            #                        cor(feat[inds.trim.feat[use]], 
+            #                            ref[ref.pos[use]],
+            #                            use = "pairwise.complete.obs",
+            #                            method = "pearson")            
                                    )
             return(data.frame(ref.start = min(ref.pos),
                               ref.end = max(ref.pos),
