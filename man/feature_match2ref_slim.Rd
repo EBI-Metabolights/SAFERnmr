@@ -17,7 +17,8 @@ feature_match2ref_slim(
   pad.size,
   max.hits = 5,
   r.thresh = 0.8,
-  p.thresh = 0.01
+  p.thresh = 0.01,
+  trim = FALSE
 )
 }
 \arguments{

@@ -20,8 +20,8 @@
     # Override for now:
     
       only.region.between <- pars$corrpockets$only.region.between
-      only.region.between <- c(4.5,5)
-      only.region.between <- c(2,3)
+      # only.region.between <- c(4.5,5)
+      # only.region.between <- c(2,3)
       only.region.between <- c(0,10)
         if (is.null(only.region.between))                       # which ppms to run fse between
           {only.region.between <- range(ppm)}                   #   (default is all)
@@ -263,16 +263,32 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
   # Imagine that you scroll across, seeing the feature shapes that correspond to the spectral point you're on.
   # When you find the shape, you click or press enter to trigger matching, etc. for it. 
   
+plot.sats.grid <- function(sat.list, xmat, ppm, selected, title.strs=NA, include.spectra = F){
+  # selected <- seq(from=1, to=length(sat.list), by = 10)
+  sat.list <- sat.list[selected]
+  sat.list <- lapply(1:length(sat.list), function(s){
+    
+    this.title <- title.strs[s]
+    
+    if (is.na(this.title)){
+      this.title <- ''
+    }
+    
+    sat.list[[s]]$title <- this.title
+    sat.list[[s]]
+  })
   
-  selected <- seq(from=1, to=length(sat.list), by = 50)
-  plots <- pbapply::pblapply(selected, function(sat.index){
-    sat.index <- 100
-    s <- sat.list[[sat.index]]
+  # plots <- pbapply::pblapply(selected, function(sat.index){
+  plots <- mclapply(sat.list, function(s){
+    # sat.index <- selected[1]
+    # s <- sat.list[[sat.index]]
     
     pexp <- expand_protofeature(p = data.frame(driver = s$peak), 
                                 xmat[s$subset,], data$ppm, half.window)
+      
     cv <- pexp$cv
     ppms <- pexp$ppmRegion
+    range(ppms)
     ref.mask <- s$ref.idx
     ref.mask.region <- pexp$specRegion.inds %in% ref.mask
     
@@ -281,20 +297,30 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
     cv[!ref.mask.region] <- NA
     ppms[!ref.mask.region] <- NA
     
-    colors.lines <- c(rep("gray", nrow(pexp$specRegion)), 'red')
-    
-    cv.fit <- fit_leastSquares(cv, colMeans(pexp$specRegion), plots = TRUE)
+    cv.fit <- fit_leastSquares(cv, colMeans(pexp$specRegion), plots = TRUE, scale.v2 = FALSE)
       # cv.fit$plot
-      
-    simplePlot(rbind(pexp$specRegion, cv.fit$feat.fit), 
-               pexp$ppmRegion, 
-               linecolor = colors.lines)
+
+    if (include.spectra){
+      colors.lines <- c(rep("gray", nrow(pexp$specRegion)), 'blue')
+      g1 <- simplePlot(rbind(pexp$specRegion,
+                       cv.fit$feat.fit),
+                 pexp$ppmRegion,
+                 linecolor = colors.lines)
+    } else {
+      colors.lines <- c('gray', 'blue')
+      g1 <- simplePlot(rbind(colMeans(pexp$specRegion), 
+                       cv.fit$feat.fit), 
+                 pexp$ppmRegion, 
+                 linecolor = colors.lines)
+    }
+    
     
     
     # g2 <- simplePlot(cv, xvect=ppms,linecolor = 'red')
     
     # g <- g1+g2
     
+    g1 + ggtitle(s$title)
     
     
     
@@ -303,13 +329,13 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
     
     
     
-    
-    g1 <- simplePlot(covar.filtered, xvect = ppm.vals.filtered, n_xticks = 4)
+    # g1 <- simplePlot(covar.filtered, xvect = ppm.vals.filtered, n_xticks = 4)
     # Add the peak bounds
-      g1 <- g1 + 
-        geom_vline(xintercept = ppm[pexp$primary.bounds], linetype = 2, col = "black") +
-        geom_vline(xintercept = ppm[pexp$secondary.bounds], linetype = 2, col = "black")
-    
+      # g1 <- g1 + 
+      #   geom_vline(xintercept = ppm[pexp$primary.bounds], linetype = 2, col = "black") +
+      #   geom_vline(xintercept = ppm[pexp$secondary.bounds], linetype = 2, col = "black")
+      # g1 <- 
+      
     # plot_protofeature(p = data.frame(driver = s$peak),
     #           half.window = half.window, ppm = data$ppm,
     #           xmat = xmat[s$subset,],
@@ -317,7 +343,7 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
     #           bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
     #           showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
     
-  }) 
+  }, mc.cores = min(pars$par$ncores, length(selected))) 
   
   plots %>% grid_pdf(plotLoc=tmpdir, filename="/sats.pdf")
   
@@ -326,7 +352,18 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
     
     # When feature is selected, display its plot_protofeature(overlay)
     # if switch is flipped, display its plot_protofeature(stackplot)                                                                                     
-  
+  grid_pdf <- function(plots=NULL, plotLoc="./", filename="grid_plot.pdf"){
+  # How big to make the page? 2 inches for each plot, and grid will be square.
+    dim <- 3*round(sqrt(length(plots)))
+    pdf(file = str_c(plotLoc,filename),   # The directory you want to save the file in
+        width = dim, # The width of the plot in inches
+        height = dim)
+    
+    gridExtra::grid.arrange(grobs = plots)
+    
+    dev.off()  
+  }
+}
   
   
   

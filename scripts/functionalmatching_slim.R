@@ -1,10 +1,18 @@
 ## Matching Features using Functions
-  Sys.setenv(MallocStackLogging = "0")
+  # Sys.setenv(MallocStackLogging = "0")
   lib.data.processed <- load_lib_data(pars)
-
-  ref.stack <- lib_to_refmat(lib.data.processed) # refs on rows
+  xmat <- data$xmat
+      ppm <- data$ppm
+      tmpdir <- pars$dirs$temp
+      
+  xmat.lin <- xmat %>% t %>% c
+    
+  ref.stack.lib <- lib_to_refmat(lib.data.processed) # refs on rows
     rm(lib.data.processed)
-  # ref.stack <- xmat # spectra on rows
+    # ref.stack<- ref.stack.lib #
+  ref.stack <- xmat # spectra on rows
+  # ref.stack <- xmat.lin
+  # ppm.lin <- 
   
   # Bind feature and ref ranges
   
@@ -17,11 +25,47 @@
     tol <- 0.1
     roi[1] <- roi[1]-tol
     roi[2] <- roi[2]+tol
-  match.pack <- coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=4)
+    pars$par$ncores <- 8
+  match.pack <- coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=8)
   
 # Do the matching ####
-
+  
   matches <- match_features(match.pack)
+  
+  specificies <- lapply(1:nrow(matches), function(m){
+    spec.score <- matches[m,"specificity"] %>% unlist
+    # if (is.na(spec.score) || is.infinite(spec.score)){
+    #   spec.score <- 1
+    # }
+  }) %>% unlist
+  
+  f.numbers <- match.pack$f.numbers
+  
+  plot.sats.grid(sat.list, xmat, ppm, selected = f.numbers, title.strs = specificies)
+  
+  which.plots <- seq(1,nrow(matches),by=100)
+  all.plots <- lapply(, function(x){
+    i <- i + 1
+    x <- which.plots[i]
+    match <- matches[x,]
+    
+    # Plot them
+    
+      match <- matches[x,]
+      f <- which(match.pack$f.numbers==matches$feat[x])
+        
+      feat <- match.pack$features[,f]
+      
+      ref <- match.pack$refs[, match$ref, drop = F]
+      fit <- match[c("fit.intercept","fit.scale")]
+      plot_match(match, feat, ref, ppm.margin = .25)
+      
+          # g <- plot_match(match, feat, ref, ppm.margin = .25)
+      g <- 
+      return(g)
+  })
+  
+  
   
 # Functions ####
 
@@ -127,7 +171,6 @@
     # pars$matching$p.thresh <- .01
     
     # Par setup
-    
     my.cluster <- safer_makeCluster(par, nfeats=length(mp$f.numbers))
         
     # Do matching (all refs, per feature):
@@ -139,11 +182,12 @@
                                 .errorhandling="pass") %dopar%
     
     {
-      # i <- 1
-      # f.num<-mp$f.numbers[i]
-      # feat = mp$features[,i]
-      # feat.padded.ft.c = mp$features.padded.ft.c[,i]
-      
+      i <- 1
+      f.num<-mp$f.numbers[i]
+      feat = mp$features[,i]
+      simplePlot(feat)
+      feat.padded.ft.c = mp$features.padded.ft.c[,i]
+      # 
       refs = mp$refs
       refs.padded.ft = mp$refs.padded.ft
         
@@ -154,15 +198,19 @@
         allmatches.feat <- NULL
         specificity.score <- Inf
       } else {
+        
         allmatches.feat <- fit_matches(allmatches.feat, feat, mp$refs)
-      
-  
+        
+        
         # Calculate feature specificity score ####
             n.passing <- sum(allmatches.feat$rval >= pars$matching$r.thresh)
             n.refs <- ncol(mp$refs)
-            specificity.score <- n.passing/n.refs
+            specificity.score <- n.passing
             
-            # allmatches.fits$rval %>% sort %>% plot
+            # rval for which there is < 2 matches
+            specificity.score <- allmatches.feat$rval %>% sort %>% .[2]
+            
+            # allmatches.feat$rval %>% sort %>% plot
             
             # message('Specificity Score: ', round(specificity.score, 2))
         
@@ -172,7 +220,7 @@
       return(list(matches = allmatches.feat,
                   specificity = specificity.score))
     
-    }
+    } #%>% do.call(rbind,.)
     
     parallel::stopCluster(my.cluster)
     message('...parallel cluster closed.')
@@ -197,26 +245,29 @@
     message('\tPadding features by ref.length (', ref.length, ') - length(feat) (', ncol(features), ')...')
     message('\tPadding features by ref.length - length(feat)...')
     pad.size <- ref.length - ncol(features)
+    features <- lapply(1:nrow(features), function(x) features[x,])
     fsp <-
-    mclapply(1:nrow(features), function(f){
-      feat <- features[f, ]
-      padded.feat <- feat %>% c(rep(0, pad.size),.)
-      padded.feat[is.na(padded.feat)] <- 0
-      feat.p.ft.c <- Conj(fftw::FFT(padded.feat))
-      return(feat.p.ft.c)
-    }, mc.cores = pars$par$ncores) %>% do.call(rbind,.) %>% t
+      mclapply(features, function(feat){
+        padded.feat <- feat %>% c(rep(0, pad.size),.)
+        padded.feat[is.na(padded.feat)] <- 0
+        feat.p.ft.c <- Conj(fftw::FFT(padded.feat))
+        return(feat.p.ft.c)
+      }, mc.cores = pars$par$ncores) %>% do.call(rbind,.) %>% t
     return(fsp)
   }
   
   coprep_features_and_refs <- function(feature.stack, ref.stack, ppm, roi, downsampling.factor=1){
-    
+    # coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=8)
     # Assume feature and ref stacks have the same ppm axis (on the columns)
     # roi is in ppm 
-    
-      # Cut down feature stack to relevant region
-
+    # browser()
+      # Cut down ref stack to relevant region
       roi <- roi %>% vectInds(., ppm) # ppm
+      reg <- roi %>% fillbetween
+      ref.stack <- ref.stack[,reg]
+      ppm <- ppm[reg]
       
+      # Cut feature stack to relevant features
       in.range <- lapply(sat.list, function(s){
         # s <- sat.list[[1]]
         !all(is.na(range_intersect(roi, s$finalRegion)))
@@ -224,14 +275,17 @@
       }) %>% unlist %>% which
     
       # Thin it out some
-      selected <- seq(1, length(in.range), length.out=8) %>% in.range[.]
+      selected <- in.range#  seq(1, length(in.range), length.out=8) %>% in.range[.]
       feature.stack <- feature.stack[selected,]
       
       # Scale the features
       feature.stack <- lapply(1:nrow(feature.stack), function(x){
         feature.stack[x,] %>% scale_between %>% c
       }) %>% do.call(rbind, .)
-      # stackplot(feature.stack, vshift = 10)
+      
+      # simplePlot(feature.stack[1,])
+      # simplePlot(ref.stack[1,])
+      # stackplot(feature.stack[1:10], vshift = 10)
       
     # Downsample (if doing that)
       message('\t downsampling refs and features by a factor of ',downsampling.factor)
@@ -239,20 +293,17 @@
       ds.inds.ref <- downsample_inds(ppm, downsampling.factor)
       ref.stack <- ref.stack[,ds.inds.ref]
       ds.ppm <- ppm[ds.inds.ref]
+      # simplePlot(ref.stack[1:10,], xvect = ds.ppm)
       # stackplot(ref.stack[1:10,], vshift = 10, xvect = ds.ppm)
       
-      ds.inds.feat <- seq(1,ncol(feature.stack)) %>% downsample_inds(4)
+      ds.inds.feat <- seq(1,ncol(feature.stack)) %>% downsample_inds(downsampling.factor)
       feature.stack <- feature.stack[,ds.inds.feat]
-
-      # Adjust ROI for downsampling
-        
-        roi <- (roi/downsampling.factor) %>% round
-
+      # simplePlot(feature.stack[1,])
     
     # Move on to processing ref.stack
       feature.width <- ncol(feature.stack)
       
-      refs.padded.ft <- prep_refs(ref.stack, feature.width, roi)
+      refs.padded.ft <- prep_refs(ref.stack, feature.width)
       refs <- ref.stack %>% t
       
     # Move on to processing feature.stack
@@ -268,13 +319,12 @@
                 features.padded.ft.c=features.padded.ft.c,
                 refs.padded.ft=refs.padded.ft,
                 feature_downsampled_inds=ds.inds.feat,
-                ref_downsampled_inds=ds.inds.ref))
+                ref_downsampled_inds=ds.inds.ref,
+                ppm=ppm))
     
   }
   
-  prep_refs <- function(refs, feature.width, roi){
-    # Trim the ref stack to relevant region only:
-    ref.stack <- ref.stack[,fillbetween(roi)]
+  prep_refs <- function(refs, feature.width){
     
     # Pad the ref spectra to feature size
     message('\tPadding refs by feature.width - 1...')
@@ -304,12 +354,19 @@
                                   .combine = 'rbind',
                                   .errorhandling="pass") %do%
       {
+        
         r.num = 1
         ref = refs[,r.num, drop = F]
         ref.ft = refs.padded.ft[,r.num, drop = F]
         # 
-        # simplePlot(feat %>% t %>% trim_sides(out = "inds") %>% feat[.])
-        # simplePlot(ref %>% t %>% trim_sides(out = "inds") %>% ref[.])
+        # simplePlot(feat)
+        # df <- data.frame(x=mp$ppm[mp$ref_downsampled_inds], y=c(ref))
+        # simplePlot(ref)
+        # plotly::plot_ly(data = df,
+        #         x = ~x,
+        #         y = ~y,
+        #         type = "scatter",
+        #         mode = "lines")
         
         # Cross-correlate to find locations and scores:
           matches <- feature_match2ref_slim(f.num, r.num,
@@ -317,11 +374,11 @@
                                             pad.size = length(feat)-1,
                                             feat.padded.ft.c, ref.ft,
                                             max.hits = 5,#pars$matching$max.hits,
-                                            r.thresh = .7,#pars$matching$r.thresh,
+                                            r.thresh = .6,#pars$matching$r.thresh,
                                             p.thresh = .01)#pars$matching$p.thresh)
           
           return(matches)
-      }
+      } 
   
       return(allmatches.feat)
   }
@@ -362,4 +419,49 @@
     return(allmatches.feat)
   }
 
+  plot_match <- function(match, feat, ref, ppm.margin = 1){
+                plt_range <- function(roi.inds, ref.ppm, ppm.margin=1){
+
+                  plot.start <- vectInds(ref.ppm[ref.start] + ppm.margin, ref.ppm) 
+                  plot.end <- vectInds(ref.ppm[ref.end] - ppm.margin, ref.ppm)
+                  
+                  
+                  reg <- plot.start:plot.end
+                  return(reg)
+                }
+                
+                browser()
+                
+                ref.start <- match$ref.start
+                ref.end <- match$ref.end
+                roi.inds <- c(ref.start, ref.end)
+                
+                ref.ppm <- mp$ppm[mp$ref_downsampled_inds]
+              
+              # Need to account for feat.start and ref.start alignment.
+              # Use feat inds to get relative ROI inds, then regenerate actual ROI:
+              
+                feat.inds.matched <- match$feat.start
+                
+                offset.start <- (1-match$feat.start) # need relative inds for the edges
+                offset.end <- length(feat) - match$feat.end
+
+                roi.inds <- (ref.start + offset.start):(ref.end + offset.end)
+                
+              # Plot the ref-sized, NA-filled feature
+              
+                feat.scaled <- match$fit.intercept + match$fit.scale*feat
+                
+                feat.vect <- rep(NA, length(ref))
+                
+                feat.vect[roi.inds] <- feat.scaled
+              
+              # Then limit the range for both together:
+                reg <- plt_range(roi.inds, ref.ppm, ppm.margin)
+              
+                colors.lines <- c("gray", rgb(0, 0, 1, alpha = 0.5))
+                
+                simplePlot(rbind(c(ref[reg]), c(feat.vect[reg])), xvect=ref.ppm[reg],linecolor = colors.lines)
+                
+            }
 
