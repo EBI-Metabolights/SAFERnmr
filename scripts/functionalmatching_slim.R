@@ -284,7 +284,7 @@
       }) %>% do.call(rbind, .)
       
       # simplePlot(feature.stack[1,])
-      # simplePlot(ref.stack[1,])
+      # simplePlot(ref.stack[1,], xvect=ppm)
       # stackplot(feature.stack[1:10], vshift = 10)
       
     # Downsample (if doing that)
@@ -293,7 +293,7 @@
       ds.inds.ref <- downsample_inds(ppm, downsampling.factor)
       ref.stack <- ref.stack[,ds.inds.ref]
       ds.ppm <- ppm[ds.inds.ref]
-      # simplePlot(ref.stack[1:10,], xvect = ds.ppm)
+      # simplePlot(ref.stack[1,], xvect = ds.ppm)
       # stackplot(ref.stack[1:10,], vshift = 10, xvect = ds.ppm)
       
       ds.inds.feat <- seq(1,ncol(feature.stack)) %>% downsample_inds(downsampling.factor)
