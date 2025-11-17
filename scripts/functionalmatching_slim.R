@@ -6,7 +6,7 @@
       tmpdir <- pars$dirs$temp
       
   xmat.lin <- xmat %>% t %>% c
-    
+  
   ref.stack.lib <- lib_to_refmat(lib.data.processed) # refs on rows
     rm(lib.data.processed)
     # ref.stack<- ref.stack.lib #
@@ -25,23 +25,73 @@
     tol <- 0.1
     roi[1] <- roi[1]-tol
     roi[2] <- roi[2]+tol
-    pars$par$ncores <- 8
+    pars$par$ncores <- 4
   match.pack <- coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=8)
   
 # Do the matching ####
   
-  matches <- match_features(match.pack)
+  matches <- match_features(match.pack, fitting = TRUE)
   
-  specificies <- lapply(1:nrow(matches), function(m){
-    spec.score <- matches[m,"specificity"] %>% unlist
-    # if (is.na(spec.score) || is.infinite(spec.score)){
-    #   spec.score <- 1
-    # }
-  }) %>% unlist
+  matches <- lapply(1:nrow(matches), function(m){
+      # Calculate feature specificity score ####
+          matches[m, ]$matches
+  }) 
   
+  all$rval[1]
+  all <- matches %>% do.call(rbind,.)
+  any(is.na(all))
+  
+    # all_clean <- all %>% na.omit()
+    
+    df_out <- a %>%
+      na.omit %>%
+      group_by(feat,ref) %>%
+      mutate(rval_norm = rval / max(rval)) %>%
+      summarise(
+        specificity = sum(rval_norm),  # or sum(rval_norm) / n()
+        # n_refs_with_hits = n(),         # diagnostic
+        .groups = "drop"
+      )
+    %>% 
+      group_by(feat) %>% 
+      summarise(
+        specificity = mean(specificity)
+      )
+    
+    a <- all %>% na.omit %>% filter(feat==2424)
+    
+# df_specificity <- all %>%
+    #   na.omit() %>%
+    # 
+    #   # Stage 1: normalize matches within each (feat,ref)
+    #   group_by(feat, ref) %>%
+    #   mutate(rval_norm = rval / max(rval)) %>%
+    # 
+    #   # Stage 2: compute ambiguity for each (feat,ref)
+    #   summarise(
+    #     # number of matches within this reference for this feature
+    #     n_matches = n(),
+    #     # sorted normalized rvals
+    #     top = max(rval_norm),
+    #     second = ifelse(n_matches >= 2,
+    #                     sort(rval_norm, decreasing = TRUE)[2],
+    #                     0),
+    #     ambiguity_r = 1 - second,
+    #     .groups = "drop"
+    #   ) %>%
+    # 
+    #   # Stage 3: compute feature-level specificity across refs where it exists
+    #   group_by(feat) %>%
+    #   summarise(
+    #     specificity = mean(ambiguity_r, na.rm = TRUE),
+    #     n_refs_with_hits = n(),   # optional diagnostics
+    #     .groups = "drop"
+    #   )
+
   f.numbers <- match.pack$f.numbers
   
-  plot.sats.grid(sat.list, xmat, ppm, selected = f.numbers, title.strs = specificies)
+  # keep in mind these are scores applied to 
+  plot.sats.grid(sat.list, xmat, ppm, selected = df_specificity$feat, title.strs = df_specificity$specificity)
   
   which.plots <- seq(1,nrow(matches),by=100)
   all.plots <- lapply(, function(x){
@@ -164,11 +214,8 @@
     }, mc.cores = pars$par$ncores) %>% do.call(rbind, .)
   }
 
-  match_features <- function(mp){
+  match_features <- function(mp, fitting = FALSE){
     # mp <- match.pack
-    # pars$matching$max.hits <- 10
-    # pars$matching$r.thresh <- .7
-    # pars$matching$p.thresh <- .01
     
     # Par setup
     my.cluster <- safer_makeCluster(par, nfeats=length(mp$f.numbers))
@@ -182,46 +229,32 @@
                                 .errorhandling="pass") %dopar%
     
     {
-      i <- 1
+      i <- 16
       f.num<-mp$f.numbers[i]
       feat = mp$features[,i]
       simplePlot(feat)
       feat.padded.ft.c = mp$features.padded.ft.c[,i]
-      # 
+      #
       refs = mp$refs
       refs.padded.ft = mp$refs.padded.ft
         
       allmatches.feat <- match_feature(f.num, feat, feat.padded.ft.c,
                                        mp$refs, mp$refs.padded.ft)
       
-      if (is.null(nrow(allmatches.feat))){
-        allmatches.feat <- NULL
-        specificity.score <- Inf
-      } else {
-        
-        allmatches.feat <- fit_matches(allmatches.feat, feat, mp$refs)
-        
-        
-        # Calculate feature specificity score ####
-            n.passing <- sum(allmatches.feat$rval >= pars$matching$r.thresh)
-            n.refs <- ncol(mp$refs)
-            specificity.score <- n.passing
-            
-            # rval for which there is < 2 matches
-            specificity.score <- allmatches.feat$rval %>% sort %>% .[2]
-            
-            # allmatches.feat$rval %>% sort %>% plot
-            
-            # message('Specificity Score: ', round(specificity.score, 2))
-        
-          # Best score (1) should be where feature only binds strongly to true location
-          # Worst score (0) is where feature binds everywhere. 
+      if (fitting){
+        if (is.null(nrow(allmatches.feat))){
+          allmatches.feat <- NULL
+          specificity.score <- Inf
+        } else {
+
+          allmatches.feat <- fit_matches(allmatches.feat, feat, mp$refs)
+
+        }
       }
+
       return(list(matches = allmatches.feat,
                   specificity = specificity.score))
-    
-    } #%>% do.call(rbind,.)
-    
+    }
     parallel::stopCluster(my.cluster)
     message('...parallel cluster closed.')
     return(allmatches.feats)
@@ -354,16 +387,15 @@
                                   .combine = 'rbind',
                                   .errorhandling="stop") %do%
       {
-        # if(r.num==101){browser()}
-        
-        # r.num = 99
+
+        # r.num = 1
         # ref = refs[,r.num, drop = F]
         # ref.ft = refs.padded.ft[,r.num, drop = F]
-        # 
+        message(r.num)
         # simplePlot(feat)
-        # df <- data.frame(x=mp$ppm[mp$ref_downsampled_inds], y=c(ref))
-        # simplePlot(ref)
-        # plotly::plot_ly(data = df,
+        #
+        # simplePlot(ref %>% c)
+        # plotly::plot_ly(data = data.frame(x=mp$ppm[mp$ref_downsampled_inds], y=c(ref)),
         #         x = ~x,
         #         y = ~y,
         #         type = "scatter",
@@ -404,6 +436,9 @@
   }
   
   fit_matches <- function(allmatches.feat, feat, ref.mat){
+
+            # ref.mat <- mp$refs
+    f.rev <- feat %>% rev
     
     fits <- lapply(1:nrow(allmatches.feat), function(m)
     {
@@ -415,12 +450,13 @@
         ref.pos <- allmatches.feat[m, c('ref.start','ref.end')] %>% as.numeric %>% fillbetween
   
       # Get spectral signatures which matched
-        ref <- ref.mat[,r,drop = F]
+        ref <- ref.mat[,r,drop = F] %>% c
+        # simplePlot(c(ref))
+        
         
       # Fit
+        fit <- fit_leastSquares(f.rev[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
         
-        fit <- fit_leastSquares(feat[feat.pos], ref[ref.pos], plots = F, scale.v2 = T)
-  
         return(fit)
     })
     

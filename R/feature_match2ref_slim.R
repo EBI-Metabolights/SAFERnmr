@@ -39,8 +39,8 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
                                    trim = FALSE){
   
                                   ## To debug, run these:
-                                  # pad.size <- length(feat)-1
-                                  # feat.ft.c <- feat.padded.ft.c
+                                  pad.size <- length(feat)-1
+                                  feat.ft.c <- feat.padded.ft.c
                                   
     # Do the FFT-based conv/xcorr ####
       
@@ -82,31 +82,20 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
             # lag<- lags[i]
             # # [PLOT] # # # # # # # #
             
-            ref.pos <- lag - pad.size - feat.inds
+            match <- map_inds(feat, ref, r.conv, pad.size, lag, feat.inds)
             
             # # [PLOT] # # # # # # # #
-            #   g <- plot_conv_match(feat, ref, r.conv, ref.pos, pad.size, lag)
+            #   g <- plot_conv_match(match, lag)
             # # [PLOT] # # # # # # # #
             
   
           # Get the overlapping, non-NA values of ref and feat
           
-            valid <- which(ref.pos >= 1 & ref.pos <= length(ref))
-            
-            if (length(valid) < 3) return(NULL)
-            
-            feat.pos <- feat.inds[valid]
-            ref.pos  <- ref.pos[valid]
-            use <- !is.na(feat[feat.pos] + ref[ref.pos])
-
-            # use <- !is.na(feat + ref[ref.pos])
-            # rbind(feat[feat.pos]%>% scale_between(),ref[ref.pos]%>% scale_between())  %>% simplePlot
-
             # Make sure there are enough points to do a correlation:
-            if (sum(use) < 3){return(NULL)}
+            if (sum(match$inds$use) < 3){return(NULL)}
             r <- suppressWarnings( 
-                                   cor(feat[feat.pos[use]], 
-                                       ref[ref.pos[use]],
+                                   cor(match$vals["feat",match$inds$use], 
+                                       match$vals["ref",match$inds$use],
                                        use = "pairwise.complete.obs",
                                        method = "pearson")            
                                    )       
@@ -115,9 +104,11 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
             #   g + ggtitle(r %>% round(4))
             # # [PLOT] # # # # # # # #
             
-            return(data.frame(ref.start = min(ref.pos),
-                              ref.end = max(ref.pos),
-                              pts.matched = sum(use),
+            return(data.frame(feat.start = match$inds$feat.start,
+                              feat.end = match$inds$feat.end,
+                              ref.start = match$inds$ref.start,
+                              ref.end = match$inds$ref.end,
+                              pts.matched = sum(match$inds$use),
                               rval = r))
       }) %>% do.call(rbind,.)
 
@@ -128,7 +119,7 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
         # Calculate pvals using t-distribution
           a <- -abs(fits$rval * sqrt( (fits$pts.matched-2) /(1-fits$rval^2)))
           pvals <- 2*pt(a,(fits$pts.matched-2))
-          p.pass <- pvals < p.thresh
+          p.pass <- TRUE #pvals < p.thresh
 
       # average fit intensity as a fraction of the feature signal (want to fit parts that are dominant)
       
@@ -147,9 +138,9 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
                             rval = fits$rval[matches.ranked],
                             pval = pvals[matches.ranked],
                             pts.matched = fits$pts.matched[matches.ranked],
-                            pts.feat = length(use),
-                            feat.start = 1,
-                            feat.end = length(feat),
+                            pts.feat = length(feat),
+                            feat.start = fits$feat.start[matches.ranked],
+                            feat.end = fits$feat.end[matches.ranked],
                             ref.start = fits$ref.start[matches.ranked],
                             ref.end = fits$ref.end[matches.ranked],
                             row.names = NULL)
@@ -157,39 +148,57 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
   # Record results
     return(matches)
 
+     
 }
 
-plot_conv_match <- function(feat, ref, r, ref.pos, pad.size, lag){
+  map_inds <- function(feat, ref, r.conv, pad.size, lag, feat.inds){
+    
+    ref.pos <- lag - pad.size - feat.inds
+    feat.inds.in.r <- ref.pos + pad.size
+    ref.inds.in.r <- pad.size + 1:length(ref)
   
-            r.inds <- 1:length(r)
-            feat.inds.in.r <- ref.pos + pad.size
-            ref.inds.in.r <- pad.size + 1:length(ref)
+    vals <- matrix(NA, 3, length(r.conv))
+      vals[1, ] <- r.conv
+      vals[2, ref.inds.in.r] <- ref
+      vals[3, feat.inds.in.r] <- feat
+      rownames(vals) <- c("r.conv", "ref", "feat")
   
-            unified.inds <- c(r.inds, feat.inds.in.r, ref.inds.in.r) %>% range %>% fillbetween
-            
-            fit.feat.ref <- fit_leastSquares(feat, ref[ref.pos], plots = T, scale.v2 = FALSE); fit.feat.ref$plot
-            # fit.feat.ref <- fit_batman(feat, ref[ref.pos], plots = T); fit.feat.ref$plot
-            
-            
-            feat.filled <- ref.filled <- r.filled <- matrix(NA, 1, length(unified.inds))
-
-            f <- fit.feat.ref$fit
-            fr <- fit.r.ref$fit
-            
-            feat.filled[feat.inds.in.r]<- (feat) * f[2] + f[1]
-            ref.filled[ref.inds.in.r]<- ref
-            
-            allvals <- c(feat.filled, ref.filled)
-            range.vals <- range(allvals, na.rm = TRUE)
-            r <- r %>% scale_between(range.vals[1], range.vals[2])
-            r <- r + range.vals[2]
-            
-              simplePlot(rbind(ref.filled,
-                               r,
-                               feat.filled), 
-                         linecolor = c('black','gray', 'blue')) + geom_vline(xintercept=lag, color='blue')      
+    use <- !is.na(colSums(vals))
+    
+    feat.inds <- (1:length(feat)) %>% .[use[feat.inds.in.r]]
+    ref.inds <- (1:length(ref)) %>% .[use[ref.inds.in.r]]
+    
+      
+    return(
+      list(
+        inds=list(
+                  ref.pos = ref.pos,
+                  use = use,
+                  feat.start = min(feat.inds),
+                  feat.end = max(feat.inds),
+                  ref.start = min(ref.inds),
+                  ref.end = max(ref.inds)
+        ),
+        vals=vals
+      )
+    )
+  }
+  
+  plot_conv_match <- function(match, lag){
               
-}
+              fit.feat.ref <- fit_leastSquares(match$vals["feat",], 
+                                               match$vals["ref",], plots = T, scale.v2 = FALSE); fit.feat.ref$plot
+              
+              match$vals["feat",] <- match$vals["feat",] * fit.feat.ref$fit[2] + fit.feat.ref$fit[1]
+  
+              range.vals <- match$vals[c("feat", "ref"),] %>% range(na.rm = TRUE)
+              match$vals["r.conv",] <- match$vals["r.conv",] %>% scale_between(range.vals[1], range.vals[2]) + range.vals[2]
+  
+                simplePlot(match$vals, 
+                           linecolor = c('gray', 'black','blue')) + geom_vline(xintercept=lag, color='blue')      
+                
+  }
+
 # r <- convolve(feat.long,rev(ref.long), conj = T, type = c("circular", "open", "filter"))
 # lag <- which.max(r)
   

@@ -254,17 +254,6 @@ plots <- pbapply::pblapply(selected, function(f){
 
 plots %>% grid_pdf(plotLoc=tmpdir, filename="/sat_ref_matches.pdf")
 
-grid_pdf <- function(plots=NULL, plotLoc="./", filename="grid_plot.pdf"){
-  # How big to make the page? 2 inches for each plot, and grid will be square.
-  dim <- 3*round(sqrt(length(plots)))
-  pdf(file = str_c(plotLoc,filename),   # The directory you want to save the file in
-      width = dim, # The width of the plot in inches
-      height = dim)
-  
-  gridExtra::grid.arrange(grobs = plots)
-  
-  dev.off()  
-}
 
 
 
