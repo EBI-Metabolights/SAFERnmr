@@ -38,13 +38,10 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
                                    r.thresh = 0.8, p.thresh = 0.01,
                                    trim = FALSE){
   
-                                  # f.num, r.num,feat, ref,
-                                  pad.size <- length(feat)-1
-                                  feat.ft.c <- feat.padded.ft.c
-                                  # ref.ft,
-                                  # max.hits = 5,#pars$matching$max.hits,
-                                  # r.thresh = .6,#pars$matching$r.thresh,
-                                  # p.thresh = .01
+                                  ## To debug, run these:
+                                  # pad.size <- length(feat)-1
+                                  # feat.ft.c <- feat.padded.ft.c
+                                  
     # Do the FFT-based conv/xcorr ####
       
       r.conv <- (feat.ft.c*ref.ft) %>% fftw::FFT(.,inverse = TRUE) %>% Re %>% c
@@ -91,12 +88,24 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
             #   g <- plot_conv_match(feat, ref, r.conv, ref.pos, pad.size, lag)
             # # [PLOT] # # # # # # # #
             
-            use <- !is.na(feat + ref[ref.pos])
+  
+          # Get the overlapping, non-NA values of ref and feat
+          
+            valid <- which(ref.pos >= 1 & ref.pos <= length(ref))
+            
+            if (length(valid) < 3) return(NULL)
+            
+            feat.pos <- feat.inds[valid]
+            ref.pos  <- ref.pos[valid]
+            use <- !is.na(feat[feat.pos] + ref[ref.pos])
+
+            # use <- !is.na(feat + ref[ref.pos])
+            # rbind(feat[feat.pos]%>% scale_between(),ref[ref.pos]%>% scale_between())  %>% simplePlot
 
             # Make sure there are enough points to do a correlation:
             if (sum(use) < 3){return(NULL)}
             r <- suppressWarnings( 
-                                   cor(feat[use], 
+                                   cor(feat[feat.pos[use]], 
                                        ref[ref.pos[use]],
                                        use = "pairwise.complete.obs",
                                        method = "pearson")            
@@ -129,16 +138,18 @@ feature_match2ref_slim <- function(f.num, r.num, feat, ref,
       
       
      matches.ranked <- order(pvals[r.p.pass]) %>% r.p.pass[.]
-     
+     if (length(matches.ranked) == 0) {
+        return(NULL)
+     }
      matches <- data.frame( feat = f.num,
                             ref = r.num,
                             lag = lags[matches.ranked],
                             rval = fits$rval[matches.ranked],
                             pval = pvals[matches.ranked],
                             pts.matched = fits$pts.matched[matches.ranked],
-                            pts.feat = length(inds.trim.feat),
-                            feat.start = min(inds.trim.feat),
-                            feat.end = max(inds.trim.feat),
+                            pts.feat = length(use),
+                            feat.start = 1,
+                            feat.end = length(feat),
                             ref.start = fits$ref.start[matches.ranked],
                             ref.end = fits$ref.end[matches.ranked],
                             row.names = NULL)

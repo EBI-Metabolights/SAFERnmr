@@ -352,12 +352,13 @@
                                   ref = refs,
                                   ref.ft = refs.padded.ft,
                                   .combine = 'rbind',
-                                  .errorhandling="pass") %do%
+                                  .errorhandling="stop") %do%
       {
+        # if(r.num==101){browser()}
         
-        r.num = 1
-        ref = refs[,r.num, drop = F]
-        ref.ft = refs.padded.ft[,r.num, drop = F]
+        # r.num = 99
+        # ref = refs[,r.num, drop = F]
+        # ref.ft = refs.padded.ft[,r.num, drop = F]
         # 
         # simplePlot(feat)
         # df <- data.frame(x=mp$ppm[mp$ref_downsampled_inds], y=c(ref))
@@ -376,10 +377,29 @@
                                             max.hits = 5,#pars$matching$max.hits,
                                             r.thresh = .6,#pars$matching$r.thresh,
                                             p.thresh = .01)#pars$matching$p.thresh)
-          
+
+        
+        # return a 1-row NA-filled placeholder
+        if (is.null(matches) || nrow(matches) == 0){
+          message("error..")
+          return(data.frame(
+              feat = f.num,
+              ref  = r.num,
+              lag  = NA,
+              rval = NA,
+              pval = NA,
+              pts.matched = NA,
+              pts.feat = NA,
+              feat.start = NA,
+              feat.end = NA,
+              ref.start = NA,
+              ref.end = NA
+          ))
+        }
+    
           return(matches)
       } 
-  
+      
       return(allmatches.feat)
   }
   
@@ -465,3 +485,7 @@
                 
             }
 
+  
+  
+  
+  
