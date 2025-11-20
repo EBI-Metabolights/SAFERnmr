@@ -241,6 +241,8 @@
       allmatches.feat <- match_feature(f.num, feat, feat.padded.ft.c,
                                        mp$refs, mp$refs.padded.ft)
       
+      allmatches.feat <- 
+      
       if (fit.matches){
         if (is.null(nrow(allmatches.feat))){
           allmatches.feat <- NULL
@@ -443,7 +445,7 @@
 
     fits <- lapply(1:nrow(allmatches.feat), function(m)
     {
-        message(m)
+        # message(m)
       # Get f and r indices for this row
         f <- allmatches.feat[m, 'feat']
         r <- allmatches.feat[m, 'ref']
@@ -456,7 +458,8 @@
         
         
       # Fit
-        fit <- fit_leastSquares(feat[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
+        # fit <- fit_leastSquares(feat[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
+        fit_leastSquares_fast(feat[feat.pos] , ref[ref.pos])
         
         return(fit)
     })

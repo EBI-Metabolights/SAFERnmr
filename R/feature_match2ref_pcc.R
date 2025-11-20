@@ -1,17 +1,18 @@
-feature_match2ref_pcc <- function(f.num, r.num, feat, ref,
+feature_match2ref_pcc <- function(f.num, r.num,
+                                  feat, ref,
                                   r.thresh = 0.8,
                                   max.hits = 100) {
   
-  # 1. Compute all masked Pearson correlations
+  # 1. compute NA-masked sliding Pearson correlations
   xc.res <- compute_pearson_sliding_overlap(feat, ref)
-  xc <- xc.res$xcorr
+  xc   <- xc.res$xcorr
   lags <- xc.res$lags
   pts  <- xc.res$pts
   
-  # 2. Find local maxima
+  # 2. find local maxima
   peaks <- localMaxima(xc)
   
-  # restrict to complete overlap region
+  # restrict to complete-overlap region
   valid <- peaks >= xc.res$range.complete.overlap[1] &
            peaks <= xc.res$range.complete.overlap[2]
   peaks <- peaks[valid]
@@ -22,28 +23,40 @@ feature_match2ref_pcc <- function(f.num, r.num, feat, ref,
   peaks <- peaks[xc[peaks] >= r.thresh]
   if (length(peaks) == 0) return(NULL)
   
-  # sort by correlation height
+  # sort by peak height
   peaks <- peaks[order(xc[peaks], decreasing = TRUE)]
   peaks <- peaks[seq_len(min(max.hits, length(peaks)))]
   
-  # Vectorized extraction
+  # Extract vectors
   lag_vec <- lags[peaks]
   rval    <- xc[peaks]
   npts    <- pts[peaks]
   
-  # Vectorized p-value
+  # Vectorized p-values
   tstat <- abs(rval * sqrt((npts - 2) / pmax(1e-12, (1 - rval^2))))
   pvals <- 2 * pt(-tstat, df = npts - 2)
   
+  # reference/feature lengths
   f.len <- xc.res$feat_len
   r.len <- xc.res$ref_len
   
-  ref_start <- f.len
-  ref_end   <- f.len + r.len - 1
+  # padded reference location
+  ref_start_pad <- f.len
+  ref_end_pad   <- f.len + r.len - 1
   
-  feat_start <- ref_start + lag_vec
-  feat_end   <- feat_start + f.len - 1
+  # feature padded coordinates
+  feat_start_pad <- ref_start_pad + lag_vec
+  feat_end_pad   <- feat_start_pad + f.len - 1
   
+  # convert padded → reference coordinates
+  ref_start <- feat_start_pad - (ref_start_pad - 1)
+  ref_end   <- ref_start + f.len - 1
+  
+  # clip to reference
+  ref_start <- pmax(ref_start, 1)
+  ref_end   <- pmin(ref_end, r.len)
+  
+  # assemble output
   data.frame(
     feat = f.num,
     ref  = r.num,
@@ -52,12 +65,16 @@ feature_match2ref_pcc <- function(f.num, r.num, feat, ref,
     pval = as.numeric(pvals),
     pts.matched = as.numeric(npts),
     pts.feat = f.len,
-    feat.start = as.numeric(feat_start),
-    feat.end   = as.numeric(feat_end),
-    ref.start = ref_start,
-    ref.end   = ref_end,
-    row.names = NULL,             
-    stringsAsFactors = FALSE)
+    
+    # corrected semantics
+    feat.start = 1,
+    feat.end   = f.len,
+    ref.start  = ref_start,
+    ref.end    = ref_end,
+    
+    row.names = NULL,
+    stringsAsFactors = FALSE
+  )
 }
 
 compute_pearson_sliding_overlap <- function(feat, ref) {
@@ -73,46 +90,41 @@ compute_pearson_sliding_overlap <- function(feat, ref) {
   lags <- -(f.len - 1):(r.len - 1)   # length N
   
   pearson <- rep(NA_real_, N)
-  pts_matched <- integer(N)
+  pts_vec <- integer(N)
   
   # Reference occupies padded indices:
-  ref_start <- f.len
-  ref_end   <- f.len + r.len - 1
+  ref_start_pad <- f.len
+  ref_end_pad   <- f.len + r.len - 1
   
-  # ---------------------------------------------------------
-  # PURE VECTOR LOGIC
-  # feat_start = ref_start + lag
-  # feat_end   = feat_start + f.len - 1
-  # ---------------------------------------------------------
-  feat_start <- ref_start + lags
-  feat_end   <- feat_start + f.len - 1
+  # Feature padded positions (vectorized)
+  feat_start_pad <- ref_start_pad + lags
+  feat_end_pad   <- feat_start_pad + f.len - 1
   
-  # Outer loop is already minimal (just slicing + mask)
+  # MAIN LOOP (just slicing + mask)
   for (i in seq_len(N)) {
     
-    fs <- feat_start[i]
-    fe <- feat_end[i]
+    fs_pad <- feat_start_pad[i]
+    fe_pad <- feat_end_pad[i]
     
     # enforce bounds
-    if (fs < 1 || fe > N)
+    if (fs_pad < 1 || fe_pad > N)
       next
     
-    # Compute overlap
-    # local feat indices
-    local_f <- 1:f.len
+    # local indices for feature
+    local_feat_idx <- 1:f.len
     
-    # global indices of feat in padded frame
-    global_f <- fs:fe
+    # global padded indices for this alignment
+    global_f <- fs_pad:fe_pad
     
-    # valid ref region
-    valid_ref <- (global_f >= ref_start) & (global_f <= ref_end)
+    # overlap with reference padded region
+    valid_ref <- (global_f >= ref_start_pad) & (global_f <= ref_end_pad)
     
     if (!any(valid_ref))
       next
     
-    # reference local indices
-    ref_idx <- global_f[valid_ref] - ref_start + 1
-    feat_idx <- local_f[valid_ref]
+    # convert to reference indices
+    ref_idx <- global_f[valid_ref] - (ref_start_pad - 1)
+    feat_idx <- local_feat_idx[valid_ref]
     
     x <- feat[feat_idx]
     y <- ref[ref_idx]
@@ -120,7 +132,7 @@ compute_pearson_sliding_overlap <- function(feat, ref) {
     use_mask <- !(is.na(x) | is.na(y))
     n <- sum(use_mask)
     
-    pts_matched[i] <- n
+    pts_vec[i] <- n
     
     if (n < 3)
       next
@@ -128,7 +140,7 @@ compute_pearson_sliding_overlap <- function(feat, ref) {
     x <- x[use_mask]
     y <- y[use_mask]
     
-    # Fast correlation formula
+    # Fast Pearson
     xm <- mean(x)
     ym <- mean(y)
     
@@ -144,7 +156,7 @@ compute_pearson_sliding_overlap <- function(feat, ref) {
     ref = ref,
     xcorr = pearson,
     lags = lags,
-    pts = pts_matched,
+    pts = pts_vec,
     feat_len = f.len,
     ref_len = r.len,
     range.complete.overlap = c(f.len, r.len)
@@ -157,17 +169,22 @@ convert_for_plot <- function(feat, ref, xc, match_row) {
   r.len <- length(ref)
   N <- f.len + r.len - 1
   
+  # padded matrix
   vals <- matrix(NA_real_, 3, N)
   rownames(vals) <- c("corr", "ref", "feat")
   
-  ref_start <- f.len
-  ref_end   <- f.len + r.len - 1
+  # place reference in padded space
+  ref_start_pad <- f.len
+  ref_end_pad   <- f.len + r.len - 1
+  vals["ref", ref_start_pad:ref_end_pad] <- ref
   
-  vals["ref", ref_start:ref_end] <- ref
+  # correlation spans entire padded domain
   vals["corr", ] <- xc
   
-  fs <- match_row$feat.start
-  fe <- match_row$feat.end
+  # convert ref.start to padded feature placement
+  fs <- match_row$ref.start + (ref_start_pad - 1)
+  fe <- fs + f.len - 1
+  
   vals["feat", fs:fe] <- feat
   
   use_mask <- !(is.na(vals["feat", ]) | is.na(vals["ref", ]))
@@ -177,10 +194,10 @@ convert_for_plot <- function(feat, ref, xc, match_row) {
     r.len = r.len,
     N = N,
     inds = list(
-      feat_start = fs,
-      feat_end   = fe,
-      ref_start  = ref_start,
-      ref_end    = ref_end,
+      feat_start = 1,
+      feat_end   = f.len,
+      ref_start  = match_row$ref.start,
+      ref_end    = match_row$ref.end,
       use        = use_mask,
       lag        = match_row$lag,
       peak_loc   = match_row$lag + f.len
