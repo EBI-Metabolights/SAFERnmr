@@ -214,7 +214,7 @@
     }, mc.cores = pars$par$ncores) %>% do.call(rbind, .)
   }
 
-  match_features <- function(mp, fitting = FALSE){
+  match_features <- function(mp, fit.matches = FALSE){
     # mp <- match.pack
     
     # Par setup
@@ -241,7 +241,7 @@
       allmatches.feat <- match_feature(f.num, feat, feat.padded.ft.c,
                                        mp$refs, mp$refs.padded.ft)
       
-      if (fitting){
+      if (fit.matches){
         if (is.null(nrow(allmatches.feat))){
           allmatches.feat <- NULL
           specificity.score <- Inf
@@ -408,12 +408,10 @@
         
         # Cross-correlate to find locations and scores:
           # matches <- feature_match2ref_slim(f.num, r.num,
-          matches <- feature_match2ref_slim_pcc(f.num, r.num,
-                                                feat, ref,
-                                                feat.padded.ft.c, ref.ft,
-                                                max.hits = 100,#pars$matching$max.hits,
-                                                r.thresh = .8,#pars$matching$r.thresh,
-                                                p.thresh = .01)#pars$matching$p.thresh)
+          matches <- feature_match2ref_pcc(f.num, r.num,
+                                            feat, ref,
+                                            max.hits = 100,#pars$matching$max.hits,
+                                            r.thresh = .8)#pars$matching$r.thresh)
           
 
         # return a 1-row NA-filled placeholder
@@ -442,16 +440,15 @@
   fit_matches <- function(allmatches.feat, feat, ref.mat){
 
             # ref.mat <- mp$refs
-    f.rev <- feat %>% rev
-    
+
     fits <- lapply(1:nrow(allmatches.feat), function(m)
     {
-        
+        message(m)
       # Get f and r indices for this row
         f <- allmatches.feat[m, 'feat']
         r <- allmatches.feat[m, 'ref']
-        feat.pos <- allmatches.feat[m, c('feat_start','feat_end')] %>% as.numeric %>% fillbetween
-        ref.pos <- allmatches.feat[m, c('ref_start','ref_end')] %>% as.numeric %>% fillbetween
+        feat.pos <- allmatches.feat[m, c('feat.start','feat.end')] %>% as.numeric %>% fillbetween
+        ref.pos <- allmatches.feat[m, c('ref.start','ref.end')] %>% as.numeric %>% fillbetween
   
       # Get spectral signatures which matched
         ref <- ref.mat[,r,drop = F] %>% c
@@ -459,7 +456,7 @@
         
         
       # Fit
-        fit <- fit_leastSquares(f.rev[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
+        fit <- fit_leastSquares(feat[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
         
         return(fit)
     })

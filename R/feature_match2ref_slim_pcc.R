@@ -87,8 +87,8 @@ feature_match2ref_slim_pcc <- function(f.num, r.num, feat, ref,
       
     # Loop though candidate lags and evaluate fit at each one ####
       
-      feat <- t(c(feat))
-      ref <- t(c(ref))
+      feat <- as.double(feat)
+      ref <- as.double(ref)
       
       
       mapped <- map_ref_xcorr(xc.res, ref)
@@ -175,12 +175,11 @@ feature_match2ref_slim_pcc <- function(f.num, r.num, feat, ref,
                  linecolor = c('black', 'gray','blue')) + geom_vline(xintercept=match$inds$peak_loc, color='blue', alpha=0.4)      
                 
   }
-
   compute_pearson_sliding_overlap <- function(feat, ref) {
     
-    # keep NA exactly as-is
-    feat <- as.numeric(feat)
-    ref  <- as.numeric(ref)
+    # 3. Convert everything to plain double early
+    feat <- as.double(feat)
+    ref  <- as.double(ref)
     
     f.len <- length(feat)
     r.len <- length(ref)
@@ -195,11 +194,22 @@ feature_match2ref_slim_pcc <- function(f.num, r.num, feat, ref,
     ref_start <- f.len
     ref_end   <- f.len + r.len - 1
     
-    # Base template for vals matrix (same structure as your mapping code)
+    # 1. Precompute base vals matrix ONCE per reference
     base_vals <- matrix(NA_real_, 3, N)
     rownames(base_vals) <- c("feat", "ref", "corr")
     
     base_vals["ref", ref_start:ref_end] <- ref
+    
+    # 2. Precompute ref mask once (never changes)
+    ref_mask <- !is.na(base_vals["ref", ])
+    
+    # Reuse a single vals matrix; only overwrite the feat row region
+    vals <- base_vals
+    last_feat_start <- NULL
+    last_feat_end   <- NULL
+    
+    # 4. Avoid S3 dispatch by taking a local handle to stats::cor
+    .cor <- stats::cor
     
     # ---------------------------------------------------------------
     # Slide the feature across the reference, reproduce your overlay logic
@@ -215,20 +225,27 @@ feature_match2ref_slim_pcc <- function(f.num, r.num, feat, ref,
       if (feat_start < 1 || feat_end > N)
         next
       
-      vals <- base_vals
-      vals["feat", ] <- NA
+      # clear previous feature region only (no full copy)
+      if (!is.null(last_feat_start)) {
+        vals["feat", last_feat_start:last_feat_end] <- NA_real_
+      }
+      
+      # write new feature region
       vals["feat", feat_start:feat_end] <- feat
       
-      # EXACT same mask as your plotting code
-      use_mask <- !(is.na(vals["feat", ]) | is.na(vals["ref", ]))
+      last_feat_start <- feat_start
+      last_feat_end   <- feat_end
+      
+      # 2. Vectorized overlap mask using precomputed ref_mask
+      feat_mask <- !is.na(vals["feat", ])
+      use_mask  <- feat_mask & ref_mask
       
       # Need at least 3 valid points
       if (sum(use_mask) < 3)
         next
       
-      # EXACTLY your desired Pearson logic
       pearson[i] <- suppressWarnings(
-        cor(
+        .cor(
           vals["feat", use_mask],
           vals["ref",  use_mask],
           use    = "pairwise.complete.obs",
@@ -249,3 +266,77 @@ feature_match2ref_slim_pcc <- function(f.num, r.num, feat, ref,
       range.complete.overlap = range.complete.overlap
     )
   }
+
+  # compute_pearson_sliding_overlap <- function(feat, ref) {
+  #   
+  #   # keep NA exactly as-is
+  #   feat <- as.numeric(feat)
+  #   ref  <- as.numeric(ref)
+  #   
+  #   f.len <- length(feat)
+  #   r.len <- length(ref)
+  #   N <- f.len + r.len - 1
+  #   
+  #   # lag indexing identical to FFT Pearson / NCC
+  #   lags <- -(f.len - 1):(r.len - 1)
+  #   
+  #   pearson <- rep(NA_real_, N)
+  #   
+  #   # place reference at canonical FFT alignment:
+  #   ref_start <- f.len
+  #   ref_end   <- f.len + r.len - 1
+  #   
+  #   # Base template for vals matrix (same structure as your mapping code)
+  #   base_vals <- matrix(NA_real_, 3, N)
+  #   rownames(base_vals) <- c("feat", "ref", "corr")
+  #   
+  #   base_vals["ref", ref_start:ref_end] <- ref
+  #   
+  #   # ---------------------------------------------------------------
+  #   # Slide the feature across the reference, reproduce your overlay logic
+  #   # ---------------------------------------------------------------
+  #   for (i in seq_along(lags)) {
+  #     
+  #     lag <- lags[i]
+  #     
+  #     feat_start <- ref_start + lag
+  #     feat_end   <- feat_start + f.len - 1
+  #     
+  #     # Only compute if feature is within the padded frame
+  #     if (feat_start < 1 || feat_end > N)
+  #       next
+  #     
+  #     vals <- base_vals
+  #     vals["feat", ] <- NA
+  #     vals["feat", feat_start:feat_end] <- feat
+  #     
+  #     # EXACT same mask as your plotting code
+  #     use_mask <- !(is.na(vals["feat", ]) | is.na(vals["ref", ]))
+  #     
+  #     # Need at least 3 valid points
+  #     if (sum(use_mask) < 3)
+  #       next
+  #     
+  #     # EXACTLY your desired Pearson logic
+  #     pearson[i] <- suppressWarnings(
+  #       cor(
+  #         vals["feat", use_mask],
+  #         vals["ref",  use_mask],
+  #         use    = "pairwise.complete.obs",
+  #         method = "pearson"
+  #       )
+  #     )
+  #   }
+  #   
+  #   range.complete.overlap <- c(f.len, r.len)
+  #   
+  #   list(
+  #     feat = feat,
+  #     ref = ref,
+  #     xcorr = pearson,   # matches FFT version field name
+  #     lags = lags,
+  #     feat_len = f.len,
+  #     ref_len = r.len,
+  #     range.complete.overlap = range.complete.overlap
+  #   )
+  # }
