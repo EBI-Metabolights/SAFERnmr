@@ -240,17 +240,32 @@
       
       allmatches.feat <- match_feature(f.num, feat, feat.padded.ft.c,
                                        mp$refs, mp$refs.padded.ft)
+
+      if (fit.matches) {
       
-      allmatches.feat <- 
-      
-      if (fit.matches){
-        if (is.null(nrow(allmatches.feat))){
+        if (is.null(nrow(allmatches.feat))) {
           allmatches.feat <- NULL
           specificity.score <- Inf
+      
         } else {
-
-          allmatches.feat <- fit_matches(allmatches.feat, feat, mp$refs)
-
+      
+          # always initialize columns so combine() never breaks
+          allmatches.feat$fit.intercept <- NA_real_
+          allmatches.feat$fit.scale     <- NA_real_
+          allmatches.feat$rmse          <- NA_real_
+      
+          # rows that have a real match and should be fit
+          valid_rows <- !is.na(allmatches.feat$rval)
+      
+          if (any(valid_rows)) {
+            fitted <- fit_matches_vectorized(allmatches.feat[valid_rows, ],
+                                             feat, refs)
+      
+            # write fitted values back into original data frame
+            allmatches.feat$fit.intercept[valid_rows] <- fitted$fit.intercept
+            allmatches.feat$fit.scale[valid_rows]     <- fitted$fit.scale
+            allmatches.feat$rmse[valid_rows]          <- fitted$rmse
+          }
         }
       }
 
@@ -438,14 +453,105 @@
       
       return(allmatches.feat)
   }
+
+  fit_matches_vectorized <- function(matches, feat, ref.mat) {
   
+    M <- nrow(matches)
+    if (M == 0) return(matches)
+  
+    f.len <- length(feat)
+  
+    # Preallocate
+    a_unscaled <- b_unscaled <- rep(NA_real_, M)
+    rmse       <- rep(NA_real_, M)
+  
+    # -----------------------------
+    # Precompute v1 stats ONCE
+    # -----------------------------
+    # Raw feature
+    v1 <- feat
+    # scaled feature for RMSE comparison
+    fr1 <- range(v1, na.rm = TRUE)
+    v1s <- (v1 - fr1[1]) / diff(fr1)
+  
+    for (j in seq_len(M)) {
+  
+      r  <- matches$ref[j]
+      rs <- matches$ref.start[j]
+      re <- matches$ref.end[j]
+  
+      if (is.na(r) || is.na(rs) || is.na(re) || re < rs)
+        next
+  
+      v2 <- ref.mat[rs:re, r]
+  
+      # Determine usable overlap region
+      use <- !(is.na(v1) | is.na(v2))
+  
+      if (sum(use) < 3)
+        next
+  
+      x  <- v1[use]
+      y  <- v2[use]
+  
+      # ---------------------------
+      # Unscaled regression
+      # ---------------------------
+      xm <- mean(x)
+      ym <- mean(y)
+      dx <- x - xm
+      dy <- y - ym
+  
+      var_x <- sum(dx * dx)
+      if (!is.finite(var_x) || var_x == 0) next
+  
+      b <- sum(dx * dy) / var_x
+      a <- ym - b * xm
+  
+      a_unscaled[j] <- a
+      b_unscaled[j] <- b
+  
+      # ---------------------------
+      # Scaled RMSE
+      # ---------------------------
+      # scale v2 on its window
+      fr2 <- range(v2, na.rm = TRUE)
+      if (!is.finite(diff(fr2)) || diff(fr2) == 0) next
+  
+      y2s <- (v2 - fr2[1]) / diff(fr2)
+      v1s_use <- v1s[use]
+  
+      # compute scaled regression for RMSE
+      ym2s <- mean(y2s[use])
+      dy2s <- y2s[use] - ym2s
+  
+      dx1s_use <- v1s_use - mean(v1s_use)
+      var_x1s  <- sum(dx1s_use * dx1s_use)
+      if (!is.finite(var_x1s) || var_x1s == 0) next
+  
+      b_s <- sum(dx1s_use * dy2s) / var_x1s
+      a_s <- ym2s - b_s * mean(v1s_use)
+  
+      fit_vals <- a_s + b_s * v1s_use
+      rmse[j] <- sqrt(mean((y2s[use] - fit_vals)^2))
+    }
+  
+    matches$fit.intercept <- a_unscaled
+    matches$fit.scale     <- b_unscaled
+    matches$rmse          <- rmse
+  
+    matches
+  }
+
   fit_matches <- function(allmatches.feat, feat, ref.mat){
 
             # ref.mat <- mp$refs
-
-    fits <- lapply(1:nrow(allmatches.feat), function(m)
+    has.vals <- is.na(allmatches.feat$rval)
+    
+    fits <- lapply(which(has.vals), function(m)
     {
         # message(m)
+        
       # Get f and r indices for this row
         f <- allmatches.feat[m, 'feat']
         r <- allmatches.feat[m, 'ref']
@@ -459,15 +565,17 @@
         
       # Fit
         # fit <- fit_leastSquares(feat[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
-        fit_leastSquares_fast(feat[feat.pos] , ref[ref.pos])
+        fit <- fit_leastSquares_fast(feat[feat.pos] , ref[ref.pos])
         
-        return(fit)
-    })
+        data.frame(a = fit$a,
+                   b = fit$b,
+                   rmse = fit$rmse)
+    }) %>% do.call(rbind,.)
     
     # Extract out minimal fit data ####
       fit.data <- lapply(fits, function(f) f$fit %>% as.numeric) %>% do.call(rbind,.)
-      allmatches.feat[,"fit.intercept"] <- fit.data[,1]
-      allmatches.feat[,"fit.scale"] <- fit.data[,2]
+      allmatches.feat[has.vals,"fit.intercept"] <- fit.data[,1]
+      allmatches.feat[has.vals,"fit.scale"] <- fit.data[,2]
     
     # Add some different scores from the fits ####
       message("    - calculating additional scores...")
