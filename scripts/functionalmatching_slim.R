@@ -268,7 +268,13 @@
           }
         }
       }
-
+      
+      ref.ppm <- mp$ppm[mp$ref_downsampled_inds]
+      i <- 0
+      i <- i + 1
+      plot_match(allmatches.feat[i,], feat, ref, ref.ppm, ppm.margin = 1)
+      
+      
       return(list(matches = allmatches.feat,
                   specificity = specificity.score))
     }
@@ -543,176 +549,133 @@
     matches
   }
 
-  fit_matches <- function(allmatches.feat, feat, ref.mat){
-
-            # ref.mat <- mp$refs
-    has.vals <- is.na(allmatches.feat$rval)
+  plot_match <- function(match, feat, ref, ref.ppm, ppm.margin = 1) {
     
-    fits <- lapply(which(has.vals), function(m)
-    {
-        # message(m)
-        
-      # Get f and r indices for this row
-        f <- allmatches.feat[m, 'feat']
-        r <- allmatches.feat[m, 'ref']
-        feat.pos <- allmatches.feat[m, c('feat.start','feat.end')] %>% as.numeric %>% fillbetween
-        ref.pos <- allmatches.feat[m, c('ref.start','ref.end')] %>% as.numeric %>% fillbetween
+    # match<- allmatches.feat[1,]
+    ref.start <- match$ref.start
+    ref.end   <- match$ref.end
   
-      # Get spectral signatures which matched
-        ref <- ref.mat[,r,drop = F] %>% c
-        # simplePlot(c(ref))
-        
-        
-      # Fit
-        # fit <- fit_leastSquares(feat[feat.pos] , ref[ref.pos], plots = FALSE, scale.v2 = TRUE)#;fit$plot
-        fit <- fit_leastSquares_fast(feat[feat.pos] , ref[ref.pos])
-        
-        data.frame(a = fit$a,
-                   b = fit$b,
-                   rmse = fit$rmse)
-    }) %>% do.call(rbind,.)
-    
-    # Extract out minimal fit data ####
-      fit.data <- lapply(fits, function(f) f$fit %>% as.numeric) %>% do.call(rbind,.)
-      allmatches.feat[has.vals,"fit.intercept"] <- fit.data[,1]
-      allmatches.feat[has.vals,"fit.scale"] <- fit.data[,2]
-    
-    # Add some different scores from the fits ####
-      message("    - calculating additional scores...")
-      allmatches.feat[,'sum.residuals'] <-
-        lapply(fits, function(x) x$sum.residuals) %>% unlist
-      allmatches.feat[,'rmse'] <-
-        lapply(fits, function(x) x$rmse) %>% unlist
+    # 1) Full-length NA vector for plotting feature in ref coordinates
+    feat.scaled <- match$fit.intercept + match$fit.scale * feat
+    feat.vec <- rep(NA_real_, length(ref))
+    feat.vec[ref.start:ref.end] <- feat.scaled
   
-    return(allmatches.feat)
+    # 2) Determine plotting window in ppm units
+    plot_start_ppm <- ref.ppm[ref.start] + ppm.margin
+    plot_end_ppm   <- ref.ppm[ref.end]   - ppm.margin
+  
+    # Determine ppm direction
+    ascending <- ref.ppm[1] < ref.ppm[length(ref.ppm)]
+    
+    # Clamp ppm request to valid range
+    lo <- min(ref.ppm)
+    hi <- max(ref.ppm)
+    
+    plot_start_ppm_clamped <- max(lo, min(hi, plot_start_ppm))
+    plot_end_ppm_clamped   <- max(lo, min(hi, plot_end_ppm))
+    
+    # Build region
+    if (ascending) {
+      reg <- which(ref.ppm >= plot_start_ppm_clamped &
+                   ref.ppm <= plot_end_ppm_clamped)
+    } else {
+      reg <- which(ref.ppm <= plot_start_ppm_clamped &
+                   ref.ppm >= plot_end_ppm_clamped)
+    }
+    
+    # If nothing, fall back to the matched region
+    if (length(reg) == 0) {
+      reg <- ref.start:ref.end
+    }
+    simplePlot_x(
+      rbind(ref[reg], feat.vec[reg]),
+      xvect = ref.ppm[reg],
+      linecolor = c("gray", rgb(0,0,1,0.5)),
+      linewidth = c(1, 1.25)
+    )
+  
   }
 
-  plot_match <- function(match, feat, ref, ppm.margin = 1){
-                plt_range <- function(roi.inds, ref.ppm, ppm.margin=1){
-
-                  plot.start <- vectInds(ref.ppm[ref_start] + ppm.margin, ref.ppm) 
-                  plot.end <- vectInds(ref.ppm[ref_end] - ppm.margin, ref.ppm)
-                  
-                  
-                  reg <- plot.start:plot.end
-                  return(reg)
-                }
-                
-                browser()
-                
-                ref_start <- match$ref_start
-                ref_end <- match$ref_end
-                roi.inds <- c(ref_start, ref_end)
-                
-                ref.ppm <- mp$ppm[mp$ref_downsampled_inds]
-              
-              # Need to account for feat_start and ref_start alignment.
-              # Use feat inds to get relative ROI inds, then regenerate actual ROI:
-              
-                feat.inds.matched <- match$feat_start
-                
-                offset.start <- (1-match$feat_start) # need relative inds for the edges
-                offset.end <- length(feat) - match$feat_end
-
-                roi.inds <- (ref_start + offset.start):(ref_end + offset.end)
-                
-              # Plot the ref-sized, NA-filled feature
-              
-                feat.scaled <- match$fit.intercept + match$fit.scale*feat
-                
-                feat.vect <- rep(NA, length(ref))
-                
-                feat.vect[roi.inds] <- feat.scaled
-              
-              # Then limit the range for both together:
-                reg <- plt_range(roi.inds, ref.ppm, ppm.margin)
-              
-                colors.lines <- c("gray", rgb(0, 0, 1, alpha = 0.5))
-                
-                simplePlot(rbind(c(ref[reg]), c(feat.vect[reg])), xvect=ref.ppm[reg],linecolor = colors.lines)
-                
-            }
-
-map_ref_xcorr <- function(xc.res, ref) {
-  
-  N     <- length(xc.res$xcorr)   # = f.len + r.len - 1
-  r.len <- xc.res$ref_len
-  f.len <- xc.res$feat_len
-  
-  # FFT linear correlation zero-lag alignment:
-  # lag 0 corresponds to index f.len
-  ref_start <- f.len
-  ref_end   <- f.len + r.len - 1
-  
-  # Create padded full-length arrays
-  vals <- matrix(NA, 3, N)
-  rownames(vals) <- c("corr", "ref", "feat")
-  
-  # NCC already aligned to this indexing
-  vals["corr", ] <- xc.res$xcorr
-  
-  # Place the REF
-  vals["ref", ref_start:ref_end] <- as.vector(ref)
-  
-  # 'use' will be filled later in map_feat_xcorr()
-  
-  list(
-    f.len      = f.len,
-    r.len      = r.len,
-    N          = N,
-    inds = list(
-      use        = NULL,
-      feat_start = NA,
-      feat_end   = NA,
-      ref_start  = ref_start,
-      ref_end    = ref_end,
-      lag        = NA
-    ),
-    vals = vals
-  )
-}
-
-map_feat_xcorr <- function(mapped, feat, lag) {
-  
-  N     <- mapped$N
-  f.len <- mapped$f.len
-  r.len <- mapped$r.len
-  
-  ref_start <- mapped$inds$ref_start  # = f.len
-  
-  vals <- mapped$vals
-  
-  # --------------------------
-  # Place FEAT according to lag
-  # lag = -(f.len-1):(r.len-1)
-  #
-  # feat_start = f.len + lag
-  # feat_end   = f.len + lag + f.len - 1
-  # -------------------------
-  
-  feat_start <- ref_start + lag       # = f.len + lag
-  feat_end   <- feat_start + f.len - 1
-  
-  # validity check: must lie in 1..N
-  if (feat_start < 1 || feat_end > N) {
-    return(NULL)     # should never happen for valid FFT lags
+  map_ref_xcorr <- function(xc.res, ref) {
+    
+    N     <- length(xc.res$xcorr)   # = f.len + r.len - 1
+    r.len <- xc.res$ref_len
+    f.len <- xc.res$feat_len
+    
+    # FFT linear correlation zero-lag alignment:
+    # lag 0 corresponds to index f.len
+    ref_start <- f.len
+    ref_end   <- f.len + r.len - 1
+    
+    # Create padded full-length arrays
+    vals <- matrix(NA, 3, N)
+    rownames(vals) <- c("corr", "ref", "feat")
+    
+    # NCC already aligned to this indexing
+    vals["corr", ] <- xc.res$xcorr
+    
+    # Place the REF
+    vals["ref", ref_start:ref_end] <- as.vector(ref)
+    
+    # 'use' will be filled later in map_feat_xcorr()
+    
+    list(
+      f.len      = f.len,
+      r.len      = r.len,
+      N          = N,
+      inds = list(
+        use        = NULL,
+        feat_start = NA,
+        feat_end   = NA,
+        ref_start  = ref_start,
+        ref_end    = ref_end,
+        lag        = NA
+      ),
+      vals = vals
+    )
   }
   
-  # clear old feat
-  vals["feat", ] <- NA
-  
-  # insert new feat
-  vals["feat", feat_start:feat_end] <- feat
-  
-  # overlap: indices where both exist
-  mapped$inds$use <- !(is.na(vals["feat", ]) | is.na(vals["ref", ]))
-  
-  mapped$inds$feat_start <- feat_start
-  mapped$inds$feat_end   <- feat_end
-  mapped$inds$lag        <- lag
-  mapped$vals            <- vals
-  mapped$inds$peak_loc   <- lag + f.len
-  
-  mapped
-}
+  map_feat_xcorr <- function(mapped, feat, lag) {
+    
+    N     <- mapped$N
+    f.len <- mapped$f.len
+    r.len <- mapped$r.len
+    
+    ref_start <- mapped$inds$ref_start  # = f.len
+    
+    vals <- mapped$vals
+    
+    # --------------------------
+    # Place FEAT according to lag
+    # lag = -(f.len-1):(r.len-1)
+    #
+    # feat_start = f.len + lag
+    # feat_end   = f.len + lag + f.len - 1
+    # -------------------------
+    
+    feat_start <- ref_start + lag       # = f.len + lag
+    feat_end   <- feat_start + f.len - 1
+    
+    # validity check: must lie in 1..N
+    if (feat_start < 1 || feat_end > N) {
+      return(NULL)     # should never happen for valid FFT lags
+    }
+    
+    # clear old feat
+    vals["feat", ] <- NA
+    
+    # insert new feat
+    vals["feat", feat_start:feat_end] <- feat
+    
+    # overlap: indices where both exist
+    mapped$inds$use <- !(is.na(vals["feat", ]) | is.na(vals["ref", ]))
+    
+    mapped$inds$feat_start <- feat_start
+    mapped$inds$feat_end   <- feat_end
+    mapped$inds$lag        <- lag
+    mapped$vals            <- vals
+    mapped$inds$peak_loc   <- lag + f.len
+    
+    mapped
+  }
 
