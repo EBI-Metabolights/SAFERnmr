@@ -25,25 +25,25 @@
     tol <- 0.1
     roi[1] <- roi[1]-tol
     roi[2] <- roi[2]+tol
-    pars$par$ncores <- 4
+    pars$par$ncores <- 8
   match.pack <- coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=8)
   
 # Do the matching ####
   
-  matches <- match_features(match.pack, fitting = TRUE)
+  matches <- match_features(match.pack, fit.matches = TRUE)
   
   matches <- lapply(1:nrow(matches), function(m){
       # Calculate feature specificity score ####
           matches[m, ]$matches
   }) 
   
-  all$rval[1]
+  
   all <- matches %>% do.call(rbind,.)
   any(is.na(all))
   
     # all_clean <- all %>% na.omit()
     
-    df_out <- a %>%
+    df_out <- all %>%
       na.omit %>%
       group_by(feat,ref) %>%
       mutate(rval_norm = rval / max(rval)) %>%
@@ -51,11 +51,12 @@
         specificity = sum(rval_norm),  # or sum(rval_norm) / n()
         # n_refs_with_hits = n(),         # diagnostic
         .groups = "drop"
-      )
-    %>% 
-      group_by(feat) %>% 
+      ) %>%
+      group_by(feat) %>%
       summarise(
-        specificity = mean(specificity)
+        mean_specificity = mean(specificity, na.rm = TRUE),
+        n_refs = n(),   # optional diagnostic
+        .groups = "drop"
       )
     
     a <- all %>% na.omit %>% filter(feat==2424)
@@ -229,14 +230,14 @@
                                 .errorhandling="pass") %dopar%
     
     {
-      i <- 16
-      f.num<-mp$f.numbers[i]
-      feat = mp$features[,i]
-      simplePlot(feat)
-      feat.padded.ft.c = mp$features.padded.ft.c[,i]
-      #
-      refs = mp$refs
-      refs.padded.ft = mp$refs.padded.ft
+      # i <- 16
+      # f.num<-mp$f.numbers[i]
+      # feat = mp$features[,i]
+      # simplePlot(feat)
+      # feat.padded.ft.c = mp$features.padded.ft.c[,i]
+      # #
+      # refs = mp$refs
+      # refs.padded.ft = mp$refs.padded.ft
       
       allmatches.feat <- match_feature(f.num, feat, feat.padded.ft.c,
                                        mp$refs, mp$refs.padded.ft)
@@ -269,10 +270,12 @@
         }
       }
       
-      ref.ppm <- mp$ppm[mp$ref_downsampled_inds]
-      i <- 0
-      i <- i + 1
-      plot_match(allmatches.feat[i,], feat, ref, ref.ppm, ppm.margin = 1)
+      specificity.score<-NA
+      
+      # ref.ppm <- mp$ppm[mp$ref_downsampled_inds]
+      # i <- 0
+      # i <- i + 1
+      # plot_match(allmatches.feat[i,], feat, ref, ref.ppm, ppm.margin = 1)
       
       
       return(list(matches = allmatches.feat,
