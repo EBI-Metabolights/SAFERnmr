@@ -3,6 +3,7 @@ feature_match2ref_pcc <- function(f.num, r.num,
                                   r.thresh = 0.8,
                                   max.hits = 100) {
   
+  
   # 1. compute NA-masked sliding Pearson correlations
   xc.res <- compute_pearson_sliding_overlap(feat, ref)
   xc   <- xc.res$xcorr

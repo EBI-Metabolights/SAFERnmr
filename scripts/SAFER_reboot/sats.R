@@ -233,6 +233,11 @@ message(str_c("Succeeded iterations (count): ", sum(succeeded), " (",
   
   sat.list <- results.all.cores[succeeded]
   
+  sat.list <- lapply(1:length(sat.list), function(x){
+    s <- sat.list[[x]]
+    s$id <- x
+    return(s)})
+  
   # simplePlot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
   # stackplot(xmat[,only.region.between %>% vectInds(ppm) %>% fillbetween])
   sat.list %>% lapply(function(x) x$peak) %>% unlist %>% sort %>% plot(y = 1:length(sat.list), x=.)

@@ -1,5 +1,6 @@
 simplePlot_x <- function(ymat = NULL, xvect = NULL, n_xticks = NULL, xdir = "reverse",
-                       linecolor = "gray", opacity = 0.6, linewidth = 0.5){
+                       linecolor = "gray", opacity = 0.6, linewidth = 0.5, title.str = NULL,
+                       st.str = NULL){
 
   # Handle single vector case:
   if (is.vector(ymat))
@@ -73,6 +74,17 @@ simplePlot_x <- function(ymat = NULL, xvect = NULL, n_xticks = NULL, xdir = "rev
     }
   }
 
+  if (!is.null(title.str)){
+    if (!is.null(st.str)){
+      g <- g + labs(
+          title = title.str,
+          subtitle = st.str)
+    } else {
+      g <- g + labs(
+              title = title.str)
+    }
+  }
+  
   # --------------------------
   # Theme
   # --------------------------

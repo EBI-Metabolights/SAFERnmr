@@ -1,81 +1,104 @@
 ## Matching Features using Functions
-  # Sys.setenv(MallocStackLogging = "0")
-  lib.data.processed <- load_lib_data(pars)
-  xmat <- data$xmat
-      ppm <- data$ppm
-      tmpdir <- pars$dirs$temp
-      
-  xmat.lin <- xmat %>% t %>% c
-  
-  ref.stack.lib <- lib_to_refmat(lib.data.processed) # refs on rows
-    rm(lib.data.processed)
-    # ref.stack<- ref.stack.lib #
-  ref.stack <- xmat # spectra on rows
-  # ref.stack <- xmat.lin
-  # ppm.lin <- 
-  
-  # Bind feature and ref ranges
-  
-  feature.stack <- stack_sats(sat.list, xmat, ppm, half.window) # feats on rows
 
-# Prep the features and refs ####
+  sats <- sat.list
+  dataset.spectra <- xmat
+  downsample.factor <- 8
+  tol <- 0.5
+  fit.matches <- TRUE
+
+  # For each SAT, add the ref region ####
   
-  # +/- 1 ppm from each 
-  roi <- c(2.25,2.5)
-    tol <- 0.1
-    roi[1] <- roi[1]-tol
-    roi[2] <- roi[2]+tol
-    pars$par$ncores <- 10
-  match.pack <- coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=8)
+    sats.withranges <- lapply(sats, function(s){
+      driver.ppm <- s$driver.initial %>% ppm[.]
+      ref.range <- c(-tol, tol) + driver.ppm
+        s$ref.range.tol <- vectInds(ref.range, ppm) # this also keeps them in bounds
+      return(s)
+    })
+  
+  # Match features and refs ####
+  
+    sats <- sats.withranges
+    dataset.spectra <- xmat %>% t
+    fit.matches <- TRUE
+
+    # For each feature:
+    spec.data.all <- mclapply(sats, function(s){
+      # s <- sats[[500]]
+      
+      # Downsampling 
+        
+        f.num <- s$id
+        feat.ds <- s_to_feat_ds(s, downsample.factor)
+        ref.data <- refs_ds(s, dataset.spectra, ppm, downsample.factor)
+
+        empty.result <- list(specificity = Inf,
+                             matches     = NA)
+        
+        # with downsampling, we lose some tiny feats
+        if ( sum( !is.na(feat.ds) )  <4 ){ return(empty.result) }
+        
+      # Match to ref regions using PCC
+        
+        matches.feat <- match_feature(f.num, feat.ds, ref.data$refs.ds)
+
+      # Calculate specificity score
+      
+        specificity.score <- calc_specificity_feat_fast(matches.feat)
+        if ( is.nan(specificity.score) ){ return(empty.result) }
+      
+      # Get fits 
+      
+        if (fit.matches) {
+          
+          matches.feat <- fit_matches(matches.feat, feat.ds, ref.data$refs.ds) # downsampled
+          # m <- m+1
+          # plot_match(matches[m,], feat.ds, refs.ds, ppm.ds, ppm.margin = tol)
+        }
+        
+      # convert ref inds back to actual refmat inds, not ss.inds. (only after fitting, or breaks ref inds)
+      matches.feat$ref <- ref.data$ss[matches.feat$ref] 
+      
+        return(list(
+          specificity = specificity.score,
+          matches     = matches.feat))      
+        
+    }, mc.cores = 6)
+    saveRDS(spec.data.all, "spec.data.all.RDS")
+    # lapply(spec.data, function(s){s$specificity}) %>% unlist %>% as.numeric
   
 # Do the matching ####
   
-  matches <- match_features(match.pack, fit.matches = TRUE)
+    matches <- lapply(spec.data, function(s){
+        s$matches
+    }) %>% do.call(rbind, .) %>% na.omit
   
-  matches <- lapply(1:nrow(matches), function(m){
-      # Calculate feature specificity score ####
-          matches[m, ]$matches
-  }) %>% do.call(rbind, matches) %>% na.omit
+    # matches$rval %>% sort %>% plot(type="l")
   
-  
+    matches.sorted <- matches$rval %>% order(decreasing = TRUE) %>% matches[., ]
+    
       # m <- 0
-      m <- m + 1
-      matches.sorted <- matches$
+      m <- m + 10
+      
       
       # plot_match(allmatches.feat[i,], feat, ref, ref.ppm, ppm.margin = 1)
-            match <- matches[m, ]
+            match <- matches.sorted[m, ]
             f <- match$feat
-            r <- match$ref
-            # feat.pos <- match[m, c('feat.start','feat.end')] %>% as.numeric %>% fillbetween
-            # ref.pos <- match[m, c('ref.start','ref.end')] %>% as.numeric %>% fillbetween
-          # Get spectral signatures which matched
-            ref <- mp$refs[,r] %>% as.double
-            feat <- mp$features[,mp$f.numbers==f] %>% as.double
-            ref.ppm <- mp$ppm[mp$ref_downsampled_inds]
-            # simplePlot(c(ref))
-          # Fit
-
-            # fit <- fit_leastSquares(feat[feat.pos] , ref[ref.pos], plots = TRUE, scale.v2 = FALSE);fit$plot
-            # match$fit.intercept <- fit$fit[1]
-            # match$fit.scale <- fit$fit[2]
+            s <- sats[[f]]
             
-            message(specificity)
-            plot_match(match, feat, ref, ref.ppm, ppm.margin = 1)
+            feat.ds <- s_to_feat_ds(s, downsample.factor)
+            r.data <- refs_ds(s, dataset.spectra, ppm, downsample.factor)
+            
+          # Get spectral signatures which matched
+            r <- which(r.data$ss == match$ref)
+            ref.ds <- r.data$refs.ds[,r,drop=F] #%>% as.double
+            # fit <- fit_leastSquares(feat.ds, ref.ds %>% as.numeric, scale.v2 = FALSE, plots = TRUE); fit$plot
+            # match$fit.scale <- 
+            
+            # match <- fit_matches(matches = match, feat.ds, ref.mat = ref.ds)
+            
+            message(spec.data.all[[f]]$specificity)
+            plot_match(match, feat.ds, ref.ds, r.data$ppm.ds, ppm.margin = 1)
   
-    df_out <- matches %>%
-      group_by(feat,ref) %>%
-      mutate(rval_norm = rval / max(rval)) %>%
-      summarise(
-        sum_r_in_ref = sum(rval_norm),  # or sum(rval_norm) / n()
-        # n_refs_with_hits = n(),         # diagnostic
-        .groups = "drop"
-      ) %>%
-      group_by(feat) %>%
-      summarise(
-        specificity = mean(sum_r_in_ref, na.rm = TRUE),
-        n_refs = n(),   # optional diagnostic
-        .groups = "drop"
-      )
     
     # Sort features by specificity
       specificity <- df_out$specificity[match$feat == df_out$feat]
@@ -150,63 +173,6 @@
     ) %>% do.call(rbind, .)
   }
   
-  stack_sats <- function(sat.list, xmat, ppm, half.window){
-    mclapply(sat.list, function(s){
-      
-      p <- data.frame(driver = s$peak)
-      driver <- p$driver
-  
-      # Driver locates the index, everything else can be built around it
-      
-      p.abs <- driver - p
-      
-      fullView <- (driver - half.window):(driver + half.window)
-      
-      in.bounds <- !(fullView < 1 | fullView > length(ppm))
-      
-      specreg.inds <- fullView[in.bounds]
-
-      cv <- cr <- rep(NA, length(fullView))
-      cv[in.bounds] <- s$covar[in.bounds]
-      cr[in.bounds] <- s$corr[in.bounds]
-      
-      # Make mask
-      # If this isn't a protofeature, but just a driver: let "peak" bounds = spec Region
-      if (is.null(p.abs$primary.lower)){
-        p.abs$primary.lower <- min(specreg.inds)
-        p.abs$primary.upper <- max(specreg.inds)
-        p.abs$secondary.lower <- p.abs$primary.lower
-        p.abs$secondary.upper <- p.abs$primary.upper
-      }
-
-      primary.bounds <- c(p.abs$primary.lower, p.abs$primary.upper) %>% sort
-      secondary.bounds <- c(p.abs$secondary.lower, p.abs$secondary.upper) %>% sort
-      
-      
-      pk.mask <- rep(0, length(fullView))
-      pk.mask[which(fullView %in% primary.bounds) %>% fillbetween] <- 1
-      pk.mask[which(fullView %in% secondary.bounds) %>% fillbetween] <- 2
-    
-      # s <- sat.list[[1]]
-      # plot_protofeature(p = data.frame(driver = s$peak),
-      #           half.window = half.window, ppm = data$ppm,
-      #           xmat = xmat[s$subset,],
-      #           # bgplot = 'stack', line.shape = 'covar', line.color = "corr",
-      #           bgplot = 'overlay', line.shape = 'covar', line.color = "corr",
-      #           showPeaks = FALSE, ref.mask = s$ref.idx, show.mask.bounds = TRUE)
-      
-      # pexp <- expand_protofeature(p = data.frame(driver = s$peak), 
-      #                                xmat[s$subset,], ppm, half.window)
-      # pexp$specRegion <- NULL
-      # simplePlot(ymat = cv, xvect = ppm[specreg.inds])
-      
-      feat <- cv %>% length %>% matrix(NA, nrow = 1, ncol = .)
-      mask <- (specreg.inds %in% s$ref.idx)
-      feat[, mask] <- cv[mask]
-      return(feat)
-    }, mc.cores = pars$par$ncores) %>% do.call(rbind, .)
-  }
-
   match_features <- function(mp, fit.matches = FALSE){
     # mp <- match.pack
     
@@ -304,114 +270,6 @@
         return(my.cluster)
   }
   
-  prep_features <- function(features, ref.length){
-
-    message('\tPadding features by ref.length (', ref.length, ') - length(feat) (', ncol(features), ')...')
-    message('\tPadding features by ref.length - length(feat)...')
-    pad.size <- ref.length - ncol(features)
-    features <- lapply(1:nrow(features), function(x) features[x,])
-    fsp <-
-      mclapply(features, function(feat){
-        padded.feat <- feat %>% c(rep(0, pad.size),.)
-        padded.feat[is.na(padded.feat)] <- 0
-        feat.p.ft.c <- Conj(fftw::FFT(padded.feat))
-        return(feat.p.ft.c)
-      }, mc.cores = pars$par$ncores) %>% do.call(rbind,.) %>% t
-    return(fsp)
-  }
-  
-  coprep_features_and_refs <- function(feature.stack, ref.stack, ppm, roi, downsampling.factor=1){
-    # coprep_features_and_refs(feature.stack, ref.stack, ppm, roi, downsampling.factor=8)
-    # Assume feature and ref stacks have the same ppm axis (on the columns)
-    # roi is in ppm 
-    # browser()
-      # Cut down ref stack to relevant region
-      roi <- roi %>% vectInds(., ppm) # ppm
-      reg <- roi %>% fillbetween
-      ref.stack <- ref.stack[,reg]
-      ppm <- ppm[reg]
-      
-      # Cut feature stack to relevant features
-      in.range <- lapply(sat.list, function(s){
-        # s <- sat.list[[1]]
-        !all(is.na(range_intersect(roi, s$finalRegion)))
-      
-      }) %>% unlist %>% which
-    
-      # Thin it out some
-      selected <- in.range#  seq(1, length(in.range), length.out=8) %>% in.range[.]
-      feature.stack <- feature.stack[selected,]
-      
-      # Scale the features
-      feature.stack <- lapply(1:nrow(feature.stack), function(x){
-        feature.stack[x,] %>% scale_between %>% c
-      }) %>% do.call(rbind, .)
-      
-      # simplePlot(feature.stack[1,])
-      # simplePlot(ref.stack[1,], xvect=ppm)
-      # stackplot(feature.stack[1:10], vshift = 10)
-      
-    # Downsample (if doing that)
-      message('\t downsampling refs and features by a factor of ',downsampling.factor)
-      
-      ds.inds.ref <- downsample_inds(ppm, downsampling.factor)
-      ref.stack <- ref.stack[,ds.inds.ref]
-      ds.ppm <- ppm[ds.inds.ref]
-      # simplePlot(ref.stack[1,], xvect = ds.ppm)
-      # stackplot(ref.stack[1:10,], vshift = 10, xvect = ds.ppm)
-      
-      ds.inds.feat <- seq(1,ncol(feature.stack)) %>% downsample_inds(downsampling.factor)
-      feature.stack <- feature.stack[,ds.inds.feat]
-      # simplePlot(feature.stack[1,])
-    
-    # Move on to processing ref.stack
-      feature.width <- ncol(feature.stack)
-      
- ### Experiment with NCC  ###  ###  ###  ###  ###  ###  ###  ###  ### 
- 
-
- ###  ###  ###  ###  ###  ###  ###  ###  ###  ###  ###  ###  ###  ###
-  
-      refs.padded.ft <- prep_refs(ref.stack, feature.width)
-      refs <- ref.stack %>% t
-      
-    # Move on to processing feature.stack
-      padded.ref.length <- nrow(refs.padded.ft)
-      
-      features.padded.ft.c <- prep_features(feature.stack, padded.ref.length)
-      features <- feature.stack %>% t
-      
-    return(list(feature.width = feature.width,
-                f.numbers=selected,
-                features=features,
-                refs=refs,
-                features.padded.ft.c=features.padded.ft.c,
-                refs.padded.ft=refs.padded.ft,
-                feature_downsampled_inds=ds.inds.feat,
-                ref_downsampled_inds=ds.inds.ref,
-                ppm=ppm))
-    
-  }
-  
-  prep_refs <- function(refs, feature.width){
-    
-    # Pad the ref spectra to feature size
-    message('\tPadding refs by feature.width - 1...')
-    pad.size <- feature.width- 1
-    r.mat <- refs %>% padmat(use = 0, col.by = pad.size)
-    r.mat[is.na(r.mat)] <- 0
-    
-    # List-format the matrices to facilitate parallel
-      message('\tSplitting ref matrix to lists...')
-      r.mat <- lapply(1:nrow(r.mat), function(r) r.mat[r,])
-    
-    # Loop through spec matrix, compute fftw::fft()
-      message('\tReference matrix fft...')
-      r.mat <- mclapply(r.mat, function(ref) fftw::FFT(ref), mc.cores = pars$par$ncores) %>% do.call(cbind,.)
-      
-    return(r.mat)
-  }
-  
   match_feature <- function(f.num, feat, refs){
     
     # Locate best positions in all available refs
@@ -423,11 +281,10 @@
                                   .errorhandling="stop") %do%
       {
 
-        # r.num = 100
-        # ref = refs[,r.num, drop = F]
-        # ref.ft = refs.padded.ft[,r.num, drop = F]
+        # r.num = 1
+        # ref = refs[,r.num, drop = F]  %>% plot(type="l")
         # message(r.num)
-        # simplePlot(feat)
+        # feat %>% plot(type="l")
         #
         # simplePlot(ref %>% c)
         # plotly::plot_ly(data = data.frame(x=mp$ppm[mp$ref_downsampled_inds], y=c(ref)),
@@ -437,7 +294,7 @@
         #         mode = "lines")
         
         # Cross-correlate to find locations and scores:
-          # matches <- feature_match2ref_slim(f.num, r.num,
+          
           matches <- feature_match2ref_pcc(f.num, r.num,
                                             feat, ref,
                                             max.hits = 100,#pars$matching$max.hits,
@@ -467,8 +324,35 @@
       return(allmatches.feat)
   }
 
-  fit_matches_vectorized <- function(matches, feat, ref.mat) {
+  fit_matches <- function(matches, feat, ref.mat){
+    
+    if (is.null(nrow(matches))) {
+      return(NULL)
+    } else {
   
+      # always initialize columns so combine() never breaks
+      matches$fit.intercept <- NA_real_
+      matches$fit.scale     <- NA_real_
+      matches$rmse          <- NA_real_
+  
+      # rows that have a real match and should be fit
+      valid_rows <- !is.na(matches$rval)
+      
+      if (any(valid_rows)) {
+        fitted <- fit_matches_vectorized(matches[valid_rows, ],
+                                         feat, ref.mat)
+        
+        # write fitted values back into original data frame
+        matches$fit.intercept[valid_rows] <- fitted$fit.intercept
+        matches$fit.scale[valid_rows]     <- fitted$fit.scale
+        matches$rmse[valid_rows]          <- fitted$rmse
+      }
+    }
+    return(matches)
+  }
+  
+  fit_matches_vectorized <- function(matches, feat, ref.mat) {
+    
     M <- nrow(matches)
     if (M == 0) return(matches)
   
@@ -558,7 +442,7 @@
 
   plot_match <- function(match, feat, ref, ref.ppm, ppm.margin = 1) {
     
-    # match<- allmatches.feat[1,]
+    # match<- matches[m,]
     ref.start <- match$ref.start
     ref.end   <- match$ref.end
   
@@ -606,86 +490,90 @@
   
   }
 
-  map_ref_xcorr <- function(xc.res, ref) {
+  calc_specificity_feat <- function(matches){
+    # matches <- matches.feat
+    matches %>%
+      group_by(feat,ref) %>%
+      mutate(rval_norm = rval / max(rval)) %>%
+      summarise(
+        sum_r_in_ref = sum(rval_norm),  # or sum(rval_norm) / n()
+        # n_refs_with_hits = n(),         # diagnostic
+        .groups = "drop"
+      ) %>%
+      # group_by(feat) %>%
+      summarise(
+        specificity = mean(sum_r_in_ref, na.rm = TRUE),
+        n_refs = n(),   # optional diagnostic
+        .groups = "drop"
+      ) %>% .["specificity"] %>% as.numeric
     
-    N     <- length(xc.res$xcorr)   # = f.len + r.len - 1
-    r.len <- xc.res$ref_len
-    f.len <- xc.res$feat_len
-    
-    # FFT linear correlation zero-lag alignment:
-    # lag 0 corresponds to index f.len
-    ref_start <- f.len
-    ref_end   <- f.len + r.len - 1
-    
-    # Create padded full-length arrays
-    vals <- matrix(NA, 3, N)
-    rownames(vals) <- c("corr", "ref", "feat")
-    
-    # NCC already aligned to this indexing
-    vals["corr", ] <- xc.res$xcorr
-    
-    # Place the REF
-    vals["ref", ref_start:ref_end] <- as.vector(ref)
-    
-    # 'use' will be filled later in map_feat_xcorr()
-    
-    list(
-      f.len      = f.len,
-      r.len      = r.len,
-      N          = N,
-      inds = list(
-        use        = NULL,
-        feat_start = NA,
-        feat_end   = NA,
-        ref_start  = ref_start,
-        ref_end    = ref_end,
-        lag        = NA
-      ),
-      vals = vals
-    )
-  }
-  
-  map_feat_xcorr <- function(mapped, feat, lag) {
-    
-    N     <- mapped$N
-    f.len <- mapped$f.len
-    r.len <- mapped$r.len
-    
-    ref_start <- mapped$inds$ref_start  # = f.len
-    
-    vals <- mapped$vals
-    
-    # --------------------------
-    # Place FEAT according to lag
-    # lag = -(f.len-1):(r.len-1)
-    #
-    # feat_start = f.len + lag
-    # feat_end   = f.len + lag + f.len - 1
-    # -------------------------
-    
-    feat_start <- ref_start + lag       # = f.len + lag
-    feat_end   <- feat_start + f.len - 1
-    
-    # validity check: must lie in 1..N
-    if (feat_start < 1 || feat_end > N) {
-      return(NULL)     # should never happen for valid FFT lags
-    }
-    
-    # clear old feat
-    vals["feat", ] <- NA
-    
-    # insert new feat
-    vals["feat", feat_start:feat_end] <- feat
-    
-    # overlap: indices where both exist
-    mapped$inds$use <- !(is.na(vals["feat", ]) | is.na(vals["ref", ]))
-    
-    mapped$inds$feat_start <- feat_start
-    mapped$inds$feat_end   <- feat_end
-    mapped$inds$lag        <- lag
-    mapped$vals            <- vals
-    mapped$inds$peak_loc   <- lag + f.len
-    
-    mapped
   }
 
+  calc_specificity_feat_fast <- function(matches) {
+  
+    # Drop NA rows immediately
+    matches <- matches[!is.na(matches$rval), ]
+    if (!nrow(matches)) return(Inf)
+    
+    # 1. Compute max rval per ref (vectorized)
+    max_rval_per_ref <- tapply(matches$rval, matches$ref, max, na.rm=TRUE)
+  
+    # 2. Normalize rval using lookup table (no group_by)
+    rval_norm <- matches$rval / max_rval_per_ref[matches$ref]
+  
+    # 3. Sum normalized rval per ref
+    sum_r_per_ref <- tapply(rval_norm, matches$ref, sum)
+  
+    # 4. Specificity = mean across refs
+    mean(sum_r_per_ref)
+  }
+  
+  calc_specificity <- function(matches){
+    matches %>%
+      group_by(feat,ref) %>%
+      mutate(rval_norm = rval / max(rval)) %>%
+      summarise(
+        sum_r_in_ref = sum(rval_norm),  # or sum(rval_norm) / n()
+        # n_refs_with_hits = n(),         # diagnostic
+        .groups = "drop"
+      ) %>%
+      # group_by(feat) %>%
+      summarise(
+        specificity = mean(sum_r_in_ref, na.rm = TRUE),
+        n_refs = n(),   # optional diagnostic
+        .groups = "drop"
+      )
+    
+  }
+    
+  s_to_feat_ds <- function(s, downsample.factor){
+    # Feature
+    # s <- sats[[14]]
+    ss <- s$subset
+    feat <- rep(NA, length(s$covar))
+    feat[ s$pass ] <- s$covar[ s$pass ]
+    ds.inds.feat <- downsample_inds(feat, downsample.factor)
+    feat.ds <- feat[ds.inds.feat]
+    
+    return(feat.ds)  
+    
+  }
+    
+  refs_ss_ds <- function(s, refs, ppm, downsample.factor){
+    
+    # Refs
+    
+    ref.reg <- s$ref.range.tol %>% fillbetween
+    ppm.reg <- ppm[ref.reg]
+    refs.ss <- refs[ref.reg, s$subset]
+    ds.inds.ref <- downsample_inds(refs.ss[,1], downsample.factor)
+    refs.ds <- refs.ss[ds.inds.ref, ]# %>% .[,1] %>% plot(type="l")
+    ppm.ds <- ppm.reg[ds.inds.ref]# %>% plot(type="l")  
+    
+    return(
+            list(refs.ds = refs.ds,
+                 ppm.ds = ppm.ds,
+                 ss = s$subset)
+    )
+    
+  }
