@@ -107,7 +107,7 @@ head(vec$peak_counts)
 # Collapse scales
 summary(vec$collapse_scales)
 
-# Grid plot of first 12 features
+# Grid plot
 plot_feature_grid(
   feat_mat,
   feat_ids = 1:25,
@@ -182,15 +182,105 @@ plot_examples_for_scale <- function(
   invisible(chosen)
 }
 
-# Usage: 
-
-plot_examples_for_scale(feat_mat,
-    vec$collapse_scales,
-    target_scale = 32,
-    scales = c(0,1,2,4,8,16,32),
+plot_features_byScale <- function(
+    feat_mat,
+    collapse_scales,
+    target_scale,
     n_examples = 25,
     ncol = 5,
     peak_cex = 0.5,
     pdf_file = NULL,
-    seed = 1, 
-    sigma.labels = FALSE)
+    seed = 1)
+  {
+  set.seed(seed)
+
+  # Which features match that collapse scale?
+  idx <- which(collapse_scales == target_scale)
+
+  if (length(idx) == 0){
+    warning("No features found with collapse scale = ", target_scale)
+    return(invisible(NULL))
+  }
+
+  # Sample up to n_examples
+  chosen <- sample(idx, min(n_examples, length(idx)))
+
+  # Default PDF name if not supplied
+  if (is.null(pdf_file)){
+    pdf_file <- paste0(n_examples, "_features_collapse_scale_", target_scale, ".pdf")
+  }
+
+  pdf(pdf_file, width = 8, height = 10)
+
+  oldpar <- par(no.readonly = TRUE)
+  on.exit(par(oldpar), add = TRUE)
+
+  # Grid layout: 2 x ceiling(n/2)
+  nrow <- ceiling(length(chosen) / ncol)
+
+  par(mfrow = c(nrow, ncol), mar = c(2,2,2,1))
+
+  for (i in chosen){
+    feat <- feat_mat[i, ]
+
+    plot(feat, type='l', lwd=1)
+
+    title(main = paste("Feature", i),
+          cex.main = 0.5)
+  }
+
+  dev.off()
+
+  message("Saved ", length(chosen), 
+          " examples for collapse scale ", target_scale,
+          " → ", pdf_file)
+
+  invisible(chosen)
+}
+
+###############################################################################
+
+# Usage: 
+# Suppose feature$stack is your matrix (features on rows)
+feature.stack <- lapply(sats, feat_profile) %>% do.call(rbind,.)
+feat_mat <- feature.stack
+scales <- c(0,1,2,4,8,12,16,32)
+
+# Analyze everything (no plotting)
+vec <- analyze_features_collapse(
+  feat_mat,
+  scales = scales,
+  n_cores = 4   # optional
+)
+
+# Peak counts
+head(vec$peak_counts)
+
+# Collapse scales
+summary(vec$collapse_scales)
+
+res <-lapply(scales, function(x){
+  plot_examples_for_scale(feat_mat,
+      vec$collapse_scales,
+      target_scale = x,
+      scales = scales,
+      n_examples = 25,
+      ncol = 5,
+      peak_cex = 0.5,
+      pdf_file = NULL,
+      seed = 1, 
+      sigma.labels = FALSE)
+})
+
+
+res <-lapply(scales, function(x){
+  res <-plot_features_byScale(feat_mat,
+      vec$collapse_scales,
+      target_scale = x,
+      n_examples = 25,
+      ncol = 5,
+      peak_cex = 0.5,
+      pdf_file = NULL,
+      seed = 1)
+})
+
