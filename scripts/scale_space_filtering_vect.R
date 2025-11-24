@@ -1,5 +1,87 @@
 ###############################################################################
-# VECTORIZED collapse-scale analyzer for multiple features
+# Paralellized (not vectorized) collapse-scale analyzer for multiple features
+# 
+# The point of this analysis is to determine the point at which smoothing produces
+# <= 1 true peak in the feature profile. Singlet/shoulder peaks will quickly collapse,
+# even if they have small bumps on them. Here we use Gaussian smoothing with 
+# varying sigma levels, which double at each level. We simply need to catch the point 
+# at which real features begin to emerge. 
+# 
+# -------------------------------------------------------------
+# Gaussian smoothing
+# -------------------------------------------------------------
+smooth_gauss <- function(x, sigma){
+  if (sigma <= 0) return(x)
+  k <- ceiling(4*sigma)             # 
+  gx <- -k:k                        # 99.99% of the distribution is between +/- 4*sigma
+  kern <- exp(-(gx^2)/(2*sigma^2))  # gaussian formula relating intensities to x coords via sigma
+  kern <- kern / sum(kern)          # normalize intensities
+  y <- stats::filter(x, kern, sides = 2) # apply the filter to profile
+
+  # fill NA edges by nearest valid value
+  if (anyNA(y)){
+    good <- which(!is.na(y))
+    y[1:(min(good)-1)] <- y[min(good)]
+    y[(max(good)+1):length(y)] <- y[max(good)]
+  }
+  as.numeric(y)
+}
+
+# -------------------------------------------------------------
+# Linear interpolation over NA runs (just for filtering purposes)
+# -------------------------------------------------------------
+fill_na_interp <- function(x){
+  na <- is.na(x)
+  if (!any(na)) return(x)
+  good <- which(!na)
+  bad  <- which(na)
+
+  # pad edges
+  if (min(good) > 1){
+    x[1:(min(good)-1)] <- x[min(good)]
+  }
+  if (max(good) < length(x)){
+    x[(max(good)+1):length(x)] <- x[max(good)]
+  }
+
+  # linear interpolation inside
+  x[bad] <- approx(good, x[good], xout = bad)$y
+  x
+}
+
+# -------------------------------------------------------------
+# Normalize to [0,1]
+# -------------------------------------------------------------
+normalize01 <- function(x){
+  x <- x - min(x, na.rm=TRUE)
+  r <- max(x, na.rm=TRUE)
+  if (r == 0) return(rep(0, length(x)))
+  x / r
+}
+
+# -------------------------------------------------------------
+# LOCAL MAXIMUM DETECTION (very simple, global rule)
+# -------------------------------------------------------------
+local_maxima <- function(y){
+  # y[i] is a peak if it is greater than neighbors
+  # boundaries excluded
+  n <- length(y)
+  if (n < 3) return(integer(0))
+
+  # exclude NAs
+  good <- which(!is.na(y))
+  if (length(good) < n) {
+    # small fix: smooth edges already filled but double check
+    y <- fill_na_interp(y)
+  }
+
+  idx <- which(
+    c(FALSE,
+      y[2:(n-1)] > y[1:(n-2)] & y[2:(n-1)] > y[3:n],
+      FALSE)
+  )
+  idx
+}
 ###############################################################################
 analyze_features_collapse <- function(
     feat_mat,                   # matrix: features on rows
@@ -20,7 +102,6 @@ analyze_features_collapse <- function(
 
   # Use mclapply if >1 core
   FUN <- function(i){
-    print(i)
     analyze_feature_collapse(
       feat = feat_mat[i, ],
       scales = scales,
@@ -259,6 +340,7 @@ head(vec$peak_counts)
 # Collapse scales
 summary(vec$collapse_scales)
 
+# Plot degradation of each feature profile
 res <-lapply(scales, function(x){
   plot_examples_for_scale(feat_mat,
       vec$collapse_scales,
@@ -272,7 +354,7 @@ res <-lapply(scales, function(x){
       sigma.labels = FALSE)
 })
 
-
+# Plot with just feature profile
 res <-lapply(scales, function(x){
   res <-plot_features_byScale(feat_mat,
       vec$collapse_scales,

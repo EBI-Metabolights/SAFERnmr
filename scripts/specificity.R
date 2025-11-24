@@ -1,14 +1,98 @@
-## Matching Features using Functions
+## Which features are likely to be useful?
+## Can we quantify their usefulness?
 
-  sats <- sat.list
+sats <- sat.list
+
+# First: Which features are singlet/shoulders? ####
+#   Strategy: Scale-space filtering collapse
+#   
+#   The idea is to progressively degrade the 
+#   feature profile with gaussian smoothing
+#   (increasing sigmas) and record the point 
+#   at which the feature profile collapses to 
+#   a single point. For features dominated by
+#   shoulders/singlets, this happens quickly,  
+#   while bona fide features last a surprisingly 
+#   long time. 
+#   
+#   If you just count local maxima, you'll end up
+#   with lots of false positive "peaks". So, 
+#   naturally, you smooth the profile. But how much?
+#   Until it's basically gone. This is surprisingly fast
+#   for 3.5 k features at full-res (401 points)
+#   
+
+  # Suppose feature$stack is your matrix (features on rows)
+  feature.stack <- lapply(sats, feat_profile) %>% do.call(rbind,.)
+  feat_mat <- feature.stack
+  scales <- c(0,1,2,4,8,12,16,32)
   
-  is.singlet <- lapply(sats, function(s){
-    s <- sats[[103]]
-    feat <- s_to_feat_ds(s, downsample.factor = 1)
-    simplePlot(feat)
-    # plot_scale_space(feat)
-    plot_scale_space_with_peaks(feat)
-  })
+  # Analyze everything (no plotting)
+  vec <- analyze_features_collapse(
+    feat_mat,
+    scales = scales,
+    n_cores = 4   # optional
+  )
+  
+  ## Extras ####
+  # # Some descriptive stats that might be interesting
+    sigma.collapsed <- sort(vec$collapse_scales)
+    sorted.index <- seq_along(vec$collapse_scales)
+    plot(sigma.collapsed, sorted.index, type='l')
+    title("Scale collapse levels for features")
+    
+    sigma <- vec$collapse_scales
+    tbl <- table(sigma)
+    
+    barplot(tbl,
+            col = "steelblue",
+            main = "Collapse-scale distribution",
+            xlab = "Collapse σ",
+            ylab = "Number of features")
+
+    passed.scale.space <- sigma >= 12
+    
+    
+  # 
+  #   # Peak counts
+  #   head(vec$peak_counts)
+  #   
+  #   # Collapse scales
+  #   summary(vec$collapse_scales)
+  #   
+  # # Some plotting to show it works:
+  #   # Plot degradation of each feature profile
+  #   res <-lapply(scales, function(x){
+  #     plot_examples_for_scale(feat_mat,
+  #         vec$collapse_scales,
+  #         target_scale = x,
+  #         scales = scales,
+  #         n_examples = 25,
+  #         ncol = 5,
+  #         peak_cex = 0.5,
+  #         pdf_file = NULL,
+  #         seed = 1, 
+  #         sigma.labels = FALSE)
+  #   })
+  # 
+  #   # Plot with just feature profile
+  #   res <-lapply(scales, function(x){
+  #     res <-plot_features_byScale(feat_mat,
+  #         vec$collapse_scales,
+  #         target_scale = x,
+  #         n_examples = 25,
+  #         ncol = 5,
+  #         peak_cex = 0.5,
+  #         pdf_file = NULL,
+  #         seed = 1)
+  #   })
+
+# Second: specificity ####
+#   Strategy: Simply match the features to their 
+#   original dataset, see if they stick specifically
+#   or all over the place. This is slow. 
+#
+  sats <- sat.list
   
   dataset.spectra <- xmat
   downsample.factor <- 8
