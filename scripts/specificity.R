@@ -1,11 +1,21 @@
 ## Matching Features using Functions
 
   sats <- sat.list
+  
+  is.singlet <- lapply(sats, function(s){
+    s <- sats[[103]]
+    feat <- s_to_feat_ds(s, downsample.factor = 1)
+    simplePlot(feat)
+    # plot_scale_space(feat)
+    plot_scale_space_with_peaks(feat)
+  })
+  
   dataset.spectra <- xmat
   downsample.factor <- 8
   tol <- 0.5
   fit.matches <- TRUE
 
+  
   # For each SAT, add the ref region ####
   
     sats.withranges <- lapply(sats, function(s){
@@ -546,12 +556,17 @@
     
   }
     
+  feat_profile <- function(s){
+    feat <- rep(NA, length(s$covar))
+    feat[ s$pass ] <- s$covar[ s$pass ]   
+    feat %>% as.numeric
+  }
+  
   s_to_feat_ds <- function(s, downsample.factor){
     # Feature
     # s <- sats[[14]]
     ss <- s$subset
-    feat <- rep(NA, length(s$covar))
-    feat[ s$pass ] <- s$covar[ s$pass ]
+    feat <- feat_profile(s)
     ds.inds.feat <- downsample_inds(feat, downsample.factor)
     feat.ds <- feat[ds.inds.feat]
     
